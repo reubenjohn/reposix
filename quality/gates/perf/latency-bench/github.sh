@@ -24,6 +24,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     "${BIN_DIR}/reposix" init "github::${GH_PROJECT}" "$GH_REPO" >/dev/null 2>&1 || true
     T1=$(now_ms)
     GH_INIT_MS=$((T1 - T0))
+    warn_if_over_3s github init "$GH_INIT_MS"
     # Cache-dir name uses sanitize_project_for_cache: `owner/repo` → `owner-repo`.
     GH_BLOBS=$(count_blob_materializations "${CACHE_ROOT}/reposix/github-reubenjohn-reposix.git")
 
@@ -38,6 +39,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
             "${GH_ORIGIN}/repos/${GH_PROJECT}/issues?state=all&per_page=100"
     }
     GH_LIST_MS=$(median3_step gh_list)
+    warn_if_over_3s github list "$GH_LIST_MS"
 
     if [[ -n "$GH_FIRST_NUMBER" ]]; then
         gh_get() {
@@ -45,6 +47,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
                 "${GH_ORIGIN}/repos/${GH_PROJECT}/issues/${GH_FIRST_NUMBER}"
         }
         GH_GET_MS=$(median3_step gh_get)
+        warn_if_over_3s github get "$GH_GET_MS"
         # No-op PATCH: rewrite title to itself.
         gh_patch() {
             curl -fsS -X PATCH -H "Authorization: Bearer ${GITHUB_TOKEN}" \
@@ -53,6 +56,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
                 "${GH_ORIGIN}/repos/${GH_PROJECT}/issues/${GH_FIRST_NUMBER}"
         }
         GH_PATCH_MS=$(median3_step gh_patch)
+        warn_if_over_3s github patch "$GH_PATCH_MS"
     else
         GH_GET_MS="n/a"; GH_PATCH_MS="n/a"
     fi

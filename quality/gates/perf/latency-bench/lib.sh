@@ -70,3 +70,15 @@ fmt_ms_n() {
         echo "${v} ms (N=${n})"
     fi
 }
+
+# warn_if_over_3s <backend> <step> <ms> — soft-threshold WARN (non-fatal),
+# mirroring the sim init/list 500ms pattern in sim.sh but at the
+# real-backend 3000ms threshold documented in docs/benchmarks/latency.md
+# ("Soft thresholds" — real-backend step < 3s). Callers MUST only pass a
+# step whose $ms is guaranteed to be a plain integer at the call site
+# (never call this with "n/a" or an empty string — those steps didn't run,
+# so there's nothing to threshold-check).
+warn_if_over_3s() {
+    local backend="$1" step="$2" ms="$3"
+    [[ $ms -gt 3000 ]] && echo "WARN: ${backend} ${step} ${ms}ms > 3000ms threshold" >&2 || true
+}

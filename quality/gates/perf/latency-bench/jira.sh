@@ -27,6 +27,7 @@ if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
     "${BIN_DIR}/reposix" init "jira::${JR_PROJECT}" "$JR_REPO" >/dev/null 2>&1 || true
     T1=$(now_ms)
     JR_INIT_MS=$((T1 - T0))
+    warn_if_over_3s jira init "$JR_INIT_MS"
     JR_BLOBS=$(count_blob_materializations "${CACHE_ROOT}/reposix/jira-${JR_PROJECT}.git")
 
     JR_LIST_BODY="$(curl -fsS -X POST -u "${JR_AUTH}" \
@@ -44,6 +45,7 @@ if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
             "${JR_ORIGIN}/rest/api/3/search/jql"
     }
     JR_LIST_MS=$(median3_step jr_list)
+    warn_if_over_3s jira list "$JR_LIST_MS"
 
     if [[ -n "$JR_FIRST_KEY" ]]; then
         jr_get() {
@@ -51,6 +53,7 @@ if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
                 "${JR_ORIGIN}/rest/api/3/issue/${JR_FIRST_KEY}"
         }
         JR_GET_MS=$(median3_step jr_get)
+        warn_if_over_3s jira get "$JR_GET_MS"
         # No-op PATCH: PUT the summary back to its current value.
         jr_patch() {
             curl -fsS -X PUT -u "${JR_AUTH}" \
@@ -59,6 +62,7 @@ if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
                 "${JR_ORIGIN}/rest/api/3/issue/${JR_FIRST_KEY}"
         }
         JR_PATCH_MS=$(median3_step jr_patch)
+        warn_if_over_3s jira patch "$JR_PATCH_MS"
     else
         JR_GET_MS="n/a"; JR_PATCH_MS="n/a"
     fi

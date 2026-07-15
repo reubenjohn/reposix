@@ -30,6 +30,7 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
     "${BIN_DIR}/reposix" init "confluence::${CF_PROJECT}" "$CF_REPO" >/dev/null 2>&1 || true
     T1=$(now_ms)
     CF_INIT_MS=$((T1 - T0))
+    warn_if_over_3s confluence init "$CF_INIT_MS"
     CF_BLOBS=$(count_blob_materializations "${CACHE_ROOT}/reposix/confluence-${CF_PROJECT}.git")
 
     if [[ -n "$CF_SPACE_ID" ]]; then
@@ -46,6 +47,7 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
                 "${CF_ORIGIN}/wiki/api/v2/spaces/${CF_SPACE_ID}/pages?limit=250"
         }
         CF_LIST_MS=$(median3_step cf_list)
+        warn_if_over_3s confluence list "$CF_LIST_MS"
 
         if [[ -n "$CF_FIRST_ID" ]]; then
             cf_get() {
@@ -53,6 +55,7 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
                     "${CF_ORIGIN}/wiki/api/v2/pages/${CF_FIRST_ID}?body-format=storage"
             }
             CF_GET_MS=$(median3_step cf_get)
+            warn_if_over_3s confluence get "$CF_GET_MS"
             # No-op PATCH: PUT page with same title + bumped version. Confluence's
             # update endpoint requires {id, status, title, version: {number: N+1}}.
             # Even a no-content-change rewrite increments the version; treat the
@@ -68,6 +71,7 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
                     "${CF_ORIGIN}/wiki/api/v2/pages/${CF_FIRST_ID}"
             }
             CF_PATCH_MS=$(median3_step cf_patch)
+            warn_if_over_3s confluence patch "$CF_PATCH_MS"
         else
             CF_GET_MS="n/a"; CF_PATCH_MS="n/a"
         fi

@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 251,
+    "claims_bound": 265,
     "claims_missing_test": 8,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7470238095238095,
+    "alignment_ratio": 0.7886904761904762,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-15T20:02:14Z",
-    "coverage_ratio": 0.17744537322188003,
-    "lines_covered": 1210,
-    "total_eligible_lines": 6819,
+    "last_walked": "2026-07-15T22:17:45Z",
+    "coverage_ratio": 0.17509444928799767,
+    "lines_covered": 1205,
+    "total_eligible_lines": 6882,
     "coverage_floor": 0.1,
     "claims_waived": 8
   },
@@ -3540,52 +3540,52 @@
     },
     {
       "id": "docs/benchmarks/latency/github-get-under-300ms",
-      "claim": "Get one record: 291 ms for GitHub backend",
+      "claim": "Get one record: 320 ms for GitHub backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "same median-of-3 GET against the GitHub backend populates this cell",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh github.sh sets GH_GET_MS=median3_step gh_get (median-of-3 GET), emit-markdown.sh emits GH_GET_CELL=fmt_ms $GH_GET_MS into the 'Get one record' github column; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-get-under-10ms",
-      "claim": "Get one record: 8 ms for sim backend",
+      "claim": "Get one record: 6 ms for sim backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh runs median-of-3 GET against sim and emits the sim get-record row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench sim.sh runs median3_step curl on /projects/demo/issues/1 -> SIM_GET_MS; emit-markdown.sh stamps the sim Get cell via fmt_ms SIM_GET_MS at table row 73",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:06Z",
+      "last_extracted": "2026-07-15T22:09:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4196,27 +4196,27 @@
     },
     {
       "id": "docs/benchmarks/latency/capabilities-probe-under-10ms",
-      "claim": "Helper capabilities probe: ~5-6 ms (local-only, backend-independent)",
+      "claim": "Helper capabilities probe: 5 ms sim (5/5/7/6 ms across sim/github/confluence/jira), local-only and backend-independent",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh measures the local helper-capabilities round trip and emits this row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench sim.sh runs median3_step sim_cap (pipes 'capabilities' into git-remote-reposix, a local-only helper round trip) -> SIM_CAP_MS; emit-markdown.sh stamps the Helper capabilities cell via fmt_ms SIM_CAP_MS at table row 75",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:12Z",
+      "last_extracted": "2026-07-15T22:09:12Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5037,77 +5037,77 @@
     },
     {
       "id": "docs/benchmarks/latency/jira-list-under-400ms",
-      "claim": "List records: 332 ms (N=0) for JIRA backend",
+      "claim": "List records: 226 ms (N=0) for JIRA backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh emits the JIRA list-record row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh jira.sh sets JR_LIST_MS=median3_step jr_list and JR_N=jq .issues|length, emit-markdown.sh emits JR_LIST_CELL=fmt_ms_n $JR_LIST_MS $JR_N into the 'List records' jira column; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-list-under-500ms",
-      "claim": "List records: 451 ms (N=18) for GitHub backend",
+      "claim": "List records: 779 ms (N=75) for GitHub backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh emits the GitHub list-record row with N count",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh github.sh sets GH_LIST_MS=median3_step gh_list and GH_N=jq length, emit-markdown.sh emits GH_LIST_CELL=fmt_ms_n $GH_LIST_MS $GH_N into the 'List records' github column with N count; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-list-under-15ms",
-      "claim": "List records: 9 ms (N=6) for sim backend",
+      "claim": "List records: 7 ms (N=6) for sim backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh runs median-of-3 LIST against sim and emits the list-record row with N count",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench sim.sh runs median3_step curl on /projects/demo/issues -> SIM_LIST_MS and jq length -> SIM_N; emit-markdown.sh stamps the sim List cell via fmt_ms_n SIM_LIST_MS SIM_N at table row 72",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:04Z",
+      "last_extracted": "2026-07-15T22:09:04Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5831,52 +5831,52 @@
     },
     {
       "id": "docs/benchmarks/latency/sim-patch-under-20ms",
-      "claim": "PATCH record (no-op): 11 ms for sim backend",
+      "claim": "PATCH record (no-op): 10 ms for sim backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh runs sim_patch median-of-3 with version round-trip and emits the sim PATCH row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench sim.sh defines sim_patch (PATCH with expected_version read back from a prior GET) and runs median3_step sim_patch -> SIM_PATCH_MS; emit-markdown.sh stamps the sim PATCH cell via fmt_ms SIM_PATCH_MS at table row 74",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:09Z",
+      "last_extracted": "2026-07-15T22:09:09Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-patch-under-900ms",
-      "claim": "PATCH record (no-op): 828 ms for GitHub backend",
+      "claim": "PATCH record (no-op): 662 ms for GitHub backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh emits the GitHub PATCH row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh github.sh sets GH_PATCH_MS=median3_step gh_patch (no-op PATCH), emit-markdown.sh emits GH_PATCH_CELL=fmt_ms $GH_PATCH_MS into the 'PATCH record (no-op)' github column; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7225,102 +7225,102 @@
     },
     {
       "id": "docs/benchmarks/latency/jira-init-under-30ms",
-      "claim": "reposix init cold: 25 ms for JIRA backend",
+      "claim": "reposix init cold: 329 ms for JIRA backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh emits the JIRA-column cold-init cell when JIRA env bundle present",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh jira.sh times reposix init with T0=now_ms/T1=now_ms (JR_INIT_MS=$((T1-T0)), gated on JIRA_EMAIL+JIRA_API_TOKEN+REPOSIX_JIRA_INSTANCE) and emit-markdown.sh emits JR_INIT_CELL=fmt_ms $JR_INIT_MS into the 'reposix init cold' jira column; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-init-under-30ms",
-      "claim": "reposix init cold: 26 ms for GitHub backend",
+      "claim": "reposix init cold: 830 ms for GitHub backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh populates the GitHub-column cold-init cell (auto-detects GITHUB_TOKEN, median-of-3)",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh github.sh times reposix init with T0=now_ms/T1=now_ms (GH_INIT_MS=$((T1-T0)), gated on GITHUB_TOKEN) and emit-markdown.sh emits GH_INIT_CELL=fmt_ms $GH_INIT_MS into the 'reposix init cold' github column; still measures+emits this cell (soft threshold WARN not hard-assert)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-init-cold-under-30ms",
-      "claim": "reposix init cold: 27 ms for sim backend",
+      "claim": "reposix init cold: 278 ms for sim backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh measures reposix init cold against sim and emits the sim cold-init row -- IS the regenerator of latency.md",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench sim.sh times reposix init cold (T0/T1 around 'reposix init sim::demo' -> SIM_INIT_MS) and emit-markdown.sh stamps it into the sim reposix-init cell (fmt_ms SIM_INIT_MS at table row 71) -- the script IS the regenerator of latency.md",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:01Z",
+      "last_extracted": "2026-07-15T22:09:01Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/confluence-init-under-600ms",
-      "claim": "reposix init cold: 508 ms for Confluence backend",
+      "claim": "reposix init cold: 1136 ms for Confluence backend",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 34,
-        "line_end": 45
+        "line_start": 38,
+        "line_end": 44
       },
-      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hash": "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6",
       "source_hashes": [
-        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+        "8913921c6dab2e5de5566e2d1199bbf63c80d85af8eaab257113a21a19e8e3e6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh emits the Confluence-column cold-init cell when ATLASSIAN env bundle present",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh confluence.sh times reposix init with T0=now_ms/T1=now_ms (CF_INIT_MS=$((T1-T0)), gated on ATLASSIAN_API_KEY+ATLASSIAN_EMAIL+REPOSIX_CONFLUENCE_TENANT) and emit-markdown.sh emits CF_INIT_CELL=fmt_ms $CF_INIT_MS into the 'reposix init cold' confluence column; still measures+emits this cell",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:09:46Z",
+      "last_extracted": "2026-07-15T22:09:46Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8445,8 +8445,8 @@
       "claim": "Soft threshold: real-backend step < 3s (regression-flagged, not CI-blocking)",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 60,
-        "line_end": 65
+        "line_start": 119,
+        "line_end": 124
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
       "source_hashes": [
@@ -8456,13 +8456,13 @@
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh header documents the 3s real-backend WARN threshold (line 32)",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "Added warn_if_over_3s() shared helper in quality/gates/perf/latency-bench/lib.sh, called from github.sh (init/list/get/patch), jira.sh (init/list/get/patch), and confluence.sh (init/list/get/patch) — mirrors the sim.sh WARN pattern (lines 47-49) but at the 3000ms real-backend threshold; emits 'WARN: <backend> <step> <ms>ms > 3000ms threshold' on stderr, non-fatal.",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:17:45Z",
+      "last_extracted": "2026-07-15T22:17:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8470,24 +8470,24 @@
       "claim": "Soft threshold: sim cold init < 500ms (regression-flagged, not CI-blocking)",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 60,
-        "line_end": 65
+        "line_start": 119,
+        "line_end": 123
       },
-      "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
+      "source_hash": "d77d9afc77fda569d44a81c215f0ebf2c77440308eaa9e6cb742b4b24e9760d3",
       "source_hashes": [
-        "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825"
+        "d77d9afc77fda569d44a81c215f0ebf2c77440308eaa9e6cb742b4b24e9760d3"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "latency-bench.sh header lines 30-32 explicitly document and enforce this soft threshold via WARN",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "latency-bench.sh header line 34 documents the sim-cold-init < 500ms soft threshold and sources latency-bench/sim.sh (dispatcher line 103), which enforces it at sim.sh:48 -- [[ SIM_INIT_MS -gt 500 ]] && echo WARN: sim cold init <N>ms > 500ms threshold >&2 || true (non-fatal WARN on stderr, not exit). Documented AND enforced.",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-07-15T22:11:25Z",
+      "last_extracted": "2026-07-15T22:11:25Z",
       "last_extracted_by": "bind-call"
     },
     {
