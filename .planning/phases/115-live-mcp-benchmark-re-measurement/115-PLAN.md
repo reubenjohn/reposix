@@ -19,11 +19,14 @@ requirements: [BENCH-01]
 execution_mode: top-level    # fan-out → gather → interpret; the top-level coordinator IS the executor (NOT gsd-executor)
 
 user_setup:
-  - service: "Anthropic count_tokens (existing subscription)"
-    why: "One networked count_tokens run is needed to populate the .tokens.json sidecars for the two REPLACED fixtures; unchanged fixtures reuse their cached counts."
+  - service: "Session JSONL usage records (Claude Code) — PRIMARY token-economy source [AMENDED #10 2026-07-15]"
+    why: "T5 token-economy HEADLINE numbers derive from the captured Claude Code session JSONL usage records (parsed by the session-analyzer skill) — honest end-to-end session cost. NO ANTHROPIC_API_KEY, no networked count, first run included; reruns stay offline-on-CI from committed fixtures + counts. See the jsonl-usage-methodology amendment below + CONSULT-DECISIONS.md 2026-07-15 [SELF] P115-T5 token-economy methodology."
+    env_vars: []
+  - service: "Anthropic count_tokens — OPTIONAL later per-artifact enrichment ONLY [AMENDED #10]"
+    why: "NOT required for the T5 headline. count_tokens gives isolated per-artifact token cost — an optional later enrichment. The endpoint is free of charge; subscription OAuth could authenticate it if ever wired — NO pay-as-you-go key, no new API spend."
     env_vars:
       - name: ANTHROPIC_API_KEY
-        source: "existing project subscription — NO new pay-as-you-go key (locked constraint: no new API spend)"
+        source: "NOT required (JSONL-usage methodology). Only if optional count_tokens enrichment is later wired, then via existing-subscription auth — never a new pay-as-you-go key."
   - service: "Live MCP servers + sanctioned real backends"
     why: "Track B captures a real MCP transcript + a real reposix transcript against the 3 owner-sanctioned targets."
     env_vars:
@@ -150,11 +153,12 @@ Latency track (ZERO session budget):
     # REQUIRES reposix + reposix-sim on PATH: `cargo build -p reposix-cli -p reposix-sim`
     # (ONE cargo invocation machine-wide — never parallel).
 
-Token-economy track (session-budgeted):
-  ANTHROPIC_API_KEY=<existing> python3 quality/gates/perf/bench_token_economy.py
-    # Reads benchmarks/fixtures/{mcp_jira_catalog.json,reposix_session.txt,...},
-    # counts tokens via Anthropic count_tokens (get_or_count in bench_token_economy_io.py),
-    # caches SHA-256-keyed in *.tokens.json sidecars, regenerates docs/benchmarks/token-economy.md.
+Token-economy track — HEADLINE via JSONL usage [AMENDED #10]:
+  # T5 headline token numbers derive from captured Claude Code session JSONL usage records
+  # (session-analyzer skill) — NO ANTHROPIC_API_KEY, no networked count. See the
+  # jsonl-usage-methodology amendment above.
+  # OPTIONAL later per-artifact enrichment (free-of-charge endpoint, no pay-as-you-go key):
+  #   python3 quality/gates/perf/bench_token_economy.py   # count_tokens via get_or_count; SHA-keyed *.tokens.json cache
   python3 quality/gates/perf/bench_token_economy.py --offline
     # Cache-hit rerun; no network. Use to confirm the regenerated doc is cache-stable.
 
@@ -171,6 +175,33 @@ The 8 rows (115-RESEARCH.md § "The 8 Rows, Exhaustively") — 3 hero numbers:
   number for it but does NOT edit its prose (that is Phase 117/118).
 </interfaces>
 </context>
+
+<amendment id="jsonl-usage-methodology" date="2026-07-15" rotation="#10" self-ruling="CONSULT-DECISIONS.md 2026-07-15 [SELF] P115-T5 token-economy methodology">
+ADOPTED — JSONL-usage methodology (supersedes the count_tokens-first plan body below):
+
+- **Primary source shift.** T5 token-economy HEADLINE numbers derive from the captured
+  Claude Code **session JSONL usage records** (parsed by the `session-analyzer` skill), NOT
+  the Anthropic `count_tokens` endpoint. JSONL usage = honest END-TO-END session cost (the
+  headline); `count_tokens` = isolated PER-ARTIFACT cost, an OPTIONAL later enrichment only.
+- **ANTHROPIC_API_KEY requirement DROPPED — entirely, first run included.** JSONL usage is
+  read from the committed session records; no networked count is needed for the headline.
+  This removes the T4/T5 owner-block on providing an existing-subscription key.
+- **Reruns stay offline-on-CI** from committed fixtures + counts; the SHA-256-keyed
+  `*.tokens.json` sidecar caching is UNCHANGED.
+- **count_tokens is free of charge** and, if ever wired for optional per-artifact enrichment,
+  could authenticate via subscription OAuth — NEVER a new pay-as-you-go key, no new API spend.
+
+**Supersedes in the body below:** (1) the `user_setup` count_tokens/ANTHROPIC_API_KEY entry
+— now optional; (2) Task 1 execution-start gate item 3 (ANTHROPIC_API_KEY presence) — NO
+LONGER a gate; (3) the "Token-economy track" how-to-run `ANTHROPIC_API_KEY=<existing>`
+invocation; (4) Task 5 step 1's networked count_tokens run.
+
+**T5-executor reconciliations (post-reset):** `quality/gates/perf/bench_token_economy.py`
+today counts via `count_tokens` (`get_or_count` in `bench_token_economy_io.py`) — the T5
+executor adds a JSONL-usage path (via `session-analyzer`) as the HEADLINE source and demotes
+count_tokens to optional enrichment; the Task 5 `<automated>` check + the token-economy.md
+provenance/methodology note update accordingly. Catalog-first if a perf-row contract changes.
+</amendment>
 
 <tasks>
 
@@ -193,9 +224,10 @@ wastes tracking effort (H1 when H2 meant) or silently blows the ceiling (H2 when
   2. Live-MCP GA (A2, MEDIUM confidence, WebSearch-only): attempt the official Atlassian
      remote MCP server OAuth connect; if it stalls/fails, fall back to `sooperset/mcp-atlassian`
      (self-hosted, API-token, still a REAL MCP server). Record which server is used.
-  3. `ANTHROPIC_API_KEY` is present on the EXISTING subscription (research session had it
-     unset). If genuinely absent, the token track cannot re-cache the two replaced
-     fixtures — escalate rather than proceed blind.
+  3. ~~`ANTHROPIC_API_KEY` presence~~ — **SUPERSEDED by the jsonl-usage-methodology amendment
+     (#10): NO LONGER A GATE.** T5 headline token numbers derive from committed session JSONL
+     usage records (session-analyzer), needing no key. count_tokens is optional later
+     enrichment only; do not block Track B on a key.
   </context>
   <options>
     <option id="h1-per-conversation">
@@ -213,7 +245,7 @@ wastes tracking effort (H1 when H2 meant) or silently blows the ceiling (H2 when
   <verify>
     <automated>bash scripts/preflight-real-backends.sh; echo "exit=$?"</automated>
   </verify>
-  <done>MANAGER ruling on the session unit is recorded; preflight exits 0; the MCP server to use is chosen (official or fallback); ANTHROPIC_API_KEY presence confirmed. NO ledger rows and NO live-MCP session exist yet.</done>
+  <done>MANAGER ruling on the session unit is recorded; preflight exits 0; the MCP server to use is chosen (official or fallback). (ANTHROPIC_API_KEY presence is NO LONGER a gate — jsonl-usage-methodology amendment #10.) NO ledger rows and NO live-MCP session exist yet.</done>
 </task>
 
 <task type="auto">
@@ -324,10 +356,13 @@ transcripts for credential material (OAuth tokens / API keys) before committing.
   <action>
 Regenerate the results doc from the REPLACED fixtures — do NOT hand-edit the numbers.
 
-1. `ANTHROPIC_API_KEY=<existing> python3 quality/gates/perf/bench_token_economy.py`
-   (one networked run to populate the new `*.tokens.json` sidecars for the two replaced
-   fixtures; unchanged fixtures reuse their cache). If the key is genuinely absent
-   (Task-1 preflight), escalate — new fixtures need one networked count.
+1. **[AMENDED #10 — JSONL usage is the headline]** Produce the headline token numbers from
+   the captured Claude Code session JSONL usage records via the `session-analyzer` skill
+   (end-to-end session cost) — NO ANTHROPIC_API_KEY, no networked count. Wire this as a
+   `bench_token_economy.py` JSONL-usage path (headline source). OPTIONAL later per-artifact
+   enrichment: `python3 quality/gates/perf/bench_token_economy.py` populates the SHA-keyed
+   `*.tokens.json` sidecars via the free-of-charge count_tokens endpoint (no pay-as-you-go
+   key) — do NOT block on it.
 2. Confirm cache-stability: `python3 quality/gates/perf/bench_token_economy.py --offline`
    reproduces the SAME doc (no network).
 3. **Rewrite the "Fixture provenance" section** (token-economy.md ~L44-52) to name the

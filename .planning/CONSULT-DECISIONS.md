@@ -119,3 +119,33 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Downstream (flagged to manager, non-blocking):** the honest CI sim cold-init (~278ms) is ~10x the legacy 27ms hero claim, so un-waiving the latency-track doc-alignment rows (T6) requires CHANGING the doc CLAIMS to the CI figures, not merely re-verifying the old numbers. Overlaps v0.21 "benchmark honesty" scope; surfaced to the manager (w1:p7) for owner awareness. Honesty is non-negotiable, so the correction proceeds regardless.
 - **Reversibility:** Fully reversible — docs + this ledger entry only; no code/contract change. DELETE once T6 encodes the canonical-source methodology and the phase closes.
 - **Commit:** (this commit).
+
+## 2026-07-15 [SELF] P115-T5 token-economy methodology — JSONL session-usage records (session-analyzer), NOT the count_tokens endpoint; ANTHROPIC_API_KEY requirement DROPPED
+
+- **Context:** P115 Task 4/5 were owner-blocked (#34 handover §5) on an existing-subscription
+  `ANTHROPIC_API_KEY` for the count_tokens run the plan assumed was needed to populate the two
+  replaced fixtures' `*.tokens.json` sidecars. The manager's rotation #9→#10 refresh (commit
+  25bd6a3) adopted a JSONL-usage methodology that removes that assumption; this entry formalizes
+  the ruling in the ledger + as a 115-PLAN amendment.
+- **Decision:** T5 token-economy HEADLINE numbers derive from the captured Claude Code **session
+  JSONL usage records** (parsed by the `session-analyzer` skill), NOT the Anthropic `count_tokens`
+  endpoint. This removes the `ANTHROPIC_API_KEY` requirement ENTIRELY, first run included. Reruns
+  stay offline-on-CI from committed fixtures + counts; the SHA-256-keyed `*.tokens.json` sidecar
+  caching is unchanged. **Meaning shift:** JSONL usage = honest END-TO-END session cost (the
+  headline); `count_tokens` = isolated PER-ARTIFACT cost, an OPTIONAL later enrichment only — the
+  endpoint is free of charge, subscription OAuth could authenticate it if ever wired, and NO
+  pay-as-you-go key / no new API spend is ever introduced.
+- **Rationale:** JSONL usage is the truthful "what did this task actually cost end-to-end" number
+  a reader wants from a token-economy benchmark; count_tokens measures an artifact in isolation,
+  which under-counts real session cost. Deriving the headline from committed JSONL records also
+  unblocks T4/T5 with zero new-key/new-spend exposure — honoring the locked no-new-API-dollars
+  constraint by construction rather than by gating on an owner-provided key.
+- **Scope note:** A HOW-TO-MEASURE ruling within the delegated benchmark mandate — no
+  owner-ratified scope deleted, no spend incurred, fully within the [SELF] bar. Aligns with the
+  manager's rotation #10 adoption (commit 25bd6a3). T4 capture itself remains HARD-STOPPED until
+  the weekly subscription reset (2am PT 2026-07-16); this ruling governs T5's derivation, not T4's timing.
+- **Reversibility:** Fully reversible — 115-PLAN.md amendment + this ledger entry only; no code or
+  fixture change yet (the bench_token_economy.py JSONL-usage path is written when T5 executes
+  post-reset). Owner veto window via this ledger + the session handover.
+- **Commit:** (this commit). DELETE this entry once P115's T5 encodes the JSONL-usage methodology in
+  the regenerated token-economy.md + methodology note and the phase closes.
