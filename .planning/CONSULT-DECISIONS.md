@@ -93,6 +93,24 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Commit:** (this commit). DELETE this entry once P115's ledger/capture tasks encode
   the definition and the phase closes.
 
+## 2026-07-15 [SELF] P115-T6 headline framing — proceed with the honest CI-canonical reframe now; no owner pre-approval gate
+
+- **Context:** #32's T2 correction made CI `bench-latency-v09` the canonical latency
+  source; honest CI cold-init (~278ms) is ~10× the legacy 27ms hero claim. #32 raised
+  an E3-ish heads-up: "owner may want the headline reframed before T6."
+- **Decision:** T6 proceeds without waiting: headline latency claims lead with the
+  CI-canonical figure WITH provenance and environment context; faster dev-machine
+  times may be noted as such but never presented as THE number. Cherry-picked
+  best-case-as-headline is treated as a lying-doc defect.
+- **Rationale:** OD-4 owner intent already directs "honest headline numbers" — pausing
+  honesty to await approval inverts that intent. Not E3: no owner-ratified scope
+  deleted, no spend; presentation framing sits inside the manager's delegated UX
+  mandate. Overlap with v0.21 benchmark-honesty milestone noted; T6 does the honest
+  minimum now, v0.21 does the deep pass.
+- **Reversibility:** Doc edits only, fully reversible; owner veto window via this
+  ledger + manager handover.
+- **Commit:** (this commit). DELETE when T6 lands and P115 closes.
+
 ## 2026-07-15 [SELF] P115-T2 — canonical latency measurement environment = CI `bench-latency-v09`; sim cold-init is environment-dependent, not one fixed value
 
 - **Context:** P115-T2 re-measured sim latency to resolve the documented 24-vs-27ms cold-init discrepancy to "one authoritative figure." Re-measurement showed sim `init` is highly environment-dependent: 27ms (legacy dev machine), 42-45ms (this dev VM, warm, N=3), 155ms (dev VM cold/loaded first-run outlier — the mistaken figure in commit 9384ca6), 278ms (CI `bench-latency-v09`, ubuntu-24.04 hosted runner, commit 3278abc). No single stable number exists; "resolve to ONE figure" required a canonical-environment decision the plan did not anticipate.

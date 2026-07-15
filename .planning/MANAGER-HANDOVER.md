@@ -71,25 +71,28 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
 
-- **WORKHORSE #32 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #31
-  relieved cleanly at `804f5b0`): charter = ground-truth check (CI green on
-  `804f5b0` + manager commits) → open **P115 EXECUTION** top-level per
-  `.planning/SESSION-HANDOVER.md` (`804f5b0`, authoritative) + 115-PLAN.md (1
-  plan, 6 tasks, 5 waves). **A1 RULED by manager `[SELF]`** (ledger,
-  CONSULT-DECISIONS.md): one benchmark session = one live agentic
-  conversation/task run (NOT one metered API call); failed runs count; ballooning
-  session (>~5x median tokens) flagged; >50 → owner. T2 latency re-measure was
-  independent of A1 and can start immediately.
-- **#31 outcome: P115 planning DONE, CI-green (`8e1e970`, run 29451252463
-  success), NO context sink** — the anti-sink charter (delegate heavy reads to
-  reader-digester) broke the #27/#28 pattern; checker found 2 MEDIUM + 1 LOW, all
-  fixed pre-commit. #30 outcome: push-unblock DONE (`be6f1bf`), one API-error
-  incident recovered (lesson: an announced dispatch is not a landed artifact —
-  verify after any API-error banner). Watch items live in the session handover:
-  pre-push 91s/115s/84s vs ~60s budget (cold-cache theory holding, watch
-  warm-cache runs); flaky CI test job (re-run once on a single red); plan-refresh
-  reads persisted last_verdict (walk first); 115-PLAN.md at 29.4k chars rides the
-  file-size waiver (expires 2026-08-08).
+- **WORKHORSE #33 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #32
+  relieved cleanly at `eac08a1`, Wave-1 boundary): charter = push the unpushed
+  stack first (refresh-tail contingency: latency.md edits may have drifted
+  doc-alignment rows → `/reposix-quality-refresh docs/benchmarks/latency.md`,
+  the #30 playbook) → resume P115 per `.planning/SESSION-HANDOVER.md`
+  (`eac08a1`, 11-step runbook): T3 ledger scaffold → T4 ≤50-session capture wave
+  (A1 definition encoded) → T5 → T6 → phase-close push+verify → P116 packets.
+  **Two manager rulings live in CONSULT-DECISIONS.md:** A1 (session = one live
+  agentic conversation) + T6 headline framing (honest CI-canonical reframe
+  proceeds NOW, no owner gate; cherry-picked hero numbers = lying-doc defect).
+- **#32 outcome: P115 Wave 1 CLOSED** — T1 preflight 3/3 backends; T4 GA
+  de-risked (Rovo + GitHub remote MCP both GA → CONDITIONAL GO); T2 caught a
+  real finding: sim cold-init is environment-dependent (27ms legacy dev → 278ms
+  CI), ruled CI `bench-latency-v09` canonical `[SELF]`, latency.md corrected
+  with provenance, sim/bench expected_version PATCH defect filed. Honest CI
+  figure is ~10× the legacy hero claim → T6 reframe ruled (above). Carried into
+  T6: latency.md regeneration-clobber tension (local sim-only generator would
+  overwrite CI-canonical sections); un-waive-path scripts absent. Prior-session
+  watch items (pre-push timing, flaky CI job, plan-refresh walk-first, file-size
+  waiver 2026-08-08) live in the session handover. Weekly subscription limit was
+  75% at ~2:40pm PT 2026-07-15 (resets 2am PT) — cap-hit = forced pause =
+  PUSH-NOTIFY owner.
 - **#29 outcome (2026-07-15): Directive-2 CLOSED** — scratch-repo KEEP-policy
   landed in `docs/reference/testing-targets.md` (spot-verified: lines 173–193,
   never-delete / force-push-reset / unarchive-API) via gsd-quick 260715-h1d,
