@@ -602,8 +602,10 @@ Recorded by the manager; supersedes the "pending" status of the §5 questions be
   ~10% of the latent work; expect ~10 deep survey passes over the roadmap to reach
   convergence. Recurring deep surveys are a standing practice baked into milestone
   planning — not a one-time audit.
-- **Arc (§4): pending explicit owner confirm.** Owner asked what the arc choice
-  actually decides (order/emphasis — content converges by v0.25). Manager's proposed
-  recording: Arc D (ratchet-first) with the simplification mandate as a strengthened
-  bloat-purge component — each survey's findings become standing gates so pass N+1
-  never re-finds pass N's issues.
+- **Arc (§4): DECIDED — Arc D (ratchet-first), ratified by the manager under
+  explicit owner delegation ("Your call", 2026-07-14 live session).** Recording: Arc D
+  with the simplification mandate as a strengthened bloat-purge component, per-milestone
+  deep surveys (per the ~10-pass convergence calibration above), and the Q3 real-backend
+  launch gate at v0.25 — each survey's findings become standing gates so pass N+1 never
+  re-finds pass N's issues. This closes the last pending item of this audit; the
+  /gsd-new-milestone re-anchor folds this addendum into PROJECT.md.

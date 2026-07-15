@@ -156,8 +156,9 @@ does reposix work itself. Keep this file lean; git history is the archive.
   `.planning/milestones/audits/2026-07-12-reality-check.md` (owner chose that home).
   Headlines: real-backend launch gate; DELETE legacy files, no banners — docs/planning
   simplification is a first-class roadmap goal; keep ~6-milestone scale; one survey
-  pass ≈ 10% of latent work, ~10 passes to convergence. Arc D recording proposed,
-  owner confirm still pending.**
+  pass ≈ 10% of latent work, ~10 passes to convergence. **Arc D RATIFIED 2026-07-14
+  under explicit owner delegation ("Your call") — pipeline pause LIFTED; #21 launched
+  into STATE.md cursor refresh → /gsd-new-milestone re-anchor → v0.15 floor planning.**
 - **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
   `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
   manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
