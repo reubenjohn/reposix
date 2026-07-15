@@ -6,9 +6,18 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Role & standing owner instructions
 
-- **Outer loop**: monitor w1:p5 (`herdr agent wait w1:p5 --status idle --timeout
-  3600000`), inspect on wake (`herdr agent explain/read` — see the `/herdr-manager`
-  skill, incl. the ghost-text trap), nudge/answer/rotate. Never `agent send` blind.
+- **Outer loop — POLLING MODEL (owner directive 2026-07-15)**: never rely on
+  event-stream `Monitor` tasks or `herdr agent wait` for wakes — both proved
+  unreliable (wait fires on ghost-idle while subagents/shells still run; stream
+  events go quiet). Watch via `bash .planning/manager-poll.sh w1:p5 3300 "<handled
+  CI run ids>"` as a background Bash task — one-shot, polls every 60s, EXITS (a
+  task-completion wake is reliable) on the first of ORIGIN-MOVED / BLOCKED /
+  TRUE-IDLE (idle + no subagent line + no shells, ×3) / CI-RED, else HEARTBEAT at
+  ~55 min. **Every wait/poll is capped at ≤1h** — the manager is never asleep
+  longer than an hour. Re-arm on every wake. Script is local-only (git-excluded
+  like manager-rotate.sh); recreate from this contract if absent. On wake, inspect
+  (`herdr agent explain/read` — see `/herdr-manager` skill, incl. the ghost-text
+  trap) before acting. Never `agent send` blind.
 - **Ownership mandate**: the manager OWNS everything end-to-end — maintainability,
   code/architectural elegance, end-user experience. Heavy delegation and context-lean
   constraints stand, with one exception: at rare boundaries (only after very
@@ -58,6 +67,14 @@ does reposix work itself. Keep this file lean; git history is the archive.
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
 ## Live state (refresh at every rotation) — 2026-07-15, rotation #7→#8
+
+- **MANAGER #8 MID-SESSION UPDATE (2026-07-15):** Workhorse #26 LIVE in w1:p5 on
+  P114 execution (planning shipped by #25 at `fb38189`, CI green ×4; Wave 1/114-01
+  landed `47fa803`..`6f15138` — RED→GREEN render-parity fix, body-format on the
+  Confluence list path — CI green; opus phase-coordinator self-paused, its own CI
+  watcher opens Wave 2/114-02). #26 holds attached until P114 completes (correct —
+  coordinator notification routes to its session), then wraps + relieves to #27.
+  Watch model REPLACED per owner directive — see § Role (polling model, ≤1h cap).
 
 - **SUCCESSOR #8 FIRST ACTIONS:** (1) Owner may be active in-pane — greet briefly,
   continue seamlessly. (2) TaskStop monitor `bzbk2m1ds`, re-arm your own (script in
@@ -181,9 +198,10 @@ does reposix work itself. Keep this file lean; git history is the archive.
   DELETED. Item 7 = RESOLVED-DEFER (owner-waived CREATE-recovery RBF-LR-03 — flag
   VERBATIM in the READY-TO-TAG report); 8 OPEN intakes route v0.15.0, none
   tag-blocking (+ new rows from the diagnosis/fix lanes, all routed).
-- **Manager monitor:** task `bzbk2m1ds` (manager #7; 60s poll; ORIGIN-MOVED / BLOCKED /
-  IDLE-STABLE / one-shot STALL / CI-RED). Incoming manager: TaskStop it, re-arm your
-  own (script recoverable via TaskStop output or git history of this file).
+- **Manager watch:** `.planning/manager-poll.sh` one-shot poll task (see § Role —
+  polling model, ≤1h cap, owner directive 2026-07-15). Predecessor Monitor-style
+  tasks (`bzbk2m1ds` #7, `bcknhk6ln` #8-early) are STOPPED — do not revive the
+  event-stream pattern. Incoming manager: arm a fresh poll task on entry.
 - **Ops lessons (rotation #3):** commit the manager-handover refresh BEFORE launching
   a workhorse successor (committing after raced its first commit — harmless near-miss,
   different files). Relaying a ruling to a WORKING workhorse via queued `agent send`
