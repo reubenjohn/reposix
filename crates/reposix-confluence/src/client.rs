@@ -1073,11 +1073,24 @@ mod tests {
 
     // -------- 2: pagination via _links.next --------
 
+    /// Pagination follows `_links.next` to exhaustion — AND the FIX-01 defensive
+    /// re-append (the `next_url` closure above) re-attaches
+    /// `body-format=atlas_doc_format` to any followed cursor url that dropped it.
+    /// The page-1 `_links.next` here DELIBERATELY omits `body-format` (mirroring
+    /// Confluence's own cursor shape `?cursor=ABC&limit=100`), so the page-2 mock
+    /// GATES on `query_param("body-format", "atlas_doc_format")` with `.expect(1)`.
+    /// If the re-append ever regressed, the followed request would carry no
+    /// `body-format`, miss this mock (404 → `list` errors), and the test would
+    /// fail. This locks the >100-page cursor immunity the fix claims: the
+    /// empty-body render-drift that FIX-01 closed on page 1 must not reappear on
+    /// page 2+.
     #[tokio::test]
     async fn list_paginates_via_links_next() {
         let server = MockServer::start().await;
         mount_space_lookup(&server, "REPOSIX", "12345").await;
-        // Page 1: two results, _links.next as relative path
+        // Page 1: two results; the `_links.next` cursor DELIBERATELY drops
+        // `body-format`, forcing the FIX-01 defensive re-append to fire on the
+        // follow (the assertion that it did lives on the page-2 mock below).
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces/12345/pages"))
             .and(query_param("limit", "100"))
@@ -1093,16 +1106,21 @@ mod tests {
             .up_to_n_times(1)
             .mount(&server)
             .await;
-        // Page 2: one result, no next
+        // Page 2: one result, no next. GATED on `body-format=atlas_doc_format` to
+        // prove the cursor-follow request carries the re-appended param; the
+        // `.expect(1)` makes wiremock panic on server drop if the re-append path
+        // did not run (i.e. the followed request lacked `body-format`).
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces/12345/pages"))
             .and(query_param("cursor", "ABC"))
+            .and(query_param("body-format", "atlas_doc_format"))
             .respond_with(ResponseTemplate::new(200).set_body_json(json!({
                 "results": [
                     page_json("3", "current", "p3", None),
                 ],
                 "_links": {}
             })))
+            .expect(1)
             .mount(&server)
             .await;
 
