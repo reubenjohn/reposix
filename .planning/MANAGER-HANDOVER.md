@@ -9,11 +9,11 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **Outer loop — polling model (owner directive 2026-07-15)**: watch w1:p5 per the
   `/herdr-manager` skill § "Watching a pane over time" — one-shot background poll
   that EXITS on the first event, **every wait capped ≤1h**, re-arm on every wake;
-  never event-stream monitors or a long `herdr agent wait`. Concrete loop:
-  `bash .planning/manager-poll.sh w1:p5 3300 "<handled CI run ids>"` (local-only,
-  git-excluded like manager-rotate.sh; recreate from the skill contract). On wake,
-  inspect (`herdr agent explain/read`, ghost-text trap) before acting. Never
-  `agent send` blind.
+  never event-stream monitors or a long `herdr agent wait`. Concrete loop ships
+  WITH the skill: `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh
+  w1:p5 3300 "<handled CI run ids>" /home/reuben/workspace/reposix` (no local
+  copy — the skill's is canonical). On wake, inspect (`herdr agent explain/read`,
+  ghost-text trap) before acting. Never `agent send` blind.
 - **Ownership mandate**: the manager OWNS everything end-to-end — maintainability,
   code/architectural elegance, end-user experience. Heavy delegation and context-lean
   constraints stand, with one exception: at rare boundaries (only after very
