@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
-status: in_progress
-last_updated: "2026-07-15T19:22:11.000Z"
-last_activity: 2026-07-15
+status: executing
+last_updated: "2026-07-15T21:12:30.254Z"
+last_activity: 2026-07-15 -- Phase 115 planning complete
 progress:
-  total_phases: 15
+  total_phases: 21
   completed_phases: 1
-  total_plans: 2
+  total_plans: 3
   completed_plans: 2
-  percent: 7
+  percent: 5
 ---
 
 # Project State
@@ -23,13 +23,13 @@ phases complete** (P114–P128); P114 was the milestone's FIRST phase, 14 remain
 top-level`; hard deadline **2026-08-15**).
 Plan: 114-01 (FIX-01 list-vs-get render-parity) + 114-02 (FIX-02 `sync --reconcile`
 recovery-claim audit) — both SHIPPED GREEN.
-Status: **P114 phase-close GREEN.** SC1 (live TokenWorld `git checkout -B main
+Status: Ready to execute
 refs/reposix/origin/main`, incl. page 7766017 → zero `OidDrift`) + SC2
 (`agent-ux/t4-conflict-rebase-ancestry-real-backend` P0 gate exit 0) both PASS live
 (coordinator-run 2026-07-15T17:56Z, tenant `reuben-john` / space `REPOSIX`);
 artifact-verifiable SC3/SC4 + Wave-1/Wave-2 truths GREEN (`114-VERIFICATION.md`). Next:
 `/gsd-plan-phase 115`.
-Last activity: 2026-07-15 — Directive 2 CLOSED (ended a 5-rotation starvation): recorded the
+Last activity: 2026-07-15 -- Phase 115 planning complete
 `reposix-scope-test-DELETEME` scratch-repo KEEP-policy in `docs/reference/testing-targets.md`
 (never-delete / force-push-reset / unarchive-via-`gh api`-before-reuse; grounded on live
 `gh api` → `archived:true`) + eager-fixed a stale "Phase 36 cleanup automation" lying-doc

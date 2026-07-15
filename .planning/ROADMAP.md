@@ -64,7 +64,7 @@
 
 ### Phase index (P114–P128)
 
-- [ ] **Phase 114: t4 Confluence oid-drift fix-first + reconcile audit** - Confluence checkouts stop aborting on oid-drift; the `sync --reconcile` recovery claim is proven or corrected.
+- [x] **Phase 114: t4 Confluence oid-drift fix-first + reconcile audit** - Confluence checkouts stop aborting on oid-drift; the `sync --reconcile` recovery claim is proven or corrected. (completed 2026-07-15)
 - [ ] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
 - [ ] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling.
 - [ ] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent.
@@ -92,8 +92,8 @@
   3. The root-cause fix lands in either the Confluence adapter (render-parity between `list_records` and `get_record`) or `build_from`'s oid computation (use the get-representation it actually materializes from) — not a workaround.
   4. `builder.rs`/`cache.rs` doc comments accurately describe which oid-drift class `reposix sync --reconcile` actually recovers, verified against a reproduction rather than assumed.
 **Plans**: 2 plans (Wave 1: 114-01 · Wave 2: 114-02)
-- [ ] 114-01-PLAN.md — FIX-01: Confluence adapter render-parity — add `body-format=atlas_doc_format` to the `list_issues_impl` LIST url so list/get bodies decode identically; + a render-parity contract test
-- [ ] 114-02-PLAN.md — FIX-02: `sync --reconcile` recovery-claim audit — reproduction-backed `oid_drift_reconcile` mock test + scoped doc corrections in error.rs/sync.rs/main.rs (cache.rs cursor-drift doc confirmed accurate)
+- [x] 114-01-PLAN.md — FIX-01: Confluence adapter render-parity — add `body-format=atlas_doc_format` to the `list_issues_impl` LIST url so list/get bodies decode identically; + a render-parity contract test
+- [x] 114-02-PLAN.md — FIX-02: `sync --reconcile` recovery-claim audit — reproduction-backed `oid_drift_reconcile` mock test + scoped doc corrections in error.rs/sync.rs/main.rs (cache.rs cursor-drift doc confirmed accurate)
 
 ### Phase 115: Live MCP benchmark re-measurement
 **Goal**: Token-economy + latency benchmark figures backing the 8 hero-number doc-alignment-waived rows are re-measured against live conditions before the waiver-expiry deadline.
@@ -256,7 +256,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 114. t4 oid-drift fix-first + reconcile audit | 0/TBD | Not started | - |
+| 114. t4 oid-drift fix-first + reconcile audit | 2/2 | Complete   | 2026-07-15 |
 | 115. Live MCP benchmark re-measurement | 0/TBD | Not started | - |
 | 116. ADR-010 decision packet + slug→id design | 0/TBD | Not started | - |
 | 117. Doc-truth launch-blocker purge | 0/TBD | Not started | - |
