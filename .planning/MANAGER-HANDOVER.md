@@ -53,20 +53,34 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rotation #6→#7 the successor prompt never submitted at all (pane showed only a stray
    "a" — likely the pasted-block/Enter race) — owner had to bootstrap manually; verify
    the send actually submitted (agent read: input emptied + turn started) before the
-   outgoing manager's script exits.
+   outgoing manager's script exits. HARDENED 2026-07-15 (#7): the script now verifies
+   gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
+   send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refresh at every rotation) — 2026-07-15, rotation #7 LIVE (OWNER ACTIVE IN-PANE)
+## Live state (refresh at every rotation) — 2026-07-15, rotation #7→#8
 
-- **ROTATION #7 BOOTSTRAP NOTE (2026-07-15):** manager-rotate.sh's successor prompt
-  never submitted (pane received only a stray "a") — the owner bootstrapped #7 manually
-  by pointing it at this file. Fix-or-verify the script's send step before relying on
-  it for #7→#8 (see Known tooling bugs).
-- **#7 FIRST ACTIONS (status):** (1) Owner active in-pane — live. (2) DONE: `bjsloa9qo`
-  TaskStopped; manager-#7 monitor live as task `bzbk2m1ds` (same script, recovered from
-  TaskStop output). (3) Workhorse #22 LIVE in w1:p5 (charter: t4 creds-loaded
-  pre-release-real-backend cadence with manager GO + /gsd-new-milestone re-anchor →
-  v0.15 floor planning; scratch-repo-policy doc queued); at #7 wake it was mid-cadence
-  (gsd-executor on preflight-real-backends.sh), context ~8%, healthy.
+- **SUCCESSOR #8 FIRST ACTIONS:** (1) Owner may be active in-pane — greet briefly,
+  continue seamlessly. (2) TaskStop monitor `bzbk2m1ds`, re-arm your own (script in
+  TaskStop output / git history of this file). (3) **Workhorse #25 LIVE in w1:p5**
+  (launched 2026-07-15 over green main `d310a99`, gauge-reset + submission verified):
+  charter = v0.15.0 Floor PHASE EXECUTION, opening move `/gsd-plan-phase 114` (t4
+  Confluence oid-drift fix-first, `builder.rs:612` OidDrift); reminders embedded:
+  real-backend cadence needs .env sourced same-invocation + refresh-tokenworld-mirror.sh
+  pre-step; P116 ADR packets route to MANAGER. (4) Launch craft (proven ×3): verify
+  /clear reset AND send-submitted via agent read; arm one-shot bg CI watch on the new
+  head; launch only over green + stood-down predecessor. STALL alarms false-positive on
+  long subagent lanes — inspect before nudging (paid off twice tonight).
+- **v0.15.0 FLOOR RE-ANCHOR COMPLETE (#24, 2026-07-15, all CI green):** PROJECT.md +
+  STATE.md re-anchored (`825c449`, net −88 lines, simplification mandate); REQUIREMENTS
+  + ROADMAP minted (`bb12601`..`baa3583`): **15 phases P114–P128, 41/41 REQ-IDs
+  mapped**, supersedes the 4 pre-Arc-D stubs; stale v0.13.x H2 blocks stripped;
+  freshness historical-H2 gate GENERALIZED (flags any shipped-milestone block below
+  active version) + 131 test lines — regex blind spot CLOSED (fix-twice executed).
+  Schedule facts: **BENCH-01 at P115 (early)** inside the 2026-08-15 waiver deadline,
+  ≤50-session ceiling in-phase; **P116 = decision-only phase** co-locating ADR-01
+  (mirror-fanout packet) + FIX-03 (GTH-09 slug→id durable-create) — packets produced at
+  P116 execution, MANAGER rules on them (decide-and-disclose), no pre-ruling
+  implementation. #24 relief handover `d310a99`.
 - **ROTATIONS #22→#23→#24 (2026-07-15, all manager-verified):** #22 closed green (t4
   cadence outcome below + 6 intake rows `15e816d` + relief handover `7eb2d50`, CI
   green; protected pair live-verified intact post-destructive-run). #23 = de-risk
@@ -198,21 +212,7 @@ does reposix work itself. Keep this file lean; git history is the archive.
   confirm** → then /gsd-new-milestone re-anchor (fold audit ADDENDUM rulings +
   simplification mandate + per-milestone deep surveys) → v0.15 floor planning.
   Workhorse seat w1:p5 idle after #20's wrap; launch #21 only after arc confirm.
-  Historical queue detail (superseded): ⓪ DONE (ff7be56 — cursor de-staled, 4 new
-  noticings routed to v0.15.0 intake, CI green + post-push cadence PASS);
-  ① DONE (re-scoped then closed @ 6dc47a3, CI green): the original "v0.13.0 tag
-  sequence" was STALE — v0.13.0/v0.13.1 already tagged+released 07-07/07-08 (#17
-  caught it, manager corroborated). Landed instead: make_latest hardening (370310d —
-  release.yml computes highest published semver, passes --latest=true|false explicitly
-  on create+edit; hazard PROVEN by executed steal-demo, proof artifact committed) +
-  riders (Workstream-C de-stale, PROJECT.md truth banner; wholesale PROJECT.md
-  re-anchor stays deferred to /gsd-new-milestone); ② Q1c interim hero qualifiers
-  (README "Three measured numbers" + index.md:17 synthetic-baseline caveat);
-  ③ `.playwright-mcp/audit-03..08` droppings sweep; ④ `/gsd-cleanup` archival cascade;
-  ⑤ ORCHESTRATION.md >100% size split + RIDER (CORRECTED after #17's provenance
-  flag): trim CONSULT-DECISIONS.md per decision-procedures doctrine — DELETE closed
-  entries, git history IS the archive; do NOT create .planning/archive copies (the
-  manager's earlier "move to archive/" wording was wrong; ~54k vs 20k guideline).
+  (Item-by-item queue detail superseded — git history of this file, `61da012` era.)
 - **OWNER RULINGS (2026-07-14): Q3/Q4/Q5/Q7/Q8/Q9 DECIDED + a 10-survey calibration
   mandate — canonical record is the ADDENDUM in
   `.planning/milestones/audits/2026-07-12-reality-check.md` (owner chose that home).
