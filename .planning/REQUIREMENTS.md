@@ -52,6 +52,20 @@ mandate).
   actually clears the systematic list-vs-get drift class FIX-01 targets, or merely
   reproduces the same stale list-oid. If it does not recover, correct the doc comments to
   scope the claim to the eventual-consistency race it was originally written for.
+- [ ] **FIX-03** *(GOOD-TO-HAVES-09, owner-ratified v0.15.0 carry-forward from
+  v0.14.0-close, 2026-07-12)*: Produce the slug→id durable-create reconciliation DESIGN and
+  eliminate the interrupted-create duplicate hazard: a `create` against an id-assigning real
+  backend (GitHub Issues / JIRA / Confluence) cut off mid-push can, on retry, leave ONE
+  duplicate record — ADR-010's convergence contract ("already-landed writes diffed away
+  against recomputed base") holds for UPDATEs (stable ids) but is FALSE for CREATEs
+  (backend-assigned id unknown until the interrupted call completes); sim + client-id
+  backends are unaffected. Model a create as a durable slug→id translation — mint a stable
+  local slug before the push, model the create as "slug X → (pending) → backend id N" — so an
+  interrupted create leaves a well-defined resumable state instead of blindly re-creating.
+  **Note:** this design intersects ADR-010 (`docs/decisions/010-l2-l3-cache-coherence.md`)
+  and must be coordinated with the ADR-010 decision-packet lane (ADR-01 below) — the
+  owner/manager rules on ADR-010 depth, so the implementation extent within v0.15 is subject
+  to that ruling.
 
 ### Lane 2 — DOCS: doc-truth launch-blocker purge + planning simplification
 
@@ -95,6 +109,16 @@ mandate).
   (`v0.11.1-catalog.json`, `docs_reproducible_catalog.json`), loose MANAGER/SESSION-HANDOVER
   transients — full inventory at phase-plan time. **Excludes** the
   SURPRISES-INTAKE/GOOD-TO-HAVES progressive-disclosure bloat split (see Out of Scope).
+- [ ] **DOCS-09**: Correct the stale "cut two stalled tags (v0.13.0, v0.14.0)" premise in the
+  Arc D ADDENDUM (`.planning/milestones/audits/2026-07-12-reality-check.md` L336-339,
+  L409-411) — all three tags (v0.13.0, v0.13.1, v0.14.0) are ALREADY cut as git tags AND
+  public GitHub releases (v0.14.0 = Latest; verified via `git tag -l` + `gh release list`),
+  so the "archival-cascade-blocked-on-un-pushed-tags" premise is resolved. Requirement is
+  PROSE CORRECTION ONLY (update the ADDENDUM's stale sentences to reflect current state) +
+  verify the archival cascade actually ran: CONFIRMED — P78-94 archived under
+  `.planning/milestones/v0.13.0-phases/`, P102/105/106/110-113 archived under
+  `.../v0.14.0-phases/`, neither range remains in live `.planning/phases/`. Explicitly NOT a
+  literal tag cut — the tags already exist.
 
 ### Lane 3 — UX: user-facing error hardening to Rust-compiler-grade
 
@@ -127,11 +151,12 @@ mandate).
   tradeoffs (alongside `docs/decisions/010-l2-l3-cache-coherence.md`) for the owner/manager
   to RULE on. Does **NOT** require implementing the chosen option pre-ruling; the
   deliverable is the packet + a recorded owner ruling (`.planning/CONSULT-DECISIONS.md` or
-  equivalent).
+  equivalent). **Cross-ref:** FIX-03's slug→id durable-create design (GOOD-TO-HAVES-09) is a
+  second ADR-010-touching concern — co-locate in the same packet/ruling if sensible.
 
 ### Lane 6 — DRAIN: intake / good-to-have drain (OP-8)
 
-**SURPRISES-INTAKE (4 rows):**
+**SURPRISES-INTAKE (8 rows):**
 
 - [ ] **DRAIN-01** *(MED)*: Fix the t4 gate's misleading error — it misattributes
   oid-drift aborts to a git-version problem. `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`
@@ -150,6 +175,41 @@ mandate).
   to a worse status on a skip/false-negative run with no confirm gate — add an
   `--allow-downgrade` opt-in (default refuse) so a false-negative run cannot silently
   corrupt catalog state.
+- [ ] **DRAIN-22** *(MED)*: F-K4b container-class congruence tautology. Because
+  `quality/gates/docs-repro/container-rehearse.sh` now emits each `kind: container` row's
+  `expected.asserts` verbatim as `asserts_passed` on container exit 0, the per-expected-assert
+  congruence gate (`quality/runners/_audit_field.py::asserts_congruent`) is a TAUTOLOGY — a
+  no-op `exit 0` script would pass identically to a real one. Make container-row congruence
+  EARNED, not emitted: prefer per-step-earned emission mirroring
+  `quality/gates/docs-repro/tutorial-replay.sh` (each example script prints a
+  machine-parseable `ASSERT-PASS: <text>` line only after the step that establishes that
+  specific assert actually succeeds; harvest those instead of copying `expected.asserts`).
+  Also give example-05 a real runtime blob-limit-exceeded exercise (drive the actual
+  `BLOB_LIMIT_EXCEEDED_FMT` error + `git sparse-checkout` recovery cycle) rather than only the
+  pre-emptive sparse-checkout + source-constant stand-in it exercises today.
+- [ ] **DRAIN-23** *(MED)*: SIGKILL sim-leak / EXIT-trap orphan in
+  `quality/gates/docs-repro/container-rehearse.sh` — the harness backgrounds the ephemeral sim
+  and tears it down via a bash `EXIT` trap, which never fires when the runner's
+  `subprocess.run(timeout=...)` SIGKILLs the harness (reproduced in the b773c04 CI failure,
+  orphaned pid on host port 7878). Make sim teardown SIGKILL-proof: wrap `docker run` in an
+  internal `timeout` strictly shorter than the row's catalog `timeout_s` so the harness reaps
+  its own children before the outer SIGKILL fires, and/or start the sim in its own process
+  group (`setsid`/`set -m`) and kill the group on teardown; add a pre-`docker run`
+  port-7878-free readiness check so a stale orphaned sim is detected fail-loud instead of
+  silently reused.
+- [ ] **DRAIN-24** *(MED, verify)*: Confirm `target/debug/reposix`'s provenance on the
+  `quality-post-release.yml` runner that `container-rehearse.sh` needs host-mounted — trace
+  whether it reaches the runner via an explicit `cargo build -p reposix-cli` step, an
+  artifact download, or an unconfirmed implicit cache hit. If implicit, add an explicit build
+  or artifact-download step as a hard dependency of the container-rehearse job so `kind:
+  container` docs-repro rows are provenance-guaranteed on a cold runner rather than silently
+  degrading to NOT-VERIFIED; if an explicit step already exists, document it inline so the
+  question isn't re-opened.
+- [ ] **DRAIN-25** *(LOW)*: Fix six broken `**Plan:**` markdown links in
+  `.planning/milestones/v0.13.0-phases/ROADMAP.md` — P79 (L28), P80 (L39), P81 (L45), P82
+  (L51), P83 (L57), P84 (L63) each point at a nonexistent `NN-PLAN-OVERVIEW.md` FILE; repoint
+  to the real `NN-PLAN-OVERVIEW/` DIRECTORY form (`index.md` entry point), e.g.
+  `[80-PLAN-OVERVIEW](80-mirror-lag-refs/80-PLAN-OVERVIEW/index.md)`.
 
 **GOOD-TO-HAVES (17 of 18 rows; GTH-V15-19 is FIX-02 above):**
 
@@ -242,4 +302,4 @@ executed. The roadmapper fills REQ-ID → Phase → Status below.)*
 |--------|-------|--------|
 | *(pending roadmapper)* | | |
 
-**REQ-ID count:** 35 total — FIX (2), DOCS (8), UX (2), BENCH (1), ADR (1), DRAIN (21).
+**REQ-ID count:** 41 total — FIX (3), DOCS (9), UX (2), BENCH (1), ADR (1), DRAIN (25).
