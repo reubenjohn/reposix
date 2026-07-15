@@ -2,34 +2,48 @@
 gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
-status: planning
-last_updated: "2026-07-15T05:15:00.000Z"
+status: in_progress
+last_updated: "2026-07-15T18:10:00.000Z"
 last_activity: 2026-07-15
 progress:
   total_phases: 15
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 7
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Not started — ROADMAP.md scoped (15 phases, P114–P128); ready to plan Phase 114
-Plan: —
-Status: Roadmap drafted (gsd-roadmapper) — next: `/gsd-plan-phase 114`
-Last activity: 2026-07-15 — `/gsd-new-milestone` Step 10: `.planning/ROADMAP.md` +
-`.planning/REQUIREMENTS.md` traceability written for v0.15.0 Floor. 15 phases (P114–P128,
-continuing from v0.14.0's highest shipped phase P113), all 41 v0.15.0 REQ-IDs mapped
-(FIX/DOCS/UX/BENCH/ADR/DRAIN), 100% coverage, no orphans, no duplicates. Ordering: FIX-01
-(t4 oid-drift) first, BENCH-01 early (2026-08-15 hard waiver deadline, ≤50-session spend
-ceiling), ADR-010 decision packet (FIX-03+ADR-01) produces options only — no pre-ruling
-implementation, doc-truth purge → post-bench honesty corrections → docs/planning
-simplification (P112 RAISE) → UX Rust-compiler-grade hardening → 5 DRAIN-grouping phases
-→ P127/P128 OP-8 "+2 reservation" absorption slots. Phases 115 (BENCH-01), 116 (ADR-010
-packet), 119 (docs/planning simplification) marked `Execution mode: top-level`.
+Phase: **P114 CLOSED GREEN** — t4 Confluence oid-drift fix-first + reconcile audit. **1/15
+phases complete** (P114–P128); P114 was the milestone's FIRST phase, 14 remain. Next:
+`/gsd-plan-phase 115` (BENCH-01 live MCP benchmark re-measurement; `Execution mode:
+top-level`; hard deadline **2026-08-15**).
+Plan: 114-01 (FIX-01 list-vs-get render-parity) + 114-02 (FIX-02 `sync --reconcile`
+recovery-claim audit) — both SHIPPED GREEN.
+Status: **P114 phase-close GREEN.** SC1 (live TokenWorld `git checkout -B main
+refs/reposix/origin/main`, incl. page 7766017 → zero `OidDrift`) + SC2
+(`agent-ux/t4-conflict-rebase-ancestry-real-backend` P0 gate exit 0) both PASS live
+(coordinator-run 2026-07-15T17:56Z, tenant `reuben-john` / space `REPOSIX`);
+artifact-verifiable SC3/SC4 + Wave-1/Wave-2 truths GREEN (`114-VERIFICATION.md`). Next:
+`/gsd-plan-phase 115`.
+Last activity: 2026-07-15 — P114 phase-close: SC1/SC2 real-backend evidence committed,
+cursor advanced (0→1 of 15), SC1 false-GREEN command corrected in plan + verification
+(`git checkout -B main refs/reposix/origin/main` — the start-point ref materializes blobs so
+the OidDrift check actually runs), GOOD-TO-HAVES template reconciled + GTH-16 filed.
+
+> **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
+> `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
+> P113), 41 REQ-IDs (FIX/DOCS/UX/BENCH/ADR/DRAIN), 100% coverage, no orphans/duplicates.
+> Order: FIX-01 (t4 oid-drift) first → BENCH-01 early (2026-08-15 hard waiver deadline,
+> ≤50-session spend ceiling) → ADR-010 decision packet (FIX-03+ADR-01, options-only, no
+> pre-ruling implementation) → doc-truth purge → post-bench honesty corrections →
+> docs/planning simplification (P112 RAISE) → UX Rust-compiler-grade hardening → 5
+> DRAIN-grouping phases → P127/P128 OP-8 "+2 reservation" absorption slots. Phases 115
+> (BENCH-01), 116 (ADR-010 packet), 119 (docs/planning simplification) marked `Execution
+> mode: top-level`.
 
 ### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN — SHIPPED + Latest
 

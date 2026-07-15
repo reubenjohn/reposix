@@ -206,6 +206,31 @@ Sketch: update the walker's printed recovery hint string.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-16 — `leaf-guard-variable-cd-target-friction` — leaf-isolation guard fail-closes on a variable `cd` target; only a literal `/tmp/...` passes
+
+**Discovered during:** P114 phase-close (SC1 leaf-repro)
+
+**Size:** XS
+
+**Severity:** LOW — the guard is CORRECT to fail closed; the friction is discoverability, not a
+safety gap.
+
+**Source:** the leaf-isolation guard (`.claude/hooks/leaf-isolation-guard.sh`) fail-closes on a
+leaf-setup `cd` whose target is a shell VARIABLE (`cd "$REPRO"`) because it cannot canonicalize the
+value at hook time — only a LITERAL `/tmp/...` cd target is recognized as leaf-safe and passes. A
+leaf executor that factors its repro path into a variable (idiomatic bash) hits a surprise BLOCK on a
+command that is actually correct. Observed setting up the SC1 real-backend repro this phase.
+
+**Acceptance:** a leaf executor pointed at the SC1 (or any leaf-setup) repro guidance does not hit a
+surprise guard BLOCK on a correctly-isolated command. Sketch: add a one-line note to the SC1
+leaf-repro guidance recommending a LITERAL `/tmp/...` cd target (or document the guard's
+canonicalization requirement — variable cd targets fail closed by design) so executors inline the
+path rather than factor it into `$VAR`.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
@@ -214,6 +239,8 @@ Sketch: update the walker's printed recovery hint string.
 **Discovered during:** P<N>
 
 **Size:** XS|S|M (rough effort estimate)
+
+**Severity:** LOW|MED|HIGH (impact / urgency if left undone).
 
 **Source:** where this was noticed.
 
