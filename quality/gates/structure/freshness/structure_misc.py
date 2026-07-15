@@ -17,8 +17,48 @@ from pathlib import Path
 
 from ._shared import bash_check, make_artifact, write_artifact
 
-_HISTORICAL_HEADING_RE = re.compile(r"^## v0\.(?:8|9|10|11)\.[0-9]+", re.MULTILINE)
-_HISTORICAL_HEADING_WITH_SPACE_RE = re.compile(r"^## v0\.(?:8|9|10|11)\.[0-9]+ ", re.MULTILINE)
+_HISTORICAL_HEADING_VERSION_RE = re.compile(r"^## v(\d+)\.(\d+)\.(\d+)", re.MULTILINE)
+_HISTORICAL_HEADING_VERSION_WITH_SPACE_RE = re.compile(r"^## v(\d+)\.(\d+)\.(\d+) ", re.MULTILINE)
+_ACTIVE_MILESTONE_RE = re.compile(r"^milestone:\s*v(\d+)\.(\d+)\.(\d+)\s*$", re.MULTILINE)
+
+
+def _active_milestone_version(repo_root: Path) -> tuple[int, int, int] | None:
+    """Parse the active milestone version from `.planning/STATE.md` frontmatter.
+
+    Returns (major, minor, patch), or None if STATE.md is missing or its
+    `milestone:` line doesn't parse. Callers must fail closed (flag nothing)
+    on None rather than guess — a silent gate beats a false-positive block on
+    the active milestone's own H2 heading.
+    """
+    state_path = repo_root / ".planning" / "STATE.md"
+    try:
+        text = state_path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = _ACTIVE_MILESTONE_RE.search(text)
+    if not match:
+        return None
+    return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+
+
+def _historical_headings(
+    text: str, pattern: re.Pattern[str], active: tuple[int, int, int] | None
+) -> list[str]:
+    """Return H2 heading-start strings whose version is strictly below `active`.
+
+    Self-maintaining across milestones: no hardcoded version list to go stale
+    (the bug this replaces — a `v0.(8|9|10|11)` allowlist silently missed
+    every shipped/queued milestone from v0.12 onward). If `active` is None
+    (STATE.md unreadable/unparseable), returns [] — fail closed, never flag.
+    """
+    if active is None:
+        return []
+    out: list[str] = []
+    for m in pattern.finditer(text):
+        version = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        if version < active:
+            out.append(m.group(0).rstrip())
+    return out
 
 
 def verify_no_version_pinned_filenames(row: dict, repo_root: Path) -> int:
@@ -126,34 +166,47 @@ def verify_no_orphan_docs(row: dict, repo_root: Path) -> int:
 def verify_top_level_requirements_roadmap_scope(row: dict, repo_root: Path) -> int:
     asserts_passed: list[str] = []
     asserts_failed: list[str] = []
-    # Assert 1 — REQUIREMENTS.md has no historical H2 sections
-    req_path = repo_root / ".planning" / "REQUIREMENTS.md"
-    if not req_path.exists():
-        asserts_failed.append(f"missing: {req_path}")
+    active = _active_milestone_version(repo_root)
+    if active is None:
+        asserts_failed.append(
+            "could not determine active milestone version from "
+            ".planning/STATE.md frontmatter `milestone:` field — "
+            "historical-heading check skipped (fail closed, nothing flagged)"
+        )
     else:
-        req_text = req_path.read_text(encoding="utf-8")
-        historical_req = _HISTORICAL_HEADING_RE.findall(req_text)
-        if historical_req:
-            asserts_failed.append(
-                f".planning/REQUIREMENTS.md contains historical milestone sections: {historical_req}. "
-                f"Move them to .planning/milestones/v0.X.0-phases/REQUIREMENTS.md per CLAUDE.md §0.5."
-            )
+        active_str = ".".join(str(p) for p in active)
+        # Assert 1 — REQUIREMENTS.md has no historical H2 sections
+        req_path = repo_root / ".planning" / "REQUIREMENTS.md"
+        if not req_path.exists():
+            asserts_failed.append(f"missing: {req_path}")
         else:
-            asserts_passed.append(".planning/REQUIREMENTS.md scope is clean (no v0.8/9/10/11 H2 sections)")
-    # Assert 2 — ROADMAP.md has no historical milestone H2 sections
-    rm_path = repo_root / ".planning" / "ROADMAP.md"
-    if not rm_path.exists():
-        asserts_failed.append(f"missing: {rm_path}")
-    else:
-        rm_text = rm_path.read_text(encoding="utf-8")
-        historical_rm = _HISTORICAL_HEADING_WITH_SPACE_RE.findall(rm_text)
-        if historical_rm:
-            asserts_failed.append(
-                f".planning/ROADMAP.md contains historical milestone sections: {historical_rm}. "
-                f"Move them to .planning/milestones/v0.X.0-phases/ROADMAP.md per CLAUDE.md §0.5."
-            )
+            req_text = req_path.read_text(encoding="utf-8")
+            historical_req = _historical_headings(req_text, _HISTORICAL_HEADING_VERSION_RE, active)
+            if historical_req:
+                asserts_failed.append(
+                    f".planning/REQUIREMENTS.md contains historical milestone sections: {historical_req}. "
+                    f"Move them to .planning/milestones/v0.X.0-phases/REQUIREMENTS.md per CLAUDE.md §0.5."
+                )
+            else:
+                asserts_passed.append(
+                    f".planning/REQUIREMENTS.md scope is clean (no H2 section below active milestone v{active_str})"
+                )
+        # Assert 2 — ROADMAP.md has no historical milestone H2 sections
+        rm_path = repo_root / ".planning" / "ROADMAP.md"
+        if not rm_path.exists():
+            asserts_failed.append(f"missing: {rm_path}")
         else:
-            asserts_passed.append(".planning/ROADMAP.md scope is clean (no historical milestone H2 sections)")
+            rm_text = rm_path.read_text(encoding="utf-8")
+            historical_rm = _historical_headings(rm_text, _HISTORICAL_HEADING_VERSION_WITH_SPACE_RE, active)
+            if historical_rm:
+                asserts_failed.append(
+                    f".planning/ROADMAP.md contains historical milestone sections: {historical_rm}. "
+                    f"Move them to .planning/milestones/v0.X.0-phases/ROADMAP.md per CLAUDE.md §0.5."
+                )
+            else:
+                asserts_passed.append(
+                    f".planning/ROADMAP.md scope is clean (no H2 section below active milestone v{active_str})"
+                )
     asserts_passed.append("Historical milestones index paragraph is permitted in both files (informational only)")
     artifact = make_artifact(row, 1 if asserts_failed else 0, asserts_passed, asserts_failed)
     write_artifact(repo_root / row["artifact"], artifact)
