@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: planning
-last_updated: "2026-07-15T04:29:06.229Z"
+last_updated: "2026-07-15T05:15:00.000Z"
 last_activity: 2026-07-15
 progress:
-  total_phases: 0
+  total_phases: 15
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,10 +17,19 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started — ROADMAP.md scoped (15 phases, P114–P128); ready to plan Phase 114
 Plan: —
-Status: Defining requirements
-Last activity: 2026-07-15 — Milestone v0.15.0 started
+Status: Roadmap drafted (gsd-roadmapper) — next: `/gsd-plan-phase 114`
+Last activity: 2026-07-15 — `/gsd-new-milestone` Step 10: `.planning/ROADMAP.md` +
+`.planning/REQUIREMENTS.md` traceability written for v0.15.0 Floor. 15 phases (P114–P128,
+continuing from v0.14.0's highest shipped phase P113), all 41 v0.15.0 REQ-IDs mapped
+(FIX/DOCS/UX/BENCH/ADR/DRAIN), 100% coverage, no orphans, no duplicates. Ordering: FIX-01
+(t4 oid-drift) first, BENCH-01 early (2026-08-15 hard waiver deadline, ≤50-session spend
+ceiling), ADR-010 decision packet (FIX-03+ADR-01) produces options only — no pre-ruling
+implementation, doc-truth purge → post-bench honesty corrections → docs/planning
+simplification (P112 RAISE) → UX Rust-compiler-grade hardening → 5 DRAIN-grouping phases
+→ P127/P128 OP-8 "+2 reservation" absorption slots. Phases 115 (BENCH-01), 116 (ADR-010
+packet), 119 (docs/planning simplification) marked `Execution mode: top-level`.
 
 ### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN — SHIPPED + Latest
 
@@ -62,13 +71,17 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 ## Current Focus
 
-**Active milestones (SERIAL per OD-3 — A then C then B, per OD-4 resequencing):**
+**Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
+Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
+Next step: `/gsd-plan-phase 114` (t4 Confluence oid-drift fix-first + reconcile audit).
+
+**Serial workstream history (OD-3 — A then C then B, per OD-4 resequencing):**
 
 - **Workstream A — v0.13.0 extended.** **CLOSED GREEN 2026-07-05 (P78–P97, 20/20 phases).** Shipped P78–P88 2026-05-01; extended 2026-05-08 with P89–P97 (real-backend frictions); milestone-close verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`. Tag v0.13.0 landed; v0.13.1 onboarding hotfix (P98–P101) additionally SHIPPED 2026-07-07 (tag `04640d5`). ROADMAP at `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
-- **Workstream C — v0.14.0 wave-2 hardening.** **SHIPPED + Latest 2026-07-14** — **11/11 phases GREEN** (P102–P112 + out-of-band P113; see § Workstream C above). v0.14.0 tagged/released (crates.io 0.14.0, GitHub release "Latest"); b773c04 RED-main incident CLOSED (@ `8e2aae5`). P112 OD-4 launch-readiness scope stub LANDED (DO-NOT-START; it now feeds the wholesale re-anchor, which is ACTIVE — post-tag queue items 0–5 CLOSED green and Arc D RATIFIED at 6aa734a, so the `/gsd-new-milestone` re-anchor is underway, v0.15 floor milestone first). ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
-- **Workstream B — v0.13.2 cross-link-fidelity.** QUEUED behind workstream C (this OD-4 resequencing) AND the not-yet-scoped launch-readiness milestone. Original placeholder range P98–P107 shifts again when eventually replanned (renumber-on-insertion convention). ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
+- **Workstream C — v0.14.0 wave-2 hardening.** **SHIPPED + Latest 2026-07-14** — **11/11 phases GREEN** (P102–P112 + out-of-band P113; see § Workstream C above). v0.14.0 tagged/released (crates.io 0.14.0, GitHub release "Latest"); b773c04 RED-main incident CLOSED (@ `8e2aae5`). P112 OD-4 launch-readiness scope stub LANDED and now superseded by the v0.15.0 ROADMAP above. ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
+- **Workstream B — v0.13.2 cross-link-fidelity.** QUEUED behind workstream C AND the now-scoped v0.15.0 launch-readiness milestone. Original placeholder range P98–P107 shifts again when eventually replanned (renumber-on-insertion convention — collides with the now-shipped v0.13.1/v0.14.0 ranges). ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
 
-**Last shipped milestone:** v0.12.1 (closed 2026-04-30). Verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (commit 9ef348e).
+**Last shipped milestone:** v0.14.0 (SHIPPED + Latest 2026-07-14).
 
 **Cargo serialization rule (CLAUDE.md memory budget):** only ONE cargo invocation at a time. The separate-worktrees caveat is moot under OD-3 serial execution (single working branch: main); doc-only / planning-only subagents can still run truly concurrent with one cargo subagent.
 
@@ -94,7 +107,7 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**Workstream C — v0.14.0 SHIPPED + Latest 2026-07-14 (crates.io 0.14.0, GitHub 'Latest'); 11/11 phases GREEN (P102–P112 + out-of-band P113); b773c04 RED-main CLOSED @ 8e2aae5. No tag pending. Post-tag queue items 0-5 CLOSED green; Arc D RATIFIED at 6aa734a (pipeline pause LIFTED); wholesale re-anchor now ACTIVE via /gsd-new-milestone (v0.15 floor milestone first; P112 OD-4 launch-readiness stub feeds the Arc D ratchet-first sequence)**" (see § Workstream C). Workstream A (v0.13.0-extension) is CLOSED GREEN historically (P78–P97, tag landed); the owner pre-tag checklist below is retained for record. Workstream B (v0.13.2) stays queued behind workstream C per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor ROADMAP scoped 2026-07-15 (15 phases, P114–P128; gsd-roadmapper). 41/41 REQ-IDs mapped, 100% coverage. Next: `/gsd-plan-phase 114`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 

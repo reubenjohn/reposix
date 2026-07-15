@@ -1,7 +1,8 @@
 # Requirements — Active milestone: v0.15.0 Floor
 
-**Status:** PLANNING (Step 9 of `/gsd-new-milestone` re-anchor — requirements defined;
-phase decomposition is Step 10, not yet executed as of this commit). Arc D RATIFIED at
+**Status:** ROADMAPPED (Step 10 of `/gsd-new-milestone` re-anchor complete 2026-07-15 —
+phase decomposition done; all 41 REQ-IDs mapped to Phases 114–128 in `.planning/ROADMAP.md`,
+100% coverage, no orphans, no duplicates). Arc D RATIFIED at
 `6aa734a` (ADDENDUM: `.planning/milestones/audits/2026-07-12-reality-check.md`).
 
 **Milestone goal:** Establish the launch-readiness floor — fix the t4 Confluence
@@ -14,7 +15,7 @@ gaps before the journey-slice milestones (v0.23+).
 lanes); `.planning/milestones/v0.15.0-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES,ROADMAP}.md`
 (row-level detail this file routes); `.planning/milestones/audits/2026-07-12-reality-check.md`
 (Arc D authority — LAUNCH-BLOCKER inventory, disputed-metric findings, Q5/Q7 simplification
-mandate).
+mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 
 **Shipped milestones — full REQ-ID detail in per-milestone files:**
 - v0.14.0 Wave-2 hardening — `.planning/milestones/v0.14.0-phases/REQUIREMENTS.md` (SHIPPED, Phases P102–P113).
@@ -295,11 +296,57 @@ interleaved draining surprises/good-to-haves as they surface.
 
 ## Traceability
 
-*(Empty — phase decomposition is Step 10 of this `/gsd-new-milestone` run, not yet
-executed. The roadmapper fills REQ-ID → Phase → Status below.)*
+**Coverage: 41/41 REQ-IDs mapped to Phases 114–128, no orphans, no duplicates** (roadmapped
+2026-07-15 — see `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)" for full phase detail,
+goals, and success criteria).
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| *(pending roadmapper)* | | |
+| FIX-01 | Phase 114 | Pending |
+| FIX-02 | Phase 114 | Pending |
+| FIX-03 | Phase 116 | Pending |
+| DOCS-01 | Phase 117 | Pending |
+| DOCS-02 | Phase 117 | Pending |
+| DOCS-03 | Phase 117 | Pending |
+| DOCS-04 | Phase 117 | Pending |
+| DOCS-05 | Phase 117 | Pending |
+| DOCS-06 | Phase 117 | Pending |
+| DOCS-07 | Phase 118 | Pending |
+| DOCS-08 | Phase 119 | Pending |
+| DOCS-09 | Phase 118 | Pending |
+| UX-01 | Phase 120 | Pending |
+| UX-02 | Phase 121 | Pending |
+| BENCH-01 | Phase 115 | Pending |
+| ADR-01 | Phase 116 | Pending |
+| DRAIN-01 | Phase 123 | Pending |
+| DRAIN-02 | Phase 125 | Pending |
+| DRAIN-03 | Phase 123 | Pending |
+| DRAIN-04 | Phase 123 | Pending |
+| DRAIN-05 | Phase 123 | Pending |
+| DRAIN-06 | Phase 123 | Pending |
+| DRAIN-07 | Phase 122 | Pending |
+| DRAIN-08 | Phase 122 | Pending |
+| DRAIN-09 | Phase 122 | Pending |
+| DRAIN-10 | Phase 123 | Pending |
+| DRAIN-11 | Phase 119 | Pending |
+| DRAIN-12 | Phase 125 | Pending |
+| DRAIN-13 | Phase 124 | Pending |
+| DRAIN-14 | Phase 124 | Pending |
+| DRAIN-15 | Phase 126 | Pending |
+| DRAIN-16 | Phase 126 | Pending |
+| DRAIN-17 | Phase 126 | Pending |
+| DRAIN-18 | Phase 126 | Pending |
+| DRAIN-19 | Phase 126 | Pending |
+| DRAIN-20 | Phase 126 | Pending |
+| DRAIN-21 | Phase 126 | Pending |
+| DRAIN-22 | Phase 124 | Pending |
+| DRAIN-23 | Phase 124 | Pending |
+| DRAIN-24 | Phase 124 | Pending |
+| DRAIN-25 | Phase 119 | Pending |
+
+**Reserved OP-8 absorption slots (no REQ-ID; drain NEW intake surfaced during P114–P126's
+own execution, not the DRAIN-01..25 rows above which are already routed):** Phase 127
+(Surprises absorption, OP-8 Slot 1), Phase 128 (Good-to-haves polish + milestone close,
+OP-9 Slot 2).
 
 **REQ-ID count:** 41 total — FIX (3), DOCS (9), UX (2), BENCH (1), ADR (1), DRAIN (25).
