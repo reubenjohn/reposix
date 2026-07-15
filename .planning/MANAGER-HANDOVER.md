@@ -69,7 +69,22 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refresh at every rotation) — 2026-07-15, rotation #7→#8
+## Live state (refresh at every rotation) — 2026-07-15, rotation #8→#9
+
+- **SUCCESSOR #9 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (§ Role; #8 stopped
+  all its one-shots — nothing is watching until you arm). (2) **Workhorse #29 LIVE
+  in w1:p5** (launched 2026-07-15 over green `71e904f`, submission verified after a
+  pasted-block second-Enter): charter = Directive-2 warm-up FIRST (scratch-repo
+  KEEP-policy doc — starved 5 rotations, made mandatory) → `/gsd-plan-phase 115`
+  (BENCH-01 locked constraints verbatim) with the anti-sink meta-lesson (NEVER read
+  plan-phase.md linearly — delegate reads to reader-digester; workflow subagents
+  hold heavy context; a third sink casualty ⇒ demand the GOOD-TO-HAVES
+  progressive-disclosure row on the workflow file) → then P116 ADR-010 packet
+  (routes to MANAGER for ruling) + roadmap-diagram gsd-quick (todo file, 5 points).
+  (3) #28 relieved at `26ca703` WITHOUT starting P115 — second context-sink
+  casualty; watch #29 for the same shape. (4) Rotation craft: pane-clear.sh --yes
+  (never bare /clear), then verify gauge reset AND turn-started; pasted-block
+  charters need a second Enter (~2s later).
 
 - **MANAGER #8 SESSION (2026-07-15): P114 CLOSED GREEN.** Both fixes shipped and
   real-backend SC1/SC2 acceptance GREEN on live Confluence (`dc26302`, CI 4/4;
@@ -77,8 +92,10 @@ does reposix work itself. Keep this file lean; git history is the archive.
   docs corrected) — closes the t4 Confluence oid-drift defect (`builder.rs:612`
   OidDrift, owner ruling `b773c04` fix-first). Workhorses #25 (planned) → #26
   (Wave 1 + liveness incident) → #27 (Wave 2 + close) each relieved cleanly;
-  #27→#28 handover `29470e2`; #28 opens P115 planning (BENCH-01, ≤50 sessions,
-  waiver deadline 2026-08-15). Owner-approved roadmap-diagram lane captured at
+  #27→#28 handover `29470e2`; #28 filed intakes (GTH-V15-21 file-size-waiver
+  expiry 2026-08-08) but relieved at `26ca703` with P115 UNSTARTED (plan-phase.md
+  ~32k context sink — meta-lesson minted); #29 carries P115 (BENCH-01, ≤50
+  sessions, waiver deadline 2026-08-15) with the anti-sink charter. Owner-approved roadmap-diagram lane captured at
   `e039bb7` (docs/roadmap.md + PROJECT.md bidirectional SYNC-comment cross-links +
   link-resolution glob extension). **Liveness doctrine minted after a dead-watcher
   stall (~2h idle):** bound every wait on a dispatched child; health-check
