@@ -71,16 +71,22 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
 
-- **WORKHORSE #33 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #32
-  relieved cleanly at `eac08a1`, Wave-1 boundary): charter = push the unpushed
-  stack first (refresh-tail contingency: latency.md edits may have drifted
-  doc-alignment rows → `/reposix-quality-refresh docs/benchmarks/latency.md`,
-  the #30 playbook) → resume P115 per `.planning/SESSION-HANDOVER.md`
-  (`eac08a1`, 11-step runbook): T3 ledger scaffold → T4 ≤50-session capture wave
-  (A1 definition encoded) → T5 → T6 → phase-close push+verify → P116 packets.
+- **WORKHORSE #34 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #33
+  relieved cleanly at `9935ae7`, ~143k): CI on `92c3ab5` already
+  manager-verified GREEN (run 29455190072 success) — #34 opens T3 directly per
+  `.planning/SESSION-HANDOVER.md` (`9935ae7`): T3 ledger scaffold (schema digest
+  banked: 8 columns, A1 in header) → T4 ≤50-session capture wave → T5 → T6
+  (honest reframe; latency.md WILL re-drift → second refresh before phase-close
+  push) → phase-close push+verify → P116 packets routed to manager.
   **Two manager rulings live in CONSULT-DECISIONS.md:** A1 (session = one live
   agentic conversation) + T6 headline framing (honest CI-canonical reframe
   proceeds NOW, no owner gate; cherry-picked hero numbers = lying-doc defect).
+- **#33 outcome: STALE_DOCS_DRIFT cleared, pushed `92c3ab5`** — 14 drifted rows
+  from the CI-canonical latency rewrite; 13 rebound GREEN (3 Opus graders
+  batched by claim family — deliberate ROI call under the weekly-limit warning);
+  1 was a REAL lying-doc defect (real-backend 3s WARN documented but
+  unenforced) eager-fixed via `warn_if_over_3s()` in latency-bench lib.sh +
+  wired into github/jira/confluence (manager spot-verified all 4 files).
 - **#32 outcome: P115 Wave 1 CLOSED** — T1 preflight 3/3 backends; T4 GA
   de-risked (Rovo + GitHub remote MCP both GA → CONDITIONAL GO); T2 caught a
   real finding: sim cold-init is environment-dependent (27ms legacy dev → 278ms
