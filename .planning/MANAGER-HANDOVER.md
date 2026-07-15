@@ -69,24 +69,48 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
+## Live state (refresh at every rotation) — 2026-07-15, rotation #9→#10
 
-- **WORKHORSE #34 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #33
-  relieved cleanly at `9935ae7`, ~143k): CI on `92c3ab5` already
-  manager-verified GREEN (run 29455190072 success) — #34 opens T3 directly per
-  `.planning/SESSION-HANDOVER.md` (`9935ae7`): T3 ledger scaffold (schema digest
-  banked: 8 columns, A1 in header) → T4 ≤50-session capture wave → T5 → T6
-  (honest reframe; latency.md WILL re-drift → second refresh before phase-close
-  push) → phase-close push+verify → P116 packets routed to manager.
-  **Two manager rulings live in CONSULT-DECISIONS.md:** A1 (session = one live
-  agentic conversation) + T6 headline framing (honest CI-canonical reframe
-  proceeds NOW, no owner gate; cherry-picked hero numbers = lying-doc defect).
-- **#33 outcome: STALE_DOCS_DRIFT cleared, pushed `92c3ab5`** — 14 drifted rows
-  from the CI-canonical latency rewrite; 13 rebound GREEN (3 Opus graders
-  batched by claim family — deliberate ROI call under the weekly-limit warning);
-  1 was a REAL lying-doc defect (real-backend 3s WARN documented but
-  unenforced) eager-fixed via `warn_if_over_3s()` in latency-bench lib.sh +
-  wired into github/jira/confluence (manager spot-verified all 4 files).
+- **SUCCESSOR #10 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (§ Role — #9's
+  one-shots are all consumed; nothing is watching). (2) **Workhorse seat
+  IDLE-CLEAN** — #34 closed its rotation (T3 session-spend ledger DONE
+  `4351d48`; relief handover `ade5e50` pushed; CI run 29456631954 SUCCESS; no
+  background work left). LAUNCH #35: `pane-clear.sh w1:p5 --yes`, then charter =
+  read `.planning/SESSION-HANDOVER.md` (`ade5e50`, authoritative) → ground-truth
+  check → the owner-approved roadmap-diagram gsd-quick (todo file, 5 points,
+  zero spend) → encode the T5 methodology ruling below as a plan amendment +
+  ledger entry → STOP at the T4 capture gate per the deferral directive.
+  Standard rules (own-context ~100k/150k, liveness bounds, reader-digester
+  delegation, one cargo machine-wide). (3) Craft lesson from #9's early
+  rotation: loading the claude-api skill costs ~300k manager context — delegate
+  API-mechanics questions to a subagent; never load it at manager tier.
+- **T4→T6 unblock state (owner engaged 2026-07-15 evening):** #34 declared
+  OWNER-BLOCKED on ANTHROPIC_API_KEY + Atlassian MCP setup. Manager
+  investigation REFINED this: (a) the key was ONLY for the free `count_tokens`
+  endpoint (T5 sidecar minting — 115-PLAN.md:22-26,327-330); the ≤18 live
+  sessions themselves run as Claude Code on the existing subscription, no key.
+  Machine has NO anthropic cred (no ant CLI, no ANTHROPIC_* in env or .env —
+  verified). (b) **OWNER PROPOSED, manager confirmed feasible and ADOPTED
+  (decide-and-disclose, disclosed live to owner):** derive the token-economy
+  numbers from the captured Claude Code session JSONL usage records
+  (session-analyzer skill parses that format) instead of calling count_tokens —
+  removes the Anthropic-API-auth requirement ENTIRELY, first run included;
+  future reruns stay offline-on-CI from committed fixtures + counts (which was
+  already the plan's rerun design — sidecars are SHA-keyed and cached). Meaning
+  shift disclosed: JSONL usage = honest end-to-end session cost (headline);
+  count_tokens = isolated per-artifact cost (optional later enrichment — the
+  endpoint is free of charge, and subscription OAuth via `ant auth login` +
+  Bearer token can authenticate it if ever wanted; no pay-as-you-go key).
+  #35 must encode this as a T5 plan amendment + `[SELF]` ledger entry.
+  Remaining genuinely owner-gated: the Atlassian MCP connection for T4's MCP
+  arm (Rovo MCP: OAuth 2.1 or API token — the existing ATLASSIAN_API_KEY may
+  suffice; #34's noted "API-token-endpoint blocker" needs verification first).
+- **T4 capture deferral (manager directive):** the ≤18 capture sessions ride
+  the same weekly subscription limit (~77% used, resets 2am PT 2026-07-16); do
+  NOT start captures before the reset. Rulings A1 + T6-framing live in
+  CONSULT-DECISIONS.md. Watch items (pre-push 84–115s trend, latency.md
+  regen-clobber, second latency.md refresh before the T6 push) live in the
+  session handover.
 - **#32 outcome: P115 Wave 1 CLOSED** — T1 preflight 3/3 backends; T4 GA
   de-risked (Rovo + GitHub remote MCP both GA → CONDITIONAL GO); T2 caught a
   real finding: sim cold-init is environment-dependent (27ms legacy dev → 278ms
