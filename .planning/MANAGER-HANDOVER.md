@@ -67,6 +67,23 @@ does reposix work itself. Keep this file lean; git history is the archive.
   pre-release-real-backend cadence with manager GO + /gsd-new-milestone re-anchor →
   v0.15 floor planning; scratch-repo-policy doc queued); at #7 wake it was mid-cadence
   (gsd-executor on preflight-real-backends.sh), context ~8%, healthy.
+- **ROTATIONS #22→#23→#24 (2026-07-15, all manager-verified):** #22 closed green (t4
+  cadence outcome below + 6 intake rows `15e816d` + relief handover `7eb2d50`, CI
+  green; protected pair live-verified intact post-destructive-run). #23 = de-risk
+  rotation, NO mutations BY DESIGN: converted blind /gsd-new-milestone into a
+  runbooked GO (phases.clear safe no-op; root-ROADMAP write correct per precedent
+  beed160/7bfca56; supersede-don't-clobber the 4 pre-Arc-D v0.15 stubs; tag-cut
+  launch-blocker #7 obsolete — prose correction only); KEY NOTICING
+  (manager-verified at `quality/gates/structure/freshness/structure_misc.py:20-21`):
+  historical-H2 freshness regex matches ONLY v0.8–v0.11 — blind ≥v0.12, so stale
+  v0.13.x H2 blocks in root ROADMAP need manual strip + regex eager-fix (charged to
+  #24). #23 relief handover `c1f4f21`, CI green. **#24 LIVE** (launched over green
+  main, gauge-reset verified, charter = SESSION-HANDOVER GO + 3 manager amendments:
+  mutate immediately, zero further prep rotations / regex eager-fix-or-file /
+  ADR-010 packet routes to MANAGER for ruling, not decided at L0). Launch craft:
+  verify /clear reset AND send-submitted via agent read EVERY rotation (the #6→#7
+  failure shape); arm a one-shot bg CI watch on the new head and launch only over
+  green.
 - **t4 REAL-BACKEND CADENCE COMPLETE (#22 wrap, 2026-07-15): env-gap FIXED** (source
   .env in the SAME invocation as run.py — all 6 rows EXECUTE for real, 0 NOT-VERIFIED,
   0 silent skips); verdict 4 PASS / 2 P0 FAIL, exit 1. **t4 CONVERTS from env-caveat to
