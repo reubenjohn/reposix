@@ -3,11 +3,10 @@
 > **Active milestone: v0.15.0 "Floor"** (roadmap scoped 2026-07-15 via `/gsd-new-milestone`
 > → gsd-roadmapper) — Phases **P114–P128** (15 phases), continuing numbering from v0.14.0's
 > highest shipped phase (P113). Full detail: § "v0.15.0 Floor (PLANNING)" below +
-> `.planning/REQUIREMENTS.md`. The v0.13.0 / v0.13.2 sections further down in this file
-> predate this re-anchor and are stale (v0.13.0 SHIPPED 2026-07-07, v0.13.1 hotfix SHIPPED
-> 2026-07-08, v0.14.0 SHIPPED + Latest 2026-07-14, v0.13.2 QUEUED not shipped — see
-> `.planning/MILESTONES.md` for ground truth). A separate cleanup pass retires them; do not
-> treat them as current.
+> `.planning/REQUIREMENTS.md`. The stale v0.13.0 (SHIPPED 2026-07-07) and v0.13.2 (QUEUED,
+> not shipped) planning H2 blocks that used to sit further down in this file were retired
+> in the 2026-07-14 cleanup pass — git history is the archive; see § "Milestones" and
+> § "Previously planned milestones" below, plus `.planning/MILESTONES.md`, for ground truth.
 
 ## Milestones
 
@@ -270,71 +269,6 @@
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
 | 127. Surprises absorption (OP-8 Slot 1) | 0/TBD | Not started | - |
 | 128. Good-to-haves polish + milestone close (OP-9 Slot 2) | 0/TBD | Not started | - |
-
-## v0.13.0 DVCS over REST (PLANNING)
-
-> **Status:** scoped 2026-04-30. The full milestone roadmap (thesis, mental model, recurring success criteria, and per-phase detail for P78–P88) lives at `.planning/milestones/v0.13.0-phases/ROADMAP.md`. The index below is a navigable summary; click each phase for its `*-PLAN-OVERVIEW.md` (where it exists) or read the milestone roadmap for full per-phase scope, success criteria, and context anchors.
->
-> **Source-of-truth handover bundle:** `.planning/research/v0.13.0-dvcs/{vision-and-mental-model,architecture-sketch,kickoff-recommendations,decisions}.md` + `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` + `.planning/research/v0.14.0-observability-and-multi-repo/vision-and-mental-model.md` (so v0.13.0 knows what NOT to absorb).
->
-> **Recurring per-phase success criteria** (catalog-first, CLAUDE.md-in-same-PR, per-phase push, unbiased verifier subagent, eager-resolution preference, simulator-first, tainted-by-default, dual-table audit) — see milestone ROADMAP.md § "Recurring success criteria for EVERY phase (P78–P88)".
-
-### Phase index (P78–P88, original v0.13.0)
-
-- **P78** Pre-DVCS hygiene — gix bump, WAIVED-row verifiers, multi-source walker · [78-PLAN-OVERVIEW](milestones/v0.13.0-phases/78-pre-dvcs-hygiene/78-PLAN-OVERVIEW.md)
-- **P79** POC + `reposix attach` core · [79-PLAN-OVERVIEW](milestones/v0.13.0-phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md)
-- **P80** Mirror-lag refs (`refs/mirrors/<sot>-head`, `<sot>-synced-at`) · [80-PLAN-OVERVIEW](phases/80-mirror-lag-refs/) (TBD)
-- **P81** L1 perf migration — `list_changed_since`-based conflict detection · [81-PLAN-OVERVIEW](phases/81-l1-perf-migration/) (TBD)
-- **P82** Bus remote — URL parser, prechecks, fetch dispatch · [82-PLAN-OVERVIEW](phases/82-bus-remote-url-parser/) (TBD)
-- **P83** Bus remote — write fan-out (SoT-first, mirror-best-effort, fault injection) · [83-PLAN-OVERVIEW](milestones/v0.13.0-phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md)
-- **P84** Webhook-driven mirror sync — GH Action workflow + setup guide · [84-PLAN-OVERVIEW](phases/84-webhook-mirror-sync/) (TBD)
-- **P85** DVCS docs — topology, mirror setup, troubleshooting, cold-reader pass · [85-PLAN-OVERVIEW](phases/85-dvcs-docs/) (TBD)
-- **P86** Dark-factory regression — third arm (vanilla-clone + attach + bus-push) · [86-PLAN-OVERVIEW](phases/86-dark-factory-third-arm/) (TBD)
-- **P87** Surprises absorption (+2 reservation slot 1) · [87-PLAN-OVERVIEW](phases/87-surprises-absorption/) (TBD)
-- **P88** Good-to-haves polish (+2 reservation slot 2) — milestone close · [88-PLAN-OVERVIEW](phases/88-good-to-haves-polish/) (TBD)
-
-### Phase index (P89–P97, v0.13.0 extension — added 2026-05-08, workstream A)
-
-Source: `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`. P89–P90 are framework fixes; P91–P95 ride the framework substrate; P96 + P97 supersede P87 + P88 as the +2 reservation for the EXTENDED milestone. v0.13.0 tag pushes only after P97 GREEN.
-
-- **P89** Framework fixes: real-backend cadence + shell-subprocess kind + milestone-close litmus probe (top-level)
-- **P90** Framework fixes: catalog-row honesty rules + dishonest-test triage + spot-check meta-rule (top-level)
-- **P91** `reposix attach` + `sync --reconcile` real-backend wiring (Cluster A)
-- **P92** Push-flow correctness fixes: rebase recovery + OP-3 audit log silence (Clusters B + C)
-- **P93** L2/L3 cache-coherence + SotPartialFail recovery (Decision 2 promotion from v0.14.0)
-- **P94** Bus-push compatibility with documented mirror setup (Cluster D)
-- **P95** Quality framework upgrade + doc fixes (Clusters E + F + H + I) — split candidate
-- **P96** Surprises absorption (+2 reservation slot 1, OP-8) — supersedes P87
-- **P97** Good-to-haves polish + milestone close + tag v0.13.0 (+2 reservation slot 2, OP-9) — supersedes P88
-
-For full per-phase goals, requirements, dependencies, success criteria, and context anchors, see `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
-
-## v0.13.2 Cross-link fidelity (PLANNING — workstream B, parallel)
-
-> **Status:** scoped 2026-05-08. The full milestone roadmap (thesis, mental model, recurring success criteria, and per-phase detail for P98–P107) lives at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
->
-> **Source-of-truth handover bundle:** `.planning/research/v0.13.2-cross-link-fidelity/{index,01-vision-and-problem,02-architecture,03-schemas,06-decisions-log,08-open-questions}.md` + `examples/` (10 chapters, 28 ADRs, 4 examples; ratifications captured in `08-open-questions.md` § "Owner ratification" Q2/Q6/Q14).
-
-### Phase index (P98–P107, v0.13.2 — workstream B)
-
-- **P98** Crate skeleton + shared-compute lift + edge model + walker + catalog + tracker schemas (lifts `coverage.rs::walk_md` to `md_walker.rs`; adds `heading_subtree_hash`)
-- **P99** Config TOML schema + scope resolution + glob matcher
-- **P100** L0 + L1 verifiers + pre-commit hook integration
-- **P101** L2 hash-drift + edge state classifier
-- **P102** L3 judge dispatcher (via `persist_artifact` + Path A/B) + grading_context merge
-- **P103** `bootstrap` + `plan-refresh` + cron CI integration
-- **P104** `suggest-scopes` migration assistant
-- **P105** Pre-push hook integration; phased enforcement modes; `max_l3_per_push` cap
-- **P106** Reposix dogfood — bootstrap + flip default to `block-newedge` (real ~$20 Anthropic API spend)
-- **P107** +2 reservation slot — surprises absorption + good-to-haves polish + milestone close + tag v0.13.2
-
-For full per-phase goals, requirements, dependencies, success criteria, and context anchors, see `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
-
-> **Renumber note:** P98–P107 above collide with the now-shipped v0.13.1 (P98–P101) and
-> v0.14.0 (P102–P113) ranges — these were always placeholder numbers pending
-> renumber-on-insertion (per `.planning/PROJECT.md` § Previously Validated Milestones);
-> v0.13.2 is QUEUED behind the Arc D launch-readiness arc and will be renumbered when
-> scheduled.
 
 ## Previously planned milestones
 
