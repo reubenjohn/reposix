@@ -122,6 +122,90 @@ re-append rather than a false-skip.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-12 — `cargo-doc-warnings-cache-cli-family` — cargo doc not warning-clean in the reposix-cache/reposix-cli family
+
+**Discovered during:** P114 phase-close (pre-existing — NOT files this phase touched)
+
+**Size:** S
+
+**Severity:** LOW — cosmetic / link-integrity only; `cargo doc` still builds.
+
+**Source:** `cargo doc` emits broken intra-doc links at `attach.rs:23`, `init.rs:33-34`,
+`cache.rs:596`, and `sink_egress`, plus unclosed HTML tags at `main.rs:250` and
+`sync_tag.rs:8`. All pre-existing in the reposix-cache/reposix-cli family — none are among
+this phase's edited files.
+
+**Acceptance:** `cargo doc` is warning-clean across the affected crates. Sketch: a
+doc-warning sweep across reposix-cache/reposix-cli — repair the intra-doc link targets and
+close the stray HTML tags.
+
+**Default disposition:** S closes-or-defers; safe to defer (cosmetic, non-blocking).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-13 — `oid-hex-lookup-test-helper-dedup` — `oid_map` SQL-lookup idiom duplicated across ≥4 test files
+
+**Discovered during:** P114 phase-close
+
+**Size:** XS
+
+**Severity:** LOW — test-only duplication, not a correctness issue.
+
+**Source:** the `oid_map` SQL-lookup idiom (resolving a record's oid hex from the cache DB)
+is copy-pasted across ≥4 test files.
+
+**Acceptance:** the copy-pasted oid-hex lookup lives in one shared
+`tests/common/mod.rs::oid_hex_for` helper that the callsites invoke. Sketch: extract the
+lookup into `tests/common/mod.rs::oid_hex_for` and dedup the ≥4 copies.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-14 — `pre-push-budget-doc-rebaseline` — re-baseline the pre-push budget doc to observed kcov-dominated ~100s
+
+**Discovered during:** P114 phase-close (observed across two real pre-push runs)
+
+**Size:** XS
+
+**Severity:** LOW-MED — stale figure produces always-firing WARN noise + misdirecting
+advice, but pushes still succeed.
+
+**Source:** `quality/CLAUDE.md` § Cadences claims pre-push ≈55s and WARNs at ~60s, but real
+runs this phase measured 104s and 191s, dominated by `code/shell-coverage` kcov (68–100s).
+The 60s WARN therefore always fires, and its "suspect a new whole-repo gate" advice
+misdirects — kcov IS the standing cost, not a regression.
+
+**Acceptance:** `quality/CLAUDE.md` § Cadences documents the observed kcov-dominated ~100s
+figure and a WARN threshold that no longer always-fires, and names kcov shell-coverage as
+the dominant cost. Sketch: re-baseline the documented figure + WARN threshold to the
+measured ~100s.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-15 — `quality-refresh-recovery-hint-subagent-reachable` — docs-alignment walker recovery hint names a top-level-only command unreachable in a subagent
+
+**Discovered during:** P114 phase-close
+
+**Size:** XS
+
+**Severity:** LOW — UX seam; the reachable primitive exists, the hint just points at the
+wrong one.
+
+**Source:** the docs-alignment walker prints a recovery hint naming `/reposix-quality-refresh`
+(a top-level-only slash command), which is unreachable inside a `gsd-executor` subagent (no
+`Task`, depth-2 spawning forbidden). The reachable primitive is the `doc-alignment bind` verb.
+
+**Acceptance:** the walker's printed recovery hint names the subagent-reachable primitive
+(`doc-alignment bind`) — or names both, flagging which is reachable from a subagent context.
+Sketch: update the walker's printed recovery hint string.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
