@@ -182,16 +182,16 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (5) herdr: a digit/letter alone answers menus; long `agent send` needs a second
   Enter after ~2s; text after `❯` is often ghost-text — never treat it as pending
   input.
-- **Standing RAISEs for the owner:** ORPHANED SCRATCH REPO from item-1's executed
-  steal-demo proof: `reubenjohn/reposix-scope-test-DELETEME` (private, archived; token
-  lacks delete_repo scope). Owner cleanup: `gh auth refresh -h github.com -s
-  delete_repo && gh repo delete reubenjohn/reposix-scope-test-DELETEME --yes`.
-  (Manager note: the scratch-repo probe was manager-authorized for the proof; the
-  leftover is flagged, not hidden.) INTERACTIVE-SUDO VM git upgrade to ≥2.34
-  (t4 env floor, CONSULT `c27fd06`; afterwards run ONE creds-loaded
-  `pre-release-real-backend` cadence so t4 executes its destructive scenario for
-  real — product-FAIL there becomes a v0.15.0 fix-first item); ADR-010 RBF-LR-04
-  mirror fan-out redesign
+- **RETIRED RAISEs (owner, 2026-07-14):** (1) VM git upgraded to **2.50.1** (verified;
+  t4 env floor satisfied — one creds-loaded `pre-release-real-backend` cadence
+  dispatched to #21 so t4 executes its destructive scenario for real; product-FAIL
+  there = v0.15 fix-first). (2) Scratch repo `reubenjohn/reposix-scope-test-DELETEME`:
+  owner KEEPS it as a REUSABLE scratch test target — no delete_repo scope by design;
+  reset policy = force-push; currently archived, unarchive via API on first reuse;
+  record in docs/reference/testing-targets.md at GSD-quick scale.
+- **Standing RAISEs for the owner:** ADR-010 RBF-LR-04
+  mirror fan-out redesign (decision packet in v0.15 planning; MANAGER decides under
+  delegated authority, decide-and-disclose)
   (push POST-write materialized snapshot; litmus non-idempotency, intake part-03)
   + the entangled dvcs-topology/root-CLAUDE.md "bus-push catch-up" doc correction;
   P112 ROADMAP prose-vs-artifact reconcile at /gsd-new-milestone; D5
