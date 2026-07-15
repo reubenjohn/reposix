@@ -105,9 +105,14 @@ pub(crate) struct ConfLinks {
     pub(crate) next: Option<String>,
 }
 
-/// A single page as returned by both the list endpoint (with `body: {}`
-/// empty) and the single-page endpoint (with `body.storage.value` populated
-/// when `?body-format=storage` is requested).
+/// A single page as returned by both the list endpoint and the single-page
+/// endpoint. As of FIX-01 (Phase 114) BOTH paths request
+/// `?body-format=atlas_doc_format`, so the page
+/// body IS populated when a page has ADF content — the list render and the get
+/// render decode through the same `translate()` to byte-identical output
+/// (render parity; the cut that stops `Error::OidDrift`). The single-page
+/// endpoint additionally issues a `?body-format=storage` re-fetch for the
+/// pre-ADF storage-only fallback when no `atlas_doc_format` body is present.
 #[derive(Debug, Deserialize)]
 pub(crate) struct ConfPage {
     pub(crate) id: String,

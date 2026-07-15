@@ -207,20 +207,21 @@ fn dark_factory_real_confluence() {
 /// whose ADF is valid. This is the durable real-TokenWorld twin of the wiremock
 /// decode regression in `reposix-confluence::translate` tests.
 ///
-/// ## Why this MUST call `get_record`, not `list_records`
+/// ## Why this drives `get_record` per id
 ///
-/// The string-encoded-ADF decode path lives ONLY on the single-page GET
-/// (`?body-format=atlas_doc_format` — see `ConfluenceBackend::get_record`).
-/// `list_records` requests NO body-format, so every listed record carries an
-/// EMPTY body — asserting `!is_unreadable_adf_sentinel(&r.body)` over the list
-/// is VACUOUS: an empty string is not the sentinel, so the check passes even
-/// against the ORIGINAL buggy deserializer and never exercises the decode at
-/// all. This twin therefore drives `get_record` per id and makes a
-/// POSITIVE + NEGATIVE assertion on the DECODED body: under the bug every real
-/// page's `get_record` body WAS the sentinel (decode failed → root type read
-/// `""` → `adf_to_markdown` erred → fail-closed placeholder substituted), so
-/// the negative assertion is the true regression lock and the positive
-/// "at least one real page" assertion keeps the twin from passing vacuously.
+/// As of FIX-01 (Phase 114) `list_records` DOES request
+/// `?body-format=atlas_doc_format`, so list bodies are now populated for
+/// ADF-native pages too — the old "list bodies are empty, so a list-side
+/// sentinel check would be vacuous" rationale no longer holds. This twin still
+/// drives `get_record` per id because `get_record` is the canonical single-page
+/// decode surface and additionally exercises the `?body-format=storage` fallback
+/// for pre-ADF pages that the list walk never issues. It makes a
+/// POSITIVE + NEGATIVE assertion on the DECODED body: under the original
+/// string-decode bug every real page's `get_record` body WAS the sentinel
+/// (decode failed → root type read `""` → `adf_to_markdown` erred → fail-closed
+/// placeholder substituted), so the negative assertion is the true regression
+/// lock and the positive "at least one real page" assertion keeps the twin from
+/// passing vacuously.
 #[test]
 #[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
 fn get_record_real_confluence_body_is_real_markdown_not_unreadable_sentinel() {
@@ -242,8 +243,10 @@ fn get_record_real_confluence_body_is_real_markdown_not_unreadable_sentinel() {
         .enable_all()
         .build()
         .expect("tokio runtime");
-    // list_records only to ENUMERATE ids (its bodies are empty — see the doc
-    // comment); the decode is exercised via get_record below.
+    // list_records to ENUMERATE ids. Post-FIX-01,
+    // list bodies are now populated for ADF-native pages (see the doc comment),
+    // but the string-decode + storage-fallback regression is still exercised
+    // per id via get_record below.
     let records = rt
         .block_on(backend.list_records(&space))
         .expect("list_records against live TokenWorld");

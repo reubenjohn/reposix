@@ -192,8 +192,14 @@ impl ConfluenceBackend {
         strict: bool,
     ) -> Result<(Vec<Record>, bool)> {
         let space_id = self.resolve_space_id(project).await?;
+        // FIX-01 render-parity: request the SAME body representation `get_record`
+        // uses (`?body-format=atlas_doc_format`). Without it Confluence returns
+        // every page body EMPTY on the list path, so `build_from` hashes an
+        // empty-body render while `read_blob` later re-fetches the REAL body via
+        // `get_record` → deterministic `Error::OidDrift` on every ADF-native page.
+        // Zero extra round-trips: the same list walk, just a fuller body.
         let first = format!(
-            "{}/wiki/api/v2/spaces/{}/pages?limit={}",
+            "{}/wiki/api/v2/spaces/{}/pages?limit={}&body-format=atlas_doc_format",
             self.base(),
             space_id,
             PAGE_SIZE
@@ -271,10 +277,24 @@ impl ConfluenceBackend {
                 // — prepend tenant base. Absolute URLs would be caught by
                 // the SG-01 allowlist gate anyway, but relative-only by
                 // construction defeats SSRF by design.
-                if relative.starts_with("http://") || relative.starts_with("https://") {
+                let url = if relative.starts_with("http://") || relative.starts_with("https://") {
                     relative
                 } else {
                     format!("{}{}", self.base(), relative)
+                };
+                // FIX-01 defensive: TokenWorld is < 100 pages so this cursor path
+                // never fires in the oid-drift repro, but a larger space's
+                // `_links.next` cursor could drop `body-format` across pages —
+                // reintroducing the empty-body render-drift on page 2+. Re-append
+                // it when absent so every followed page carries the same body
+                // representation as page 1. No URL-parsing dependency: a substring
+                // check plus a separator-aware append (`?` when the cursor url has
+                // no query, `&` otherwise) that reuses the existing string idiom.
+                if url.contains("body-format=") {
+                    url
+                } else {
+                    let sep = if url.contains('?') { '&' } else { '?' };
+                    format!("{url}{sep}body-format=atlas_doc_format")
                 }
             });
         }
