@@ -142,3 +142,13 @@
 **Sketched resolution:** Fix-twice obligation: (i) this intake row captures the footgun; (ii) correct the documented example other agents copy from — the `coordinator-dispatch` skill and/or `.planning/ORCHESTRATION.md` commit example — to the positional form `gsd-sdk query commit "<msg>" --files <path>`, so no future example teaches the `--message` flag form. Also consider whether `gsd-sdk query commit` itself should hard-error on an unrecognized `--message` flag rather than silently committing garbage, closing the footgun at the source rather than only in docs.
 
 **STATUS:** OPEN
+
+## 2026-07-15 06:35 | discovered-by: manager amendment 4 to L0 rotation #26 (measured on this rotation's push; corroborates workhorse #25's 101s WARN) | severity: LOW-MEDIUM
+
+**What:** Pre-push hook wall-clock measured **~1:31.68 (91.7s)** this rotation and **~101s** on workhorse #25's final push, vs the **~55–60s** budget documented in `quality/CLAUDE.md` § Cadences. Likely driver: `code/shell-coverage` (kcov shell coverage) measured **56.2s this run** vs the **~29s** figure documented in § Cadences — roughly 2×. Pre-push cost is a fixed whole-repo cost (NOT diff-size-scaled), so this is a genuine creep, not a big-diff artifact.
+
+**Why out-of-scope for the discovering session:** Surfaced from a timing measurement taken during an intake-filing leaf's own push, not a planned perf-investigation phase; diagnosing whether kcov crept (corpus growth, toolchain/version change, VM contention) and deciding baseline-vs-regression is its own bounded investigation, not an eager patch mid intake-filing. Pre-push is WARN (not FAIL) so no gate blocked — no urgency to fix inline.
+
+**Sketched resolution:** Fix-twice obligation: (i) investigate whether kcov shell-coverage crept — more `.sh` files under coverage (corpus growth), a kcov/toolchain version change, or transient VM contention; re-measure `code/shell-coverage` in isolation on a quiet VM to separate contention from real cost; (ii) if the higher figure is a legitimate new baseline, update the § Cadences documented number (~29s → measured, and the ≈55s pre-push aggregate → measured) to match reality; if it's a regression, find and fix the cause (e.g. trim the covered corpus, cache kcov output, or parallelize where the cargo-mutex allows). Corroborated across two rotations (#25 ~101s, #26 ~91.7s), so it is a stable creep rather than a one-off flake.
+
+**STATUS:** OPEN
