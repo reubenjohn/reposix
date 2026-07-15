@@ -77,6 +77,27 @@ carry-forward target.
 **STATUS:** DEFERRED — owner scope call, 2026-07-12 (explicit deferral past v0.14.0
 milestone-close, not a silent slip).
 
+## GOOD-TO-HAVES-10 — `cargo-nextest-not-installed` — cargo nextest absent on the VM; plan/CLAUDE verify commands fail as written
+
+**Discovered during:** 114-01 (Confluence oid-drift render-parity)
+
+**Size:** XS
+
+**Source:** `cargo nextest run -p reposix-confluence …` returns `error: no such command:
+nextest` on this VM. `crates/CLAUDE.md`, `114-01-PLAN.md`, and `114-RESEARCH.md` all name
+`cargo nextest` as the canonical per-crate / full-workspace test runner, but it is not
+installed — every nextest verify command a plan copies verbatim fails, and the executor
+must silently substitute `cargo test`.
+
+**Acceptance:** either install `cargo-nextest` in the VM image (preferred — restores the
+memory-friendlier one-binary-at-a-time test linking `crates/CLAUDE.md` relies on for
+full-workspace runs), OR soften the docs/plans that hard-name `cargo nextest` to
+"`cargo nextest` if available, else `cargo test`" so the copy-paste command always works.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown

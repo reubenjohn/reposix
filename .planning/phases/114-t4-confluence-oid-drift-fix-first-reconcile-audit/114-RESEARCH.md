@@ -408,7 +408,13 @@ never triggers in the reproduction).**
 
 ## Open Questions
 
-1. **Does the real TokenWorld space contain any pre-ADF pages?**
+1. **Does the real TokenWorld space contain any pre-ADF pages?** — **DEFERRED
+   (114-01 Wave 1): the fix already handles pre-ADF pages (`translate` falls back
+   to raw storage when no `atlas_doc_format` body is present), but whether
+   TokenWorld actually contains one is only answerable by the env-gated
+   real-backend gate (SC1/SC2), NOT by this wiremock wave. Left genuinely open for
+   the gate run — if a DIFFERENT page id trips `OidDrift` post-fix, that page is
+   the pre-ADF follow-up target.**
    - What we know: page 7766017 is ADF-native (the repro/regression-lock test
      `get_record_real_confluence_body_is_real_markdown_not_unreadable_sentinel` already
      proves `get_record(7766017)` decodes real ADF markdown, not the sentinel).
@@ -419,7 +425,11 @@ never triggers in the reproduction).**
      DIFFERENT page id trips `OidDrift` after the fix, that page is very likely
      pre-ADF, confirming the gap and giving a concrete follow-up target.
 
-2. **Does `_links.next` preserve `body-format`?**
+2. **Does `_links.next` preserve `body-format`?** — **RESOLVED (114-01 Wave 1):
+   made moot by shipping the recommended defensive re-append. `list_issues_impl`'s
+   `next_url` closure now re-appends `&body-format=atlas_doc_format` (or `?…` when
+   the cursor url carries no query) whenever a followed page's url lacks it, so the
+   fix is immune to the answer either way — no live multi-page probe needed.**
    - What we know: general Atlassian pagination guidance says "use the next link as
      returned, don't reconstruct it" (implying it should self-contain everything
      needed).
