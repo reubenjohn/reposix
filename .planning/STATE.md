@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: in_progress
-last_updated: "2026-07-15T18:10:00.000Z"
+last_updated: "2026-07-15T19:22:11.000Z"
 last_activity: 2026-07-15
 progress:
   total_phases: 15
@@ -29,10 +29,12 @@ refs/reposix/origin/main`, incl. page 7766017 → zero `OidDrift`) + SC2
 (coordinator-run 2026-07-15T17:56Z, tenant `reuben-john` / space `REPOSIX`);
 artifact-verifiable SC3/SC4 + Wave-1/Wave-2 truths GREEN (`114-VERIFICATION.md`). Next:
 `/gsd-plan-phase 115`.
-Last activity: 2026-07-15 — P114 phase-close: SC1/SC2 real-backend evidence committed,
-cursor advanced (0→1 of 15), SC1 false-GREEN command corrected in plan + verification
-(`git checkout -B main refs/reposix/origin/main` — the start-point ref materializes blobs so
-the OidDrift check actually runs), GOOD-TO-HAVES template reconciled + GTH-16 filed.
+Last activity: 2026-07-15 — Directive 2 CLOSED (ended a 5-rotation starvation): recorded the
+`reposix-scope-test-DELETEME` scratch-repo KEEP-policy in `docs/reference/testing-targets.md`
+(never-delete / force-push-reset / unarchive-via-`gh api`-before-reuse; grounded on live
+`gh api` → `archived:true`) + eager-fixed a stale "Phase 36 cleanup automation" lying-doc
+forward-ref → present-tense manual cleanup (commit `a165d48`, quick `260715-h1d`). Next:
+`/gsd-plan-phase 115` (BENCH-01) as the fresh opening move for successor #30.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
@@ -118,6 +120,7 @@ Next step: `/gsd-plan-phase 114` (t4 Confluence oid-drift fix-first + reconcile 
 | 260713-q0e | Fix RED main (HONEST-REWORK, Manager Ruling #5 Option A) — post-release `quality-post-release` (run 29298424648, v0.14.0) went RED on 4 P1 docs-repro example gates (01/02/04/05); root cause = harness gap, NOT product: containers exit 0 but the generic `container-rehearse.sh` emitted one generic `asserts_passed` line, which F-K4b (`_audit_field.py::asserts_congruent`) rejects. The first fix (`0f2b7c5`, emit `expected.asserts` verbatim on exit 0) failed adversarial verification as a SYMPTOM-FIX — example-05's asserts overclaimed. Reworked: `git reset --soft d68fa8a` un-stacked the held commits; KEPT the emission (verified fail-loud for 01/02/04) and REWORDED example-05 asserts #2/#3 to the truth (pre-emptive `git sparse-checkout` pattern + `BLOB_LIMIT_EXCEEDED_FMT` source-constant presence — NOT a runtime-error observation; #3 scoped to the `ls issues/*.md` ≥1-file check). NO F-K4b weakening, NO waivers. Filed ONE v0.15.0 SURPRISES-INTAKE (MEDIUM): F-K4b container-tautology redesign + example-05 real-runtime-error deeper fix. post-release re-run: 6 PASS / 0 FAIL / exit 0. No push (orchestrator-gated). | 2026-07-13 | 03e7a6f (fix), 3775075 (intake) | [260713-q0e-fix-red-main-container-rehearse-sh-emits](./quick/260713-q0e-fix-red-main-container-rehearse-sh-emits/) |
 | 260713-rug | Green RED-main `docs-repro/example-04-conflict-resolve` (FAILED at exactly 300.00s in `quality-post-release` run 29301412750, sha 05aa23c) via TIMEOUT-BUDGET fix (ruling b773c04). Diagnosis (opus repro): not a hang — the example runs ~0.5s and passes all 3 asserts; the 300s cap was eaten by per-container-row SETUP `apt-get install ... build-essential pkg-config libssl-dev ...`, compile-time deps NEVER exercised (examples run the host-mounted pre-built `target/debug/reposix`; no in-container cargo build). Two clean edits: (a) `container-rehearse.sh` SETUP drops `build-essential pkg-config libssl-dev`, keeps `curl ca-certificates python3 git sqlite3` + fix-it-twice comment; (b) `docs-reproducible.json` bumps `timeout_s` 300→600 symmetrically on all 4 `kind:container` rows (01/02/04/05), non-container rows untouched (tutorial-replay stays 300), JSON revalidated. Prove-before-fix: all 4 container rows rc=0 locally (01:16s, 02:15s, 04:16s, 05:19s), asserts_failed []. NO assert/waiver/example-proof touched (honesty guard CLEAN). No push (orchestrator-gated). | 2026-07-13 | (this commit) | [260713-rug-example04-timeout-budget](./quick/260713-rug-example04-timeout-budget/) |
 | 260714-rcv | Post-tag cursor refresh + carried-noticing intake filing (L0 rotation #21: STATE.md cursor → post-tag queue 0-5 CLOSED green + Arc D RATIFIED at 6aa734a + re-anchor ACTIVE; 2 carried noticings filed to v0.15.0 SURPRISES-INTAKE — GTH oversize masked by 08-08 waiver + v0.13.0 ROADMAP broken plan links) | 2026-07-14 | (this commit) | [260714-rcv-cursor-refresh-intake](./quick/260714-rcv-cursor-refresh-intake/) |
+| 260715-h1d | Directive 2 (5-rotation starvation ended): record `reposix-scope-test-DELETEME` scratch-repo KEEP-policy in `docs/reference/testing-targets.md` — throwaway private GitHub scratch *remote-target*; NEVER-delete / reset-via-force-push (URL stays stable across sessions); currently ARCHIVED per live `gh api` (`archived:true, private:true, pushed 2026-07-14`); unarchive via `gh api -X PATCH ... archived=false` before first reuse. + eager-fixed a stale "Phase 36 cleanup automation will handle this" lying-doc forward-ref (verified no such automation ever shipped) → present-tense manual cleanup. mkdocs-strict GREEN, one-file diff. | 2026-07-15 | a165d48 | [260715-h1d-scratch-repo-keep-policy](./quick/260715-h1d-scratch-repo-keep-policy/) |
 
 ## Session Continuity
 
