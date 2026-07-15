@@ -71,23 +71,25 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
 
-- **WORKHORSE #31 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #30
-  relieved cleanly at `6114a6f`): charter = opening ground-truth check (newest CI
-  run 29448217566, .planning-only handover commit, must be green) → then
-  `/gsd-plan-phase 115` (BENCH-01, locked constraints, anti-sink meta-lesson) per
-  `.planning/SESSION-HANDOVER.md` (`6114a6f`, authoritative). Watch #31 for the
-  plan-phase context-sink shape (#28 was casualty #2); a third casualty ⇒ demand
-  the GOOD-TO-HAVES progressive-disclosure row on the workflow file.
-- **#30 outcome (2026-07-15): push-unblock DONE, clean relief.** Doc-alignment
-  refresh `be6f1bf` (10 rows re-bound; root cause: a165d48 inserted 23 lines,
-  shifting cited claims +23), pushed, CI 29447017101 success, post-push P0 probe
-  PASS. Incident: an API connection error killed #30's response mid-relief — the
-  announced relief-handover-writer dispatch had NOT run (verified: no commit, file
-  unchanged); manager nudged #30 to resume only the relief tail, which completed
-  (`6114a6f`, GTH-V15-22/23 filed). Lesson: a workhorse "I'm dispatching X" claim
-  is not X having happened — verify the artifact after any API-error banner.
-  Watch items carried in the session handover: pre-push 91s vs ~60s budget;
-  plan-refresh reads persisted last_verdict (walk must run first).
+- **WORKHORSE #32 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #31
+  relieved cleanly at `804f5b0`): charter = ground-truth check (CI green on
+  `804f5b0` + manager commits) → open **P115 EXECUTION** top-level per
+  `.planning/SESSION-HANDOVER.md` (`804f5b0`, authoritative) + 115-PLAN.md (1
+  plan, 6 tasks, 5 waves). **A1 RULED by manager `[SELF]`** (ledger,
+  CONSULT-DECISIONS.md): one benchmark session = one live agentic
+  conversation/task run (NOT one metered API call); failed runs count; ballooning
+  session (>~5x median tokens) flagged; >50 → owner. T2 latency re-measure was
+  independent of A1 and can start immediately.
+- **#31 outcome: P115 planning DONE, CI-green (`8e1e970`, run 29451252463
+  success), NO context sink** — the anti-sink charter (delegate heavy reads to
+  reader-digester) broke the #27/#28 pattern; checker found 2 MEDIUM + 1 LOW, all
+  fixed pre-commit. #30 outcome: push-unblock DONE (`be6f1bf`), one API-error
+  incident recovered (lesson: an announced dispatch is not a landed artifact —
+  verify after any API-error banner). Watch items live in the session handover:
+  pre-push 91s/115s/84s vs ~60s budget (cold-cache theory holding, watch
+  warm-cache runs); flaky CI test job (re-run once on a single red); plan-refresh
+  reads persisted last_verdict (walk first); 115-PLAN.md at 29.4k chars rides the
+  file-size waiver (expires 2026-08-08).
 - **#29 outcome (2026-07-15): Directive-2 CLOSED** — scratch-repo KEEP-policy
   landed in `docs/reference/testing-targets.md` (spot-verified: lines 173–193,
   never-delete / force-push-reset / unarchive-API) via gsd-quick 260715-h1d,

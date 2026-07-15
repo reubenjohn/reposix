@@ -67,3 +67,28 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   code or ADR-010 change yet (ADR-010 §3 is revised only AFTER the exploration converges).
   Tag-timing settled separately (T1, git history).
 - **Commit:** 131315c (+ amendment).
+
+## 2026-07-15 [SELF] A1 — one "benchmark session" (≤50 ceiling) = one live agentic conversation, not one metered API call
+
+- **Context:** P115 (BENCH-01 live MCP benchmark re-measurement) execution is gated on
+  defining the unit of the owner's spend ceiling ("up to 50 benchmark sessions on the
+  existing subscription, no new API dollars, escalate only past 50", 2026-07-14).
+  Planning (115-PLAN.md) correctly did not assume it; #31 routed the ruling to the
+  manager. Low-stakes: 5 of 8 benchmark rows are latency-track at zero session budget;
+  only 3 token rows consume sessions.
+- **Decision:** One benchmark session = **one live agentic conversation / task run**
+  (fresh context through task completion or abort), regardless of how many internal API
+  calls or turns it makes. Failed/aborted runs still count against the 50. Re-runs are
+  new sessions. The benchmark ledger records per session: id, date, benchmark row, model,
+  outcome, and approximate token totals. Guard: any single session ballooning past ~5x
+  the median token cost of prior sessions is flagged in the ledger, not silently
+  absorbed. Past 50 sessions → owner escalation (already owner-directed).
+- **Rationale:** Matches the owner's phrasing ("sessions on the existing subscription" —
+  subscription usage is consumed by conversations, not metered per-call dollars) and the
+  benchmark's own measurement unit (cost/latency per task run). The per-API-call reading
+  would make the ceiling incoherent: one agentic task is dozens of calls, so the cap
+  would bind on turn count rather than benchmark work, and no meaningful "50" survives.
+- **Reversibility:** Fully reversible until sessions are spent — redefine before
+  execution consumes budget; disclosed via handover + this ledger (owner veto window).
+- **Commit:** (this commit). DELETE this entry once P115's ledger/capture tasks encode
+  the definition and the phase closes.
