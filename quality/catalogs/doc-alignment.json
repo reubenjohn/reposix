@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7470238095238095,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-14T15:49:42Z",
+    "last_walked": "2026-07-15T17:14:18Z",
     "coverage_ratio": 0.17804590935844614,
     "lines_covered": 1210,
     "total_eligible_lines": 6796,
@@ -2217,9 +2217,9 @@
         "line_start": 39,
         "line_end": 319
       },
-      "source_hash": "42d5a83a4dded7e3968942bbbabe3d4a84934a164a3859b78d1818cc4c66d155",
+      "source_hash": "1c4c23d661db0f1e7ecb3a0363862177f45a67530ae9d043b43865ca2b2dd331",
       "source_hashes": [
-        "42d5a83a4dded7e3968942bbbabe3d4a84934a164a3859b78d1818cc4c66d155"
+        "1c4c23d661db0f1e7ecb3a0363862177f45a67530ae9d043b43865ca2b2dd331"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -2227,11 +2227,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix + rustfmt import collapse shifted main.rs enum lines; subcommand surface unchanged, real-backend dark-factory test still exercises it.",
+      "rationale": "v0.15.0 FIX-02 added a systematic oid-drift caveat to the Sync clap doc-comment inside the bound region (~L169-180); subcommand surface enum unchanged, real-backend dark-factory test still exercises it.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:52:38Z",
-      "last_extracted": "2026-07-07T23:52:38Z",
+      "last_run": "2026-07-15T17:14:18Z",
+      "last_extracted": "2026-07-15T17:14:18Z",
       "last_extracted_by": "bind-call"
     },
     {
