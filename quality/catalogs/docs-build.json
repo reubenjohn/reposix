@@ -85,7 +85,7 @@
       "command": "python3 quality/gates/docs-build/link-resolution.py",
       "expected": {
         "asserts": [
-          "every relative Markdown link in docs/{index.md, concepts/*.md, tutorials/*.md, how-it-works/*.md, guides/*.md, reference/*.md, benchmarks/*.md} resolves to an existing file path",
+          "every relative Markdown link in docs/*.md (top-level: index.md, roadmap.md, security.md, why.md) + docs/{concepts/*.md, tutorials/*.md, how-it-works/*.md, guides/*.md, reference/*.md, benchmarks/*.md} + .planning/PROJECT.md resolves to an existing file path",
           "http(s):// and mailto: and pure-anchor links are skipped (anchor validation is mkdocs --strict's job per the existing script docstring)"
         ]
       },
