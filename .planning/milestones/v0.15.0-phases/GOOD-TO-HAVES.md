@@ -135,6 +135,18 @@
 - **What:** Two ARCHIVED files exceed the file-size gate and are only kept passing by the active waiver: `.planning/milestones/v0.13.0-phases/97-HANDOVER.md` (31,271 chars) and `.planning/milestones/v0.14.0-phases/RELIEF-HANDOVER-C2-wave-2b.md` (20,132 chars). When the waiver expires **2026-08-08** the `structure/file-size-limits` gate will BLOCK any push.
 - **Fix-sketch:** Decision-owner call before 2026-08-08 (hard deadline = waiver expiry): EITHER exempt archived milestone dirs (`.planning/milestones/v*.0-phases/` and/or `.planning/archive/`) from the file-size gate — likely correct, archives are immutable history — OR split the two files. No new dependencies; resolution fits easily into any v0.15.0 phase.
 
+## From L0 rotation #30 push-unblock docs-alignment refresh (2026-07-15)
+
+### GTH-V15-22 — `prior_rationale` line-refs in `doc-alignment.json` rot silently
+- **Source:** Opus grader, `/reposix-quality-refresh docs/reference/testing-targets.md` (workhorse #30 push-unblock, 2026-07-15) · **Severity: LOW** · STATUS: OPEN.
+- **What:** doc-alignment catalog rows store `prior_rationale` with hardcoded line refs, and nothing validates them against the live source — so they drift silently even when the underlying binding is sound (fns resolve by symbol, not by the stale line number). Observed instance: all JIRA rows in `quality/catalogs/doc-alignment.json` cited `agent_flow_real.rs:296`, but the real fn `dark_factory_real_jira` sits at `crates/reposix-cli/tests/agent_flow_real.rs:298`, its `skip_if_no_env!` at `:299`, and the URL-suffix assertion at `:308-311`.
+- **Fix-sketch:** add a lint/periodic sweep that re-derives `prior_rationale` line refs from the current source and flags drift, OR drop line numbers from rationales in favor of symbol-only refs (fn/const names), which don't rot on unrelated edits above them in the same file. Small, no new dependency; fits a docs-alignment framework-hardening phase.
+
+### GTH-V15-23 — `github-url-prefix` claim lives in an ADR blockquote, not the GitHub testing section
+- **Source:** Opus grader, `/reposix-quality-refresh docs/reference/testing-targets.md` (workhorse #30 push-unblock, 2026-07-15) · **Severity: LOW** · STATUS: OPEN.
+- **What:** Row `docs/reference/testing-targets/github-url-prefix` (claim: `remote.origin.url` starts with `reposix::https://api.github.com/`) is bound to prose at `docs/reference/testing-targets.md:245-251`, which is the ADR-008 dispatch note, not a "GitHub env vars" section. The binding itself is sound (the cited test asserts exactly that prefix) but a reader scanning the GitHub testing section for the URL contract won't find it stated there.
+- **Fix-sketch:** also state the literal remote-URL prefix contract in the GitHub testing section proper (near the other GitHub env-var / setup claims), leaving the ADR-008 blockquote as-is for the dispatch-note context. Trivial (<15 min doc edit); bundle into any `docs/reference/testing-targets.md`-touching change (mind the refresh-tail caveat — this edit will itself drift catalog rows and need a `/reposix-quality-refresh` pass).
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each

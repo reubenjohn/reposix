@@ -1,12 +1,13 @@
-# SESSION-HANDOVER.md — v0.15.0 Floor: PUSH BLOCKED on docs-alignment refresh tail, P115 planning still not started — 2026-07-15
+# SESSION-HANDOVER.md — v0.15.0 Floor: push-unblock COMPLETE, P115 planning is the next substantive work — 2026-07-15
 
-Written by the **relief-handover-writer** on behalf of **workhorse #29** (L0
-orchestrator, herded by the manager in w1:p7), relieving to **successor #30**. This
-file **REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#28→#29's
+Written by the **relief-handover-writer** on behalf of **workhorse #30** (L0
+orchestrator, herded by the manager in w1:p7), relieving to **successor #31**. This
+file **REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#29→#30's
 handover, superseded here).
 
-**Read order:** this file → §1 (verify live) → the ⛔ BLOCKER at the top of §6 (do this
-FIRST, before P115) → §2/§4/§5 as needed. **Guardrails unchanged:** do NOT touch
+**Read order:** this file → §1 (verify live) → §6 runbook (the ONLY next task is
+P115 planning — the push-unblock objective #29 handed off is DONE, do NOT repeat it)
+→ §3/§4/§5 as needed. **Guardrails unchanged:** do NOT touch
 `.planning/MANAGER-HANDOVER.md` (separate document, separate owner — the manager, pane
 w1:p7). No tag push by any coordinator — the manager cuts tags, never L0. Do NOT do git
 surgery (reset/rebase/reorder/amend) on `main`. Shared tree with the manager — TARGETED
@@ -18,63 +19,47 @@ Re-run before doing anything else:
 ```
 git rev-parse HEAD && git status --porcelain && \
   git rev-list --left-right --count HEAD...origin/main && \
-  gh run list --branch main --workflow CI --limit 5
+  gh run list --branch main --workflow CI --limit 3
 ```
 **Verified independently this handover (2026-07-15, just now):**
-- `origin/main` = `a266582` ("docs(planning): refresh manager handover — rotation
-  #8→#9"; **manager-authored**), CI on that tip is **completed/success**
-  (`ci.yml` run `29443988376`, 5m23s, concluded `2026-07-15T19:18:08Z`). No red run
-  sits on origin/main's recent history (last 5 runs all `completed`/`success`).
-- LOCAL `main` = `dff801b`, tree **clean** (`git status --porcelain` empty), **+2 ahead
-  / 0 behind** `origin/main` (`git rev-list --left-right --count HEAD...origin/main` →
-  `2  0`; `git status --branch` confirms `ahead 2`). This handover commit will make it
-  **+3 ahead**.
-- **Local-only commits not yet on origin, oldest → newest** (both #29-authored this
-  rotation, both from the Directive-2 gsd-quick `260715-h1d`):
-  1. `a165d48` — "docs(testing-targets): record reposix-scope-test-DELETEME
-     KEEP-policy" (`Claude-Session: gsd-executor`) — the Directive-2 work product:
-     adds a KEEP-policy subsection to `docs/reference/testing-targets.md`
-     (never-delete / force-push-reset to keep URL stable / unarchive via `gh api`
-     before first reuse), PLUS an eager-fix of a stale "Phase 36 cleanup automation"
-     forward-reference (verified via git log/grep that no such automation ever
-     shipped — rewritten to present-tense manual cleanup).
-  2. `dff801b` — "docs(planning): close Directive 2 quick 260715-h1d — scratch-repo
-     KEEP-policy + STATE cursor" (`Claude-Session: L0-workhorse-29`) — commits the
-     quick's PLAN.md + SUMMARY.md and refreshes `.planning/STATE.md`
-     (last_activity + quick-tasks table row).
-  3. **`<this handover commit, created below>`** — the #29→#30 handover you are
-     reading, will become the new local tip at +3 ahead.
+- `HEAD` = `be6f1bf431dcb133c816d567b473ffa05d69c17d` ("refresh(doc-alignment): re-bind
+  10 stale rows in docs/reference/testing-targets.md"). Tree **clean**
+  (`git status --porcelain` empty). Local `main` == `origin/main` — **0 ahead / 0
+  behind** (`git rev-list --left-right --count HEAD...origin/main` → `0  0`).
+- CI on `be6f1bf`: `ci.yml` run `29447017101`, **completed/success**, 5m39s, concluded
+  `2026-07-15T20:06:04Z`. The two runs before it (`29443988376` on `a266582`,
+  `29443163657` on `71e904f`) are also `completed`/`success` — no red run anywhere in
+  recent history. Post-push `code/ci-green-on-main` (P0) probe **PASS**.
+- **This handover's own commit will move `HEAD`/`origin/main` again and kick off a
+  fresh CI run for it** — re-run `gh run list` per §1 above after pushing and confirm
+  that run is green (or at minimum in-flight, not failed) before #31 opens P115. Never
+  open a phase over a red or pending main.
 - `.planning/STATE.md` last confirmed `status: in_progress`, `completed_phases: 1/15`,
-  P114 CLOSED GREEN, P115 (`/gsd-plan-phase 115`) still the next planning action —
-  **UNCHANGED this rotation**, #29 did not reach P115 planning (see §5 for why: the
-  Directive-2 push surfaced an unbudgeted docs-alignment refresh tail exactly at
-  #29's own ~100k soft-relief line).
+  P114 CLOSED GREEN. P115 (`/gsd-plan-phase 115`) is the next planning action — the
+  phase dir does not exist yet, `/gsd-plan-phase 115` has never been run.
 
-**Deviations from the plan #30 MUST know:**
-- **The local tree is 2 commits ahead of a CI-green origin/main and CANNOT push
-  as-is** — a pre-push quality gate (`docs-alignment/walk`) BLOCKS on 11 drifted
-  catalog rows caused by `a165d48`'s edit to `docs/reference/testing-targets.md`. This
-  is the load-bearing fact of this rotation — see the ⛔ BLOCKER at the top of §6. It
-  is a REAL gate doing its job, not a bug, not a false-positive, not waivable.
-- No P115 planning artifacts exist yet — `gsd-sdk query init.plan-phase 115` was run
-  by #28 (read-only) but `/gsd-plan-phase 115` itself has never been run. Nothing
-  half-built to inspect; P115 planning starts from scratch, AFTER the push unblocks.
+**The push-unblock objective handed to #30 is COMPLETE — do not repeat it:**
+- #29's blocker (11-ish drifted `docs-alignment` catalog rows caused by `a165d48`'s edit
+  to `docs/reference/testing-targets.md`) is **resolved and pushed** as `be6f1bf`. The
+  local tree that was previously "+2/+3 ahead, cannot push" is now **fully synced with
+  origin, 0/0**. There is no pending push, no pending catalog refresh, no open gate
+  failure. §6 below starts directly at P115 planning.
 
 ## 2. Wave/cycle state
 
 | Wave/Phase | Plan | State | Commits |
 |---|---|---|---|
 | P114 (all waves + verification + close) | — | **DONE + CI GREEN** | tip carried from prior rotations |
-| Directive 2 (scratch-repo KEEP-policy doc, gsd-quick `260715-h1d`) | `260715-h1d-PLAN.md` | **DONE — work committed, ends 5-rotation (now 6) starvation** | `a165d48`, `dff801b` (both **LOCAL ONLY**, not yet on origin) |
-| docs-alignment refresh tail (11 drifted rows in `doc-alignment.json`, caused by `a165d48`) | — | **BLOCKING — NOT STARTED**, is the opening move for #30 | — |
-| **P115 BENCH-01** (live MCP benchmark re-measurement) | not yet written | **NOT STARTED** — `init.plan-phase` query run by #28, phase dir not yet created, `/gsd-plan-phase 115` never run | — |
-| P116 ADR-010 packet (ADR-01 + FIX-03 options) | not yet written | NOT STARTED | — |
-| roadmap-diagram gsd-quick (owner-approved) | todo filed | NOT STARTED, queued | — |
+| Directive 2 (scratch-repo KEEP-policy doc, gsd-quick `260715-h1d`) | `260715-h1d-PLAN.md` | **DONE** | `a165d48`, `dff801b` — pushed, part of `origin/main` |
+| docs-alignment refresh tail (10 drifted rows in `doc-alignment.json`, caused by `a165d48`) | — | **DONE — pushed, CI green** | `be6f1bf` |
+| **P115 BENCH-01** (live MCP benchmark re-measurement) | not yet written | **NOT STARTED** — `init.plan-phase` query run by #28 (stale, re-run fresh), phase dir not yet created, `/gsd-plan-phase 115` never run — **THE OPENING MOVE FOR #31** | — |
+| P116 ADR-010 packet (ADR-01 + FIX-03 options) | not yet written | NOT STARTED, comes after P115, routes to MANAGER for ruling | — |
+| roadmap-diagram gsd-quick (owner-approved) | todo filed | NOT STARTED, queued, interleave opportunistically | — |
 | GOOD-TO-HAVES consolidation (needs manager doctrine call) | todo filed | NOT STARTED, blocked on manager ruling | — |
 
-No named incident (no test failure, no corruption, no rollback) this rotation — the
-"incident" is purely a quality-gate correctly blocking a push, resolved by running the
-gate's own named recovery command. See §5 for the honest account.
+No named incident this rotation — #30's push-unblock work was a clean, correctly-scoped
+catalog refresh; no test failure, no corruption, no rollback. See §5 for the honest
+account of what #30 did.
 
 ## 3. Binding constraints (carried verbatim, unchanged)
 
@@ -82,8 +67,7 @@ gate's own named recovery command. See §5 for the honest account.
   owner rejected them as over-engineering for current cadence).
 - **ONE cargo invocation machine-wide** (check/build/test/clippy) — prefer `-p <crate>`
   over `--workspace`; VM has OOM-crashed on parallel builds.
-- **No `--no-verify`**, ever, on any commit or push — including to work around the
-  docs-alignment blocker below; run the gate's named recovery instead.
+- **No `--no-verify`**, ever, on any commit or push.
 - **Push at green, then confirm CI green on `main` AFTER the push** — run
   `python3 quality/runners/run.py --cadence post-push --persist`; the
   `code/ci-green-on-main` (P0) probe asserts the NEWEST `ci.yml` run on `main`
@@ -98,9 +82,7 @@ gate's own named recovery command. See §5 for the honest account.
   shared repo. Mechanically enforced by `.claude/hooks/leaf-isolation-guard.sh`.
 - **No tag push by any coordinator** — the manager cuts tags.
 - **No git surgery on `main`** (no reset/rebase/reorder/amend of already-pushed
-  commits) — the 2 unpushed local commits are NOT yet "already pushed," so they may
-  still be amended/reordered if truly needed, but prefer NOT to; the correct fix is to
-  add a NEW catalog-refresh commit on top, not rewrite history.
+  commits).
 - **Shared tree with the manager** — TARGETED staging only (`git add <path>`, never
   `-A`/`.`); do not touch `.planning/MANAGER-HANDOVER.md`.
 - **LIVENESS doctrine:** bound every wait on a dispatched child; health-check quiet
@@ -111,93 +93,100 @@ gate's own named recovery command. See §5 for the honest account.
   `7766017`/`7798785` NEVER deleted.
 - **Before ending any turn with background shells/monitors running**, note their task
   ids in visible output (`/clear` does not kill them; successors can't enumerate them).
+  **This rotation: none running** — verified `jobs -l` and `ps aux` clean at handover
+  time, nothing to note for #31.
 - **Manager (w1:p7) uses a POLLING model** — clear in-pane narration at each boundary
   IS the report; escalate actively only for owner-blocking moments.
 - **Relieve past ~100k tokens of own context** (hard stop ~150k; **absolute, not %** of
   the window) at a wave boundary — write+commit a fresh handover, REPLACING this file,
-  naming successor **#31**.
+  naming successor **#32**.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **CI gate:** `origin/main` tip `a266582` — `code/ci-green-on-main` P0 **PASS**
-  (newest `ci.yml` run `29443988376`, completed/success). Local tip `dff801b` has NOT
-  been pushed, so it has no CI run of its own yet.
-- **REOPEN / active gate failure:** pre-push gate `docs-alignment/walk` is **FAILING
-  (P0)** against the local tree — **NOT yet run against a push attempt this rotation
-  by #29** (the failure was surfaced during the executor's mkdocs-strict + local
-  doc-alignment sanity pass inside the Directive-2 quick, per its SUMMARY.md; #29 did
-  not force a `git push` to re-confirm the exact stderr, to avoid a failed push attempt
-  mid-relief). **#30 MUST re-run the actual `git push origin main` (or the pre-push
-  hook standalone) to get the live gate transcript before assuming this handover's
-  characterization is exact** — treat "11 drifted rows" as the best-known count, not
-  gospel, and let the gate's own output be the final word.
-  - Named rows expected to drift (`sources_drifted=[0]`, per doc-alignment catalog
-    entries anchored into `docs/reference/testing-targets.md`): `jira-token`,
-    `jira-email`, `jira-test-project-override`, `jira-url-format`,
-    `github-url-prefix`, `jira-init-success`, `jira-instance`,
-    `jira-reposix-override`, `skip-no-panic`, `skip-without-creds`, + 1 more (11
-    total) — all in `quality/catalogs/doc-alignment.json`.
-  - **Named recovery (repeated per row by the gate itself):** `/reposix-quality-refresh
-    docs/reference/testing-targets.md` (top-level slash command). The
-    `reposix-quality` binary is already built (`target/release/reposix-quality`, built
-    Jul 13) — no rebuild should be needed unless it's stale/missing.
-  - This is a REAL gate correctly catching drift from a legitimate doc edit — it is
-    NOT a bug, NOT to be waived, NOT to be bypassed with `--no-verify`.
+- **CI gate:** `origin/main` tip `be6f1bf` — `code/ci-green-on-main` P0 **PASS**
+  (`ci.yml` run `29447017101`, completed/success). No REOPEN, no active gate failure.
+- **What was REOPEN last rotation, now CLOSED:** the `docs-alignment/walk` pre-push
+  block (10 drifted rows in `quality/catalogs/doc-alignment.json`, anchored into
+  `docs/reference/testing-targets.md`, caused by `a165d48`'s KEEP-policy insertion).
+  Resolved via `/reposix-quality-refresh docs/reference/testing-targets.md` (Opus
+  grader re-bound all 10 rows GREEN with corrected source ranges, e.g. `jira-token`
+  `:186 → :209`), committed `be6f1bf`, pushed, CI verified green. `walk` now exits 0,
+  no blocking states remain.
 - **Waiver / deadline clocks (carried, unchanged this rotation):**
   - `agent-ux` hero-number doc-alignment rows (8 total) — waiver expires
     **2026-08-15** (P115/BENCH-01 re-measures to lift it).
   - `structure/file-size-limits` — waiver expires **2026-08-08** (`client.rs` split is
-    v0.17 scope, do NOT split early).
+    v0.17 scope, do NOT split early). This waiver is gate-wide (over-budget tier
+    warns, does not block) — this handover file itself and its predecessor both sit
+    slightly over the 20000 B `*.md` ceiling; non-blocking under the same waiver, but
+    do not treat that as license to bloat further.
   - `perf-targets` — self-WAIVED until **2026-07-26**.
   - Pre-push timing WARN is a stale budget doc (GTH-14), NOT a real regression — do
     NOT re-investigate.
+- **NEW watch item (#30, not yet a filed defect):** #30's pre-push cadence measured
+  **~91s vs the documented ~55-60s budget** (WARN-level, non-blocking). Likely cause:
+  cold cargo/kcov caches after a `reposix-quality --release` rebuild earlier this
+  session — NOT the GTH-14 stale-budget-doc case above (that one is about the budget
+  number being wrong; this is a live timing observation on a specific run). Not a
+  blocker. **If #31 (or a later successor) sees this recur on a WARM cache**, treat it
+  as a real signal and check for a newly-added whole-repo pre-push gate rather than
+  assuming diff size — do not dismiss a second occurrence as noise.
 - **Milestone-close 9th probe** (`pre-release-real-backend`) not yet due — milestone
   still open, 14 phases remain.
 - **Intake already filed — do NOT re-file:** GTH-V15-21 (archived-handover file-size at
   the 08-08 waiver expiry, committed `71e904f`); the 2 todos filed prior rotation
-  (roadmap-diagram lane + GOOD-TO-HAVES consolidation); GTH-16.
+  (roadmap-diagram lane + GOOD-TO-HAVES consolidation); GTH-16; **and, new this
+  rotation, GTH-V15-22 + GTH-V15-23** (both filed below in §5/committed to
+  `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` in the same commit as this
+  handover).
 
 ## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
 
-- **What #29 did this rotation (honest account):** re-verified §1 ground truth live
-  (HEAD lineage `71e904f`→`26ca703`→`87a4bb2` at start, CI green). **Closed Directive
-  2** — a 5-rotation (now 6, counting this one) starvation — via gsd-quick `260715-h1d`
-  (opus planner → sonnet executor): recorded the `reposix-scope-test-DELETEME`
-  scratch-repo KEEP-policy in `docs/reference/testing-targets.md` (never-delete /
-  reset-via-force-push / currently ARCHIVED per LIVE `gh api` check
-  `archived:true, private:true, pushed 2026-07-14` / unarchive via `gh api -X PATCH
-  repos/reubenjohn/reposix-scope-test-DELETEME -f archived=false` before first reuse).
-  **Eager-fixed a genuine lying doc** in the same commit (authorized, OP-8 <1h/
-  same-file scope): a stale "Phase 36 cleanup automation will handle this"
-  forward-reference — verified via git log/grep that no such automation ever shipped —
-  rewritten to present-tense manual cleanup. mkdocs-strict passed GREEN on the diff.
-- **Why #29 relieved here (honest, not spun):** the Directive-2 push surfaced the
-  docs-alignment refresh tail (a NEW, unbudgeted top-level workload — 11 drifted
-  catalog rows requiring an Opus-graded `/reposix-quality-refresh` dispatch) at
-  exactly the moment #29's own context reached the ~100k soft-relief threshold. Per
-  doctrine §3 (relieve at a wave boundary past ~100k; the runway to 150k is
-  CORRECTION MARGIN, not workload budget), #29 relieved rather than either (a)
-  hand-bind 11 catalog rows context-fatigued — `reposix-quality doc-alignment bind`
-  requires exact `--claim/--source/--test/--rationale` per row, a catalog-corruption
-  risk under fatigue — or (b) start heavy P115 planning over-budget (the exact #28
-  trap this handover explicitly avoids repeating). Directive-2's WORK is fully
-  committed (`a165d48`, `dff801b`); only the push+refresh tail remains — a clean,
-  discrete opening unit for a fresh #30. **This is a clean pre-P115 boundary, not a
-  mid-flight rescue** — nothing is half-edited, no test is failing, no state is
-  corrupted; only a push is pending behind a correctly-firing gate.
-- **META-LESSON for #30 (fix-it-twice — this is a NEW instance, not a repeat of the
-  #27/#28 plan-phase.md sink):** editing ANY `docs/**/*.md` file that carries
-  doc-alignment catalog rows drifts those rows and REQUIRES a top-level
-  `/reposix-quality-refresh <doc>` before the NEXT push lands. This tail surfaces
-  ONLY at pre-push (`docs-alignment/walk`) — NOT at pre-commit, and NOT at the
-  executor's own `mkdocs-strict` gate — so a "cheap docs-only change" framing is a
-  trap for ANY tracked doc, not just this one. **Action for #30:** before editing a
-  tracked doc in future work, `grep '<doc-path>' quality/catalogs/doc-alignment.json`
-  to check if it's tracked, and budget the refresh tail if so. File a
-  `GOOD-TO-HAVES` row proposing this pre-check be surfaced in the executor/quick-task
-  contract or CLAUDE.md, so future agents stop under-scoping tracked-doc edits. This
-  ALSO applies to the queued **roadmap-diagram gsd-quick** if it ends up touching a
-  tracked doc — check before scoping it as "small."
+- **What #30 did this rotation (honest account):** ran the push-unblock runbook #29
+  handed off, end to end, and nothing else. Re-verified §1 ground truth live. Diagnosed
+  the exact drift: `a165d48` had inserted a 23-line "Scratch repo —
+  reposix-scope-test-DELETEME" subsection at doc line 166 in
+  `docs/reference/testing-targets.md`, uniformly shifting every cited JIRA/GitHub/
+  skip-pattern claim below it by +23 lines (STALE_DOCS_DRIFT, confirmed **10** rows,
+  not the "11-ish" estimate #29's handover carried — the exact count was resolved by
+  the live `walk`, not by trusting the prior handover's characterization, per that
+  handover's own instruction). Ran `/reposix-quality-refresh
+  docs/reference/testing-targets.md`; an Opus grader re-read each claim's prose AND
+  its asserting test fn body (not just the claim text) and re-bound all 10 GREEN with
+  corrected source ranges. Committed `be6f1bf`, pushed, confirmed CI green
+  (`29447017101`) and the post-push `code/ci-green-on-main` P0 probe PASS. **No P115
+  work was started this rotation** — the push-unblock tail consumed the rotation as
+  scoped; P115 planning is entirely #31's to open fresh.
+- **NEW operational meta-lesson for #31 (add near the #29/#30 plan-refresh lesson,
+  this is a NEW instance discovered fixing the blocker above):**
+  `reposix-quality doc-alignment plan-refresh <doc>` builds its stale-row manifest
+  from the catalog's **PERSISTED** `last_verdict` — on a clean tree it returns an
+  **EMPTY** `stale_rows` list until a `walk` has run and persisted `STALE_DOCS_DRIFT`.
+  `walk` "updates `last_verdict` only" — i.e. it is the one that mutates/dirties the
+  catalog with the live drift state. So when diagnosing a `STALE_DOCS_DRIFT` block
+  manually: run **`walk` FIRST** (authoritative — exits 1 and lists the drifted rows +
+  persists their state), **THEN** `plan-refresh` will return them. **Do NOT misread an
+  empty `plan-refresh` as "nothing to do"** — cross-check against `walk`'s exit code.
+  (The pre-push gate's own internal `walk` normally pre-populates this automatically;
+  it is only a fresh MANUAL diagnosis on an otherwise-clean tree that can be fooled by
+  an empty `plan-refresh`.) This is closely related to, but a sharper/more specific
+  instance of, the already-filed **GTH-V15-16** ("`plan-refresh` under-reports drift
+  when invoked cold") — do NOT file a duplicate GTH row for this; the existing
+  GTH-V15-16 fix-sketch already covers it, this bullet is operational guidance for
+  agents until that GTH lands.
+- **Two GOOD-TO-HAVES rows filed this rotation** (from the Opus grader's noticing
+  during the refresh above), appended to
+  `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` in the SAME commit as this
+  handover — **do NOT re-file, see full text there:**
+  - **GTH-V15-22** — `prior_rationale` line-refs in `doc-alignment.json` rot silently
+    (hardcoded line numbers drift even when the underlying binding is sound, because
+    nothing validates them against the live source; e.g. all JIRA rows cited
+    `agent_flow_real.rs:296` while the real fn/assertions sit at `:298`-`:311`).
+  - **GTH-V15-23** — the `github-url-prefix` claim (row
+    `docs/reference/testing-targets/github-url-prefix`) is bound to prose in the
+    ADR-008 dispatch-note blockquote (`docs/reference/testing-targets.md:245-251`),
+    not stated in the GitHub testing section proper — binding is sound, but a reader
+    scanning that section won't find the URL contract there.
 - **RAISE LIST / open items carried forward, all still OPEN:**
   - **P116 ADR-010 packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
     durable-create hazard): after P115, produce options+tradeoffs and **route the
@@ -205,88 +194,78 @@ gate's own named recovery command. See §5 for the honest account.
   - **roadmap-diagram gsd-quick** — owner-approved, small; todo
     `.planning/todos/pending/2026-07-15-public-birds-eye-roadmap-diagram.md` (read it
     for all 5 points before scoping). Interleave opportunistically; carries the
-    docs-alignment refresh-tail caveat above if it touches a tracked doc.
+    docs-alignment refresh-tail caveat (editing ANY tracked doc in
+    `quality/catalogs/doc-alignment.json` requires a `/reposix-quality-refresh` pass
+    before the next push) if it touches a tracked doc.
   - **GOOD-TO-HAVES consolidation** (two coexisting files: root
     `.planning/GOOD-TO-HAVES.md` vs `.planning/milestones/v0.15.0-phases/
     GOOD-TO-HAVES.md`) — needs a manager/owner **DOCTRINE CALL** before merging; todo
     `.planning/todos/pending/2026-07-15-consolidate-two-good-to-haves-files.md`. Do
     NOT merge unilaterally.
 - **Intake already filed — do NOT re-file:** see §4 list above (GTH-V15-21, the 2
-  todos, GTH-16). Directive 2's completion itself needs no separate intake filing —
-  its resolution is the two local commits `a165d48`/`dff801b`.
+  todos, GTH-16, and this rotation's GTH-V15-22 + GTH-V15-23).
 
-## 6. Precise next steps (successor #30 runbook)
+## 6. Precise next steps (successor #31 runbook)
 
-**⛔ THE BLOCKER — do this FIRST, before P115 or anything else:**
+**The push-unblock blocker is CLOSED. There is no ⛔ blocker at the top of this
+runbook — start directly at step 1.**
 
 1. **Re-verify §1 ground truth live**: `git rev-parse HEAD && git status --porcelain
    && git rev-list --left-right --count HEAD...origin/main && gh run list --branch
-   main --workflow CI --limit 3`. Confirm local is still `dff801b`+this handover
-   commit, ahead of a CI-green `origin/main` tip.
-2. **Run `/reposix-quality-refresh docs/reference/testing-targets.md`** (top-level
-   slash command) to re-bind the 11 (confirm exact count live) drifted doc-alignment
-   catalog rows. It dispatches Opus grader(s) that propose citations; the
-   `reposix-quality` binary (`target/release/reposix-quality`) validates and mints —
-   **NEVER hand-edit `quality/catalogs/doc-alignment.json` directly.** This command
-   commits the minted catalog rows itself.
-3. **`git push origin main`** — should now pass the `docs-alignment/walk` gate (lands
-   `a165d48` + `dff801b` + this handover commit + the catalog-refresh commit, in that
-   order, `--no-verify` NEVER).
-4. **Post-push CI verify:** `python3 quality/runners/run.py --cadence post-push
-   --persist` — confirm `code/ci-green-on-main` P0 **PASS** (the newest `ci.yml` run
-   on the new tip concluded success). **Never open P115 over a red or pending main.**
-
-**Then, P115 planning (the milestone's next substantive work):**
-
-5. **Run `/gsd-plan-phase 115` FRESH from a clean context.** Heed the #27/#28
-   meta-lesson (still binding, distinct from this rotation's new one): do **NOT** read
-   `$HOME/.claude/get-shit-done/workflows/plan-phase.md` linearly (~1720 lines /
-   ~32k-token context sink, burned 2 prior rotations before a single subagent was
-   dispatched). Follow it step-by-step, delegate every heavy read to
-   `reader-digester`, and let its own dispatched subagents
-   (`gsd-phase-researcher`/`gsd-planner`/`gsd-plan-checker`) hold the heavy context.
-   If a 3rd rotation sinks here, file a `GOOD-TO-HAVES` for a progressive-disclosure
-   pass on that workflow file.
-6. **During P115 planning, run `roadmap.update-plan-progress 114`** to clear the
-   stale P114 ROADMAP checkbox — NEVER hand-edit `ROADMAP.md`.
-7. **Carry the P115 BENCH-01 LOCKED CONSTRAINTS verbatim** into the plan (owner/
+   main --workflow CI --limit 3`. Expect `HEAD` at or after `be6f1bf` (this handover's
+   own commit will be the new tip), clean tree, `0 0` ahead/behind, newest CI run
+   green. **If the newest run is still `in_progress`** (this handover's push will have
+   just kicked one off), wait for it to conclude green before proceeding — never open
+   a phase over a red or pending main.
+2. **Run `/gsd-plan-phase 115` FRESH from a clean context.** `Execution mode:
+   top-level` (planning AND execution stay top-level — `gsd-executor` lacks the Skill
+   tool a `/gsd-plan-phase` sub-dispatch needs; orchestration-shaped-phase rule,
+   `.planning/CLAUDE.md`). The phase dir does not exist yet — re-run `gsd-sdk query
+   init.plan-phase 115` fresh (do not trust any cached copy) to confirm: `phase_name`
+   "Live MCP benchmark re-measurement", `slug` `live-mcp-benchmark-re-measurement`,
+   `phase_req_ids` BENCH-01, `has_context`/`has_research`/`has_plans` all false, models
+   researcher=sonnet planner=opus checker=sonnet.
+   - **Anti-sink lesson (carried, still binding — distinct from #30's new lesson
+     above):** do **NOT** read `$HOME/.claude/get-shit-done/workflows/plan-phase.md`
+     linearly (~1720 lines / ~32k-token context sink — burned 2 prior rotations
+     before a single subagent was dispatched, the #27/#28 trap). Follow it
+     step-by-step, delegate EVERY heavy read to `reader-digester`, and let its own
+     dispatched subagents (`gsd-phase-researcher`/`gsd-planner`/`gsd-plan-checker`)
+     hold the heavy context. If a 3rd rotation sinks here, file a `GOOD-TO-HAVES` for
+     a progressive-disclosure pass on that workflow file.
+3. **During P115 planning, run `roadmap.update-plan-progress 114`** to clear the stale
+   P114 ROADMAP checkbox — NEVER hand-edit `ROADMAP.md`.
+4. **Carry the P115 BENCH-01 LOCKED CONSTRAINTS verbatim** into the plan (owner/
    manager-set, do not re-derive): ≤50 benchmark sessions on the EXISTING
    subscription / NO new API spend / escalate past 50 to the MANAGER (w1:p7) /
    hero-number waiver HARD DEADLINE **2026-08-15** (8 `agent-ux` hero-number
-   doc-alignment rows) / `Execution mode: top-level` (planning AND execution stay
-   top-level — `gsd-executor` lacks the Skill tool a `/gsd-plan-phase` sub-dispatch
-   needs). Prior methodology home: `docs/benchmarks/latency.md`. P115 init facts
-   (re-run `gsd-sdk query init.plan-phase 115` fresh, do not trust a cached copy):
-   `phase_name` "Live MCP benchmark re-measurement", `slug`
-   `live-mcp-benchmark-re-measurement`, `phase_req_ids` BENCH-01,
-   `has_context`/`has_research`/`has_plans` all false, models researcher=sonnet
-   planner=opus checker=sonnet, `phase_dir` NOT yet created (the workflow creates it).
-8. **After P115 is planned and executed**, open **P116 ADR-010 packet** — options +
+   doc-alignment rows) / `Execution mode: top-level`. Prior methodology home:
+   `docs/benchmarks/latency.md`.
+5. **After P115 is planned and executed**, open **P116 ADR-010 packet** — options +
    tradeoffs for BOTH ADR-01 (mirror-fanout) and FIX-03 (GTH-09 slug→id
    durable-create hazard), then route to the **MANAGER (w1:p7) for ruling — no
    pre-ruling implementation.**
-9. **roadmap-diagram gsd-quick** (§5) — owner-approved, small; interleave
+6. **roadmap-diagram gsd-quick** (§5) — owner-approved, small; interleave
    opportunistically, mind the docs-alignment refresh-tail caveat if it touches a
    tracked doc.
-10. **GOOD-TO-HAVES consolidation** — do NOT merge unilaterally; flag to the manager
-    for a doctrine call if it hasn't already happened.
-11. **Report to the manager (w1:p7)** at each boundary (blocker resolved + push
-    landed, P115 planning start, P115 close, P116 routing to manager) and at any
-    owner-blocking moment. The manager POLLS — clear in-pane narration at each
-    boundary IS the report.
-12. **Relieve past ~100k own-context tokens** (hard stop ~150k, absolute not %) at a
-    wave boundary — dispatch `relief-handover-writer`, which writes+commits a fresh
-    `.planning/SESSION-HANDOVER.md` that REPLACES this file, naming successor **#31**.
+7. **GOOD-TO-HAVES consolidation** — do NOT merge unilaterally; flag to the manager
+   for a doctrine call if it hasn't already happened.
+8. **Report to the manager (w1:p7)** at each boundary (P115 planning start, P115
+   close, P116 routing to manager) and at any owner-blocking moment. The manager
+   POLLS — clear in-pane narration at each boundary IS the report.
+9. **Relieve past ~100k own-context tokens** (hard stop ~150k, absolute not %) at a
+   wave boundary — dispatch `relief-handover-writer`, which writes+commits a fresh
+   `.planning/SESSION-HANDOVER.md` that REPLACES this file, naming successor **#32**.
 
 **Ratchet-first sequence for reference** (canonical = Arc D ADDENDUM, digest only, do
 not re-fetch): **v0.15 floor** (current milestone, P114 CLOSED GREEN, 1/15 phases done,
-P115 opens next once the push blocker clears) → **v0.17 meta-milestone** (5 gate
-shapes: pivot-vocabulary lint, nav-budget, hero-redundancy, framing-claim rows,
-persona whole-journey rubric; + subjective-runner Task-dispatch fix unfreezing 3
-WAIVED meaning-gates; + waiver-escalation rule; + transcript retention; + bloat
-remediation incl. the SURPRISES-INTAKE/GOOD-TO-HAVES progressive-disclosure split) →
-**v0.19** truth purge + IA rebuild → **v0.21** benchmark honesty (re-fixture live
-baseline, CI job, headline-cross-check verifier) → **v0.23** journey slices →
+P115 opens next — the push blocker that gated it is now clear) → **v0.17
+meta-milestone** (5 gate shapes: pivot-vocabulary lint, nav-budget, hero-redundancy,
+framing-claim rows, persona whole-journey rubric; + subjective-runner Task-dispatch fix
+unfreezing 3 WAIVED meaning-gates; + waiver-escalation rule; + transcript retention; +
+bloat remediation incl. the SURPRISES-INTAKE/GOOD-TO-HAVES progressive-disclosure
+split) → **v0.19** truth purge + IA rebuild → **v0.21** benchmark honesty (re-fixture
+live baseline, CI job, headline-cross-check verifier) → **v0.23** journey slices →
 **v0.25** launch kit → Show-HN. **Q3 launch gate:** Show-HN gated on a walkable
 REAL-BACKEND journey (GitHub minimum), not sim-first. **Deep-survey calibration:**
 ~10% latent work per pass, ~10 passes to converge, recurring deep surveys are
