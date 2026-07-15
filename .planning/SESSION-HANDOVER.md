@@ -1,9 +1,9 @@
 # SESSION-HANDOVER.md — v0.15.0 Floor: P114 CLOSED GREEN, P115 planning opens next — 2026-07-15
 
-Written by the **relief-handover-writer** on behalf of **workhorse #27** (L0
-orchestrator, herded by the manager in w1:p7), relieving to **successor #28**. This
-file **REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#26→#27's
-handover, committed at `276beb8`'s successor chain, superseded here).
+Written by the **relief-handover-writer** on behalf of **workhorse #28** (L0
+orchestrator, herded by the manager in w1:p7), relieving to **successor #29**. This
+file **REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#27→#28's
+handover, committed at `29470e2`, superseded here).
 
 **Read order:** this file → §1 (verify live, do not trust timestamps) → §6 (runbook) →
 dip into §2/§4/§5 as needed. **Guardrails unchanged:** do NOT touch
@@ -22,83 +22,64 @@ git rev-parse HEAD && git status --porcelain && \
 ```
 **Verified independently this handover (2026-07-15, just now, before writing this
 file):**
-- Local `main` HEAD = `e039bb79b2a5992016228445ea62f468685f7e5e` (short `e039bb7`, "docs:
-  capture 2 todos — roadmap-diagram lane + GOOD-TO-HAVES consolidation"), tree
-  **clean** (`git status --porcelain` empty), **+1 AHEAD** of `origin/main`
-  (`origin/main` = `dc26302fefebb83da5e185e069f01592d30d2741`, short `dc26302`) —
-  `git rev-list --left-right --count HEAD...origin/main` → `1  0`.
-- **After this handover commit lands, local HEAD will be 2 AHEAD of origin**
-  (`e039bb7` + this handover doc). **L0 pushes both after this commit** — #28 must
-  re-verify CI green live on the pushed tip as runbook step 1 (docs-only diff,
-  expected green, but confirm, don't assume).
-- **CI GREEN, verified live via `gh run list --branch main --workflow CI --limit 3`:**
-  newest `ci.yml` run on `main` (headSha `dc26302`, run `29439318240`) is
-  `completed`/`success`, 5m37s, concluded 2026-07-15T18:08:15Z. The two runs before it
-  (`5de29d4` run `29437799441`, success; `12a0f57` run `29435883070`, success) are also
-  green — no red/pending run sits on main right now.
-- `.planning/STATE.md` (`last_updated: 2026-07-15T18:10:00Z`) independently confirms:
-  `status: in_progress`, `completed_phases: 1/15`, current position "P114 CLOSED
-  GREEN", next action `/gsd-plan-phase 115`. This matches the git lineage below —
-  cross-checked, not just trusted.
+- Local `main` HEAD = `87a4bb24bec872033a1fce501b377b1d1b322ad9` (short `87a4bb2`,
+  "docs(planning): prune manager handover to size budget (git history is the
+  archive)"), tree **clean** (`git status --porcelain` empty), **IN SYNC** with
+  `origin/main` (`git rev-list --left-right --count HEAD...origin/main` → `0  0`).
+- **`87a4bb2` is a MANAGER commit, not #28's work** — the manager (w1:p7) pruned
+  `.planning/MANAGER-HANDOVER.md` between #28's own verification pass and this
+  handover being written. Expected on a shared tree; not a deviation to chase.
+- **CI status on the CURRENT TIP (`87a4bb2`) was IN_PROGRESS, not yet concluded, at
+  the moment this handover was verified** (`ci.yml` run `29442201377`, started
+  `18:50:51Z`, still `in_progress` at `18:53:12Z`; `release-plz` run `29442203689`
+  also `in_progress`; only `Push on main` had completed/success on this sha). **#29
+  MUST re-run `gh run list --branch main --workflow CI --limit 3` as its first action
+  and confirm the newest run on `87a4bb2` (or whatever the tip is by then) concluded
+  `success` before doing anything else** — do not assume green from this document.
+- **The prior tip `f2f0f01` (manager's earlier handover refresh) IS confirmed GREEN**:
+  `ci.yml` run `29441724976`, `completed`/`success`, concluded `18:49:16Z`. The tip
+  before that, `29470e2` (the #27→#28 relief handover), is also `completed`/`success`
+  (run `29440972233`). No red run sits on main's recent history.
+- `.planning/STATE.md` last confirmed (by #27→#28's handover) `status: in_progress`,
+  `completed_phases: 1/15`, current position "P114 CLOSED GREEN", next action
+  `/gsd-plan-phase 115` — unchanged this rotation, #28 did not execute planning (see
+  §5 for why).
 
-**Commit lineage this rotation (#27), oldest → newest, chronological:**
-1. `9915953` — test(114-02): reproduction-backed oid-drift + reconcile-non-recovery
-2. `0e200f9` — docs(114-02): scope `--reconcile`'s oid-drift recovery to what it heals
-3. `de87650` — docs(114-02): Wave-2 reconcile-audit SUMMARY (FIX-02)
-4. `9bed65a` — docs(114-02): align `read_blob` `# Errors` OidDrift framing (code-review
-   nit)
-5. `12a0f57` — docs(114-02): re-bind `cli-subcommand-surface` doc-alignment hash after
-   FIX-02 doc-comment drift
-6. `dde50fa` — docs(114): C1 relief handover — Wave-2 done+pushed+CI-green,
-   verification tail opens next
-7. `5de29d4` — docs(114): phase-close verification + batched GTH intake
-   (FIX-01/FIX-02)
-8. `dc26302` — docs(114): close phase — SC1/SC2 real-backend GREEN, cursor advance,
-   SC1-cmd fix
-9. `e039bb7` — docs: capture 2 todos — roadmap-diagram lane (owner-approved) +
-   GOOD-TO-HAVES consolidation (**L0 closeout, current HEAD**)
-10. **`<this commit, created below>`** — the #27→#28 handover you are reading
+**Commit lineage since the last known-clean sha (`dc26302`), oldest → newest:**
+1. `e039bb7` — docs: capture 2 todos — roadmap-diagram lane + GOOD-TO-HAVES
+   consolidation (prior rotation, #27 closeout)
+2. `29470e2` — docs(planning): L0 relief handover #27→#28 (prior rotation's handover)
+3. `f2f0f01` — docs(planning): refresh manager handover — P114 closed green,
+   pane-clear rotation rule, #8 session state (**manager-authored**)
+4. `87a4bb2` — docs(planning): prune manager handover to size budget
+   (**manager-authored, current HEAD**)
+5. **`<this commit, created below>`** — the #28→#29 handover you are reading
 
-**Deviations from the plan #28 MUST know:**
-- P114 is now **fully closed** — both waves shipped, verification tail ran, real-backend
-  SC1/SC2 acceptance ran live and PASSED. There is no open Wave for #28 to resume; the
-  next unit of work is **planning P115**, not executing an in-flight phase.
-- The SC1 acceptance command in the plan/verification docs had a **latent false-GREEN**
-  (a bare `git checkout -B main` materializes nothing, so the OidDrift check never
-  actually ran) — this was caught and corrected to `git checkout -B main
-  refs/reposix/origin/main` across 5 occurrences before close. Read §2/§3 before
-  reusing that acceptance command anywhere else.
+**Deviations from the plan #29 MUST know:**
+- **No P115 planning artifacts exist yet.** #28 ran `gsd-sdk query init.plan-phase 115`
+  (read-only, produced no file writes — see §3/§5) then relieved at that clean
+  pre-research boundary. `/gsd-plan-phase 115` has NOT been run. There is nothing
+  half-built to inspect or resume — the next unit of work is starting P115 planning
+  from scratch.
+- P114 remains fully closed (both waves shipped, verification tail ran, real-backend
+  SC1/SC2 PASSED) — carried unchanged from the #27→#28 handover, no new information
+  this rotation.
 
 ## 2. Wave/cycle state
 
 | Wave/Phase | Plan | State | Commits |
 |---|---|---|---|
-| P114-01 (FIX-01, Confluence render-parity) | `114-01-PLAN.md` | **DONE + CI GREEN** | tip `6f15138` (prior rotation) |
-| P114-02 (FIX-02, reconcile-audit) | `114-02-PLAN.md` | **DONE + CI GREEN** | `9915953` → `0e200f9` → `de87650` → `9bed65a` → `12a0f57` |
-| P114 verification tail | `114-VERIFICATION.md` | **DONE + CI GREEN** | `5de29d4` |
-| P114 phase-close (SC1/SC2 real-backend, cursor advance) | — | **DONE + CI GREEN** | `dc26302` |
+| P114 (all waves + verification + close) | — | **DONE + CI GREEN** | tip `dc26302` (prior rotations) |
 | P114 closeout (2 todos filed) | — | **DONE** | `e039bb7` |
-| **P115 BENCH-01** (live MCP benchmark re-measurement) | not yet written | **NOT STARTED — #28's opening move** | — |
+| Manager handover refresh + prune | — | DONE (manager's own artifact) | `f2f0f01`, `87a4bb2` |
+| **P115 BENCH-01** (live MCP benchmark re-measurement) | not yet written | **NOT STARTED — `init.plan-phase` query run, phase dir NOT yet created, `/gsd-plan-phase 115` NOT yet run** | — |
 | P116 ADR-010 packet (ADR-01 + FIX-03 options) | not yet written | NOT STARTED | — |
-| roadmap-diagram gsd-quick (owner-approved, §4) | todo filed | NOT STARTED, queued | — |
-| Directive 2 (scratch-repo KEEP-policy doc, gsd-quick) | todo | NOT STARTED, **4 rotations pending** | — |
+| roadmap-diagram gsd-quick (owner-approved) | todo filed | NOT STARTED, queued | — |
+| Directive 2 (scratch-repo KEEP-policy doc, gsd-quick) | todo | NOT STARTED, **5 rotations pending** | — |
+| GOOD-TO-HAVES consolidation (needs manager doctrine call) | todo filed | NOT STARTED, blocked on manager ruling | — |
 
-**P114 close-out summary (milestone v0.15.0 Floor — 1 of 15 phases done):**
-- Wave-1 FIX-01 (Confluence render-parity): done+green (tip `6f15138`).
-- Wave-2 FIX-02 (reconcile-audit): done+green (`9915953`/`0e200f9`/`de87650`/`9bed65a`/
-  `12a0f57`).
-- Verification tail: `5de29d4` + `dc26302`, both CI-green.
-- **SC results:** SC3/SC4 GREEN (`oid_drift_reconcile` 3/3, `list_and_get_render_parity`
-  1/1). **SC1 PASS live** — TokenWorld page `7766017` materialized ADF-native (664B),
-  zero OidDrift; the pre-ADF risk carried from the prior rotation did NOT fire (OQ1
-  residual latent-but-dormant, tracked, not re-opened). **SC2 PASS**
-  (conflict-rebase-ancestry real-backend, exit 0, 7 asserts). Protected TokenWorld pair
-  `7766017`/`7798785` intact throughout.
-
-**Named incident carried from the prior rotation (already resolved, informational
-only):** a background self-resume CI watcher died mid-Wave-2 and stalled progress ~2h
-before the manager caught it idle. This produced the standing liveness doctrine in §5 —
-already applied for the rest of this rotation, no outstanding action.
+No named incident this rotation — #28's turn was short and clean (init query → early
+relief). See §5 for the honest account of why relief happened this early.
 
 ## 3. Binding constraints (unchanged, carried)
 
@@ -124,135 +105,153 @@ already applied for the rest of this rotation, no outstanding action.
   commits).
 - **Shared tree with the manager** — TARGETED staging only (`git add <path>`, never
   `-A`/`.`); do not touch `.planning/MANAGER-HANDOVER.md`.
+- **LIVENESS doctrine:** bound every wait on a dispatched child; health-check quiet
+  children on a ≤30min/≤1h timer; children poll CI INLINE or run synchronously — never
+  idle-trust a background self-resume watcher alone.
+- **Real-backend cadence:** source `.env` in the SAME invocation as `run.py`;
+  `scripts/refresh-tokenworld-mirror.sh` as a pre-step; TokenWorld protected pair
+  `7766017`/`7798785` NEVER deleted.
+- **Before ending any turn with background shells/monitors running**, note their task
+  ids in visible output (`/clear` does not kill them; successors can't enumerate them).
+- **Manager (w1:p7) uses a POLLING model** — clear in-pane narration at each boundary
+  IS the report; escalate actively only for owner-blocking moments.
 - **Relieve past ~100k tokens of own context** (hard stop ~150k; **absolute, not %** of
   the window) at a wave boundary — write+commit a fresh handover, REPLACING this file,
-  naming successor **#29**.
+  naming successor **#30**.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **CI gate run history:** `29439318240` (headSha `dc26302`) `completed`/`success`,
-  5m37s — the current tip of `origin/main`, verified live this handover via `gh run
-  list`. Preceding two runs (`29437799441` on `5de29d4`, `29435883070` on `12a0f57`)
-  also `completed`/`success`. `code/ci-green-on-main` P0 = **PASS** on `dc26302`.
-- **P114 real-backend acceptance (SC1–SC4), all GREEN, run live 2026-07-15 ~17:56Z**
-  (tenant `reuben-john` / space `REPOSIX`): SC1 PASS (TokenWorld page `7766017`
-  materialized ADF-native, 664B, zero OidDrift — the corrected `git checkout -B main
-  refs/reposix/origin/main` command was used, not the earlier false-GREEN form); SC2
-  PASS (`agent-ux/t4-conflict-rebase-ancestry-real-backend`, exit 0, 7 asserts); SC3/SC4
-  GREEN via artifact-verifiable tests (`oid_drift_reconcile` 3/3,
-  `list_and_get_render_parity` 1/1). Full transcript: `114-VERIFICATION.md` in
-  `.planning/phases/114-t4-confluence-oid-drift-fix-first-reconcile-audit/`.
+- **CI gate run history:** newest run on main's tip (`87a4bb2`) was **IN_PROGRESS at
+  verification time** — see §1, #29 must confirm conclusion before proceeding. The
+  preceding two tips (`f2f0f01` run `29441724976`, `29470e2` run `29440972233`) are
+  both `completed`/`success`. `code/ci-green-on-main` P0 status: **PASS on `f2f0f01`,
+  PENDING re-check on `87a4bb2`.**
+- **P115 BENCH-01 LOCKED CONSTRAINTS** (owner/manager-set — #29 MUST carry these into
+  planning as locked decisions, not re-derive them):
+  - Funded Q1 re-measurement.
+  - Ceiling **≤50 benchmark sessions on the EXISTING subscription**; **NO new API
+    spend**.
+  - **Escalate past 50 sessions to the MANAGER (w1:p7)** — never exceed 50 without an
+    explicit manager GO.
+  - Hero-number waiver **HARD DEADLINE 2026-08-15** (the `agent-ux` hero-number
+    doc-alignment rows, 8 total, whose waiver expires that date — BENCH-01
+    re-measures the hero numbers so the waiver can be lifted). Schedule early.
+  - `Execution mode: top-level` — P115 is orchestration/measurement-shaped, runs at
+    top-level (NOT under `/gsd-execute-phase`; a `phase-coordinator`/`gsd-executor`
+    lacks the Skill tool needed to run `/gsd-plan-phase`). Planning MUST stay
+    top-level (L0/#29).
+  - Prior benchmark methodology / latency envelope home: `docs/benchmarks/latency.md`.
+- **P115 init facts** (from `gsd-sdk query init.plan-phase 115`, captured by #28 —
+  re-run this query fresh, do not trust a cached copy, none was committed):
+  - `phase_found: true`; `phase_name: "Live MCP benchmark re-measurement"`;
+    `phase_slug: live-mcp-benchmark-re-measurement`; `padded_phase: 115`.
+  - `phase_dir` does NOT exist yet — the plan-phase workflow (step 2) creates
+    `.planning/phases/115-live-mcp-benchmark-re-measurement` itself.
+  - `has_context`, `has_research`, `has_plans` all **false**; `phase_req_ids:
+    BENCH-01`.
+  - `research_enabled`, `plan_checker_enabled`, `nyquist_validation_enabled`,
+    `commit_docs` all **true**.
+  - Models: researcher=**sonnet**, planner=**opus**, checker=**sonnet**.
 - **Waiver / deadline clocks (carried, unchanged this rotation):**
   - `agent-ux` hero-number doc-alignment rows (8 total) — waiver expires
     **2026-08-15**.
-  - `structure/file-size-limits` — waiver expires **2026-08-08** (`client.rs` ~130k
-    chars split is v0.17 scope, do NOT split early).
+  - `structure/file-size-limits` — waiver expires **2026-08-08** (`client.rs` split is
+    v0.17 scope, do NOT split early).
   - `perf-targets` — self-WAIVED until **2026-07-26**.
-  - **P115 BENCH-01** hero-number waiver — **HARD DEADLINE 2026-08-15**; ≤50 benchmark
-    sessions on the subscription budget; escalate to the manager past 50 (never exceed
-    without a manager GO). Schedule early — see §6.
-  - Pre-push timing WARN (was trending up rotation-over-rotation) is now understood as
-    a **stale budget doc** (GTH-14), not a real regression — do NOT re-investigate.
-- **Real-backend cadence (unchanged):** source `.env` in the SAME invocation as
-  `run.py`; `scripts/refresh-tokenworld-mirror.sh` as a PRE-STEP before any
-  litmus/real-backend run; TokenWorld protected pair `7766017`/`7798785` NEVER deleted
-  (repair tool: `scripts/confluence_tokenworld.py`). Milestone-close needs the
-  non-skippable 9th probe `pre-release-real-backend` — not yet due (milestone still
-  open, 14 phases remain).
+  - Pre-push timing WARN is a stale budget doc (GTH-14), NOT a real regression — do
+    NOT re-investigate.
+- **Milestone-close 9th probe** (`pre-release-real-backend`) not yet due — milestone
+  still open, 14 phases remain.
 
 ## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
 
-- **RAISE LIST triaged this rotation:**
-  - **#1 ROADMAP.md checkbox stale** (line ~67 `- [ ] Phase 114` + progress row "Not
-    started" — contradicts `STATE.md`). Deliberately NOT hand-edited (tool-owned).
-    **FIX during P115 planning via `roadmap.update-plan-progress 114`** — #28 must
-    ensure it runs as part of `/gsd-plan-phase 115`.
-  - **#2 Two coexisting GOOD-TO-HAVES.md files** — root
-    `.planning/GOOD-TO-HAVES.md` (prefix `GOOD-TO-HAVES-01,-09..16`) vs
-    `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` (prefix
-    `GTH-V15-01..20`) — DISTINCT prefixes, ambiguity CONFIRMED real. Filed as todo
-    `.planning/todos/pending/2026-07-15-consolidate-two-good-to-haves-files.md`.
-    **NEEDS a manager/owner DOCTRINE CALL before consolidating** — do NOT merge
-    unilaterally. Flag to manager.
-  - **#3 (informational, already fixed):** SC1 acceptance shipped a latent
-    false-GREEN (bare `git checkout -B main` materializes nothing) — caught and fixed
-    across 5 occurrences before close. Also independently confirmed by the closeout
-    executor: a `link-resolution.py` `DEFAULT_GLOBS` gap and a GTH-numbering
-    correction. No further action — informational only.
-- **OWNER-APPROVED lane queued (manager w1:p7, 2026-07-15) — public birds-eye roadmap
-  diagram.** Now a committed todo:
-  `.planning/todos/pending/2026-07-15-public-birds-eye-roadmap-diagram.md` (all 5
-  points verbatim — read it before scoping). **gsd-quick scale, schedule AFTER P114
-  (now eligible), enter via `/gsd-quick`.** Summary: (1) new `docs/roadmap.md` in
-  mkdocs nav — ONE color-coded mermaid, shipped/active(v0.15.0)/future arcs to OD-4
-  golden end state, ARCS/CAPABILITIES not phase#/dates; (2) OWNER REQ — bidirectional
-  `<!-- SYNC: -->` cross-links `docs/roadmap.md`↔`.planning/PROJECT.md` + add re-color
-  line to OP-9 distill checklist in `.planning/PRACTICES.md`; (3) gates: mkdocs-strict,
-  mermaid-renders, mcp-mermaid render-review, reposix-banned-words, docs→.planning
-  link-resolution; (4) optional structure-gate row asserting the SYNC marker pair; (5)
-  REQUIRED — extend `DEFAULT_GLOBS` in `quality/gates/docs-build/link-resolution.py`
-  to cover `docs/*.md` + `.planning/PROJECT.md` (catalog-first if a row contract
-  changes). **#28: ack to manager + schedule.**
-- **Structural recommendation (not yet a decision — advisory only):** 14 phases remain
-  (P115–P128). Consider launching a **milestone-scoped C2 coordinator-of-coordinators**
-  so per-phase C1 rotations absorb below L0 rather than relieving L0 every ~100k tokens.
-  **Caveat:** top-level PLANNING (`/gsd-plan-phase`) can't run inside a
-  `phase-coordinator` (no Skill tool) — planning stays top-level (L0/#28); only
-  execution would delegate to C1/C2. #28 to weigh this before P115 planning if context
-  budget is a concern.
-- **NEW LIVENESS DOCTRINE (owner directive 2026-07-15, durable in the `/herdr-manager`
-  skill — carry forward every rotation until superseded):** background self-resume
-  watchers are a liveness risk (a P114 C1's background CI watcher died mid-Wave-2 and
-  stalled progress ~2h until the manager caught it idle). Rule: (a) dispatchers MUST
-  bound their wait and HEALTH-CHECK a quiet child — never idle-trust a background
-  self-resume; (b) children MUST poll CI INLINE (≤1h cap) or run synchronously — never
-  end their turn to wait on a background watcher alone. Already applied for the rest of
-  this rotation with no incident; #28 must keep applying it to any child it dispatches.
-- **Manager (w1:p7) uses a POLLING model** (polls L0's pane, ≤1h cap) — clear in-pane
-  narration at each boundary IS the report; escalate actively only for owner-blocking
-  moments.
-- **Directive 2** (GSD-quick, low urgency, now **4 rotations pending** — #24→#25,
-  #25→#26, #26→#27, #27→#28 all carried it forward without picking it up): document the
-  scratch-repo `reposix-scope-test-DELETEME` KEEP-policy into
-  `docs/reference/testing-targets.md` (reset via force-push, never delete). Consider
-  picking this up opportunistically — it is cheap and has been deferred four times now.
-- **Intake already filed this rotation — do NOT re-file:** the 2 todos in `e039bb7`
-  (roadmap-diagram lane + GOOD-TO-HAVES consolidation); GTH-16 (filed at `dc26302`); the
-  SC1 false-GREEN command fix (already shipped, not an open item).
+- **What #28 did this rotation (honest account):** verified §1 ground truth live,
+  confirmed CI green on the tip it inherited (the manager had landed `f2f0f01`
+  "refresh manager handover" on top of the `29470e2` relief handover — expected, the
+  manager owns that doc). Then initialized P115 planning by running `gsd-sdk query
+  init.plan-phase 115` (read-only, captured in §4 above). #28 then **relieved at the
+  clean pre-research boundary BEFORE dispatching any planning subagent.**
+- **Why #28 relieved this early (honest, not spun):** #28 over-read the plan-phase
+  workflow file (`$HOME/.claude/get-shit-done/workflows/plan-phase.md`, ~1720 lines /
+  ~32k tokens) **linearly**, pushing its own context to ~96k (the ~100k soft-relief
+  threshold) before dispatching a single planning subagent. Per the scoping rule
+  (don't plan workload into correction margin — the runway to the 150k hard stop is
+  correction margin, NOT workload budget), #28 relieved rather than gamble a degraded
+  150k-context run. No planning artifacts were written; no half-state was left behind
+  (the workflow creates the phase dir itself at its own step 2). This is a clean
+  pre-wave boundary, not a mid-flight rescue.
+- **META-LESSON for #29 (fix-it-twice — apply this, don't just read it):** do **NOT**
+  read `$HOME/.claude/get-shit-done/workflows/plan-phase.md` linearly — it is a
+  ~32k-token context sink that will burn the same budget #28 burned. Follow it
+  step-by-step, **delegate every heavy read to `reader-digester`**, and let the
+  workflow's OWN dispatched subagents (`gsd-phase-researcher`, `gsd-planner`,
+  `gsd-plan-checker`) hold the heavy context — the orchestrator's own context must
+  stay lean. If #29 (or #30, #31…) hits the same workflow-file-linear-read failure
+  mode again, that is a signal the workflow file itself needs a progressive-disclosure
+  pass (per-OP-4 doctrine) — file it as a `GOOD-TO-HAVES` row rather than re-suffering
+  it silently a third time.
+- **RAISE LIST / open items carried forward, all still OPEN** (pull verbatim detail
+  from `git log` on `29470e2` if deeper context is needed — that handover has the full
+  narrative for each):
+  - **P116 ADR-010 packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
+    durable-create hazard): after P115, produce options+tradeoffs and **route the
+    packet to the MANAGER (w1:p7) for ruling — NO pre-ruling implementation.**
+  - **roadmap-diagram gsd-quick** — owner-approved, cheap; todo
+    `.planning/todos/pending/2026-07-15-public-birds-eye-roadmap-diagram.md` (read it
+    for all 5 points before scoping). Interleave opportunistically; gsd-quick scale.
+  - **Directive 2** — scratch-repo `reposix-scope-test-DELETEME` KEEP-policy into
+    `docs/reference/testing-targets.md` (reset via force-push, never delete). Now **5
+    rotations pending** (#24→#25 through #28→#29 all carried it forward without
+    picking it up) — pick up opportunistically, it is cheap.
+  - **GOOD-TO-HAVES consolidation** (two coexisting files: root
+    `.planning/GOOD-TO-HAVES.md` vs `.planning/milestones/v0.15.0-phases/
+    GOOD-TO-HAVES.md`, distinct prefixes, ambiguity confirmed real) — needs a
+    manager/owner **DOCTRINE CALL** before merging; todo
+    `.planning/todos/pending/2026-07-15-consolidate-two-good-to-haves-files.md`. Do
+    NOT merge unilaterally.
+- **Intake already filed — do NOT re-file:** the 2 todos from `e039bb7`
+  (roadmap-diagram lane + GOOD-TO-HAVES consolidation); GTH-16 (filed prior rotation);
+  the SC1 false-GREEN command fix (already shipped, informational only).
 
-## 6. Precise next steps (successor #28 runbook)
+## 6. Precise next steps (successor #29 runbook)
 
-1. **Re-verify §1 ground truth live** before doing anything else: `git rev-parse HEAD`,
-   `git status --porcelain`, `git rev-list --left-right --count HEAD...origin/main`,
-   `gh run list --branch main --workflow CI --limit 3`. Confirm HEAD is now 2 ahead of
-   the `dc26302` origin recorded here (L0's push should have landed both `e039bb7` and
-   this handover) and that CI is green on the new tip (docs-only diff, expected green,
-   but confirm — do not assume).
-2. **OPENING MOVE — P115 BENCH-01 planning.** `Execution mode: top-level`. Requires a
-   **top-level `/gsd-plan-phase 115` FIRST** (heavy fresh charter — the reason this
-   relief happened at a phase-boundary rather than mid-phase). **HARD DEADLINE
-   2026-08-15**; ≤50 benchmark sessions on the subscription — escalate to the manager
-   past 50, never exceed without a GO. Schedule EARLY. During this planning, also run
-   `roadmap.update-plan-progress 114` to fix the stale ROADMAP checkbox (RAISE #1 in
-   §5) — do not hand-edit ROADMAP.md directly.
-3. **After P115 is planned and executed**, open **P116 ADR-010 packet** — produce
+1. **Re-verify §1 ground truth live** before doing anything else: `git rev-parse
+   HEAD`, `git status --porcelain`, `git rev-list --left-right --count
+   HEAD...origin/main`, `gh run list --branch main --workflow CI --limit 3`. Confirm
+   the newest CI run on main's current tip concluded `success` — the tip inherited
+   here (`87a4bb2`) had an IN_PROGRESS run at verification time; do not assume it
+   finished green without checking.
+2. **OPENING MOVE — run `/gsd-plan-phase 115` FRESH from a clean context.** Heed §5's
+   meta-lesson: do NOT read `plan-phase.md` linearly — follow it step-by-step,
+   delegate heavy reads to `reader-digester`, let its own dispatched subagents
+   (`gsd-phase-researcher`/`gsd-planner`/`gsd-plan-checker`) hold the heavy context.
+   The workflow will create the phase dir itself, then hit the context gate (no
+   CONTEXT.md exists yet for P115): either "continue without context" (the BENCH-01
+   constraints in §4 are already known/locked and can be carried in) or run
+   `/gsd-discuss-phase 115` first — #29's call.
+3. **During planning, run `roadmap.update-plan-progress 114`** to clear the stale P114
+   ROADMAP checkbox — do NOT hand-edit `ROADMAP.md`.
+4. **Carry the P115 BENCH-01 locked constraints verbatim** (§4) into the plan: ≤50
+   benchmark sessions on the existing subscription / no new API spend / escalate to
+   manager past 50 / hero-number waiver hard deadline 2026-08-15 / execution mode
+   top-level.
+5. **After P115 is planned and executed**, open **P116 ADR-010 packet** — produce
    options+tradeoffs for BOTH ADR-01 (mirror-fanout) and FIX-03 (GTH-09 slug→id
-   durable-create hazard). **Route the packet to the MANAGER (w1:p7) for ruling — NO
-   pre-ruling implementation** of either option.
-4. **roadmap-diagram gsd-quick** (§5) — owner-approved, small; interleave
-   opportunistically between P115/P116, does not need to block either.
-5. **Directive 2** — scratch-repo KEEP-policy doc into
-   `docs/reference/testing-targets.md`, now 4 rotations pending; pick up
+   durable-create hazard), then **route to the MANAGER (w1:p7) for ruling — no
+   pre-ruling implementation.**
+6. **roadmap-diagram gsd-quick** (§5) — owner-approved, small; interleave
+   opportunistically, does not need to block P115/P116.
+7. **Directive 2** — scratch-repo KEEP-policy doc, now 5 rotations pending; pick up
    opportunistically if a gap opens.
-6. **Weigh the §5 structural recommendation** (milestone-scoped C2
-   coordinator-of-coordinators) before or during P115 planning if own-context budget is
-   a live concern — not mandatory, advisory only.
-7. **Report to the manager (w1:p7)** at each boundary (P115 planning start, P115 close,
-   P116 routing to manager, each subsequent phase close) and at any owner-blocking
-   moment.
-8. **Relieve past ~100k own-context tokens** (hard stop ~150k, absolute not %) at a
-   wave boundary — dispatch `relief-handover-writer`, which writes+commits a fresh
-   `.planning/SESSION-HANDOVER.md` that REPLACES this file, naming successor **#29**.
+8. **GOOD-TO-HAVES consolidation** — do NOT merge unilaterally; flag to the manager
+   for a doctrine call if it hasn't already happened.
+9. **Report to the manager (w1:p7)** at each boundary (P115 planning start, P115
+   close, P116 routing to manager, each subsequent phase close) and at any
+   owner-blocking moment. Remember the manager POLLS — clear in-pane narration at each
+   boundary IS the report.
+10. **Relieve past ~100k own-context tokens** (hard stop ~150k, absolute not %) at a
+    wave boundary — dispatch `relief-handover-writer`, which writes+commits a fresh
+    `.planning/SESSION-HANDOVER.md` that REPLACES this file, naming successor **#30**.
 
 **Ratchet-first sequence for reference** (canonical = Arc D ADDENDUM, digest only, do
 not re-fetch): **v0.15 floor** (current milestone, P114 CLOSED GREEN, 1/15 phases done,
