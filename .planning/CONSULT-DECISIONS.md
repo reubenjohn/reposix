@@ -92,3 +92,12 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   execution consumes budget; disclosed via handover + this ledger (owner veto window).
 - **Commit:** (this commit). DELETE this entry once P115's ledger/capture tasks encode
   the definition and the phase closes.
+
+## 2026-07-15 [SELF] P115-T2 — canonical latency measurement environment = CI `bench-latency-v09`; sim cold-init is environment-dependent, not one fixed value
+
+- **Context:** P115-T2 re-measured sim latency to resolve the documented 24-vs-27ms cold-init discrepancy to "one authoritative figure." Re-measurement showed sim `init` is highly environment-dependent: 27ms (legacy dev machine), 42-45ms (this dev VM, warm, N=3), 155ms (dev VM cold/loaded first-run outlier — the mistaken figure in commit 9384ca6), 278ms (CI `bench-latency-v09`, ubuntu-24.04 hosted runner, commit 3278abc). No single stable number exists; "resolve to ONE figure" required a canonical-environment decision the plan did not anticipate.
+- **Decision:** The canonical, authoritative latency reference is the **CI `bench-latency-v09` job** — reproducible (documented ubuntu-24.04 runner image), runs on every push, and measures sim AND all three real backends from one controlled environment, verifiable from the run log. `docs/benchmarks/latency.md` reports the CI figures with run id + runner image as provenance. Dev-VM measurements are non-canonical (machine-load-dependent). The legacy 24/27ms figures are superseded.
+- **Rationale:** OP-1 verify-against-reality — a hero number must be reproducible from a committed artifact (the CI log), not a one-off dev-VM sample.
+- **Downstream (flagged to manager, non-blocking):** the honest CI sim cold-init (~278ms) is ~10x the legacy 27ms hero claim, so un-waiving the latency-track doc-alignment rows (T6) requires CHANGING the doc CLAIMS to the CI figures, not merely re-verifying the old numbers. Overlaps v0.21 "benchmark honesty" scope; surfaced to the manager (w1:p7) for owner awareness. Honesty is non-negotiable, so the correction proceeds regardless.
+- **Reversibility:** Fully reversible — docs + this ledger entry only; no code/contract change. DELETE once T6 encodes the canonical-source methodology and the phase closes.
+- **Commit:** (this commit).

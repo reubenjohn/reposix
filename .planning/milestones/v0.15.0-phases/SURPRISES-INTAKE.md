@@ -152,3 +152,13 @@
 **Sketched resolution:** Fix-twice obligation: (i) investigate whether kcov shell-coverage crept — more `.sh` files under coverage (corpus growth), a kcov/toolchain version change, or transient VM contention; re-measure `code/shell-coverage` in isolation on a quiet VM to separate contention from real cost; (ii) if the higher figure is a legitimate new baseline, update the § Cadences documented number (~29s → measured, and the ≈55s pre-push aggregate → measured) to match reality; if it's a regression, find and fix the cause (e.g. trim the covered corpus, cache kcov output, or parallelize where the cargo-mutex allows). Corroborated across two rotations (#25 ~101s, #26 ~91.7s), so it is a stable creep rather than a one-off flake.
 
 **STATUS:** OPEN
+
+## 2026-07-15 21:45 | discovered-by: P115-T2 (BENCH-01 live latency re-measurement) | severity: MEDIUM
+
+**What:** latency-bench PATCH probe sends unsupported `expected_version` → times an error path (sim patch figure invalid). `bash quality/gates/perf/latency-bench.sh` emits, 3x per run, `ERROR reposix_sim::error: json error error=unknown field 'expected_version', expected one of 'title','body','status','assignee','labels'`; reproduced across 3 consecutive local runs 2026-07-15 and present in CI run 29452237641. The `patch=Nms` row therefore times a 400 rejection, not a successful patch. Mechanism: the bench sim PATCH probe constructs a no-op PATCH body containing `expected_version`; the reposix-sim issue-update handler schema only accepts title/body/status/assignee/labels → 400.
+
+**Why out-of-scope for the discovering session:** Deciding the intended contract first (accept `expected_version` for optimistic concurrency, or drop it from the bench body) touches reposix-sim request validation and/or the bench probe — a >1h scoped change, not an eager fix inside a re-measurement task.
+
+**Sketched resolution:** Either (a) add `expected_version` to the sim's accepted update fields if optimistic-concurrency is intended, or (b) drop `expected_version` from the bench PATCH body. Decide the intended contract first, then fix the losing side (sim schema or bench probe) to match.
+
+**STATUS:** OPEN

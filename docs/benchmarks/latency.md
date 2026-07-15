@@ -1,27 +1,31 @@
 ---
-last_measured_at: 2026-07-15T21:36:36Z
+last_measured_at: 2026-07-15T21:45:40Z
 ---
 
 # v0.9.0 Latency Envelope
 
-**Generated:** 2026-07-15T21:36:36Z (commit `3278abc`)
-**Reproducer:** `bash quality/gates/perf/latency-bench.sh`
+**Corrected:** 2026-07-15 — supersedes commit `9384ca6`, which reported a
+machine-load noise outlier (155 ms) as the sim cold-init figure.
+**Canonical source:** CI job `bench-latency-v09`, run
+[`29452237641`](https://github.com/reubenjohn/reposix/actions/runs/29452237641),
+commit `3278abc`, GitHub Actions `ubuntu-24.04` hosted runner, 2026-07-15.
+**Reproducer:** `bash quality/gates/perf/latency-bench.sh` (regenerates the
+dev-machine figures locally; the canonical figures below come from the
+`bench-latency-v09` CI job log, not a local run).
 
 ## How to read this
 
 reposix v0.9.0 replaces the per-read FUSE round-trip with a partial-clone
 working tree backed by a `git-remote-reposix` promisor remote. The
 golden-path latencies below characterize the sim backend (in-process
-HTTP simulator) and any real backends for which credentials were
-available at run time. **What's measured:** end-to-end wall-clock for
-each operation, single-threaded, against an ephemeral sim DB on
-localhost or the corresponding real-backend REST API. Each step is the
-**median of 3 samples** to absorb network jitter. **What's NOT measured:**
-runner hardware variance and cold-cache vs warm-cache TLS reuse for HTTPS
-backends (a single warm-up GET amortizes the TLS handshake before timing).
-Take the sim column as a lower bound for transport overhead and the
-real-backend columns as a proxy for "what an agent on a typical laptop
-will see."
+HTTP simulator) and the three real backends, all measured in a single
+controlled run of the `bench-latency-v09` CI job. **What's measured:**
+end-to-end wall-clock for each operation, single-threaded, against an
+ephemeral sim DB or the corresponding real-backend REST API. **What's
+NOT measured:** per-step sample variance within the run (see the
+Provenance section below for why CI, not a dev machine, is the reference
+environment) and cold-cache vs warm-cache TLS reuse for HTTPS backends (a
+single warm-up GET amortizes the TLS handshake before timing).
 
 The MCP/REST baseline comparison sits in `docs/benchmarks/token-economy.md`
 (token-economy benchmark, v0.7.0). v0.9.0's win is on the latency
@@ -31,50 +35,86 @@ match.
 
 ## Latency table
 
-| Step                                          | sim                          | github                       | confluence                   | jira                         |
-|-----------------------------------------------|------------------------------|------------------------------|------------------------------|------------------------------|
-| `reposix init` cold [^blob]                 | 155 ms             |               |               |               |
-| List records [^N]                             | 20 ms (N=6)             |               |               |               |
-| Get one record                                | 19 ms              |                |                |                |
-| PATCH record (no-op)                          | 78 ms            |              |              |              |
-| Helper `capabilities` probe                 | 10 ms              |                |                |                |
+| Step                                          | sim                   | github                 | confluence             | jira                   |
+|-----------------------------------------------|-----------------------|-------------------------|-------------------------|-------------------------|
+| `reposix init` cold [^blob]                   | 278 ms                | 830 ms                  | 1136 ms                 | 329 ms                  |
+| List records [^N]                             | 7 ms (N=6)            | 779 ms (N=75)            | 215 ms (N=3)             | 226 ms (N=0)             |
+| Get one record                                | 6 ms                  | 320 ms                   | 202 ms                   | n/a                      |
+| PATCH record (no-op) [^patch]                 | 10 ms                 | 662 ms                   | 183 ms                   | n/a                      |
+| Helper `capabilities` probe                   | 5 ms                  | 5 ms                     | 7 ms                     | 6 ms                     |
 
 [^blob]: `reposix init` materializes blobs lazily (partial clone with
-    `--filter=blob:none`). Blob counts at end of init: sim=0,
-    github=0, confluence=0, jira=0.
-    A non-zero count means the helper served `fetch` requests from git
-    that pulled actual blob bytes during the bootstrap fetch.
-[^N]: `N` = records returned by the canonical list endpoint:
+    `--filter=blob:none`). A non-zero blob count at end of init would mean
+    the helper served `fetch` requests from git that pulled actual blob
+    bytes during the bootstrap fetch — the steady-state expectation across
+    all four backends is zero.
+[^N]: `N` = records returned by the canonical list endpoint at run time:
     sim/github/jira issues, confluence pages in the configured space.
-    **N values reflect live backend state at run time** — the configured
-    Confluence space (`TokenWorld`) and `reubenjohn/reposix`
-    issue count drift over time; expect
-    ±20% wobble between runs. The `Helper capabilities probe` row is
-    local-only (no network), so it's identical across columns and serves
-    as a runner-variance control.
+    jira's `N=0` in this run means the configured JIRA project returned no
+    issues, which is why its `Get`/`PATCH` steps have no record to operate
+    on and read `n/a`. **N values reflect live backend state at run time** —
+    the configured Confluence space (`TokenWorld`) and `reubenjohn/reposix`
+    issue count drift over time; expect wobble between runs. The `Helper
+    capabilities probe` row is local-only (no network), so it's comparable
+    across columns and serves as a runner-variance control.
+[^patch]: **Caveat — do not read this as a clean PATCH figure.** The
+    bench's PATCH probe sends an unsupported `expected_version` field,
+    which the sim's issue-update handler rejects with a 400. The sim
+    `patch=10 ms` figure above times that rejection path, not a
+    successful patch. See "PATCH figures — known caveat" below.
 
 Real-backend cells are populated by the `bench-latency-v09` CI job
 (see [`.github/workflows/ci.yml`](https://github.com/reubenjohn/reposix/blob/main/.github/workflows/ci.yml)
 for cadence; the weekly cron variant lives in
 [`.github/workflows/bench-latency-cron.yml`](https://github.com/reubenjohn/reposix/blob/main/.github/workflows/bench-latency-cron.yml)).
 
-## Summary — authoritative cold-init figure (BENCH-01, P115)
+## Provenance & methodology
 
-Prior to this measurement, downstream docs (`docs/index.md`, `README.md`, and the
-concept/tutorial pages) cited a split between **24 ms** and **27 ms** for sim
-`reposix init` cold bootstrap, sourced from earlier bench runs and never fully
-reconciled with each other. This live re-run of `quality/gates/perf/latency-bench.sh`
-on 2026-07-15T21:36:36Z (commit `3278abc`) is the current authoritative measurement:
+These figures are measured by the CI job `bench-latency-v09`
+([workflow run `29452237641`](https://github.com/reubenjohn/reposix/actions/runs/29452237641)),
+executing at commit `3278abc` on a GitHub Actions `ubuntu-24.04` hosted
+runner, 2026-07-15. The run log is the reproducible source of truth —
+anyone can re-open that run, or trigger a fresh `bench-latency-v09` run,
+and read the same numbers.
 
-- **Cold init (authoritative): 155 ms** — sim `reposix init`, single-sample
-  bootstrap, this run. This figure supersedes both the 24 ms and 27 ms values
-  above as the current sim cold-init number; it remains well under the 500 ms
-  soft threshold.
-- **Cached read (proxy: `Get one record`): 19 ms** — median of 3 samples, this run.
+**Latency is environment-dependent — there is no single fixed number.**
+A dev-VM warm sample of sim `init` (N=3 consecutive runs, no other load
+on the box) measured 42/45/42 ms — roughly 6-7x faster than the CI
+figure of 278 ms above. Neither number is "wrong"; they measure the same
+code path under different hardware and contention profiles. **CI is the
+canonical reference** for this document because (a) it is reproducible
+from a committed, replayable artifact (the run log), not a one-off
+sample on a machine whose load state isn't recorded, and (b) it runs on
+every push, so a regression is caught continuously instead of relying on
+someone remembering to re-run a benchmark by hand.
 
-Reconciling the superseded 24 ms/27 ms prose in `docs/index.md`, `README.md`, and
-the concept/tutorial docs against this figure is explicitly out of scope for this
-measurement pass — tracked as Phase 117/118 follow-up.
+**Superseded figures.** Commit `9384ca6`'s sim cold-init figure of
+155 ms was a single dev-VM sample taken while the machine was under
+unrelated load — a cold, loaded first run, i.e. a noise outlier, not a
+representative measurement. It is superseded by the CI figure above. The
+legacy 24 ms / 27 ms sim cold-init figures quoted elsewhere in the docs
+predate this benchmark's real-backend rows and were themselves
+non-reproducible dev-machine artifacts (no run log, no recorded runner
+spec); they are likewise superseded by the CI reference. (Un-waiving the
+doc-alignment rows that still quote 24/27 ms elsewhere is tracked
+separately — see the 2026-07-15 P115-T2 entry in
+`.planning/CONSULT-DECISIONS.md`.)
+
+## PATCH figures — known caveat
+
+The `PATCH record (no-op)` row above times the bench's PATCH probe
+end-to-end, but the sim PATCH probe currently sends an unsupported
+`expected_version` field in its request body, which `reposix-sim`'s
+issue-update handler rejects with a 400
+(`unknown field 'expected_version'`). **The sim `patch=10 ms` figure
+therefore times an error-rejection path, not a successful patch** — it
+is not a clean measurement of PATCH latency and should not be read as
+one until the underlying bug is fixed. See the filed defect in
+`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` (2026-07-15,
+"latency-bench PATCH probe sends unsupported `expected_version`"). The
+github/confluence/jira PATCH figures come from the same probe code path,
+so they should be cross-checked once the sim-side bug is resolved rather
+than assumed clean by default.
 
 ## Soft thresholds
 
@@ -89,8 +129,12 @@ measurement pass — tracked as Phase 117/118 follow-up.
 bash quality/gates/perf/latency-bench.sh
 ```
 
-The script regenerates this file in place. To capture real-backend
-columns, export the relevant credential bundle before running:
+The script regenerates this file in place from a local run — expect the
+sim figures it produces to differ from the CI figures above (see
+Provenance above); it does not overwrite the CI-sourced real-backend
+figures unless run with credentials for those backends. To capture
+real-backend columns locally, export the relevant credential bundle
+before running:
 
 ```bash
 # GitHub (reubenjohn/reposix issues)
