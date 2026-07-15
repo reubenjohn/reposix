@@ -60,9 +60,25 @@ pub enum Error {
     UnknownOid(String),
 
     /// Backend returned bytes whose computed blob OID differs from the
-    /// OID recorded in `oid_map`. Indicates an eventual-consistency
-    /// race on the backend side (same issue id, different content
-    /// between `list_records` and `get_record`).
+    /// OID recorded in `oid_map` at `build_from` time. Two distinct
+    /// causes produce this, and they have OPPOSITE recovery answers:
+    ///
+    /// 1. A genuine **eventual-consistency race** — the backend's content
+    ///    for this id actually changed between the `list_records` walk
+    ///    (which seeded the `oid_map` oid) and the later `get_record`.
+    ///    `reposix sync --reconcile` CAN heal this: a fresh `list_records`
+    ///    walk re-hashes the now-current content and the oid realigns.
+    ///
+    /// 2. A **systematic backend rendering-representation mismatch** — the
+    ///    same id renders to DIFFERENT bytes via `list_records` vs
+    ///    `get_record` regardless of timing (e.g. the pre-fix Confluence
+    ///    LIST path requested no `body-format`, so listed pages carried an
+    ///    empty body while `get_record` returned the real ADF body). This
+    ///    class is closed for ADF-native pages by the adapter render-parity
+    ///    fix; where it is NOT closed, `--reconcile` CANNOT heal it — a
+    ///    re-list reproduces the SAME mismatched oid deterministically, so
+    ///    only the adapter/backend fix removes the drift (reproduction:
+    ///    `crates/reposix-cache/tests/oid_drift_reconcile.rs`).
     #[error("oid drift: requested {requested}, backend returned {actual} for issue {issue_id}")]
     OidDrift {
         /// OID recorded in `oid_map` at `build_from` time.

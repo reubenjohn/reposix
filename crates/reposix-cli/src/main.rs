@@ -169,11 +169,15 @@ enum Cmd {
     /// combinations per the v0.13.0 architecture-sketch).
     ///
     /// With `--reconcile`, opens the working tree's cache and runs a
-    /// full `Cache::sync`: `list_records` walk + tree rebuild + cursor
-    /// bump. Use this when a push reject suggests cache desync (e.g.
-    /// the L1 trade-off from architecture-sketch.md § Performance
+    /// full `Cache::build_from`: `list_records` walk + tree rebuild +
+    /// cursor bump. Use this to repair tree↔`oid_map` coherence desync
+    /// (ghost / missing rows) or a genuine eventual-consistency race —
+    /// e.g. the L1 trade-off from architecture-sketch.md § Performance
     /// subtlety: backend-deleted records that surface as REST 404 on
-    /// PATCH).
+    /// PATCH. It does NOT repair a `systematic` backend rendering
+    /// mismatch (`list_records` vs `get_record` disagree on the same id
+    /// regardless of timing); that class needs the adapter/backend fix,
+    /// not a reconcile (see `reposix_cache::Error::OidDrift`).
     ///
     /// Examples:
     ///   reposix sync                        # prints a hint

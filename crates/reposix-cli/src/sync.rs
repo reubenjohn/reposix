@@ -16,6 +16,15 @@
 //! `Utc::now()` and the cache's tree state matches the backend
 //! exactly (a full `list_records` walk, not a delta).
 //!
+//! Scope caveat (what `--reconcile` does NOT fix): it heals tree↔`oid_map`
+//! coherence (ghost / missing rows) and genuine eventual-consistency
+//! races, but a `systematic` backend-side rendering mismatch — the same
+//! id rendered to different bytes by `list_records` vs `get_record`
+//! regardless of timing, the class `reposix_cache::Error::OidDrift` now
+//! documents — reproduces the SAME oid on a re-list, so that class
+//! requires the adapter/backend fix itself, not a reconcile
+//! (proof: `crates/reposix-cache/tests/oid_drift_reconcile.rs`).
+//!
 //! Design intent: the bus remote names this command in its reject-path
 //! stderr hints. Renaming or making the bare form error would force a
 //! doc-rev cascade.
@@ -41,6 +50,12 @@ use crate::worktree_helpers::{resolve_reposix_remote_url, strip_bus_query};
 /// heal a cache that has already drifted from the tree↔`oid_map`
 /// coherence invariant. The `meta.last_fetched_at` cursor is bumped as
 /// a side effect.
+///
+/// Scope: this recovers tree↔`oid_map` coherence and genuine
+/// eventual-consistency races. It does NOT recover a `systematic`
+/// backend rendering mismatch (`list_records` vs `get_record` disagree on
+/// the same id regardless of timing) — a re-list recomputes the SAME oid,
+/// so that class needs the adapter/backend fix, not a reconcile.
 ///
 /// # Errors
 /// - The working tree has no reposix remote configured.
