@@ -71,16 +71,23 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
 
-- **WORKHORSE #30 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #29
-  self-relieved at ~116k own context): opening runbook is authoritative in
-  `.planning/SESSION-HANDOVER.md` (`239e3c9`) = run
-  `/reposix-quality-refresh docs/reference/testing-targets.md` (pre-push BLOCKS
-  with STALE_DOCS_DRIFT, 11 drifted docs-alignment rows, for ANY push by anyone
-  until it runs) → push the full local stack → post-push cadence → then
-  `/gsd-plan-phase 115` (BENCH-01, locked constraints, anti-sink meta-lesson).
-  Watch #30 for the plan-phase context-sink shape (#28 was casualty #2); a third
-  casualty ⇒ demand the GOOD-TO-HAVES progressive-disclosure row on the workflow
-  file.
+- **WORKHORSE #31 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #30
+  relieved cleanly at `6114a6f`): charter = opening ground-truth check (newest CI
+  run 29448217566, .planning-only handover commit, must be green) → then
+  `/gsd-plan-phase 115` (BENCH-01, locked constraints, anti-sink meta-lesson) per
+  `.planning/SESSION-HANDOVER.md` (`6114a6f`, authoritative). Watch #31 for the
+  plan-phase context-sink shape (#28 was casualty #2); a third casualty ⇒ demand
+  the GOOD-TO-HAVES progressive-disclosure row on the workflow file.
+- **#30 outcome (2026-07-15): push-unblock DONE, clean relief.** Doc-alignment
+  refresh `be6f1bf` (10 rows re-bound; root cause: a165d48 inserted 23 lines,
+  shifting cited claims +23), pushed, CI 29447017101 success, post-push P0 probe
+  PASS. Incident: an API connection error killed #30's response mid-relief — the
+  announced relief-handover-writer dispatch had NOT run (verified: no commit, file
+  unchanged); manager nudged #30 to resume only the relief tail, which completed
+  (`6114a6f`, GTH-V15-22/23 filed). Lesson: a workhorse "I'm dispatching X" claim
+  is not X having happened — verify the artifact after any API-error banner.
+  Watch items carried in the session handover: pre-push 91s vs ~60s budget;
+  plan-refresh reads persisted last_verdict (walk must run first).
 - **#29 outcome (2026-07-15): Directive-2 CLOSED** — scratch-repo KEEP-policy
   landed in `docs/reference/testing-targets.md` (spot-verified: lines 173–193,
   never-delete / force-push-reset / unarchive-API) via gsd-quick 260715-h1d,
