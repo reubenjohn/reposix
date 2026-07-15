@@ -671,6 +671,135 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
     );
 }
 
+// ----------------------------------------------- render-parity (FIX-01)
+
+/// FIX-01 render-parity regression (Phase 114). The Confluence `list_records`
+/// path and the `get_record` path MUST request the SAME body representation so
+/// an unmutated ADF-native page renders byte-identical bytes on both paths.
+///
+/// ## The defect this locks out
+///
+/// Before the fix, `list_issues_impl` requested the space's pages with NO
+/// `body-format` query param, so Confluence returned every page body EMPTY;
+/// `build_from` hashed that empty-body list render into the tree-blob oid, then
+/// `read_blob` re-fetched via `get_record` (which DOES send
+/// `?body-format=atlas_doc_format`), got the REAL body, and hard-aborted with
+/// `Error::OidDrift` — deterministically, on every ADF-native page. This test
+/// mounts the LIST mock behind `query_param("body-format", "atlas_doc_format")`
+/// so it only matches once the adapter sends that param; pre-fix the LIST
+/// request carries only `limit=100`, misses the mock, gets a 404 and
+/// `list_records` errors (the RED). Post-fix the param is present, the mock
+/// matches, and the list body decodes non-empty AND byte-equal to the get body.
+///
+/// FIDELITY: both mocks string-encode `atlas_doc_format.value` (a JSON *string*
+/// whose contents are JSON) to match the live v2 API — the same decode path
+/// production walks, not an object-encoded fixture that would mask a
+/// string-decode regression (see `ConfBodyAdf`'s wire-encoding docs).
+#[tokio::test]
+async fn list_and_get_render_parity() {
+    let server = MockServer::start().await;
+
+    // The single ADF document both the LIST and the GET return for page 1.
+    // Real content so the decoded Markdown body is non-empty.
+    let adf_doc = json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            {
+                "type": "paragraph",
+                "content": [{"type": "text", "text": "render parity body"}]
+            }
+        ]
+    });
+    // Live-API fidelity: `atlas_doc_format.value` is a JSON *string*, not object.
+    let page_body = json!({
+        "atlas_doc_format": {
+            "value": adf_doc.to_string(),
+            "representation": "atlas_doc_format"
+        }
+    });
+
+    // (1) space-key resolve.
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces"))
+        .and(query_param("keys", "REPOSIX"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{"id": "12345", "key": "REPOSIX"}],
+            "_links": {}
+        })))
+        .mount(&server)
+        .await;
+
+    // (2) LIST — gated on body-format=atlas_doc_format. Pre-fix `list_issues_impl`
+    // sends only `limit=100`, so this mock does not match → 404 → `list_records`
+    // errors (RED). Post-fix the param is present and the list body populates.
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces/12345/pages"))
+        .and(query_param("limit", "100"))
+        .and(query_param("body-format", "atlas_doc_format"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{
+                "id": "1",
+                "status": "current",
+                "title": "render parity page",
+                "createdAt": "2026-04-13T00:00:00Z",
+                "version": {"number": 1, "createdAt": "2026-04-13T00:00:00Z"},
+                "ownerId": null,
+                "body": page_body.clone(),
+            }],
+            "_links": {}
+        })))
+        .mount(&server)
+        .await;
+
+    // (3) GET — the SAME ADF body as the LIST page (byte-identical parity target).
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/pages/1"))
+        .and(query_param("body-format", "atlas_doc_format"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": "1",
+            "status": "current",
+            "title": "render parity page",
+            "createdAt": "2026-04-13T00:00:00Z",
+            "version": {"number": 1, "createdAt": "2026-04-13T00:00:00Z"},
+            "ownerId": null,
+            "body": page_body,
+        })))
+        .mount(&server)
+        .await;
+
+    let creds = ConfluenceCreds {
+        email: "ci@example.com".into(),
+        api_token: "dummy".into(),
+    };
+    let backend = ConfluenceBackend::new_with_base_url(creds, server.uri()).expect("backend");
+
+    let recs = backend
+        .list_records("REPOSIX")
+        .await
+        .expect("list_records must succeed once the LIST url carries body-format");
+    assert_eq!(recs.len(), 1, "one-page fixture");
+
+    let got = backend
+        .get_record("REPOSIX", recs[0].id)
+        .await
+        .expect("get_record must succeed");
+
+    // The list body must be populated — the defect blanked it.
+    assert!(
+        !recs[0].body.is_empty(),
+        "list body must be populated post-fix; an empty list body IS the OidDrift defect"
+    );
+    // ... and byte-identical to the get body. This equality is exactly the
+    // property that makes the tree-blob oid match on both the `build_from`
+    // (list) path and the `read_blob` (get) path — a mismatch is the oid-drift
+    // root cause.
+    assert_eq!(
+        recs[0].body, got.body,
+        "list render must equal get render (parity); a mismatch is the oid-drift root cause"
+    );
+}
+
 // ----------------------------------------------- live-Atlassian test
 
 /// Hits a real Atlassian tenant. `#[ignore]`-gated + `skip_if_no_env!`-
