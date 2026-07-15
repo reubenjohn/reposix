@@ -163,12 +163,35 @@ test loops serialize via `--test-threads=1`.
 
 Tests that create issues SHOULD tag them with a `kind:test` label so
 they can be located via `is:issue label:kind:test` and bulk-closed at
-session end. The Phase 36 cleanup automation will handle this; for
-now manual cleanup at <https://github.com/reubenjohn/reposix/issues>.
+session end. No cleanup automation exists yet — close them manually
+at <https://github.com/reubenjohn/reposix/issues>.
 
 > "TokenWorld is for testing — go crazy, it's safe." — project owner, 2026-04-24
 > (the same permission applies to `reubenjohn/reposix` issues — they
 > are owner-controlled and safe to mutate during tests.)
+
+### Scratch repo — `reposix-scope-test-DELETEME` (KEEP-policy)
+
+`reposix-scope-test-DELETEME` is a throwaway GitHub scratch repo
+(private, under `reubenjohn/`) used for scope/init smoke tests. It is
+a git *remote target*, NOT an issues target like the parent repo above.
+
+**KEEP-policy: NEVER delete the repo.** Reset it via force-push
+(`git push --force`) instead of deletion, so its URL/identity
+(<https://github.com/reubenjohn/reposix-scope-test-DELETEME>) stays
+stable across sessions and successor agents don't have to recreate it.
+
+It is currently **ARCHIVED** on GitHub (verified `archived: true`,
+`private: true`, last pushed `2026-07-14`). Archived repos reject
+pushes. On first reuse, unarchive it via the GitHub API before running
+tests:
+
+```bash
+gh api -X PATCH repos/reubenjohn/reposix-scope-test-DELETEME -f archived=false
+```
+
+Leave it unarchived for the session, or re-archive when done, per
+session norms.
 
 ---
 
