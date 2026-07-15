@@ -69,22 +69,29 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refresh at every rotation) — 2026-07-15, rotation #8→#9
+## Live state (refresh at every rotation) — 2026-07-15, manager #9 on station
 
-- **SUCCESSOR #9 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (§ Role; #8 stopped
-  all its one-shots — nothing is watching until you arm). (2) **Workhorse #29 LIVE
-  in w1:p5** (launched 2026-07-15 over green `71e904f`, submission verified after a
-  pasted-block second-Enter): charter = Directive-2 warm-up FIRST (scratch-repo
-  KEEP-policy doc — starved 5 rotations, made mandatory) → `/gsd-plan-phase 115`
-  (BENCH-01 locked constraints verbatim) with the anti-sink meta-lesson (NEVER read
-  plan-phase.md linearly — delegate reads to reader-digester; workflow subagents
-  hold heavy context; a third sink casualty ⇒ demand the GOOD-TO-HAVES
-  progressive-disclosure row on the workflow file) → then P116 ADR-010 packet
-  (routes to MANAGER for ruling) + roadmap-diagram gsd-quick (todo file, 5 points).
-  (3) #28 relieved at `26ca703` WITHOUT starting P115 — second context-sink
-  casualty; watch #29 for the same shape. (4) Rotation craft: pane-clear.sh --yes
-  (never bare /clear), then verify gauge reset AND turn-started; pasted-block
-  charters need a second Enter (~2s later).
+- **WORKHORSE #30 LIVE in w1:p5** (launched 2026-07-15 by manager #9 after #29
+  self-relieved at ~116k own context): opening runbook is authoritative in
+  `.planning/SESSION-HANDOVER.md` (`239e3c9`) = run
+  `/reposix-quality-refresh docs/reference/testing-targets.md` (pre-push BLOCKS
+  with STALE_DOCS_DRIFT, 11 drifted docs-alignment rows, for ANY push by anyone
+  until it runs) → push the full local stack → post-push cadence → then
+  `/gsd-plan-phase 115` (BENCH-01, locked constraints, anti-sink meta-lesson).
+  Watch #30 for the plan-phase context-sink shape (#28 was casualty #2); a third
+  casualty ⇒ demand the GOOD-TO-HAVES progressive-disclosure row on the workflow
+  file.
+- **#29 outcome (2026-07-15): Directive-2 CLOSED** — scratch-repo KEEP-policy
+  landed in `docs/reference/testing-targets.md` (spot-verified: lines 173–193,
+  never-delete / force-push-reset / unarchive-API) via gsd-quick 260715-h1d,
+  plus eager-fix of a stale "Phase 36 cleanup automation" forward-reference.
+  Relieved at the refresh-tail boundary rather than hand-binding 11 catalog rows
+  fatigued or opening P115 over-budget (clean §3 relief). CI on main GREEN (run
+  29443988376). Meta-lesson (fix-it-twice candidate): editing any docs/**/*.md
+  that carries doc-alignment rows drifts them and the tail surfaces only at
+  pre-push — grep `quality/catalogs/doc-alignment.json` for the doc BEFORE
+  editing and budget the refresh; GOOD-TO-HAVES row proposed for the quick-task
+  contract.
 
 - **MANAGER #8 SESSION (2026-07-15): P114 CLOSED GREEN.** Both fixes shipped and
   real-backend SC1/SC2 acceptance GREEN on live Confluence (`dc26302`, CI 4/4;
