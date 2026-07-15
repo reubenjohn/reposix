@@ -14,6 +14,13 @@ does reposix work itself. Keep this file lean; git history is the archive.
   w1:p5 3300 "<handled CI run ids>" /home/reuben/workspace/reposix` (no local
   copy — the skill's is canonical). On wake, inspect (`herdr agent explain/read`,
   ghost-text trap) before acting. Never `agent send` blind.
+- **Workhorse seat rotation — never bare `/clear` (proven 2026-07-15)**: `/clear`
+  does NOT stop background shells/monitors; orphans survive (same PIDs) and their
+  later events INJECT into the successor session, which cannot even enumerate them.
+  Rotate via `bash ~/.claude/skills/herdr-manager/scripts/pane-clear.sh w1:p5 --yes`
+  (kills leftovers by exact PID, re-verifies, then /clears; dry-run without `--yes`;
+  read-only check: `scripts/pane-tasks.sh w1:p5`). Then verify gauge reset + charter
+  submission per skill craft (§ Clearing a session).
 - **Ownership mandate**: the manager OWNS everything end-to-end — maintainability,
   code/architectural elegance, end-user experience. Heavy delegation and context-lean
   constraints stand, with one exception: at rare boundaries (only after very
@@ -64,13 +71,21 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation) — 2026-07-15, rotation #7→#8
 
-- **MANAGER #8 MID-SESSION UPDATE (2026-07-15):** Workhorse #26 LIVE in w1:p5 on
-  P114 execution (planning shipped by #25 at `fb38189`, CI green ×4; Wave 1/114-01
-  landed `47fa803`..`6f15138` — RED→GREEN render-parity fix, body-format on the
-  Confluence list path — CI green; opus phase-coordinator self-paused, its own CI
-  watcher opens Wave 2/114-02). #26 holds attached until P114 completes (correct —
-  coordinator notification routes to its session), then wraps + relieves to #27.
-  Watch model REPLACED per owner directive — see § Role (polling model, ≤1h cap).
+- **MANAGER #8 SESSION (2026-07-15): P114 CLOSED GREEN.** Both fixes shipped and
+  real-backend SC1/SC2 acceptance GREEN on live Confluence (`dc26302`, CI 4/4;
+  root cause: list path omitted body-format → fix `9908fcc`; FIX-02 reconcile-scope
+  docs corrected). Workhorses #25 (planned) → #26 (Wave 1 + liveness incident) →
+  #27 (Wave 2 + close) each relieved cleanly; #27→#28 handover `29470e2`; #28 opens
+  P115 planning (BENCH-01, ≤50 sessions, waiver deadline 2026-08-15). Owner-approved
+  roadmap-diagram lane captured at `e039bb7` (docs/roadmap.md + PROJECT.md
+  bidirectional SYNC-comment cross-links + link-resolution glob extension).
+  **Liveness doctrine minted after a dead-watcher stall (~2h idle):** bound every
+  wait on a dispatched child; health-check self-paused children ≤30min — now in
+  workhorse charters. **herdr craft moved to the /herdr-manager skill** (owner
+  ruling) with bundled verified scripts: manager-poll.sh (polling model, ≤1h cap,
+  singular-shell ghost-idle fix), pane-tasks.sh, pane-clear.sh (`.home` commits
+  `f77d69e`/`0e75b26`/`5f41602`). Survey prompts do NOT resolve on a bare digit
+  (unlike permission menus) — unverified beyond one observation.
 
 - **SUCCESSOR #8 FIRST ACTIONS:** (1) Owner may be active in-pane — greet briefly,
   continue seamlessly. (2) TaskStop monitor `bzbk2m1ds`, re-arm your own (script in
