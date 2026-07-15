@@ -114,6 +114,13 @@
 - **What:** doc-alignment rows citing e.g. `crates/reposix-core/src/backend.rs`, the `docs/architecture.md`/`docs/demo.md` redirect stubs, and `.planning/` archives are silently dropped from coverage accounting. Not caused by any recent change; flag for the coverage-dimension owner.
 - **Fix-sketch:** audit whether the eligible-file allowlist should include these, or whether the rows should re-cite eligible files.
 
+## From L0 rotation #22 (t4 real-backend re-run, 2026-07-14)
+
+### GTH-V15-19 — `reposix sync --reconcile` oid-drift recovery claim is dubious for the systematic list-vs-get case
+- **Source:** L0 rotation #22, t4 real-backend re-run (same session as the SURPRISES-INTAKE 2026-07-14 20:40 HIGH oid-drift defect entry) · **Severity: LOW (audit)** · STATUS: OPEN.
+- **What:** `builder.rs`/`cache.rs` doc comments claim `sync --reconcile` recovers oid-drift, but a fresh `list_records` rebuild reproduces the same list-oid that still won't match the get-oid for the systematic Confluence list-vs-get representation-drift class (see the SURPRISES-INTAKE `list_records`-vs-`get_record` oid-drift entry on page 7766017, filed the same session) — so the recovery claim likely does NOT hold for that class of drift. Possible doc-lie; not yet proven, hence audit rather than fix-first.
+- **Fix-sketch:** Audit `sync --reconcile`'s recovery claim once the SURPRISES-INTAKE oid-drift defect is fixed: re-run `reposix sync --reconcile` against a Confluence page exhibiting list-vs-get drift and confirm whether the reconcile actually clears the drift or merely reproduces the same stale list-oid. If it does not recover, correct the doc comments in `crates/reposix-cache/src/builder.rs` / `cache.rs` to stop claiming general oid-drift recovery, scoping the claim to the eventual-consistency race it was originally written for.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each

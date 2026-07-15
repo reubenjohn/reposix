@@ -82,3 +82,53 @@
 **Sketched resolution:** Repoint the six P79–P84 links to the directory form — `NN-PLAN-OVERVIEW/` (whose `index.md` is the entry point), e.g. `[80-PLAN-OVERVIEW](80-mirror-lag-refs/80-PLAN-OVERVIEW/index.md)`. Secondary (same pass): replace the four P85–P88 `**Plan:** TBD (Pxx plan-overview not yet authored)` stubs with links to the real `NN-01-PLAN.md` plans so the ROADMAP stops claiming authored plans are unwritten.
 
 **STATUS:** OPEN
+
+## 2026-07-14 20:40 | discovered-by: L0 rotation #22 (t4 real-backend re-run, agent-ux/t4-conflict-rebase-ancestry-real-backend cadence) | severity: HIGH
+
+**What:** Confluence `list_records`-vs-`get_record` oid drift breaks partial-clone checkout against live Confluence. `reposix init confluence::...` then `git checkout` aborts: `oid drift: requested 288fbcf7938289e822c36d758cace9efa98e5ab2, backend returned 959a0393bfff07a3d8faeb69293db0fd9d13ff54 for issue 7766017` — fails at `git checkout -B main`, BEFORE any push (read-only). Root cause traced to `crates/reposix-cache/src/builder.rs:610-618` (`read_blob`): the tree oid is computed from the `list_records` body at `reposix init`/`build_from` time; the blob is materialized from the `get_record` body at checkout time. For Confluence page 7766017 these two API representations render to DIFFERENT bytes, so the safety drift-check (working as designed) refuses to serve the blob and the partial-clone fetch aborts. Deterministic: re-ran validate-only, byte-identical oids both runs. Page 7766017 is an UNMUTATED protected fixture — so this is NOT the eventual-consistency race the code comment assumes; it is a systematic list-body vs get-body representation difference.
+
+**Why out-of-scope for the discovering session:** Discovered mid a real-backend verification cadence run (t4), not a planned fix-first phase; the fix requires either aligning Confluence adapter rendering (`crates/reposix-core` backend connector) or reworking `build_from`'s oid computation in `reposix-cache` — both are new-scope code changes needing their own dedicated phase and test coverage, not an eager patch inside a cadence re-run.
+
+**Sketched resolution:** Fix candidates: (1) align the Confluence adapter so `list_records` and `get_record` render the same body per page, OR (2) have `build_from` compute tree oids from the get-representation it will actually materialize from. Impact: this is THE reason the `agent-ux/t4-conflict-rebase-ancestry-real-backend` (P0) caveat does NOT retire; partial-clone checkout against live Confluence is broken for at least page 7766017, likely broader. Reliable reproducer via the t4 gate. Evidence: t4 cadence run 2026-07-15; log `/tmp/t4-realbackend-run.log`; artifact `quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry-real-backend.json`.
+
+**STATUS:** OPEN
+
+## 2026-07-14 20:41 | discovered-by: L0 rotation #22 (t4 real-backend re-run, same session as the oid-drift defect above) | severity: MEDIUM
+
+**What:** Misleading t4 error message misattributes oid-drift to git version. The drift aborts with `requires git >= 2.34 stateless-connect fetch`, but git in the executing environment is 2.50.1 — the message misattributes an oid-drift/coherence failure to a git-version problem and teaches the wrong fix. Violates the root CLAUDE.md Ownership-charter north star ("every user-facing error must teach the fix").
+
+**Why out-of-scope for the discovering session:** Fixing the message requires editing `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`'s error-classification logic — a harness-script change separate from the product-defect fix above and outside the scope of a real-backend cadence re-run.
+
+**Sketched resolution:** `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh` should surface the real stderr (`oid drift … for issue 7766017`) instead of falling back to the git-version message whenever the actual failure is an oid-drift abort rather than a stateless-connect/git-version gate failure.
+
+**STATUS:** OPEN
+
+## 2026-07-14 20:42 | discovered-by: L0 rotation #22 (t4 real-backend re-run, pre-release-real-backend cadence) | severity: MEDIUM
+
+**What:** `pre-release-real-backend` cadence needs a documented mirror-refresh pre-step. The vision-litmus non-idempotency (documented in `.planning/milestones/v0.14.0-phases/surprises-intake/part-03.md` § litmus non-idempotency, Manager Ruling #2): the litmus's own successful push re-stales the GitHub mirror it reads, so a SECOND-run vision-litmus is RED unless `scripts/refresh-tokenworld-mirror.sh` runs FIRST. This is not wired into the cadence invocation. This caused a P0 vision-litmus FAIL in the 2026-07-15 t4 run that was a false-negative — the committed catalog PASS from 2026-07-13 remains legitimate on a freshly-refreshed mirror.
+
+**Why out-of-scope for the discovering session:** Wiring a mandatory pre-step into the milestone-close cadence invocation (or making the litmus self-reconcile) is a harness/procedure change needing its own review, not an eager patch mid cadence-run; it also overlaps `GTH-V15-09` (self-reconcile path already filed in `GOOD-TO-HAVES.md`) and needs the same owner-gate discipline as that entry.
+
+**Sketched resolution:** Milestone-close should either run `scripts/refresh-tokenworld-mirror.sh` as a documented pre-step of `pre-release-real-backend`, or the litmus should self-reconcile per the fix-sketch already in `GTH-V15-09` (fetch backend-current through the reposix bus remote before the marker push). This entry cross-refs `GTH-V15-09` and documents the concrete cadence-wiring gap plus the specific 2026-07-15 false-negative it caused, so the next reader does not re-diagnose from scratch.
+
+**STATUS:** OPEN
+
+## 2026-07-14 20:43 | discovered-by: L0 rotation #22 (t4 real-backend re-run — preflight vs runner env-loading gap) | severity: HIGH
+
+**What:** `quality/runners/run.py` does not source `./.env`, while `scripts/preflight-real-backends.sh` DOES — causing a false-green-preflight / silent-skip gap: the real-backend cadence skips all rows when run without `.env` pre-sourced into the shell, but preflight independently reports the backends reachable, so the two together give a false impression of full coverage. CONFIRMED this rotation: sourcing `.env` in the same invocation (`set -a; . ./.env; set +a`) fixed it — all 6 real-backend rows executed for real once the env vars were present in `run.py`'s process.
+
+**Why out-of-scope for the discovering session:** The immediate re-run was unblocked by manually sourcing `.env` before invoking `run.py`; fixing `run.py` itself (or its documented invocation) is a code/docs change to the shared quality-runner infra, not an eager patch inside a single cadence re-run, and the "fix it twice" doctrine (root CLAUDE.md meta-rule) requires updating the doc references in the same change.
+
+**Sketched resolution:** Make `run.py` source `.env` itself (e.g. load it via Python's own env-loading at startup), OR bake `set -a; . ./.env; set +a` into the documented invocation everywhere `pre-release-real-backend` is referenced. Fix-it-twice: update the `pre-release-real-backend` doc references in `.planning/CLAUDE.md` and `docs/reference/testing-targets.md` to show the corrected invocation (or note that `run.py` now self-sources), so the next agent does not silently skip-and-declare-green again.
+
+**STATUS:** OPEN
+
+## 2026-07-14 20:44 | discovered-by: L0 rotation #22 (t4 real-backend re-run — `--persist` write review) | severity: HIGH
+
+**What:** `--persist` silently rewrites genuinely-GREEN catalog rows to a worse status on a skip/false-negative. This rotation's run downgraded `vision-litmus` PASS→FAIL in the persist write — caught and `git restore`d before commit only because the diff was reviewed before staging. The prior rotation downgraded 2 P0 rows the same way on an env-skip (see the preceding env-loading-gap and mirror-staleness entries above — either false-negative feeds directly into this persist behavior, compounding the risk).
+
+**Why out-of-scope for the discovering session:** Changing `--persist`'s write semantics (adding a confirm gate) is a change to the shared quality-runner framework's core write path — needs its own review given how many cadences depend on `--persist`, not an eager patch mid a real-backend re-run where the immediate risk was mitigated by manual `git restore` + review-before-commit.
+
+**Sketched resolution:** Gate skip/fail-driven `status` rewrites behind an opt-in flag (e.g. `--allow-downgrade`), or refuse by default to rewrite a committed GREEN `status` to a worse value without an explicit confirm flag — surfacing a loud warning instead ("row X was PASS, new result is FAIL/SKIP — pass --allow-downgrade to persist this change") so a false-negative run cannot silently corrupt catalog state. Pairs with the preceding env-loading-gap and mirror-staleness entries as root causes that feed spurious downgrades into this behavior.
+
+**STATUS:** OPEN
