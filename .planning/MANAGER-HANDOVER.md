@@ -49,18 +49,36 @@ does reposix work itself. Keep this file lean; git history is the archive.
    successor `/herdr-manager` prompt pointing here.
 3. **Known tooling bugs**: `send-keys C-u` is unsupported (script's clear step must not
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
-   "[Pasted text]" block that Enter won't submit while background subagents hold input.
+   "[Pasted text]" block that Enter won't submit while background subagents hold input;
+   rotation #6→#7 the successor prompt never submitted at all (pane showed only a stray
+   "a" — likely the pasted-block/Enter race) — owner had to bootstrap manually; verify
+   the send actually submitted (agent read: input emptied + turn started) before the
+   outgoing manager's script exits.
 
-## Live state (refresh at every rotation) — 2026-07-14 late, rotation #6→#7 (OWNER ACTIVE IN-PANE)
+## Live state (refresh at every rotation) — 2026-07-15, rotation #7 LIVE (OWNER ACTIVE IN-PANE)
 
-- **SUCCESSOR #7 FIRST ACTIONS:** (1) The OWNER is actively conversing in THIS pane —
-  greet briefly, continue seamlessly; do not re-litigate tonight's decisions (all
-  recorded: audit ADDENDUM + bullets below). (2) TaskStop monitor `bjsloa9qo`, re-arm
-  your own (script in TaskStop output / git history of this file). (3) Workhorse #21
-  LIVE in w1:p5: item-0 cursor refresh DONE (3d0184f); now /gsd-new-milestone re-anchor
-  → v0.15 floor planning; two queued directives: creds-loaded pre-release-real-backend
-  cadence (t4 REAL destructive run — git 2.50.1 + preflight exit 0 verified) and
-  scratch-repo-policy doc (testing-targets.md). (4) Standing commitments made to the
+- **ROTATION #7 BOOTSTRAP NOTE (2026-07-15):** manager-rotate.sh's successor prompt
+  never submitted (pane received only a stray "a") — the owner bootstrapped #7 manually
+  by pointing it at this file. Fix-or-verify the script's send step before relying on
+  it for #7→#8 (see Known tooling bugs).
+- **#7 FIRST ACTIONS (status):** (1) Owner active in-pane — live. (2) DONE: `bjsloa9qo`
+  TaskStopped; manager-#7 monitor live as task `bzbk2m1ds` (same script, recovered from
+  TaskStop output). (3) Workhorse #22 LIVE in w1:p5 (charter: t4 creds-loaded
+  pre-release-real-backend cadence with manager GO + /gsd-new-milestone re-anchor →
+  v0.15 floor planning; scratch-repo-policy doc queued); at #7 wake it was mid-cadence
+  (gsd-executor on preflight-real-backends.sh), context ~8%, healthy.
+- **t4 REAL-BACKEND CADENCE COMPLETE (#22 wrap, 2026-07-15): env-gap FIXED** (source
+  .env in the SAME invocation as run.py — all 6 rows EXECUTE for real, 0 NOT-VERIFIED,
+  0 silent skips); verdict 4 PASS / 2 P0 FAIL, exit 1. **t4 CONVERTS from env-caveat to
+  a REAL deterministic product defect**: Confluence list_records-vs-get_record oid
+  drift on page 7766017 breaks partial-clone checkout — trips the OidDrift consistency
+  check at `crates/reposix-cache/src/builder.rs:612` (manager spot-verified the trace
+  site); byte-identical oids across two validate-only re-runs; read-only failure, ZERO
+  mutations, protected pair untouched. Routed **v0.15 FIX-FIRST** per owner ruling
+  `b773c04`. Second P0 FAIL = vision-litmus, the KNOWN mirror non-idempotency
+  (refresh-tokenworld-mirror.sh pre-step not run) — committed catalog PASS stays
+  legitimate, NOT a regression. p93 (P0) + all 3 P1 real-backend rows genuinely GREEN.
+  #22 filing ~7 fix-first/noticing intake items, then /gsd-new-milestone re-anchor. (4) Standing commitments made to the
   owner tonight: ADR-class decisions = manager decide-and-disclose (ledger + owner veto
   window); PUSH-NOTIFY the owner (PushNotification tool) at any owner-blocking moment
   or planned pause — silence must always mean "working"; owner-only = interactive sudo,
@@ -71,12 +89,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   .env): GitHub = gh keyring OAuth non-expiring (`GITHUB_TOKEN=$(gh auth token…)` —
   never grep the literal value, it's a substitution); Atlassian token-world-for-reposix
   expires 2027-01-14; JIRA_API_TOKEN=$ATLASSIAN_API_KEY (same token). gh config
-  cleaned of stale github.ncsu.edu (backup hosts.yml.bak). (7) OPEN OWNER ASKS (asked
-  2026-07-14, unanswered — push-notify when they become blocking, don't nag):
-  benchmark-spend ceiling for the funded Q1 live re-measurement — manager-recommended
-  default AWAITING owner word: up to 50 benchmark sessions on the existing
-  subscription, no new API dollars, escalate past that; keep-host-awake = DONE per
-  owner 2026-07-14; usage-plan headroom still unconfirmed. Workhorse #22 launched with
+  cleaned of stale github.ncsu.edu (backup hosts.yml.bak). (7) OWNER ASKS — ALL ANSWERED:
+  benchmark-spend ceiling ANSWERED (owner, 2026-07-15: "50 runs is easily in budget")
+  — adopted ceiling = up to 50 benchmark sessions on the existing subscription, no new
+  API dollars, escalate only past 50; relayed to workhorse #22 for v0.15 floor planning
+  (funded Q1 re-measurement lane, waiver expiry 2026-08-15); usage-plan headroom
+  concern CLOSED for benchmark purposes; keep-host-awake = DONE per owner 2026-07-14. Workhorse #22 launched with
   explicit manager GO for the t4 destructive real-backend re-run (protected-pair
   guardrails) + /gsd-new-milestone → v0.15 floor.
 
@@ -132,7 +150,7 @@ does reposix work itself. Keep this file lean; git history is the archive.
   DELETED. Item 7 = RESOLVED-DEFER (owner-waived CREATE-recovery RBF-LR-03 — flag
   VERBATIM in the READY-TO-TAG report); 8 OPEN intakes route v0.15.0, none
   tag-blocking (+ new rows from the diagnosis/fix lanes, all routed).
-- **Manager monitor:** task `bjsloa9qo` (60s poll; ORIGIN-MOVED / BLOCKED /
+- **Manager monitor:** task `bzbk2m1ds` (manager #7; 60s poll; ORIGIN-MOVED / BLOCKED /
   IDLE-STABLE / one-shot STALL / CI-RED). Incoming manager: TaskStop it, re-arm your
   own (script recoverable via TaskStop output or git history of this file).
 - **Ops lessons (rotation #3):** commit the manager-handover refresh BEFORE launching
