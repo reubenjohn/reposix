@@ -563,7 +563,8 @@ impl Cache {
     ///   `REPOSIX_ALLOWED_ORIGINS` allowlist (audit row fired first).
     /// - [`Error::Backend`] — any other backend failure.
     /// - [`Error::OidDrift`] — backend returned bytes that hash to a
-    ///   different OID than requested (eventual-consistency race).
+    ///   different OID than requested (an eventual-consistency race, or a
+    ///   systematic list-vs-get rendering mismatch — see [`Error::OidDrift`]).
     /// - [`Error::Render`] — frontmatter rendering failed.
     /// - [`Error::Git`] — `gix::Repository::write_blob` failed.
     ///
