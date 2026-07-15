@@ -132,3 +132,13 @@
 **Sketched resolution:** Gate skip/fail-driven `status` rewrites behind an opt-in flag (e.g. `--allow-downgrade`), or refuse by default to rewrite a committed GREEN `status` to a worse value without an explicit confirm flag — surfacing a loud warning instead ("row X was PASS, new result is FAIL/SKIP — pass --allow-downgrade to persist this change") so a false-negative run cannot silently corrupt catalog state. Pairs with the preceding env-loading-gap and mirror-staleness entries as root causes that feed spurious downgrades into this behavior.
 
 **STATUS:** OPEN
+
+## 2026-07-15 06:30 | discovered-by: L0 rotation #26 intake-filing leaf (carried forward across workhorse #24→#25→#26 handovers, 2 rotations un-filed) | severity: MEDIUM
+
+**What:** The commit-message argument to `gsd-sdk query commit` is POSITIONAL, not a `--message` flag. Passing `--message "..."` silently commits a garbage/empty message instead of erroring — a real footgun for any agent copying the pattern.
+
+**Why out-of-scope for the discovering session:** Discovered incidentally during unrelated work; correcting the documented example other agents copy from touches a user-global skill (`coordinator-dispatch`, outside this repo) and/or `.planning/ORCHESTRATION.md`, which needs a deliberate review pass rather than an eager patch mid another charter. Carried un-filed across two prior rotation handovers before this leaf captured it.
+
+**Sketched resolution:** Fix-twice obligation: (i) this intake row captures the footgun; (ii) correct the documented example other agents copy from — the `coordinator-dispatch` skill and/or `.planning/ORCHESTRATION.md` commit example — to the positional form `gsd-sdk query commit "<msg>" --files <path>`, so no future example teaches the `--message` flag form. Also consider whether `gsd-sdk query commit` itself should hard-error on an unrecognized `--message` flag rather than silently committing garbage, closing the footgun at the source rather than only in docs.
+
+**STATUS:** OPEN

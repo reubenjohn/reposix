@@ -121,6 +121,13 @@
 - **What:** `builder.rs`/`cache.rs` doc comments claim `sync --reconcile` recovers oid-drift, but a fresh `list_records` rebuild reproduces the same list-oid that still won't match the get-oid for the systematic Confluence list-vs-get representation-drift class (see the SURPRISES-INTAKE `list_records`-vs-`get_record` oid-drift entry on page 7766017, filed the same session) — so the recovery claim likely does NOT hold for that class of drift. Possible doc-lie; not yet proven, hence audit rather than fix-first.
 - **Fix-sketch:** Audit `sync --reconcile`'s recovery claim once the SURPRISES-INTAKE oid-drift defect is fixed: re-run `reposix sync --reconcile` against a Confluence page exhibiting list-vs-get drift and confirm whether the reconcile actually clears the drift or merely reproduces the same stale list-oid. If it does not recover, correct the doc comments in `crates/reposix-cache/src/builder.rs` / `cache.rs` to stop claiming general oid-drift recovery, scoping the claim to the eventual-consistency race it was originally written for.
 
+## From L0 rotation #26 (carry-forward intake filing, 2026-07-15)
+
+### GTH-V15-20 — Stale `v0.12.0` example text in freshness-invariants catalog
+- **Source:** carried forward across workhorse #24→#25→#26 handovers (2 rotations un-filed) · **Severity: LOW (cosmetic)** · STATUS: OPEN.
+- **What:** `quality/catalogs/freshness-invariants.json` (~L227–229), the `structure/top-level-requirements-roadmap-scope` row's `expected.asserts` text hardcodes a stale `"v0.12.0"` example string. Doc-only, non-blocking, cosmetic.
+- **Fix-sketch:** Update the example string to a current/representative milestone reference (or a placeholder pattern that doesn't go stale, e.g. `vX.Y.Z`). Fits naturally inside P119 (a DOCS-lane phase) — FILE only, do not fix now.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each
