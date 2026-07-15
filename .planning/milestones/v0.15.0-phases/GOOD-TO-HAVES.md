@@ -128,6 +128,13 @@
 - **What:** `quality/catalogs/freshness-invariants.json` (~L227–229), the `structure/top-level-requirements-roadmap-scope` row's `expected.asserts` text hardcodes a stale `"v0.12.0"` example string. Doc-only, non-blocking, cosmetic.
 - **Fix-sketch:** Update the example string to a current/representative milestone reference (or a placeholder pattern that doesn't go stale, e.g. `vX.Y.Z`). Fits naturally inside P119 (a DOCS-lane phase) — FILE only, do not fix now.
 
+## From L0 rotation #27 manager queue (2026-07-15)
+
+### GTH-V15-21 — Archived-milestone handover files will start BLOCKING pushes when the `structure/file-size-limits` waiver expires
+- **Source:** manager (w1:p7) mid-task capture, 2026-07-15 · **Severity: MEDIUM** · STATUS: OPEN.
+- **What:** Two ARCHIVED files exceed the file-size gate and are only kept passing by the active waiver: `.planning/milestones/v0.13.0-phases/97-HANDOVER.md` (31,271 chars) and `.planning/milestones/v0.14.0-phases/RELIEF-HANDOVER-C2-wave-2b.md` (20,132 chars). When the waiver expires **2026-08-08** the `structure/file-size-limits` gate will BLOCK any push.
+- **Fix-sketch:** Decision-owner call before 2026-08-08 (hard deadline = waiver expiry): EITHER exempt archived milestone dirs (`.planning/milestones/v*.0-phases/` and/or `.planning/archive/`) from the file-size gate — likely correct, archives are immutable history — OR split the two files. No new dependencies; resolution fits easily into any v0.15.0 phase.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each
