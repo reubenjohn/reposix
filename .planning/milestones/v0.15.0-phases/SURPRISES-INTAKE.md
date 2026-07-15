@@ -162,3 +162,28 @@
 **Sketched resolution:** Either (a) add `expected_version` to the sim's accepted update fields if optimistic-concurrency is intended, or (b) drop `expected_version` from the bench PATCH body. Decide the intended contract first, then fix the losing side (sim schema or bench probe) to match.
 
 **STATUS:** OPEN
+
+## 2026-07-15 22:00 | discovered-by: P115 roadmap gsd-quick noticing (OD-3) | severity: LOW
+
+**What:** `docs/development/roadmap.md` is a STALE internal snapshot that lies about the
+active milestone. Its "Active milestone" section (L20-22) still reads "**v0.11.0 Polish &
+Reproducibility** — PLANNING (Phases 50–55 scaffolded)", and its shipped-milestones table
+(L18) stops at v0.10.0 — reality is v0.15.0 (Floor). The file is `not_in_nav` (not linked
+from mkdocs nav), so it does not surface to readers via the docs site, but it remains a
+committed artifact an agent or contributor could stumble on and trust. Now that a public
+`docs/roadmap.md` exists as the canonical current-state surface, this internal snapshot's
+staleness is more conspicuous — it duplicates a job the public doc already does, but worse.
+
+**Why out-of-scope for the discovering session:** Surfaced incidentally by a P115 roadmap
+gsd-quick lane (OD-3 noticing obligation), not a planned docs-freshness pass; deciding
+whether to refresh the snapshot to current state or replace it with a redirect/pointer to
+`docs/roadmap.md` is a small but distinct doc-hygiene decision, not an eager one-line patch
+inside the P115 benchmark-remeasurement charter.
+
+**Sketched resolution:** Either (a) refresh `docs/development/roadmap.md`'s "Active
+milestone" section + shipped table to the current v0.15.0 (Floor) state, or (b) replace its
+content with a short redirect/pointer to the now-canonical public `docs/roadmap.md`, so the
+internal file cannot drift out of sync again. Prefer (b) if the internal file's only purpose
+was to duplicate what `docs/roadmap.md` now covers — one source of truth beats two.
+
+**STATUS:** OPEN
