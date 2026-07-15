@@ -73,8 +73,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   expires 2027-01-14; JIRA_API_TOKEN=$ATLASSIAN_API_KEY (same token). gh config
   cleaned of stale github.ncsu.edu (backup hosts.yml.bak). (7) OPEN OWNER ASKS (asked
   2026-07-14, unanswered — push-notify when they become blocking, don't nag):
-  benchmark-spend ceiling for the funded Q1 live re-measurement; keep-host-awake /
-  pause-Windows-updates for the week; usage-plan headroom.
+  benchmark-spend ceiling for the funded Q1 live re-measurement — manager-recommended
+  default AWAITING owner word: up to 50 benchmark sessions on the existing
+  subscription, no new API dollars, escalate past that; keep-host-awake = DONE per
+  owner 2026-07-14; usage-plan headroom still unconfirmed. Workhorse #22 launched with
+  explicit manager GO for the t4 destructive real-backend re-run (protected-pair
+  guardrails) + /gsd-new-milestone → v0.15 floor.
 
 - **v0.14.0 TAG SHIPPED (2026-07-14T01:16Z): `refs/tags/v0.14.0` @ `bcdee07`** + all 9
   release-plz per-package tags; crates.io at 0.14.0. Cut by the manager under standing
