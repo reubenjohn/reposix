@@ -1,0 +1,9 @@
+{
+  "nav_path": "/reposix/roadmap/",
+  "mermaid_count": 1,
+  "svg_counts": [1],
+  "console_errors": [],
+  "captured_at_utc": "2026-07-15T23:37:13Z",
+  "agent_id": "38d6023e-0891-406c-9b87-49821a5fcbec",
+  "captured_via": "playwright MCP against mkdocs serve on 127.0.0.1:8791; Roadmap page (docs/roadmap.md). DOM eval confirmed 1 .mermaid container with exactly 1 <svg> child (viewBox 0 0 1158.234375 814, width 100%), all 8 node labels present in rendered SVG text, and zero error-level console messages."
+}

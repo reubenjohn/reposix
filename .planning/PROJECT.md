@@ -102,6 +102,9 @@ Interim lane scaffold already seeded: `.planning/milestones/v0.15.0-phases/{ROAD
 GOOD-TO-HAVES,SURPRISES-INTAKE}.md`. Formal phase numbering + REQUIREMENTS.md routing
 happen in the next steps of this `/gsd-new-milestone` run, not in this re-anchor.
 
+**Public roadmap.** The bird's-eye capability map for this arc — shipped → Floor → future
+arcs converging on the OD-4 launch — is published at [`../docs/roadmap.md`](../docs/roadmap.md) <!-- SYNC: paired with docs/roadmap.md § Roadmap. Edit either side → update the other; re-color the arcs (shipped / active / future) at milestone close. -->
+
 ---
 
 ## Previously Validated Milestones

@@ -20,12 +20,22 @@ import sys
 
 DEFAULT_GLOBS = [
     "docs/index.md",
+    # Top-level docs pages (roadmap.md, security.md, why.md). index.md above
+    # is harmlessly re-listed here — the check loop reads it twice and its
+    # links are validated twice (a cosmetic double-count in the file total,
+    # never a false BROKEN). Added so the public roadmap and its
+    # bi-directional cross-link to .planning/PROJECT.md are both link-checked.
+    "docs/*.md",
     "docs/concepts/*.md",
     "docs/tutorials/*.md",
     "docs/how-it-works/*.md",
     "docs/guides/*.md",
     "docs/reference/*.md",
     "docs/benchmarks/*.md",
+    # Planning source of truth — carries the reverse (../docs/roadmap.md)
+    # cross-link. Only this one .planning file is scanned (not all of
+    # .planning/**), matching the roadmap↔PROJECT SYNC pair contract.
+    ".planning/PROJECT.md",
 ]
 
 LINK_RE = re.compile(r"\]\(([^)]+)\)")

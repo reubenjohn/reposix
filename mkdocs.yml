@@ -117,6 +117,7 @@ extra:
 
 nav:
   - Home: index.md
+  - Roadmap: roadmap.md
   - Concepts:
       - Mental model in 60 seconds: concepts/mental-model-in-60-seconds.md
       - reposix vs MCP and SDKs: concepts/reposix-vs-mcp-and-sdks.md

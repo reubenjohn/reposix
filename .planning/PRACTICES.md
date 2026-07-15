@@ -67,6 +67,10 @@ Inefficient / Patterns Established / Key Lessons). Raw intake files
 travel with the milestone archive into `*-phases/`; distilled lessons
 live permanently and discoverably in `RETROSPECTIVE.md`.
 
+**Also at milestone close:** keep the `docs/roadmap.md ↔ .planning/PROJECT.md` SYNC pair in
+step — both links + their `<!-- SYNC: -->` comments — and re-color the public roadmap's arc
+bands (shipped / active / future) to match the new milestone state.
+
 **Why:** without this step, learnings get lost in milestone archives —
 the +2 phase practice produces signal that's worth keeping
 cross-milestone (failure modes, patterns, process gaps) but the raw

@@ -147,6 +147,13 @@
 - **What:** Row `docs/reference/testing-targets/github-url-prefix` (claim: `remote.origin.url` starts with `reposix::https://api.github.com/`) is bound to prose at `docs/reference/testing-targets.md:245-251`, which is the ADR-008 dispatch note, not a "GitHub env vars" section. The binding itself is sound (the cited test asserts exactly that prefix) but a reader scanning the GitHub testing section for the URL contract won't find it stated there.
 - **Fix-sketch:** also state the literal remote-URL prefix contract in the GitHub testing section proper (near the other GitHub env-var / setup claims), leaving the ADR-008 blockquote as-is for the dispatch-note context. Trivial (<15 min doc edit); bundle into any `docs/reference/testing-targets.md`-touching change (mind the refresh-tail caveat — this edit will itself drift catalog rows and need a `/reposix-quality-refresh` pass).
 
+## From gsd-quick lane 260715-mk5 public roadmap diagram (2026-07-15)
+
+### GTH-V15-24 — Structure gate asserting the roadmap↔PROJECT `<!-- SYNC:` marker pair exists on BOTH sides
+- **Source:** gsd-quick lane 260715-mk5 (owner-approved w1:p7), optional noticing-grade extra · **Severity: LOW** · STATUS: OPEN.
+- **What:** The public roadmap (`docs/roadmap.md`) and the planning ledger (`.planning/PROJECT.md`) now carry a bi-directional keep-in-check link, each with an adjacent `<!-- SYNC: ... -->` comment. Nothing mechanically asserts the pair stays symmetric — if one side drops its `<!-- SYNC:` comment or its link during an edit, the drift is silent until a human notices. link-resolution.py now checks the LINKS resolve (both directions), but not that the SYNC *comments* both still exist. Deferred from this lane because a real structure gate is a multi-file add, not a trivial inline one.
+- **Fix-sketch:** add a `verify_sync_marker_pair` fn to the `DISPATCH` dict in `quality/gates/structure/freshness-invariants.py` asserting `grep -c '<!-- SYNC:'` is ≥1 in BOTH `docs/roadmap.md` and `.planning/PROJECT.md` (and, stretch, that each SYNC line sits next to its cross-link); register a catalog-first row `structure/roadmap-project-sync-pair` in `quality/catalogs/freshness-invariants.json` (cadence pre-push, blast_radius P2); add a `.selftest.sh` building a throwaway `/tmp` repo. Small but genuinely multi-file — fits a structure-dimension or DOCS-lane phase.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each
