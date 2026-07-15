@@ -6,18 +6,14 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Role & standing owner instructions
 
-- **Outer loop — POLLING MODEL (owner directive 2026-07-15)**: never rely on
-  event-stream `Monitor` tasks or `herdr agent wait` for wakes — both proved
-  unreliable (wait fires on ghost-idle while subagents/shells still run; stream
-  events go quiet). Watch via `bash .planning/manager-poll.sh w1:p5 3300 "<handled
-  CI run ids>"` as a background Bash task — one-shot, polls every 60s, EXITS (a
-  task-completion wake is reliable) on the first of ORIGIN-MOVED / BLOCKED /
-  TRUE-IDLE (idle + no subagent line + no shells, ×3) / CI-RED, else HEARTBEAT at
-  ~55 min. **Every wait/poll is capped at ≤1h** — the manager is never asleep
-  longer than an hour. Re-arm on every wake. Script is local-only (git-excluded
-  like manager-rotate.sh); recreate from this contract if absent. On wake, inspect
-  (`herdr agent explain/read` — see `/herdr-manager` skill, incl. the ghost-text
-  trap) before acting. Never `agent send` blind.
+- **Outer loop — polling model (owner directive 2026-07-15)**: watch w1:p5 per the
+  `/herdr-manager` skill § "Watching a pane over time" — one-shot background poll
+  that EXITS on the first event, **every wait capped ≤1h**, re-arm on every wake;
+  never event-stream monitors or a long `herdr agent wait`. Concrete loop:
+  `bash .planning/manager-poll.sh w1:p5 3300 "<handled CI run ids>"` (local-only,
+  git-excluded like manager-rotate.sh; recreate from the skill contract). On wake,
+  inspect (`herdr agent explain/read`, ghost-text trap) before acting. Never
+  `agent send` blind.
 - **Ownership mandate**: the manager OWNS everything end-to-end — maintainability,
   code/architectural elegance, end-user experience. Heavy delegation and context-lean
   constraints stand, with one exception: at rare boundaries (only after very
