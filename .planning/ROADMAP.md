@@ -91,7 +91,9 @@
   2. The P0 gate `agent-ux/t4-conflict-rebase-ancestry-real-backend` passes GREEN against live Confluence TokenWorld.
   3. The root-cause fix lands in either the Confluence adapter (render-parity between `list_records` and `get_record`) or `build_from`'s oid computation (use the get-representation it actually materializes from) — not a workaround.
   4. `builder.rs`/`cache.rs` doc comments accurately describe which oid-drift class `reposix sync --reconcile` actually recovers, verified against a reproduction rather than assumed.
-**Plans**: TBD
+**Plans**: 2 plans (Wave 1: 114-01 · Wave 2: 114-02)
+- [ ] 114-01-PLAN.md — FIX-01: Confluence adapter render-parity — add `body-format=atlas_doc_format` to the `list_issues_impl` LIST url so list/get bodies decode identically; + a render-parity contract test
+- [ ] 114-02-PLAN.md — FIX-02: `sync --reconcile` recovery-claim audit — reproduction-backed `oid_drift_reconcile` mock test + scoped doc corrections in error.rs/sync.rs/main.rs (cache.rs cursor-drift doc confirmed accurate)
 
 ### Phase 115: Live MCP benchmark re-measurement
 **Goal**: Token-economy + latency benchmark figures backing the 8 hero-number doc-alignment-waived rows are re-measured against live conditions before the waiver-expiry deadline.
