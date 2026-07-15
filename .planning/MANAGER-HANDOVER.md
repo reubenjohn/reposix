@@ -51,7 +51,30 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation) — 2026-07-14, manager rotation #6 (v0.14.0 SHIPPED)
+## Live state (refresh at every rotation) — 2026-07-14 late, rotation #6→#7 (OWNER ACTIVE IN-PANE)
+
+- **SUCCESSOR #7 FIRST ACTIONS:** (1) The OWNER is actively conversing in THIS pane —
+  greet briefly, continue seamlessly; do not re-litigate tonight's decisions (all
+  recorded: audit ADDENDUM + bullets below). (2) TaskStop monitor `bjsloa9qo`, re-arm
+  your own (script in TaskStop output / git history of this file). (3) Workhorse #21
+  LIVE in w1:p5: item-0 cursor refresh DONE (3d0184f); now /gsd-new-milestone re-anchor
+  → v0.15 floor planning; two queued directives: creds-loaded pre-release-real-backend
+  cadence (t4 REAL destructive run — git 2.50.1 + preflight exit 0 verified) and
+  scratch-repo-policy doc (testing-targets.md). (4) Standing commitments made to the
+  owner tonight: ADR-class decisions = manager decide-and-disclose (ledger + owner veto
+  window); PUSH-NOTIFY the owner (PushNotification tool) at any owner-blocking moment
+  or planned pause — silence must always mean "working"; owner-only = interactive sudo,
+  new creds/scopes/spend, outward publishing. (5) Owner intent: 24/7 chug through
+  v0.15→v0.25 this week; milestone cuts flow under standing release authority;
+  2026-08-15 waiver expiry is a hard scheduling deadline inside v0.15.
+  (6) CREDENTIAL AUDIT COMPLETE (2026-07-14, documented as comments in gitignored
+  .env): GitHub = gh keyring OAuth non-expiring (`GITHUB_TOKEN=$(gh auth token…)` —
+  never grep the literal value, it's a substitution); Atlassian token-world-for-reposix
+  expires 2027-01-14; JIRA_API_TOKEN=$ATLASSIAN_API_KEY (same token). gh config
+  cleaned of stale github.ncsu.edu (backup hosts.yml.bak). (7) OPEN OWNER ASKS (asked
+  2026-07-14, unanswered — push-notify when they become blocking, don't nag):
+  benchmark-spend ceiling for the funded Q1 live re-measurement; keep-host-awake /
+  pause-Windows-updates for the week; usage-plan headroom.
 
 - **v0.14.0 TAG SHIPPED (2026-07-14T01:16Z): `refs/tags/v0.14.0` @ `bcdee07`** + all 9
   release-plz per-package tags; crates.io at 0.14.0. Cut by the manager under standing
