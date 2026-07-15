@@ -409,12 +409,18 @@ never triggers in the reproduction).**
 ## Open Questions
 
 1. **Does the real TokenWorld space contain any pre-ADF pages?** — **DEFERRED
-   (114-01 Wave 1): the fix already handles pre-ADF pages (`translate` falls back
-   to raw storage when no `atlas_doc_format` body is present), but whether
-   TokenWorld actually contains one is only answerable by the env-gated
-   real-backend gate (SC1/SC2), NOT by this wiremock wave. Left genuinely open for
-   the gate run — if a DIFFERENT page id trips `OidDrift` post-fix, that page is
-   the pre-ADF follow-up target.**
+   (114-01 Wave 1): the render-parity fix resolves drift for ADF-native pages
+   ONLY. For a pre-ADF page (stored as `storage`/HTML, no ADF representation) the
+   drift PERSISTS — consistent with the "Residual gap" section above:
+   `list_issues_impl` now requests only `body-format=atlas_doc_format` with NO
+   per-page storage fallback, so its list render decodes to a different
+   (empty-or-sentinel) body, while `get_record` DOES fall back to
+   `?body-format=storage` and returns the real storage HTML. The two renders
+   differ, so `OidDrift` still fires. Whether any TokenWorld page is pre-ADF (and
+   thus still drifts) is answerable ONLY by the env-gated real-backend gate
+   (SC1/SC2), NOT by this wiremock wave. Left genuinely open for the gate run — if
+   a DIFFERENT page id trips `OidDrift` post-fix, that page is very likely pre-ADF
+   and is the follow-up target.**
    - What we know: page 7766017 is ADF-native (the repro/regression-lock test
      `get_record_real_confluence_body_is_real_markdown_not_unreadable_sentinel` already
      proves `get_record(7766017)` decodes real ADF markdown, not the sentinel).

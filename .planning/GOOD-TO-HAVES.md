@@ -98,6 +98,30 @@ full-workspace runs), OR soften the docs/plans that hard-name `cargo nextest` to
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-11 — `cursor-body-format-guard-substring-false-skip` — cursor re-append guard uses a loose `contains("body-format=")` substring check
+
+**Discovered during:** 114-01 follow-up (code-review nit #3)
+
+**Size:** XS
+
+**Source:** the FIX-01 defensive re-append in `crates/reposix-confluence/src/client.rs`
+(`list_issues_impl`'s `next_url` closure, ~L293) skips re-appending
+`body-format=atlas_doc_format` whenever the followed cursor url already `contains("body-format=")`.
+If a `_links.next` cursor ever carried a *different* representation (e.g.
+`body-format=storage`), the guard would false-skip and leave the wrong representation on
+the follow — reintroducing render-drift on page 2+. Negligible in practice: Confluence
+echoes back the `body-format` we sent (`atlas_doc_format`), so a cursor never carries a
+foreign value; the render-parity fix only ever sends `atlas_doc_format`.
+
+**Acceptance:** tighten the guard to check for the specific value
+(`contains("body-format=atlas_doc_format")`), or parse the query and assert the param
+equals `atlas_doc_format`, so a foreign `body-format` on a cursor forces a corrective
+re-append rather than a false-skip.
+
+**Default disposition:** XS always closes.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
