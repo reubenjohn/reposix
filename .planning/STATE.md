@@ -1,47 +1,26 @@
 ---
 gsd_state_version: 1.0
-mode: serial-workstreams
-status: v0.14.0-SHIPPED-public-posttag-queue-0-5-CLOSED-green-ArcD-RATIFIED-6aa734a-pipeline-active-on-new-milestone-prep-v0.15-floor
-last_updated: "2026-07-14"
-last_activity: "2026-07-14 — L0 rotation #21: post-tag queue items 0–5 confirmed CLOSED green (main green at 6aa734a, CI run 29384458026 success). Arc D RATIFIED at 6aa734a (manager under owner delegation; canonical record: ADDENDUM in .planning/milestones/audits/2026-07-12-reality-check.md) — pipeline pause LIFTED, no-new-lanes constraint DISSOLVED, normal GSD gates apply. Cursor refreshed; pipeline now active on /gsd-new-milestone re-anchor (Arc D ratchet-first sequence, v0.15 floor milestone first). Live runbook: .planning/SESSION-HANDOVER.md."
-workstreams:
-  workstream_a:
-    milestone: v0.13.0
-    milestone_name: DVCS over REST (extended)
-    status: closed-green  # v0.13.0-extension CLOSED GREEN with owner-gated caveats 2026-07-05 (milestone verdict quality/reports/verdicts/milestone-v0.13.0/VERDICT.md, verdict commit 390ce31, graded HEAD 3c6d72f)
-    phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 20  # P78-P97 (workstream A / v0.13.0-extension COMPLETE)
-    next_phase: P98  # v0.13.0 SHIPPED — tagged/released 2026-07-07 (commit 3423b18, "chore: release v0.13.0 (#68)"); v0.13.1 hotfix shipped 2026-07-08 (04640d5). No tag pending; workstream B (v0.13.2) queued behind workstream C per OD-4.
-    blocks_tag: false  # v0.13.0 tag SHIPPED 2026-07-07 (3423b18) — nothing tag-pending here
-  workstream_b:
-    milestone: v0.13.2
-    milestone_name: Cross-link fidelity
-    status: queued  # RESEQUENCED per OD-4 item 3 (2026-07-04): queued BEHIND v0.14.0 wave-2 hardening (established 2026-07-11) AND the launch-readiness milestone; phase numbers (originally P98-P107) shift again to accommodate v0.14.0's P102-P112 claim when eventually replanned
-    phases_total: 10  # P98-P107 (placeholder range, pending renumber-on-insertion at replan time)
-    phases_completed: 0
-    next_phase: P98
-    blocks_tag: false  # v0.13.2 tag ships after v0.13.0 tag AND v0.14.0 wave-2 hardening AND the launch-readiness milestone per OD-4; tag push delegated to orchestrator
-  workstream_c:
-    milestone: v0.14.0
-    milestone_name: Wave-2 hardening
-    status: shipped-green  # v0.14.0 SHIPPED + Latest 2026-07-14 (crates.io 0.14.0, GitHub release 'Latest'); 11/11 phases GREEN (P102-P112 + out-of-band P113); b773c04 RED-main CLOSED @ 8e2aae5. Nothing tag-blocked.
-    phases_total: 11  # P102-P112 (P102 D2 hard gate; P103-P109 carried HIGHs + cheap wins; P110-P111 OP-8 +2 reservation; P112 OD-4 stub)
-    phases_completed: 11  # P102-P112 ALL GREEN (P111 milestone-close grade c259718; P112 OD-4 launch-readiness scope stub landed) + out-of-band P113 GREEN
-    next_phase: none  # v0.14.0 SHIPPED; post-tag queue items 0-5 CLOSED green; Arc D RATIFIED (6aa734a). Wholesale re-anchor now ACTIVE via /gsd-new-milestone (v0.15 floor milestone first; P112 OD-4 launch-readiness stub feeds the Arc D ratchet-first sequence).
-    blocks_tag: false  # the v0.14.0 tag is owner-cut; orchestrator does not push
+milestone: v0.15.0
+milestone_name: Floor
+status: planning
+last_updated: "2026-07-15T04:29:06.229Z"
+last_activity: 2026-07-15
+progress:
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Current Position
 
-**Mode:** serial-workstreams per OD-3 (workstream A → then B; the parallel-worktree model is RETIRED).
-
-**OD-3 mandate (2026-07-03)** — see `.planning/milestones/v0.13.0-phases/89-framework-fixes-cadence-shell-kind/89-OWNER-DECISIONS.md` § "DECISION OD-3": drive to v1.0. Complete v0.13.0-ext (P89–P97, tag v0.13.0), then v0.13.2 (P98–P107, tag v0.13.2) STRICTLY SERIALLY; after both tags, formalize the research-only ladder (v0.14.0 observability/multi-repo → plugin ecosystem/launch readiness → v1.0.0 + ADR-009 semver activation) as real GSD milestones via `/gsd-new-milestone`. `main` is the working branch (workstream/v0.13.0-ext fast-forwarded into main 2026-07-03 and retired; per-phase push cadence targets origin/main). Full autonomy incl. former hard gates: OD-1's owner sign-off delegated to orchestrator (owner notified, not blocking), tag pushes at P97/P107 delegated contingent on GREEN verdicts, ~$50 pre-authorized for P106 L3 dogfood. OD-2 + litmus REOPEN gates remain in force UNCHANGED — on RED the orchestrator loops back, never waives.
-
-> Full Workstream A (v0.13.0, CLOSED GREEN) pre-tag checklist / release runbook /
-> queued post-tag items, and the superseded Workstream B (v0.13.2, QUEUED) narrative,
-> live in `.planning/STATE-history.md`.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-07-15 — Milestone v0.15.0 started
 
 ### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN — SHIPPED + Latest
 
@@ -54,7 +33,9 @@ workstreams:
 
 Phase: **P112** (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub) — LANDED. **11/11
 phases complete** as of 2026-07-12. **P102** (D2 self-safe dark-factory hardening
+
 + emergent Phase-0 re-seal), **P103, P104, P105** (RBF-LR-03 rebase recovery), **P106**
+
 (waived tutorials/examples — 5 `docs-repro` rows PASS), **P107** (RUSTSEC memmap2/quinn-proto
 cleared), **P108** (prune-completeness gate), **P109** (RBF-FW-11 grandfather rule), **P110**
 (OP-8 Slot 1 surprises drain — 17 terminal entries), **P111** (OP-8 Slot 2 good-to-haves +
