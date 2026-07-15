@@ -12,12 +12,12 @@
     "alignment_ratio": 0.7470238095238095,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-15T17:14:18Z",
-    "coverage_ratio": 0.17804590935844614,
+    "last_walked": "2026-07-15T20:02:14Z",
+    "coverage_ratio": 0.17744537322188003,
     "lines_covered": 1210,
-    "total_eligible_lines": 6796,
+    "total_eligible_lines": 6819,
     "coverage_floor": 0.1,
-    "claims_waived": 0
+    "claims_waived": 8
   },
   "rows": [
     {
@@ -4875,8 +4875,8 @@
       "claim": "JIRA_API_TOKEN env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 186,
-        "line_end": 186
+        "line_start": 209,
+        "line_end": 209
       },
       "source_hash": "c25aa41c5f194b5817ef770bb731a40d9eea842598236e37eb1c63d92620b9aa",
       "source_hashes": [
@@ -4888,11 +4888,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:296 still asserts skip_if_no_env!(...\"JIRA_API_TOKEN\"...) early-returns if unset",
+      "rationale": "agent_flow_real.rs:299 skip_if_no_env!(\"JIRA_EMAIL\",\"JIRA_API_TOKEN\",\"REPOSIX_JIRA_INSTANCE\") early-returns dark_factory_real_jira when JIRA_API_TOKEN unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:06:43Z",
-      "last_extracted": "2026-07-13T22:06:43Z",
+      "last_run": "2026-07-15T20:01:11Z",
+      "last_extracted": "2026-07-15T20:01:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4900,8 +4900,8 @@
       "claim": "JIRA_EMAIL env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 185,
-        "line_end": 185
+        "line_start": 208,
+        "line_end": 208
       },
       "source_hash": "d912f0895db5ee928e96ae7d979bc89f9ca2e58c51d937a29a8cc16f51fa16d1",
       "source_hashes": [
@@ -4913,11 +4913,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:296 still asserts skip_if_no_env!(\"JIRA_EMAIL\"...) early-returns if unset",
+      "rationale": "agent_flow_real.rs:299 skip_if_no_env! lists \"JIRA_EMAIL\"; dark_factory_real_jira early-returns when it is unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:06:47Z",
-      "last_extracted": "2026-07-13T22:06:47Z",
+      "last_run": "2026-07-15T20:01:16Z",
+      "last_extracted": "2026-07-15T20:01:16Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4925,8 +4925,8 @@
       "claim": "JIRA_TEST_PROJECT overrides default TEST project key",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 177,
-        "line_end": 179
+        "line_start": 200,
+        "line_end": 202
       },
       "source_hash": "bb1e6054b3a0a4c50a9198649efda4fee2828e72872c8d5a3b309e28555a3351",
       "source_hashes": [
@@ -4938,11 +4938,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "jira_test_project() (agent_flow_real.rs:109-117) reads JIRA_TEST_PROJECT first; asserted in URL suffix /jira/projects/{project} at :304-308",
+      "rationale": "jira_test_project() agent_flow_real.rs:112 reads JIRA_TEST_PROJECT first via first_nonempty_or; project resolves into url.ends_with(/jira/projects/{project}) asserted at :308-311",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:06:51Z",
-      "last_extracted": "2026-07-13T22:06:51Z",
+      "last_run": "2026-07-15T20:01:21Z",
+      "last_extracted": "2026-07-15T20:01:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6694,8 +6694,8 @@
       "claim": "remote.origin.url encodes /jira/projects/TEST marker",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 175,
-        "line_end": 179
+        "line_start": 198,
+        "line_end": 202
       },
       "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
       "source_hashes": [
@@ -6707,11 +6707,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:304-308 still asserts url.ends_with(/jira/projects/{project})",
+      "rationale": "dark_factory_real_jira asserts url.ends_with(format!(\"/jira/projects/{project}\")) at agent_flow_real.rs:307-311 (url from git config remote.origin.url in run_init_and_assert)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:06:55Z",
-      "last_extracted": "2026-07-13T22:06:55Z",
+      "last_run": "2026-07-15T20:01:29Z",
+      "last_extracted": "2026-07-15T20:01:29Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6744,8 +6744,8 @@
       "claim": "remote.origin.url starts with reposix::https://api.github.com/",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 222,
-        "line_end": 228
+        "line_start": 245,
+        "line_end": 251
       },
       "source_hash": "9a21c89aa0d22cd69e9abb7890734a31f20c61ed9a29f000242ee6ce66df6d8a",
       "source_hashes": [
@@ -6757,11 +6757,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "run_init_and_assert (agent_flow_real.rs:155-158) asserts url.starts_with(prefix); called with reposix::https://api.github.com/ at :167-170",
+      "rationale": "run_init_and_assert asserts url.starts_with(expected_url_prefix) at agent_flow_real.rs:155-158; dark_factory_real_github calls it with prefix \"reposix::https://api.github.com/\" at :167-170",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:03Z",
-      "last_extracted": "2026-07-13T22:07:03Z",
+      "last_run": "2026-07-15T20:01:39Z",
+      "last_extracted": "2026-07-15T20:01:39Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7428,8 +7428,8 @@
       "claim": "reposix init jira::TEST succeeds with required env vars",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 175,
-        "line_end": 193
+        "line_start": 198,
+        "line_end": 216
       },
       "source_hash": "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db",
       "source_hashes": [
@@ -7441,11 +7441,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "run_init_and_assert(jira::{project}) asserts out.status.success() (agent_flow_real.rs:144-149); gated by skip_if_no_env! JIRA_EMAIL/JIRA_API_TOKEN/REPOSIX_JIRA_INSTANCE at :296",
+      "rationale": "run_init_and_assert asserts out.status.success() at agent_flow_real.rs:144-149; dark_factory_real_jira runs it on spec jira::{project} gated by skip_if_no_env! at :299",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:17Z",
-      "last_extracted": "2026-07-13T22:07:17Z",
+      "last_run": "2026-07-15T20:01:45Z",
+      "last_extracted": "2026-07-15T20:01:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8168,8 +8168,8 @@
       "claim": "REPOSIX_JIRA_INSTANCE env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 181,
-        "line_end": 190
+        "line_start": 204,
+        "line_end": 213
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
       "source_hashes": [
@@ -8181,11 +8181,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:296 skip_if_no_env!(...\"REPOSIX_JIRA_INSTANCE\") + :297 unwraps it; test skips if unset",
+      "rationale": "skip_if_no_env! at agent_flow_real.rs:299 includes \"REPOSIX_JIRA_INSTANCE\"; :300 var(\"REPOSIX_JIRA_INSTANCE\").expect early-returns dark_factory_real_jira when unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:17Z",
-      "last_extracted": "2026-07-13T22:07:17Z",
+      "last_run": "2026-07-15T20:01:52Z",
+      "last_extracted": "2026-07-15T20:01:52Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8193,8 +8193,8 @@
       "claim": "REPOSIX_JIRA_PROJECT as fallback project key override",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 177,
-        "line_end": 193
+        "line_start": 200,
+        "line_end": 216
       },
       "source_hash": "1ccb7a24184f78f64c545683898e180ed1d35ac44f89df98fb73efb66cf64c1c",
       "source_hashes": [
@@ -8206,11 +8206,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "jira_test_project() (agent_flow_real.rs:109-117) via first_nonempty_or([JIRA_TEST_PROJECT, REPOSIX_JIRA_PROJECT], TEST) uses REPOSIX_JIRA_PROJECT as fallback",
+      "rationale": "jira_test_project() first_nonempty_or([JIRA_TEST_PROJECT, REPOSIX_JIRA_PROJECT], \"TEST\") at agent_flow_real.rs:110-116 uses REPOSIX_JIRA_PROJECT as second-priority fallback; project feeds asserted url suffix at :308-311",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:22Z",
-      "last_extracted": "2026-07-13T22:07:22Z",
+      "last_run": "2026-07-15T20:01:58Z",
+      "last_extracted": "2026-07-15T20:01:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8420,8 +8420,8 @@
       "claim": "skip_if_no_env! early-returns without panic",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 217,
-        "line_end": 220
+        "line_start": 240,
+        "line_end": 243
       },
       "source_hash": "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7",
       "source_hashes": [
@@ -8433,11 +8433,11 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:1079-1089 catch_unwind(skip_if_no_env!) then asserts ran.is_ok()",
+      "rationale": "skip_pattern_compiles_and_runs_without_creds wraps skip_if_no_env! in catch_unwind at agent_flow_real.rs:1082-1085 and asserts ran.is_ok() at :1089-1092 (early-return, no panic)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:26Z",
-      "last_extracted": "2026-07-13T22:07:26Z",
+      "last_run": "2026-07-15T20:02:06Z",
+      "last_extracted": "2026-07-15T20:02:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8745,8 +8745,8 @@
       "claim": "Tests skip cleanly without env vars (fail-closed by default)",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 217,
-        "line_end": 220
+        "line_start": 240,
+        "line_end": 243
       },
       "source_hash": "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7",
       "source_hashes": [
@@ -8758,11 +8758,11 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:1061-1074 clears all creds then :1079-1089 exercises skip_if_no_env! which early-returns (no panic)",
+      "rationale": "skip_pattern_compiles_and_runs_without_creds snapshots+clears all creds at agent_flow_real.rs:1064-1077 then exercises skip_if_no_env! (early-return, no panic) asserted at :1089-1092",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-13T22:07:31Z",
-      "last_extracted": "2026-07-13T22:07:31Z",
+      "last_run": "2026-07-15T20:02:14Z",
+      "last_extracted": "2026-07-15T20:02:14Z",
       "last_extracted_by": "bind-call"
     },
     {
