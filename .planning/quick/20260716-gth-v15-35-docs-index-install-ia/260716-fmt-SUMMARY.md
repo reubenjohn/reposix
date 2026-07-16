@@ -96,7 +96,7 @@ regression slip through undetected. `discovered-by: quick 260716-fmt`, `STATUS: 
 
 ## Commit + push
 
-- Commit: `bea4b9b` — `docs(index): nest build-from-source under 30-second install +
+- Commit: `97fad0d` — `docs(index): nest build-from-source under 30-second install +
   surface bootstrap + destale L93 (GTH-V15-35, 260716-fmt)`
 - Pushed to `origin/main`, pre-push hook GREEN (no `--no-verify`).
 - Main CI run for this commit: **SUCCESS** (see verification below).
@@ -130,5 +130,5 @@ needed (all 11 rebinds were pure line/hash re-anchors with claim+tests unchanged
 - FOUND: quality/catalogs/doc-alignment.json (11 rows rebound)
 - FOUND: .planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md (new MEDIUM row)
 - FOUND: .planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md (GTH-V15-35 -> DONE)
-- FOUND: commit bea4b9b in git log
-- FOUND: main CI run for bea4b9b concluded SUCCESS
+- FOUND: commit 97fad0d in git log
+- FOUND: main CI run for 97fad0d concluded SUCCESS
