@@ -108,3 +108,48 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Status:** OPEN — shaping input for the P117/P119 planners; not itself an
   implementation task.
 
+---
+
+## 2026-07-16 [MANAGER] P116 ADR-01 mirror fan-out — Option B with A folded in; D rejected; C filed with pull-forward trigger
+
+- **Context:** ruling on the P116 decision packet
+  (`.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`,
+  committed `da41d7d`), Decision 1 (ADR-01 / RBF-LR-04 mirror fan-out coherence).
+  Decide-and-disclose; **owner veto window open**.
+- **Decision (manager, verbatim):** *"OPTION B with A folded in. (i) Rewrite the conflated
+  'mirror' docs distinctly (observability ref vs external repo); correct the false 'sync
+  --reconcile heals the external mirror' claim in dvcs-topology.md + root CLAUDE.md + the
+  part-02 row; state honestly that clone reads SoT-current and the mirror lags until
+  convergence. (ii) BLESS webhook + 30-min cron as the AUTHORITATIVE external-mirror
+  convergence mechanism; scripts/refresh-tokenworld-mirror.sh is the manual op-recovery
+  (incl. the documented litmus pre-step). (iii) REJECT option D — keep the
+  files_touched>0 gate; the no-op perf skip assertion stands. (iv) Option C (post-write
+  snapshot fan-out) NOT sanctioned for v0.15: file as GOOD-TO-HAVES with explicit
+  pull-forward trigger = 'a real incident or recurring operational friction from the
+  litmus pre-step'."*
+- **Consequences (per the ruling):** closes the ADR-010 §2 RBF-LR-04 lever; unblocks the
+  DEFERRED doc-truth rewrite; retires the litmus-non-idempotency intake row (execute
+  during P116).
+- **Filed:** Option C → `GOOD-TO-HAVES.md` GTH-V15-38 (with the verbatim pull-forward
+  trigger). Doc rewrites + intake-row retirement are P116 execution work — sequenced
+  AFTER the P115 close/checkpoint per the same ruling.
+- **Status:** RULED — P116 execution unblocked (P115 close/checkpoint first).
+
+---
+
+## 2026-07-16 [MANAGER] P116 FIX-03 slug→id durable-create — Option A this milestone; B sanctioned target design; D incident-only stopgap
+
+- **Context:** same packet/ruling as above, Decision 2 (FIX-03 / GTH-09 slug→id
+  durable-create). Decide-and-disclose; **owner veto window open**.
+- **Decision (manager, verbatim):** *"OPTION A this milestone — design-only. Record
+  OPTION B (durable slug→id map alongside oid_map) as the SANCTIONED TARGET DESIGN in the
+  ADR-010 §3 amendment; the §3 waiver stays live, qualified by the chosen design. SC4
+  depth ruling: NO build in v0.15; propose a dedicated design+build phase for B at the
+  next milestone boundary. OPTION D (pending-create intent-log) is the sanctioned
+  reduced-scope STOPGAP only if the duplicate hazard materializes in a real incident
+  before B lands — decide then, not now."*
+- **Filed:** ADR-010 §3 amendment (recording B as sanctioned target design, waiver
+  qualification) is P116 execution work. The "dedicated design+build phase for B at the
+  next milestone boundary" proposal routes to the next-milestone roadmapper.
+- **Status:** RULED — design-only in v0.15; no build.
+

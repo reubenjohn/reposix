@@ -242,6 +242,23 @@ the reverse pointer is deferred to whenever those part files are themselves prog
   2. Doc-alignment catalog rows bound to `docs/index.md` must be CHECKED BEFORE the edit (`reposix-quality doc-alignment status` / `walk` scoped to that file) and REFRESHED in the SAME wave as the move (moving lines will shift line-anchored citations per GTH-V15-28 — do not leave rows STALE_DOCS_DRIFT across a wave boundary).
 - **Fix-sketch:** relocate the `<details markdown>…Build from source (advanced)…</details>` block to sit immediately after (or nested as a collapsed `<details>` within) the "30-second install" `=== "curl…"` / Homebrew / cargo-binstall tab set (L44-67), before "After — one commit" (L69); re-run `structure/install-leads-with-pkg-mgr-docs-index` + the doc-alignment refresh for the shifted rows in the same commit/wave.
 - **Effort:** small (<1h), single-file docs move; execute via `/gsd-quick` per the owner's scheduling.
+- **Addendum (2026-07-16, P115 cold-reader pass):** nesting the block alone is NOT
+  sufficient — the `reposix sim &` + `reposix init sim::demo` bootstrap commands live ONLY
+  inside the collapsed "Build from source (advanced)" block (`docs/index.md` ~L129-130)
+  yet are required by EVERY install method, so the visible "After — one commit" demo
+  (~L69-76) references `/tmp/reposix-demo` with no visible step creating it. When
+  executing this row, also surface those two bootstrap lines in visible prose independent
+  of the source-build block (README's Quick Start L56-77 is a good template). Minor,
+  same-wave note: L19's "5-line install" count only holds summed across all 4 methods.
+- **Addendum 2 (2026-07-16, cold-reader eager-fix BLOCKED into this row):** also rewrite
+  the STALE claim on `docs/index.md:93` — "Real-backend cells fill in once CI secret
+  packs are wired (Phase 36)" — reality: `docs/benchmarks/latency.md:42` already carries
+  real GitHub 320 ms / Confluence 202 ms figures (verified 2026-07-16). The eager-fix
+  leaf fail-closed correctly: line 93 is a TWO-CLAIM line whose other clause ("Sim cold
+  init is 278 ms…") is hash-bound by catalog row `docs/index/soft-threshold-24ms`
+  (line_start/end 93, enforced by `headline-numbers-cross-check.py`), so ANY edit to the
+  line needs that row rebound in the same wave. While there, consider splitting the
+  two-claim line so future single-claim edits stop requiring unrelated rebinds.
 
 ### GTH-V15-36 — Docs site as a "furnished product": owner furnished-product quality bar for P117/P119
 - **Source:** OWNER MANDATE (2026-07-16, received after commit `a1f2494`) · **Severity: MEDIUM-HIGH (broad quality bar, P117/P119 shaping input)** · STATUS: OPEN — feeds P117 (doc-truth purge) and P119 (docs simplification) planning.
@@ -267,5 +284,21 @@ the reverse pointer is deferred to whenever those part files are themselves prog
   `/home/reuben/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4` (7.1MB,
   verified on disk 2026-07-16) — video fallback + Show-HN/social asset; attach to a
   GitHub release, never commit to the repo.
+
+### GTH-V15-38 — ADR-01 Option C: post-write snapshot fan-out (NOT sanctioned for v0.15; pull-forward gated)
+- **Source:** MANAGER ruling 2026-07-16 on
+  `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`
+  Decision 1(iv) (`[MANAGER]` entry in `CONSULT-DECISIONS.md`) · **Severity: LOW
+  (deferred design option)** · STATUS: OPEN — pull-forward gated, do not schedule.
+- **What:** re-materialize the external mirror tree post-write so mirror == SoT
+  immediately after every SoT-changing push (self-idempotent litmus), replacing the
+  sanctioned lag-until-convergence model.
+- **Pull-forward trigger (verbatim from the ruling):** *"a real incident or recurring
+  operational friction from the litmus pre-step"* — until that trigger fires, webhook +
+  30-min cron remain the AUTHORITATIVE external-mirror convergence mechanism per the
+  same ruling.
+- **Fix-sketch:** packet § Decision 1, Option C. If triggered, propose as a phase at the
+  then-current milestone boundary; do not fold into an unrelated lane.
+- **Effort:** medium-large (fan-out write path + litmus rework) — sized only if triggered.
 - **Fix-sketch:** P117 planner adds a dedicated task implementing the 5-item checklist above in order (bundle precompile → font self-host → embed-mode config → video-fallback hosting → docs-gate coverage), each item independently verifiable; feasibility already de-risked by the manager's headless-playwright spike, so this is an implementation lane, not a research spike.
 - **Effort:** medium — new static asset pipeline + mkdocs page wiring; fits inside P117 as an owner-approved scope addition alongside the doc-truth purge.

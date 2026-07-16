@@ -8,8 +8,11 @@ option is implemented pre-ruling**, and FIX-03's v0.15 build depth is set *by* t
 ruling (SC4).
 **Provenance:** drafted 2026-07-16 by an opus researcher under L0 workhorse #43;
 committed + routed to the manager (w1:p7) for ruling by L0 workhorse #44, 2026-07-16.
-**Status: AWAITING RULING** — no option below is implemented until the ruling lands in
-`.planning/CONSULT-DECISIONS.md`.
+**Status: RULED 2026-07-16** — Decision 1: Option B with A folded in (D rejected; C filed
+as GTH-V15-38 with a pull-forward trigger). Decision 2: Option A this milestone, Option B
+recorded as the sanctioned target design (no v0.15 build; D = incident-only stopgap).
+Full verbatim ruling: the two 2026-07-16 `[MANAGER]` entries in
+`.planning/CONSULT-DECISIONS.md`. Owner veto window open.
 
 Neither decision changes the SoT: the SoT is always correct on both paths. What is at
 stake is (1) how the *external mirror* tracks the SoT, and (2) how a *create* survives a

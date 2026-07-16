@@ -66,13 +66,18 @@ checkpoints without it per that instruction):
    scope addition (productionization checklist filed). Full text: `GOOD-TO-HAVES.md`
    GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
    `.planning/ROADMAP.md` Phase 117 + Phase 119.
-3. **P116 — ADR-010 decision packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
-   durable-create; options + tradeoffs, NO implementation) — **COMMITTED** at
-   `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`
-   (rescued from `/tmp` by #44, 2026-07-16; recommends B for ADR-01, A-now/B-as-target
-   for FIX-03) → route to **MANAGER (w1:p7) for ruling** — end turn and await the
-   ruling before any implementation. Owner's mp4 export path also filed onto
-   GTH-V15-37 (charter addendum).
+3. **P116 — ADR-010 decision packet: RULED 2026-07-16** (manager, decide-and-disclose,
+   owner veto window open). Decision 1 (ADR-01 mirror fan-out): **Option B with A folded
+   in** — doc-truth rewrite of the conflated "mirror" docs + bless webhook/30-min-cron as
+   authoritative convergence; D rejected (keep `files_touched>0` gate); C filed as
+   GTH-V15-38 with a verbatim pull-forward trigger. Decision 2 (FIX-03 slug→id):
+   **Option A this milestone (design-only)**, Option B recorded as sanctioned target
+   design; NO v0.15 build; D = incident-only stopgap. Verbatim rulings: the two
+   2026-07-16 `[MANAGER]` entries in `CONSULT-DECISIONS.md`; packet at
+   `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`.
+   **P116 execution (doc rewrites, ADR-010 §2/§3 amendments, litmus-non-idempotency
+   intake retirement) unblocked AFTER the P115 close/checkpoint** per the ruling's
+   sequencing. Owner's mp4 export path also filed onto GTH-V15-37 (charter addendum).
 4. Then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started

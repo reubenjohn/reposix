@@ -130,7 +130,7 @@ The trust-model page at [`docs/how-it-works/trust-model.md`](docs/how-it-works/t
 - Build & test: `cargo check --workspace && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`.
 - Docs: `mkdocs serve` (Python 3.8+; install `mkdocs-material`).
 - Project workflow uses GSD (`get-shit-done`) — see [`CLAUDE.md`](CLAUDE.md) and [`.planning/`](.planning/).
-- Threat model: [`docs/how-it-works/trust-model.md`](docs/how-it-works/trust-model.md) plus the original red-team report in `.planning/research/v0.1-fuse-era/threat-model-and-critique.md`.
+- Threat model: [`docs/how-it-works/trust-model.md`](docs/how-it-works/trust-model.md) plus the original red-team report in `.planning/research/v0.1-fuse-era/threat-model-and-critique/index.md`.
 
 ## License
 

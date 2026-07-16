@@ -333,3 +333,46 @@ Separately, consider surfacing `STALE_TEST_DRIFT` at pre-push or in post-push re
 edits.
 
 **STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: P115 phase-close cold-reader pass (L0 #44) | severity: MEDIUM
+
+**What:** `README.md:109-110` "Project status" is 3 months / 4+ versions stale on the
+repo's most visible surface: it claims v0.9.0 shipped + v0.10.0 "landing 2026-04-25" as
+latest, while the repo is at v0.14.0 (Cargo.toml + git tags) with v0.15.0 executing
+(2026-07-16). Same lying-hero-claim class the P115 destaling lanes just purged from the
+benchmark numbers — but in a narrative section no number-focused gate watches.
+
+**Why out-of-scope for the discovering session:** the cold-reader lane was report-only;
+a status-section rewrite is a framing decision (what to promise about v0.15.0, whether
+README should carry a version ticker at all) — planner/owner input, not a figure swap,
+and the section's shape invites recurring staleness (would rot again by v0.16.0).
+
+**Sketched resolution:** (a) version-agnostic status line linking GitHub releases /
+CHANGELOG as the single version-truth source, or (b) keep a version line but bind a
+doc-alignment row asserting README version == latest git tag so drift blocks at
+pre-push. (b) is the fix-twice option — P117 (doc-truth purge) is the natural home.
+
+**STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: P115 cold-reader dispatch (L0 #44) | severity: MEDIUM (tooling, silent-failure class)
+
+**What:** the user-global `doc-clarity-review` skill
+(`/home/reuben/.claude/skills/doc-clarity-review/`) is silently broken: its documented
+`claude -p "<prompt>" <file1> <file2>` invocation does NOT attach trailing file paths in
+the current CLI — the subprocess receives no files and "reviews" ambient cwd context
+(`~/.claude/CLAUDE.md` + project CLAUDE.md) instead, returning a plausible-looking review
+of the WRONG target. Confirmed via diagnostic call (`claude -p "What files were you
+given?" f1 f2` → "no files"). Dangerous class: a silent wrong-target review reads as a
+pass on the right target. (The P115 pass itself completed via the leaf's manual
+fallback: isolated read of only the two target files.)
+
+**Why out-of-scope for the discovering session:** the skill lives in the user's global
+`~/.claude/skills/`, not this repo; fixing it is cross-project tooling work.
+
+**Sketched resolution:** inline file CONTENT into the `-p` prompt (cat the copied `/tmp`
+files / heredoc) instead of passing paths as args; add a loud self-check ("state the
+first heading of each file you were given") so a no-files run fails visibly. Distinct
+from the unreproduced "intermittent Read/Edit harness failures" noticing in #43's
+handover §5.4 — that stays unfiled pending a live repro.
+
+**STATUS:** OPEN
