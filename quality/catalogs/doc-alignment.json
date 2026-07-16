@@ -4,15 +4,15 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 398,
-    "claims_bound": 276,
+    "claims_total": 399,
+    "claims_bound": 277,
     "claims_missing_test": 0,
     "claims_retire_proposed": 11,
     "claims_retired": 57,
-    "alignment_ratio": 0.8093841642228738,
+    "alignment_ratio": 0.8099415204678363,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T20:12:35Z",
+    "last_walked": "2026-07-16T20:12:56Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -9602,6 +9602,33 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T20:12:35Z",
       "last_extracted": "2026-07-16T20:12:35Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost",
+      "claim": "On docs/concepts/reposix-vs-mcp-and-sdks.md the reposix git-native arm is stated at ~94.3% fewer output tokens and ~74.9% cheaper per session than the GitHub-MCP arm. This row binds those two TESTED headline axes; the adjacent ~66.0% cache-creation and ~55.6% input-context figures on the same L29-31 span are stated-but-untested (no test pins their real-capture values) and are filed to v0.15.0 SURPRISES-INTAKE.",
+      "source": {
+        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+        "line_start": 29,
+        "line_end": 31
+      },
+      "source_hash": "f774c0a283bf3ecc3ef6cdb364f9e950e509b675c73fafe7786bab704c9877b7",
+      "source_hashes": [
+        "f774c0a283bf3ecc3ef6cdb364f9e950e509b675c73fafe7786bab704c9877b7"
+      ],
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
+        "bfd1e8bb930a7f651433bd10bffc6222bab18e09f60a3c2f97c78a707c34a8dc"
+      ],
+      "rationale": "headline-numbers-cross-check.py::run_cross_check (:251) asserts docs/concepts/reposix-vs-mcp-and-sdks.md contains the exact one-decimal canonical substrings '~94.3% fewer output' (TOKEN_CLAIMS output axis, L232) and '~74.9% cheaper' (cost axis, L233), both parsed from docs/benchmarks/token-economy.md at run time. bench_token_economy.py::_assert_headline_reduction (:93) pins the real-capture output reduction to 94.3% +/-1.0%. CONSERVATIVE SCOPE (no false-bound): the cross-check TOKEN_CLAIMS registry covers ONLY the output+cost axes for this file; NO bound test asserts the real committed captures yield 66.0% cache-creation or 55.6% input-context -- test_bench_token_economy.py::test_compute_arm_medians_and_reductions checks all four axes but only over SYNTHETIC 90%-by-construction seeds, not the real values, and headline-numbers-cross-check has no cache-creation/input-context TOKEN_CLAIMS entry for this page. Those two axes are filed to v0.15.0 SURPRISES-INTAKE as stated-but-untested. Same test surface as the BOUND output-reduction-94-percent / cost-reduction-75-percent rows. Verified: headline-numbers-cross-check.py exits 0 in-tree 2026-07-16.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T20:12:56Z",
+      "last_extracted": "2026-07-16T20:12:56Z",
       "last_extracted_by": "bind-call"
     }
   ]
