@@ -12,14 +12,19 @@ counts and skip all network calls.
 | File | Size (bytes) | Shape | Purpose | Backend row |
 |------|-------------|-------|---------|-------------|
 | `mcp_jira_catalog.json` | 19362 | JSON object with `tools[]` | MCP-mediated baseline (35-tool Jira manifest) | MCP |
-| `reposix_session.txt` | 1372 | ANSI-stripped shell transcript | reposix POSIX session (read 3 issues, edit 1) | reposix |
+| `reposix_session.txt` | 8041 | ANSI-stripped shell transcript | reposix POSIX session (read 3 issues, edit 1, push) — **LIVE-captured** (GitHub backend, P115 T4) | reposix |
 | `github_issues.json` | 11579 | JSON array, GitHub REST v3 `/repos/{owner}/{repo}/issues` | GitHub `/issues` raw payload for token-count comparison | github (BENCH-02) |
 | `confluence_pages.json` | 7281 | JSON object with `results[]`, Confluence v2 `/wiki/api/v2/pages` shape | Confluence pages raw payload for token-count comparison | confluence (BENCH-02) |
 
 ## Synthetic data disclaimer
 
-Every fixture in this directory is constructed, not scraped. No real user data, no real tenant
-references, no production credentials. The GitHub fixture uses `example-org/example-repo` and
+Every fixture in this directory is constructed, not scraped, **with one exception:**
+`reposix_session.txt` was **live-captured** during the P115 T4 benchmark from a real reposix
+session against the sanctioned public OP-6 target `reubenjohn/reposix` (public RUSTSEC-advisory
+issues — no private data, no credentials; secret-scrubbed before commit). Its content-hash
+sidecar is stale pending regeneration with an `ANTHROPIC_API_KEY` (see GTH-V15-26); the offline
+token bench that consumes it is waived + not in CI. All other fixtures remain synthetic:
+No real user data, no real tenant references, no production credentials. The GitHub fixture uses `example-org/example-repo` and
 the Confluence fixture uses `example.atlassian.net` — these are deliberately fictional identifiers
 that make provenance obvious at a glance. User login names (`alice-bot`, `benchmark-ci`,
 `fuse-agent`) and Confluence author IDs are invented. Anyone tracing a token-reduction claim

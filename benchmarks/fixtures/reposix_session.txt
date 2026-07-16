@@ -1,46 +1,200 @@
-$ ls /mnt/reposix/issues/
-00000000001.md  00000000002.md  00000000003.md  00000000004.md  00000000005.md  00000000006.md
+# reposix pure-git session — GitHub backend (reubenjohn/reposix) — read 3 issues, edit 1, push
+# Captured live from a headless `claude -p` reposix-arm session (ZERO MCP tools loaded).
+# Bootstrap (reposix CLI, run once by the harness):
 
-$ cat /mnt/reposix/issues/00000000001.md
+$ reposix init github::reubenjohn/reposix /tmp/reposix-t4-r1
+reposix init: configured `/tmp/reposix-t4-r1` with remote.origin.url = reposix::https://api.github.com/projects/reubenjohn/reposix
+Next: cd /tmp/reposix-t4-r1 && git checkout -B main refs/reposix/origin/main (or git sparse-checkout set <pathspec> first)
+
+$ cd /tmp/reposix-t4-r1 && git checkout -B main refs/reposix/origin/main
+Switched to a new branch 'main'
+branch 'main' set up to track 'origin/main'.
+
+# From here the agent uses pure git + POSIX only — no reposix CLI awareness:
+
+$ echo "=== issues/56.md ==="; cat issues/56.md; echo; echo "=== issues/57.md ==="; cat issues/57.md; echo; echo "=== issues/60.md ==="; cat issues/60.md
+=== issues/56.md ===
 ---
-id: 1
-title: database connection drops under load
-status: open
-labels:
-- bug
-- p1
-created_at: 2026-04-13T00:00:00Z
-updated_at: 2026-04-13T00:00:00Z
+id: 56
+title: 'RUSTSEC-2026-0185:  Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly'
+status: done
+created_at: 2026-06-29T05:00:52Z
+updated_at: 2026-07-04T05:08:31Z
 version: 1
 ---
-Under sustained load (>500 concurrent writes/sec) the connection pool
-exhausts and subsequent requests hang until the 30s timeout.
+| Details |  |
+| --- | --- |
+| Package | `quinn-proto` |
+| Version | `0.11.14` |
+| URL | https://github.com/quinn-rs/quinn/pull/2694 |
+| Patched Versions | >=0.11.15 |
+| Aliases | [GHSA-4w2j-m93h-cj5j](https://github.com/advisories/GHSA-4w2j-m93h-cj5j) |
 
-Steps to reproduce:
-1. Run `scripts/loadtest.sh --concurrency 500 --duration 60s`
-2. Observe tail latency spike after ~45s
-3. p99 exceeds 30s during the spike
 
-Expected: graceful 503 with Retry-After header.
+The `Assembler` component that assembles unordered stream fragments into consecutive chunks of the
+stream incurs some overhead for non-contiguous fragments. Readers that read from a RecvStream in
+order (through an `AsyncRead` impl for example) will be sensitive to peers that send fragments
+while leaving out early parts of the stream, and in particular, fragments with many gaps (because
+these cannot be defragmented). In such a scenario, the receiving connection suffers from high
+buffer overhead, enabling memory exhaustion.
 
-$ grep -rIl "database" /mnt/reposix/issues/
-/mnt/reposix/issues/00000000001.md
+=== issues/57.md ===
+---
+id: 57
+title: 'RUSTSEC-2026-0186: Unchecked pointer offset in crate `memmap2`'
+status: done
+created_at: 2026-06-29T05:00:53Z
+updated_at: 2026-07-04T05:08:48Z
+version: 1
+---
+| Details |  |
+| --- | --- |
+| Package | `memmap2` |
+| Version | `0.9.10` |
+| Warning | unsound |
+| URL | https://github.com/RazrFalcon/memmap2-rs/issues/169 |
+| Patched Versions | >=0.9.11 |
 
-$ sed -i 's/^status: open$/status: in_progress/' /mnt/reposix/issues/00000000001.md
-$ cat /mnt/reposix/issues/00000000001.md | grep '^status:'
-status: in_progress
 
-$ cd /tmp/demo-repo
-$ git pull origin main
-From reposix::http://127.0.0.1:7878/projects/demo
- * branch            main       -> FETCH_HEAD
-Already up to date.
+Affected versionf of `memmap2` did not perform enough validation on the `offset` and `len` parameters of
+`Mmap::[unchecked_]advise_range()`,
+`MmapMut::[unchecked_]advise_ranage()`
+and `MmapMut::flush[_async]_range()`.
 
-$ sed -i 's/^status: in_progress$/status: in_review/' 0001.md
-$ git commit -am "request review for 0001"
-[main 94f25c6] request review for 0001
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This can cause undefined behavior due to invalid values being passed to [`pointer::offset()`] and [`pointer::add()`]
+when passing an out-of-bounds range to any of the affected functions.
+
+The flaw was corrected in commit [`cee7cf0`] and released in version `0.9.11`.
+
+The invalid pointer is not dereferenced,
+but it is passed to the `madvise` and `msync` syscalls and their Windows equivalents.
+
+[`pointer::offset()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.offset-1
+[`pointer::add()`]: https://doc.rust-lang.org/stable/std/primitive.pointer.html#method.add-1
+[`cee7cf0`] https://github.com/RazrFalcon/memmap2-rs/pull/170/changes/cee7cf03a9ee095982a3c37b7aac8e3f68f1a00c
+
+=== issues/60.md ===
+---
+id: 60
+title: 'RUSTSEC-2026-0190: Unsoundness in `Error::downcast_mut()`'
+status: done
+created_at: 2026-07-04T04:59:51Z
+updated_at: 2026-07-16T05:58:59Z
+version: 1
+---
+| Details |  |
+| --- | --- |
+| Package | `anyhow` |
+| Version | `1.0.102` |
+| Warning | unsound |
+| URL | https://github.com/dtolnay/anyhow/issues/451 |
+| Patched Versions | &gt;=1.0.103 |
+
+
+Affected versions of this crate violate borrow rules, resulting in undefined behavior, when the user adds context to an error via `Error::context` and then later calls `Error::downcast_mut` on the returned `Error`.
+
+The flaw was corrected in commit `6e8c000` by revising how the mutable reference is constructed, avoiding inclusion of a shared reference in the resulting borrow chain.
+
+## Example
+
+```rust
+use anyhow::Error;
+use std::fmt;
+
+#[derive(Debug)]
+struct ErrorContext(&amp;&#39;static str);
+
+impl fmt::Display for ErrorContext {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter&lt;&#39;_&gt;) -&gt; fmt::Result {
+        fmt::Display::fmt(&amp;self.0, f)
+    }
+}
+
+fn main() {
+    let mut error = Error::msg(&#34;inner error&#34;).context(ErrorContext(&#34;old context&#34;));
+    let context: &amp;mut ErrorContext = error.downcast_mut().unwrap();
+    context.0 = &#34;new context&#34;;
+    println!(&#34;{:?}&#34;, error);
+}
+```
+
+## Miri output
+
+```
+error: Undefined Behavior: trying to retag from &lt;1538&gt; for Unique permission at alloc602[0x38], but that tag only grants SharedReadOnly permission for this location
+   --&gt; src/ptr.rs:170:18
+    |
+170 |         unsafe { &amp;mut *self.ptr.as_ptr() }
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^ this error occurs as part of retag at alloc602[0x38..0x48]
+    |
+    = help: this indicates a potential bug in the program: it performed an invalid operation, but the Stacked Borrows rules it violated are still experimental
+    = help: see https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md for further information
+help: &lt;1538&gt; was created by a SharedReadOnly retag at offsets [0x38..0x48]
+   --&gt; src/ptr.rs:89:18
+    |
+ 89 |             ptr: NonNull::from(ptr),
+    |                  ^^^^^^^^^^^^^^^^^^
+    = note: stack backtrace:
+            0: anyhow::ptr::Mut::&lt;&#39;_, ErrorContext&gt;::deref_mut
+                at src/ptr.rs:170:18: 170:41
+            1: anyhow::error::<E>::downcast_mut::<T>
+                at src/error.rs:560:18: 560:46
+            2: main
+                at examples/downcast_mut.rs:15:38: 15:58
+```
+
+$ grep -n "reposix-bench-marker" issues/60.md || echo "NO_MARKER_FOUND"
+NO_MARKER_FOUND
+
+$ tail -c 50 issues/60.md | xxd | tail -5
+00000000: 2020 2020 2061 7420 6578 616d 706c 6573       at examples
+00000010: 2f64 6f77 6e63 6173 745f 6d75 742e 7273  /downcast_mut.rs
+00000020: 3a31 353a 3338 3a20 3135 3a35 380a 6060  :15:38: 15:58.``
+00000030: 600a                                     `.
+
+$ printf '<!-- reposix-bench-marker: reposix-run1 -->\n' >> issues/60.md
+tail -5 issues/60.md
+                at src/error.rs:560:18: 560:46
+            2: main
+                at examples/downcast_mut.rs:15:38: 15:58
+```
+<!-- reposix-bench-marker: reposix-run1 -->
+
+$ git diff issues/60.md
+diff --git a/issues/60.md b/issues/60.md
+index ce23502..f3ed261 100644
+--- a/issues/60.md
++++ b/issues/60.md
+@@ -66,3 +66,4 @@ help: &lt;1538&gt; was created by a SharedReadOnly retag at offsets [0x38..0x48]
+             2: main
+                 at examples/downcast_mut.rs:15:38: 15:58
+ ```
++<!-- reposix-bench-marker: reposix-run1 -->
+
+$ git add issues/60.md && git commit -m "bench: set marker reposix-run1 on issue 60"
+[main 0c14f12] bench: set marker reposix-run1 on issue 60
+ 1 file changed, 1 insertion(+)
 
 $ git push origin main
-To reposix::http://127.0.0.1:7878/projects/demo
-   278680c..94f25c6  main -> main
+Exit code 1
+11:00PM INF Unknown SCM platform. Use --platform to include links in findings. host=
+11:00PM INF 3 commits scanned.
+11:00PM INF scanned ~11168 bytes (11.17 KB) in 1.73s
+11:00PM INF no leaks found
+Secret scan: clean ✓
+error: patch issue 60: not supported: update_record — reposix-github is read-only in this cut
+To reposix::https://api.github.com/projects/reubenjohn/reposix
+ ! [remote rejected] main -> main (some-actions-failed)
+error: failed to push some refs to 'reposix::https://api.github.com/projects/reubenjohn/reposix'
+
+$ git status; echo "---"; git log --oneline -3
+On branch main
+Your branch is ahead of 'reposix/origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+---
+0c14f12 bench: set marker reposix-run1 on issue 60
+17ebe0e delta-sync(github:reubenjohn/reposix): 1 changed (of 9) at 2026-07-16T06:00:02.958711314+00:00
+9efee3b delta-sync(github:reubenjohn/reposix): 0 changed (of 9) at 2026-07-16T05:42:22.764477342+00:00
+

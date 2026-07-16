@@ -1,0 +1,27 @@
+{
+  "_note": "GTH-V15-25 step 1 ONLY: the reposix-arm (pure-git/POSIX) agent command trajectory, extracted verbatim from a live captured benchmark session JSONL. This is the canonical-trajectory fixture for the GitHub backend row. Step 2 (the CI byte-guard verifier that replays this against an ephemeral sim) is NOT implemented here. No secrets, no backend body content.",
+  "backend": "github",
+  "arm": "reposix-mediated",
+  "task": "read 3 issues (#56,#57,#60), edit 1 (#60 body marker), commit, push",
+  "bootstrap": [
+    "reposix init github::reubenjohn/reposix <path>",
+    "git checkout -B main refs/reposix/origin/main"
+  ],
+  "agent_commands": [
+    "echo \"=== issues/56.md ===\"; cat issues/56.md; echo; echo \"=== issues/57.md ===\"; cat issues/57.md; echo; echo \"=== issues/60.md ===\"; cat issues/60.md",
+    "grep -n \"reposix-bench-marker\" issues/60.md || echo \"NO_MARKER_FOUND\"",
+    "tail -c 50 issues/60.md | xxd | tail -5",
+    "printf '<!-- reposix-bench-marker: reposix-run1 -->\\n' >> issues/60.md\ntail -5 issues/60.md",
+    "git diff issues/60.md",
+    "git add issues/60.md && git commit -m \"bench: set marker reposix-run1 on issue 60\"",
+    "git push origin main",
+    "git status; echo \"---\"; git log --oneline -3"
+  ],
+  "provenance": {
+    "session_id": "cf4aefdc-2470-4abc-9190-922c4f72a257",
+    "model": "claude-sonnet-5",
+    "harness": "claude -p --strict-mcp-config (zero MCP servers loaded)",
+    "captured_at_utc": "2026-07-16",
+    "note": "push step returns the documented read-only-cut error (reposix-github create/update/delete are read-only in this build cut, crates/reposix-github/src/lib.rs); the read+edit+commit+push-attempt trajectory is intact and replayable."
+  }
+}

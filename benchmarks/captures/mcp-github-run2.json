@@ -1,0 +1,41 @@
+{
+  "_note": "Scrubbed usage extract of one live P115 T4 GitHub-backend benchmark session. No backend body content, no secrets. Offline-CI-stable input for T5.",
+  "arm": "mcp-mediated",
+  "backend": "github",
+  "run_label": "mcp-github-run2",
+  "task": "read 3 GitHub issues (#56,#57,#60), edit 1 (#60 body marker), push",
+  "session_id": "2e61fac7-b350-4daa-80f4-857c67e4a907",
+  "model": "claude-sonnet-5",
+  "input_tokens": 16,
+  "output_tokens": 12353,
+  "cache_creation_input_tokens": 54780,
+  "cache_read_input_tokens": 462923,
+  "total_input_context_tokens": 517719,
+  "num_turns": 10,
+  "total_cost_usd": 0.6528999,
+  "duration_ms": 122843,
+  "tool_calls": [
+    {
+      "name": "Bash",
+      "count": 1
+    },
+    {
+      "name": "ToolSearch",
+      "count": 2
+    },
+    {
+      "name": "mcp__github-probe__issue_read",
+      "count": 4
+    },
+    {
+      "name": "mcp__github-probe__issue_write",
+      "count": 1
+    },
+    {
+      "name": "mcp__github-probe__search_issues",
+      "count": 1
+    }
+  ],
+  "mcp_tools_loaded_count": 0,
+  "mcp_tools_loaded": []
+}

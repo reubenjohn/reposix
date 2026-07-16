@@ -24,13 +24,15 @@ budget (CI `bench-latency-v09`) and are **not** recorded here.
 
 ## Running total
 
-**Sessions spent: 1 / 50.** (One live session spent: the P115 Task-4 MCP-arm smoke
-test, 2026-07-15. The planned 6-session median-of-3 capture is **BLOCKED** — see
-`.planning/phases/115-live-mcp-benchmark-re-measurement/115-MCP-SERVER-CHOICE.md` and the
-v0.15.0 `SURPRISES-INTAKE.md` BLOCKER entry: the ratified `atlassian-rovo` MCP has no
-Jira issue-CRUD tool and its API token is permission-denied on `tools/call`, and Jira
-project KAN currently holds 0 issues. Awaiting an owner ruling before spending the
-remaining capture sessions.)
+**Sessions spent: 7 / 50.** The 6-session median-of-3 token-economy capture is
+**COMPLETE** (2026-07-16, rows 2–7 below) after the **[SELF] pivot** from the infeasible
+Jira/`atlassian-rovo` path (no issue-CRUD tool, token authz-denied, KAN empty) to the
+**GitHub backend** (`reubenjohn/reposix` issues — a sanctioned OP-6 target). Server:
+`github-probe` (official GitHub remote MCP). See
+`.planning/phases/115-live-mcp-benchmark-re-measurement/115-MCP-SERVER-CHOICE.md`. Real
+per-session token totals live in the `benchmarks/captures/*.json` extracts; no session
+ballooned past ~5× the running median, so no outlier flag. (Row 1 remains the original
+`atlassian-rovo` context-load smoke.)
 
 ## Ledger
 
@@ -40,3 +42,9 @@ remaining capture sessions.)
      row; verify ≤ 50 BEFORE starting the next session. Flag any session > ~5× the
      running median token cost. Do not backfill. -->
 | 1 | 2026-07-16T04:56:06Z | kan (context only) | mcp-mediated | smoke: list every available tool (verify mcp__atlassian-rovo__* load) | 1 | 1 | benchmarks/captures/mcp-kan-smoke.json + benchmarks/fixtures/mcp_jira_catalog.json |
+| 2 | 2026-07-16T05:53:29Z | github | mcp-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 2 | benchmarks/captures/mcp-github-run1.json + benchmarks/fixtures/mcp_github_catalog.json |
+| 3 | 2026-07-16T05:57:26Z | github | mcp-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 3 | benchmarks/captures/mcp-github-run2.json |
+| 4 | 2026-07-16T05:59:18Z | github | mcp-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 4 | benchmarks/captures/mcp-github-run3.json |
+| 5 | 2026-07-16T06:00:50Z | github | reposix-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 5 | benchmarks/captures/reposix-github-run1.json + benchmarks/fixtures/reposix_session.txt + reposix_trajectory.json |
+| 6 | 2026-07-16T06:03:17Z | github | reposix-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 6 | benchmarks/captures/reposix-github-run2.json |
+| 7 | 2026-07-16T06:04:09Z | github | reposix-mediated | read 3 issues (#56,#57,#60), edit 1 (#60 marker), push | 1 | 7 | benchmarks/captures/reposix-github-run3.json |

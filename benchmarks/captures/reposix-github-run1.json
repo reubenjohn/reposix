@@ -1,0 +1,25 @@
+{
+  "_note": "Scrubbed usage extract of one live P115 T4 GitHub-backend benchmark session. No backend body content, no secrets. Offline-CI-stable input for T5.",
+  "arm": "reposix-mediated",
+  "backend": "github",
+  "run_label": "reposix-github-run1",
+  "task": "read 3 GitHub issues (#56,#57,#60), edit 1 (#60 body marker), push",
+  "session_id": "cf4aefdc-2470-4abc-9190-922c4f72a257",
+  "model": "claude-sonnet-5",
+  "input_tokens": 18,
+  "output_tokens": 1213,
+  "cache_creation_input_tokens": 19068,
+  "cache_read_input_tokens": 348578,
+  "total_input_context_tokens": 367664,
+  "num_turns": 9,
+  "total_cost_usd": 0.2372304,
+  "duration_ms": 44066,
+  "tool_calls": [
+    {
+      "name": "Bash",
+      "count": 8
+    }
+  ],
+  "mcp_tools_loaded_count": 0,
+  "mcp_tools_loaded": []
+}
