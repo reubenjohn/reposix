@@ -208,18 +208,6 @@ The two lead numbers are **output tokens** (what the agent has to generate) and
 Equivalently: the MCP arm costs **~{red['cost_multiple']:.1f}x** more per session and
 carries **~{red['input_multiple']:.2f}x** the total input-context for the same result.
 
-## What retired the old 89.1% / 85.5% figures
-
-The previous token-economy figures (an **89.1%** headline and a per-backend
-**85.5%** GitHub number) came from a *different, synthetic* methodology: running
-Anthropic's `count_tokens` over a static, hand-constructed JSON fixture that
-stood in for an MCP tool catalog. That measured the size of a fixture, not the
-cost of a live agent run. It is **retired here** in favour of the live
-session-usage medians above -- real sessions, a real GitHub backend, and the
-GitHub MCP server's real tool surface. The synthetic fixtures remain in the repo
-only as provenance for that retired estimate; they no longer back any published
-number.
-
 ## What this DOES measure
 
 - The real, end-to-end token + dollar cost of an agent completing the task, as
