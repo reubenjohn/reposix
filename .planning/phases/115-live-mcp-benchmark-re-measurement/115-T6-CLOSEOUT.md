@@ -233,3 +233,29 @@ sections are untouched).
 
 **Owner confirm-retire mid-lane:** re-checked via `git pull --rebase origin main`
 immediately pre-push — see final push report for whether anything landed.
+
+---
+
+## Wave 2 — item 7
+
+**Scope:** Delete all 5 [SELF] decision entries from `.planning/CONSULT-DECISIONS.md` 
+per the T6 closeout plan + companion note cleanup. Executed 2026-07-16 by the Wave-2 
+tree-writer (gsd-executor).
+
+**Entries deleted (confirmed count = 5):**
+- Line 71: A1 — "one benchmark session (≤50 ceiling)" definition
+- Line 96: P115-T6 — headline framing honest CI-canonical reframe
+- Line 114: P115-T2 — canonical latency measurement environment
+- Line 123: P115-T5 — token-economy JSONL methodology  
+- Line 153: P115-T4 — pivot GitHub backend from Jira/atlassian-rovo
+
+**Companion note deleted:** Line 159 reference "Delete this entry when T4 captures land 
+(folds into the T6 [SELF]-deletion sweep)" removed as part of T4 entry deletion.
+
+**Verify against reality:**
+- `grep -n '\[SELF\]' .planning/CONSULT-DECISIONS.md` → 1 line: the definition at line 6 
+  (`[SELF]` = decided under the escalation-valve bar) — all 5 decision entries gone.
+- File structure intact: RBF-LR-03 entry ends cleanly at line 69 + blank line 70; file 
+  EOF at line 70 (no orphaned list markers, no broken headers).
+- No regression in nearby content: read lines 60–70 confirmed boundary intact, no 
+  extraneous deletions.

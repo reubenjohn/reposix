@@ -21,8 +21,7 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 ## NOW
 
 **T6 remaining — item 1 (reframe) LANDED + PUSHED, CI-green confirmation pending; item 3
-agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5 DONE; items 7/6 open (in
-that order — next up).** Numbering matches the T6 charter in
+agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5/7 DONE; item 6 next.** Numbering matches the T6 charter in
 `.planning/SESSION-HANDOVER.md` §5 (item 4's second `latency.md` refresh is DROPPED — not
 needed, `latency.md` never re-drifted):
 1. **(item 2) — DONE.** `115-UNWAIVE-PATH.md` written in the P115 phase dir — live-grepped
@@ -44,9 +43,8 @@ needed, `latency.md` never re-drifted):
 3. **(item 5) — DONE.** Regen-clobber guard shipped: `emit-markdown.sh` refuses to
    overwrite `latency.md`'s CI-canonical sections (marker + teaching error +
    `regen-guard.selftest.sh`). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 5.
-4. **(item 7) — NEXT.** Delete all FIVE `[SELF]` entries in `.planning/CONSULT-DECISIONS.md`
-   (re-grep line numbers first — line numbers shift as the file is edited).
-5. **(item 6) — NEXT AFTER 7.** Un-waive the 8 hero-number rows + the 3 newly-waived
+4. **(item 7) — DONE.** All FIVE `[SELF]` decision entries deleted from `.planning/CONSULT-DECISIONS.md`: A1 (line 71), T6 (line 96), T2 (line 114), T5 (line 123), T4 (line 153). Companion note at line 159 deleted. Post-grep confirms only the definition at line 6 remains; file structure intact (70 lines, clean EOF). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 7.
+5. **(item 6) — NEXT.** Un-waive the 8 hero-number rows + the 3 newly-waived
    MISSING_TEST rows from `c9c2aee`; un-waive `perf/token-economy-bench` by adding the
    ~94% headline assertion; write the missing
    `quality/gates/perf/headline-numbers-cross-check.py` verifier and un-waive the
