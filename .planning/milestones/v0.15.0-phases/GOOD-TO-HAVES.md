@@ -162,3 +162,16 @@ over the 20000-char `.md` ceiling (part-01 = 21516 B, part-02 = 21574 B) — app
 them further over budget, contradicting the OP-8 file-size drain the split was performed for. The
 forward trail (this file → intake, cited per-row above) is the required deliverable and is complete;
 the reverse pointer is deferred to whenever those part files are themselves progressive-disclosure-split.
+
+## From owner↔ex-manager-#9 review session (2026-07-15)
+
+### GTH-V15-25 — Token-bloat CI tripwire: replayed-trajectory byte guard calibrated by the JSONL benchmark
+- **Source:** OWNER-PROPOSED 2026-07-15 (side session with ex-manager #9); manager assessed feasible and worth the effort · **Severity: MEDIUM** · STATUS: OPEN.
+- **What:** The P115 token-economy numbers come from live JSONL-captured sessions — trustworthy, but infrequent feedback. Between re-benchmarks, a reposix change that bloats agent-visible output (fatter record frontmatter, noisier CLI/helper/error messages, bigger git output) stays invisible until someone manually re-runs the benchmark. Latency has a per-push guard (`bench-latency-v09` + `warn_if_over_3s()`); token economy has none.
+- **Fix-sketch (owner sketch + manager refinements; DP-3 applies — this is a problem statement, not a spec):**
+  1. **Trajectory fixture (near-free during T4):** extract the agent's command list from each captured benchmark session's JSONL → commit as a canonical-trajectory fixture per benchmark row. This extraction is a <1h byproduct of T4 capture work — eager-absorb it there; the guard itself is a separate small lane.
+  2. **CI byte guard:** a `quality/gates/perf/` verifier (sibling of `latency-bench/`) replays the command list against an ephemeral sim in `/tmp` (dark-factory.sh pattern), captures all agent-visible bytes (stdout + stderr + file contents read), and asserts against a RATCHETED threshold — baseline +10% WARN, +25% FAIL; re-baselining is an explicit reviewed commit, never silent decay.
+  3. **Per-backend unit checks:** render one canonical record through each adapter (sim/GitHub/JIRA/Confluence fixtures) with a per-adapter size budget — localizes the bloat source when the end-to-end guard fires.
+  4. **Honesty rule:** the CI metric is BYTES, labeled as bytes, never published as tokens — docs keep only JSONL-measured token numbers (consistent with the T6 headline-framing ruling). Each real JSONL re-benchmark records the bytes→tokens ratio for the trajectory (provenance-labeled: harness, model, date) purely as calibration for interpreting the guard.
+  5. **Known gap (accepted):** fixed-command replay catches content bloat, not workflow bloat (the agent needing MORE steps because UX regressed). Complement later by measuring the dark-factory live-agent transcript size at release cadence — no new API dependency.
+- **Effort:** small lane (catalog-first: one catalog row + one verifier, runner discovers by tag) + the T4-byproduct extraction. Depends on P115 T4 fixtures landing first; fits OP-8 Slot-2 drain or any perf/quality-hardening phase after that.
