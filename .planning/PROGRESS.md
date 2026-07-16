@@ -28,55 +28,63 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **L0 #47 boundary — uncatalogued-hero-number intake filed (manager finding)** — three hero surfaces (`docs/index.md:17`, `README.md:27`, `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31`) present the live ~94.3%/~74.9% token-economy figures with NO doc-alignment binding; once the pending 11-row confirm-retire batch lands they become entirely uncatalogued. Filed to `SURPRISES-INTAKE.md` (MEDIUM, HIGH-visibility) with the manager's remedy: `/reposix-quality-refresh` per doc binding to `bench_token_economy.py` / `headline-numbers-cross-check.py` (same as `output-reduction-94-percent` rows), execute before P117. CI green on tip (CI/Docs/release-plz/Push-on-main all success). — `029bde7` ✅
 - 2026-07-16 — **L0 #48 boundary — manager-priority hero-number refresh lanes SHIPPED** — minted 3 doc-alignment rows via the surgical `bind` verb for the previously-uncatalogued hero surfaces (`docs/index/hero-token-economy-94-75`, `README/hero-token-economy-94-75`, `docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost`); manager intake marked RESOLVED. Full detail in the #48→#49 handover archived at `b325caf`. CI green. — `c35f993`/`7553c36`/`aa75e96`/`e185e6e` ✅
 - 2026-07-16 — **L0 #49 boundary — P116 research + validation skeleton SHIPPED (one subagent-run sub-step, per #46's split-across-reliefs doctrine)** — dispatched `gsd-phase-researcher` (sonnet) → `116-RESEARCH.md` (52,340 bytes, HIGH confidence); hand-authored the `116-VALIDATION.md` step-5.5 skeleton (frontmatter filled, body explicitly planner-owned) so re-entry sails past the step-7.5 Nyquist gate. Research corrected `116-CONTEXT.md`'s mechanical framing (rulings unchanged): the false "`sync --reconcile` heals the external mirror" claim lives only in an ARCHIVED v0.14.0 intake row, NOT in any live doc-alignment catalog row (jq-verified: zero rows bind any `CLAUDE.md`); the row to actually retire is the LIVE `SURPRISES-INTAKE.md:108-116` litmus-non-idempotency entry. Pushed, CI green (`Docs`/`CI`/`Push on main` all `success`). — `05085fe` ✅
-- 2026-07-16 — **L0 #50 boundary — P116 planning tail advanced by one sub-step (pattern map), plus one filed noticing + one eager fix** — filed `GTH-V15-39` (catalog row-id-prefix inconsistency, manager-routed noticing carried from #49) and eager-fixed the adjacent `GTH-V15-37`/`GTH-V15-38` copy-paste bleed in the same commit, pushed, CI green (`6d21cae`); then dispatched `gsd-pattern-mapper` (sonnet, standalone — not via `/gsd-plan-phase`) → `116-PATTERNS.md` (22,259 bytes, 8 edit-target analogs), committed, pending push. Research + validation + patterns are now ALL on disk for P116 planning; only `gsd-planner`/`gsd-plan-checker`/coverage-gates remain. — `6d21cae`, `08e94a4` (pending push)
+- 2026-07-16 — **L0 #50 boundary — P116 planning tail advanced by one sub-step (pattern map), plus one filed noticing + one eager fix** — filed `GTH-V15-39` (catalog row-id-prefix inconsistency, manager-routed noticing carried from #49) and eager-fixed the adjacent `GTH-V15-37`/`GTH-V15-38` copy-paste bleed in the same commit, pushed, CI green (`6d21cae`); then dispatched `gsd-pattern-mapper` (sonnet, standalone — not via `/gsd-plan-phase`) → `116-PATTERNS.md` (22,259 bytes, 8 edit-target analogs), committed, pending push. Research + validation + patterns are now ALL on disk for P116 planning; only `gsd-planner`/`gsd-plan-checker`/coverage-gates remain. — `6d21cae`, `08e94a4`
+- 2026-07-16 — **L0 #51 boundary — P116 planning tail COMPLETE (planner PASS + checker PASS)** — dispatched `gsd-planner` (opus, standalone) → 3 wave-1 parallel plans (`116-01/02/03-PLAN.md`, ZERO file-overlap) + populated `116-VALIDATION.md` body + ROADMAP P116 annotation (`011096b`); filed `GTH-V15-40` (array-typed `.source` jq-crash gotcha, tag P126) after live-verifying it against the catalog, discharging #50's carried noticing (`74fb907`); dispatched `gsd-plan-checker` (sonnet, standalone) → **VERDICT PASS** (every load-bearing claim byte-checked vs disk; both req IDs land; LIVE-row-not-twin verified; FIX-03 design-only gated; zero file-overlap confirmed), eager-fixing two non-blocking WARNINGs in place: a vacuous `grep -A5` TAG-line check in `116-03-PLAN.md` T2 widened to `-A34`; `116-RESEARCH.md` Open Questions marked RESOLVED (`9dbb860`). **P116 planning is now COMPLETE — P116 EXECUTION (top-level, 3 parallel plans, zero overlap) is the next work.** — `011096b`, `74fb907`, `9dbb860`
 
 ## NOW
 
-**P116 planning tail in progress — research + validation skeleton (`05085fe`) + pattern
-map (`08e94a4`, `116-PATTERNS.md`, 22,259 bytes, 8 edit-target analogs) all SHIPPED and
-on disk; planner → checker → coverage-gates remain.** `116-CONTEXT.md` (locked, do NOT
-rewrite) + `116-RESEARCH.md` + `116-VALIDATION.md` + `116-PATTERNS.md` are all committed.
-Re-entering `/gsd-plan-phase 116` should find `has_research=true` and skip straight to
-`gsd-planner` (opus) → `PLAN.md`(s); `gsd-plan-checker`; coverage gates →
-`state.planned-phase` → ROADMAP annotation → commit — this is the LAST heavy pass in the
-P116 planning tail. Planner MUST cover the ROADMAP criterion-1 packet-location gap
-(cross-link only, per research recommendation — NOT a file move) and reconcile the
-RESEARCH.md corrections vs CONTEXT.md's mislabels (retire the LIVE
-`SURPRISES-INTAKE.md:108-116` row, not the archived v0.14.0 twin). **Do NOT auto-chain
-into execution at workflow step 15** (ROADMAP marks Phase 116 `Execution mode:
-top-level`, the top-level coordinator is the executor); actively clear
-`workflow._auto_chain_active` if the resumed workflow set it.
+**P116 PLANNING IS COMPLETE — planner and plan-checker both landed PASS this rotation.**
+`116-01-PLAN.md` / `116-02-PLAN.md` / `116-03-PLAN.md` (all wave 1, parallel, ZERO
+file-overlap) + a populated `116-VALIDATION.md` body + the ROADMAP P116 annotation landed
+in `011096b`; `gsd-plan-checker` returned **VERDICT PASS** in `9dbb860` after two
+non-blocking WARNINGs were eager-fixed in place (a vacuous grep-gate widened in
+`116-03-PLAN.md` T2; `116-RESEARCH.md` Open Questions marked RESOLVED). **These 3
+commits (`011096b`, `74fb907`, `9dbb860`) are local-only as of this NOW refresh — the L0
+orchestrator pushes them together with this PROGRESS/handover commit as the rotation's
+final act; #52's first action must confirm that push landed and CI concluded green on
+the new tip.**
 
-**P115 human confirm-retire gate stays OPEN at 11 rows — re-verified live by #50 at
-THREE separate boundaries this rotation, unchanged.** `grep -c
-'"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` → **11**, every
-time. The verifier's **GREEN-CHECKPOINT** verdict (`115-VERIFICATION.md`, `ce4d3b7`)
-stands; the **sole remaining action is the human-only 11-row confirm-retire batch**
-(`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch" — authoritative
-row-ID list + copy-paste commands; verb needs a real TTY, refuses
-`$CLAUDE_AGENT_CONTEXT`, agents never pass `--i-am-human`). Owner has the commands in
-hand and may run them at any moment — re-check this count at EVERY boundary; when it
-drops below 11, advance `.planning/STATE.md`'s cursor past P115 and close the checkpoint.
-**`STATE.md`'s cursor is held at P114-closed (P115 CHECKPOINTED, P116 mid-plan) until the
-batch lands.**
+**Next work = P116 EXECUTION** (ROADMAP marks `Execution mode: top-level` — the
+top-level coordinator IS the executor, never `/gsd-execute-phase`). The 3 plans, all
+wave 1 / parallel / zero file-overlap:
+- **116-01** (ADR-01): bless webhook+cron mirror-convergence as `"authoritative"` in
+  `docs/concepts/dvcs-topology.md` + root `CLAUDE.md`; mint a catalog-first doc-alignment
+  regression guard (`quality/gates/docs-alignment/mirror-convergence-blessed.sh` + row).
+  Verify keys on `"authoritative"` (0 occurrences today), NOT `"webhook"` (already
+  present — would be tautological).
+- **116-02** (ADR-01 + FIX-03): `docs/decisions/010-l2-l3-cache-coherence.md` — §2
+  amendment (RBF-LR-04 lever CLOSED), §3 amendment (Option B sanctioned target design,
+  **design-only**), References cross-link (not a file move — closes ROADMAP criterion-1).
+- **116-03** (ADR-01 + FIX-03): retire the **LIVE**
+  `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md:108-116` litmus row (terminal
+  RESOLVED, never delete, NOT the archived v0.14.0 twin — this is the ledger's FIRST
+  terminal row); update `GOOD-TO-HAVES-09` to sanctioned-target-design + boundary-relative
+  TAG.
 
-**L0 relieved #50→#51 at this same checkpoint boundary.** #50's rotation: filed
-`GTH-V15-39` + eager-fixed the `GTH-V15-37`/`GTH-V15-38` copy-paste bleed (`6d21cae`,
-pushed, CI green), then dispatched `gsd-pattern-mapper` standalone → `116-PATTERNS.md`
-(`08e94a4`, committed, pending push — the L0 orchestrator pushes it together with the
-new handover as the rotation's final act). This is now a FIFTH corroboration that a
-rotation fits roughly one heavy top-level pass — even the "lighter" planning-tail
-sub-steps plus routine boundary hygiene (verify, human-gate re-check, one noticing-file,
-one bug-fix, one standalone subagent dispatch) filled #50's rotation to the soft-relief
-line with no `gsd-planner` pass attempted. **Next actor: #51 — `gsd-planner` →
-`gsd-plan-checker` → coverage gates is the sole remaining P116-planning pass; budget
-entry well under ~50k own-context; do NOT auto-chain into execution.** Also carries one
-NEW noticing not yet filed (a `doc-alignment.json` row whose `.source` field is an
-array, not an object — crashes a naive `jq '.source.file'` filter; LOW, candidate P126)
-— see `.planning/SESSION-HANDOVER.md` (#50→#51) §5 item 7b.
+Also filed `GTH-V15-40` (array-typed `.source` jq-crash gotcha, tag P126) this rotation,
+discharging the #50→#51 carried noticing.
+
+**P115 human confirm-retire gate STILL OPEN at 11 rows** — re-verify live at every
+boundary: `grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json`
+→ **11**, unchanged this rotation too. The verifier's GREEN-CHECKPOINT verdict
+(`115-VERIFICATION.md`, `ce4d3b7`) stands; sole remaining action is the human-only 11-row
+confirm-retire batch (`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch").
+`STATE.md`'s cursor is deliberately held at P114-closed (P115 CHECKPOINTED, P116
+mid-plan) until the batch lands — re-check at every boundary; when it drops below 11,
+advance the cursor past P115 and close the checkpoint.
+
+**L0 relieved #51→#52 at this boundary.** #51's rotation ran the P116 planning tail to
+completion via standalone-subagent dispatches (planner + checker both kept out of L0's
+own context) plus one filed noticing — see `.planning/SESSION-HANDOVER.md` (#51→#52) for
+full detail, including a sharpened context-budget lesson: dispatch a fixer subagent for
+eager-fixes to large plan/research files rather than reading them into the coordinator's
+own context (that's what cost #51 the budget this rotation, not the dispatches
+themselves). **Next actor: #52 — P116 EXECUTION is the primary work; dispatch the 3
+wave-1 plans (parallel, zero overlap) per their `Execution mode: top-level` +
+tier rules, then run the phase-close push cadence + verifier dispatch.**
 
 **1/15 v0.15.0 "Floor" phases complete (P115 CHECKPOINTED pending the human gate; P116
-mid-planning; P117–P128 not started).**
+planning complete, execution next; P117–P128 not started).**
 
 ## NEXT
 
@@ -89,19 +97,16 @@ mid-planning; P117–P128 not started).**
    scope addition (productionization checklist filed). Full text: `GOOD-TO-HAVES.md`
    GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
    `.planning/ROADMAP.md` Phase 117 + Phase 119.
-2. **P116 — ADR-010 decision packet: RULED 2026-07-16** (manager, decide-and-disclose,
-   owner veto window open). Decision 1 (ADR-01 mirror fan-out): **Option B with A folded
-   in** — doc-truth rewrite of the conflated "mirror" docs + bless webhook/30-min-cron as
-   authoritative convergence; D rejected (keep `files_touched>0` gate); C filed as
-   GTH-V15-38 with a verbatim pull-forward trigger. Decision 2 (FIX-03 slug→id):
-   **Option A this milestone (design-only)**, Option B recorded as sanctioned target
-   design; NO v0.15 build; D = incident-only stopgap. Verbatim rulings: the two
-   2026-07-16 `[MANAGER]` entries in `CONSULT-DECISIONS.md`; packet at
+2. **P116 — planning COMPLETE, EXECUTION is now the primary work item.** ADR-010 decision
+   packet was RULED 2026-07-16 (manager, decide-and-disclose, owner veto window open):
+   Decision 1 (ADR-01 mirror fan-out) — Option B with A folded in; Decision 2 (FIX-03
+   slug→id) — Option A this milestone (design-only), Option B recorded as sanctioned
+   target design, NO v0.15 build. Verbatim rulings: the two 2026-07-16 `[MANAGER]`
+   entries in `CONSULT-DECISIONS.md`; packet at
    `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`.
-   **P116 execution (doc rewrites, ADR-010 §2/§3 amendments, litmus-non-idempotency
-   intake retirement) is now #46's PRIMARY work item** — checkpoint housekeeping
-   (`GTH-V15-35`) is complete, so this is no longer sequenced behind anything but the
-   P115 human gate confirmation (which does not block it).
+   3 wave-1 parallel plans now on disk (`116-01/02/03-PLAN.md`) — execute per ROADMAP
+   `Execution mode: top-level`, checkpoint housekeeping (`GTH-V15-35`) already complete,
+   sequenced only behind nothing (the P115 human gate does not block it).
 3. Then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started
