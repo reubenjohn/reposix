@@ -38,6 +38,11 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **Real-backend mutations PRE-AUTHORIZED**: Confluence TokenWorld, GitHub
   reubenjohn/reposix issues, JIRA TEST. Credentials/spend beyond those still
   owner-gated.
+- **NEVER gate work on weekly subscription resets (owner, 2026-07-15):** do not
+  defer, hold, or schedule around reset timing or usage percentages — launch work
+  when it is ready. If a cap-hit ever pauses a session, it wraps cleanly
+  (commit+push+handover) and the successor resumes; that is hygiene, not a
+  scheduling input and not an owner-notify event by itself.
 - **STANDING AUTHORITY (owner, 2026-07-12): milestone release cuts are the manager's.**
   The manager makes and executes tag/release-cut calls end-to-end (tag push included)
   for milestone closes, without per-milestone re-approval — ALWAYS through the honest
@@ -82,24 +87,23 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (`fcddf90`); relief handover #36→#37 pushed (`1780641`); GTH-V15-25 filed
   (`e1c71c4`, owner-approved token-bloat CI tripwire). CI GREEN on tip
   `e1c71c4` (run 29461500358). Seat IDLE at the T4 capture gate.
-- **OVERNIGHT HOLD + #37 LAUNCH PLAN:** T4 captures gated until the weekly
-  reset **2026-07-16 02:00 PT** (~80% used). Hold the idle seat with ≤1h
-  heartbeat waits (`herdr agent wait w1:p5 --status working --timeout 3300000`
-  — fires early only on unexpected pane activity; NOT manager-poll, which
-  insta-fires TRUE-IDLE on a held idle seat). Each heartbeat: quick origin/CI
-  check, re-arm. At first wake past 02:00 PT: `pane-clear.sh w1:p5 --yes`, then
-  launch #37 = read `.planning/SESSION-HANDOVER.md` (`1780641`, authoritative)
-  → T4 captures (≤18 sessions, ledger ≤50 ceiling, throwaway `/tmp` clone for
-  the reposix arm) → **FOLD-IN (owner timing note 2026-07-15): during T4, also
+- **#37 RUNNING (launched 2026-07-15 ~20:40 PT — owner directive "finish it
+  all"; reset-wait overridden, and reset-gating retired entirely per the
+  standing instruction above):** full P115 charter = read
+  `.planning/SESSION-HANDOVER.md` (`1780641`, authoritative) → T4 captures
+  (≤18 sessions, session-spend ledger ≤50 ceiling, throwaway `/tmp` clone for
+  the reposix arm, MCP arm via verified ATLASSIAN_API_KEY auth `5374fe0`; on
+  any cap-hit: commit+push progress, update handover, clean turn end,
+  successor resumes) → **FOLD-IN (owner timing note 2026-07-15): during T4,
   extract the agent command list from the captured session JSONL into a
   committed trajectory fixture — GTH-V15-25 step 1, <1h byproduct while the
   data is fresh; the rest of that row stays a post-T4 lane** → T5 (JSONL-usage
-  path, token-economy.md regen) → T6 (second latency.md refresh; delete all
-  FOUR `[SELF]` entries: A1, T2-latency-canonical, T6-headline,
-  T5-JSONL-methodology) → after P115 closes: P116 ADR-010 packet routed to
-  MANAGER for ruling, no pre-ruling implementation. Watch items: latency.md
-  regen-clobber tension; doc-alignment 14-row re-drift budget in T6;
-  subscription stall risk → PUSH-NOTIFY owner if cap hit.
+  path per `9be5439`, token-economy.md regen) → T6 (honest-headline reframe +
+  second latency.md refresh; delete all FOUR `[SELF]` entries: A1,
+  T2-latency-canonical, T6-headline, T5-JSONL-methodology) → close P115 per
+  push cadence → then P116 ADR-010 packet routed to MANAGER for ruling, no
+  pre-ruling implementation. Watch items: latency.md regen-clobber tension;
+  doc-alignment 14-row re-drift budget in T6.
 - **Seat-rotation craft (learned #35→#36):** do NOT pane-clear a workhorse
   whose wrap says "awaiting CI green" — its final turn hasn't ended; killing
   its gh-run-watch shell injects a failure event and costs an investigation
