@@ -116,8 +116,21 @@
   2. The slug→id durable-create reconciliation design (mint a stable local slug pre-push; model "slug X → (pending) → backend id N") is documented and co-located with the ADR-010 packet, per FIX-03's ask.
   3. An owner/manager ruling is recorded in `.planning/CONSULT-DECISIONS.md` (or equivalent) before any implementation of a chosen option proceeds.
   4. FIX-03's v0.15 implementation depth is explicitly scoped by that ruling, not pre-decided by the executor.
-**Plans**: TBD
+**Plans**: 3 plans (all Wave 1, parallel — zero file overlap; Plan 01 T1 is the catalog-first first commit)
+- [ ] 116-01-PLAN.md — ADR-01 live-doc mirror-truth blessing (webhook+cron = authoritative; (a)/(b) mirror-sense split; refresh-script = op-recovery-only) in `dvcs-topology.md` + root `CLAUDE.md`, + a doc-alignment regression-guard row/verifier
+- [ ] 116-02-PLAN.md — ADR-010 §2 amendment (ADR-01: RBF-LR-04 lever CLOSED, Option D rejected) + §3 amendment (FIX-03: Option B SANCTIONED TARGET DESIGN, design-only, waiver stays qualified) + packet co-location cross-link (criterion 1)
+- [ ] 116-03-PLAN.md — retire the LIVE litmus-non-idempotency SURPRISES-INTAKE row (terminal RESOLVED) + update GOOD-TO-HAVES-09 (FIX-03 next-milestone build proposal)
 **Execution mode**: top-level (produce options + tradeoffs, gather owner/manager ruling; explicitly NOT an implement-and-ship phase)
+
+> **Planner note (2026-07-16, P116 planning).** The Goal + Success Criteria 1–4 + Execution-mode
+> text above describe the OLD pre-ruling shape and are now STALE: BOTH rulings already
+> happened (`.planning/CONSULT-DECISIONS.md`, 2026-07-16, commit `8212373`; criteria 1–4 are
+> materially satisfied — packet exists, ruling recorded, FIX-03 depth scoped design-only). The
+> 3 planned plans EXECUTE the rulings' follow-through (a write→verify→commit shape); they still
+> run **top-level** (coordinator dispatches leaf subagents), so the Execution-mode marker holds
+> even though its parenthetical rationale is stale. Surfaced, not silently rewritten (RESEARCH
+> §5.5 / Noticed #4). A future reader diffing ROADMAP-vs-shipped should read the phase's
+> `116-0N-PLAN.md` + `116-VALIDATION.md` for the actual delivered scope.
 
 ### Phase 117: Doc-truth launch-blocker purge
 **Goal**: The 6 identified doc-truth launch-blockers no longer mislead a first-time reader or agent.
@@ -270,7 +283,7 @@
 |-------|----------------|--------|-----------|
 | 114. t4 oid-drift fix-first + reconcile audit | 2/2 | Complete   | 2026-07-15 |
 | 115. Live MCP benchmark re-measurement | 0/TBD | Not started | - |
-| 116. ADR-010 decision packet + slug→id design | 0/TBD | Not started | - |
+| 116. ADR-010 decision packet + slug→id design | 0/3 | Planned | - |
 | 117. Doc-truth launch-blocker purge | 0/TBD | Not started | - |
 | 118. Post-bench honesty corrections | 0/TBD | Not started | - |
 | 119. Docs/planning simplification | 0/TBD | Not started | - |
