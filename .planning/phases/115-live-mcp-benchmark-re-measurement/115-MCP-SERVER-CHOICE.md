@@ -28,11 +28,12 @@ split (85.5%).
 | mcp-arm proof | JSONL shows real `mcp__github-probe__{issue_read,issue_write,search_issues}` calls in all 3 runs |
 | reposix-arm proof | JSONL shows **zero** `mcp__*` calls (pure git/POSIX) in all 3 runs |
 
-**Key results (medians, real captures):** mcp-arm ≈ 21.2k output / 56.1k cache-creation /
-550k total input-context / $0.83 per session; reposix-arm ≈ 1.2k output / 18.0k
-cache-creation / 242k total input-context / $0.19 per session. reposix is cheaper on every
-axis (output ≈94% fewer, cost ≈77% cheaper). The exact published "% fewer tokens" figure is
-T5's to define from these captures.
+**Key results (medians of 3, real captures):** mcp-arm ≈ 21.2k output / 56.1k
+cache-creation / 550k total input-context / $0.83 per session; reposix-arm ≈ 1.2k output /
+19.1k cache-creation / 245k total input-context / $0.21 per session. reposix is cheaper on
+every axis (output ≈94% fewer, cache-creation ≈66% fewer, total input-context ≈56% fewer,
+cost ≈75% cheaper). The exact published "% fewer tokens" figure is T5's to define from the
+committed `benchmarks/captures/*.json`.
 
 **Two findings captured alongside (evidence trail):**
 1. **`reposix-github` is READ-ONLY in this build cut** (`crates/reposix-github/src/lib.rs`
