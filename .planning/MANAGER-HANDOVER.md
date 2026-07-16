@@ -74,7 +74,24 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (manager #10 on station; mid-shift refresh 2026-07-15 ~17:40 PT)
+## Live state (refreshed at rotation #10→#11, 2026-07-16 ~17:10 UTC)
+
+- **SUCCESSOR #11 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (#10's one-shots
+  are consumed; nothing is watching) — standard entry:
+  `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 3300 ""
+  /home/reuben/workspace/reposix`; triage every wake with `wake-triage.sh`.
+  (2) **#44 is RUNNING** (Fable 5 seat) — mid P115 phase-close: cold-reader done
+  (`8212373`), phase-close verifier next; it CHECKPOINTS at the human
+  confirm-retire gate if the owner's 11-command batch hasn't landed. Do NOT
+  rotate the seat mid-turn; wait for TRUE-IDLE. (3) P116 rulings are DELIVERED
+  and ENCODED (`8212373`, [MANAGER] entries in CONSULT-DECISIONS.md; packet at
+  `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`)
+  — owner veto window open; P116 execution (doc-truth rewrites, ADR-010 §3
+  amendment) proceeds under them after P115 close/checkpoint. (4) Owner threads
+  live in this conversation's tail: 11-command confirm-retire batch (sole P115
+  human action), v0.14.1 cut decision on PR #74 (recommended CUT, owner-gated).
+  (5) Watch PR #75: dependabot rebase requested; merge iff CI green (squash);
+  red freshness-test post-rebase = real main-side issue → dispatch fix.
 
 - **SHIFT SUMMARY (#10, through 2026-07-16 ~16:45 UTC):** Workhorses #35–#43
   launched+closed clean; **#44 RUNNING** (phase-close + P116 packet delivery).
@@ -94,14 +111,17 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **OPEN GATES/THREADS (successor: check these FIRST):** (1) **Human gate
   OPEN** — owner's 11-command confirm-retire batch (list: `.planning/phases/
   115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md`); #44 checkpoints
-  phase-close at this gate if not landed. (2) **P116 ADR-010 packet** (drafted
-  `f5652b2`, #44 finalizing) routes to MANAGER for decide-and-disclose ruling —
-  NO pre-ruling implementation. (3) PR #75 dependabot: `@dependabot rebase`
-  requested, merge iff CI green after (squash); watch the freshness-test job —
-  red post-rebase = real main-side issue. (4) PR #74 release-plz v0.14.1
-  (ships P114 fix): OWNER-GATED (outward publishing), recommended CUT, awaiting
-  owner word. (5) PR #67 closed as superseded (done). (6) GTH-V15-34
-  confirm-retire --batch mode filed.
+  phase-close at this gate if not landed. (2) **P116 rulings MADE + ENCODED**
+  (`8212373`): Decision 1 = Option B (doc-truth + bless webhook/cron
+  convergence; D rejected; C filed as GTH with incident trigger); Decision 2 =
+  Option A design-only, B sanctioned target design, SC4 = no build in v0.15,
+  D pre-sanctioned stopgap only on a real incident. Owner veto window open.
+  (3) PR #75 dependabot: `@dependabot rebase` requested, merge iff CI green
+  after (squash); watch the freshness-test job — red post-rebase = real
+  main-side issue. (4) PR #74 release-plz v0.14.1 (ships P114 fix):
+  OWNER-GATED (outward publishing), recommended CUT, awaiting owner word.
+  (5) PR #67 closed as superseded (done). (6) GTH-V15-34 confirm-retire
+  --batch mode filed.
 - **Liveness incident (2026-07-16, 2nd dead-watcher):** #40 froze ~30min —
   child notification chain died silently (subagent+shell gone, parent never
   resumed, dirty tree). Caught by shortened 20-min poll; nudge recovered it.
