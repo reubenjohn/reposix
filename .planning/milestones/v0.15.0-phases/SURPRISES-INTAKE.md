@@ -403,3 +403,38 @@ future generator/doc divergence fails a test instead of silently dirtying the wo
 tree at a gate run, the way the 260716-f6o regression did.
 
 **STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: manager (w1:p7) finding to L0 #47, verified live | severity: MEDIUM (HIGH-visibility — uncatalogued hero-number surfaces)
+
+**What:** Three hero surfaces present the NEW ~94.3%/~74.9% four-axis token-economy
+figures as current with **NO doc-alignment catalog binding** — so once the owner's
+pending 11-row confirm-retire batch lands, these headline claims become **entirely
+uncatalogued** (no gate watches them for drift):
+  - `docs/index.md:17` hero bullet — the new figure, restated at L42/L156/L168; only the
+    **mermaid sub-numbers at L31-39 are bound**, the hero bullet itself is not.
+  - `README.md:27` — new figure, unbound. **Verified: the only README token-economy
+    catalog row is the RETIRING `README-md/token-89-percent`** — so post-retire, README's
+    live number has zero binding.
+  - `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31` — new figure, unbound.
+This is the same lying-hero-claim failure class the P115 destaling lanes purged from the
+OLD numbers, re-appearing one layer up: the numbers are now CORRECT but UNWATCHED, so
+the next drift (e.g. a P116/P117 re-measurement) could silently re-stale them with no
+gate firing. Manager-verified live before routing to #47.
+
+**Why out-of-scope for the discovering session (#47, filing turn):** Minting bindings is
+a top-level `/reposix-quality-refresh` fan-out per doc (subagents propose claim→test
+bindings with file:line citations, the `reposix-quality` binary validates + mints catalog
+state) — a scoped multi-agent lane, not an inline edit. Filed at session-start per manager
+directive; the refresh lanes execute at the first clean boundary (see below), not mid the
+first-act verify turn.
+
+**Sketched resolution:** Run the doc-alignment refresh flow (`/reposix-quality-refresh`
+per doc, TOP-LEVEL) for each of the three surfaces, binding the live figure to
+`bench_token_economy.py` tests / `headline-numbers-cross-check.py` — **the same test
+targets the existing `output-reduction-94-percent` rows already bind to**, so this
+extends an established binding pattern rather than inventing one. **Timing (manager
+directive):** execute at the first clean boundary — before or right after P116 planning
+locks — **do NOT let it slip past P117**. Once the 11-row retire batch lands, the README
+surface in particular has no token-economy binding at all until this runs.
+
+**STATUS:** OPEN
