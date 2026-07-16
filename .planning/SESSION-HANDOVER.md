@@ -1,13 +1,15 @@
-# SESSION-HANDOVER.md — v0.15.0 Floor: T5 CLOSED (live-capture token-economy headline SHIPPED, CI green) — T6 READY — 2026-07-16
+# SESSION-HANDOVER.md — v0.15.0 Floor: T6 item 1 LANDED + PUSHED (CI verifying) — items 2/3/5/6/7 remaining — 2026-07-16
 
-Written by **workhorse #40** (L0 orchestrator), relieving to successor **#41**. This file
-**REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#39→#40's handover,
-superseded here). #40 relieved at ~115k own-context, at the T5/T6 wave boundary — T5 done,
-pushed, CI green — per the standing "relieve past ~100k soft / 150k hard, absolute not %"
-rule.
+Written by **workhorse #41** (L0 orchestrator), relieving to successor **#42**. This file
+**REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (#40→#41's handover,
+superseded here). #41 relieved at ~146k own-context, at the T6 wave boundary — item 1
+(headline reframe) landed and pushed, five items remain — per the standing "relieve past
+~100k soft / 150k hard, absolute not %" rule.
 
-**Read order:** this file → §0 ground truth (verify live) → §1 headline (T5 CLOSED) → §4
-Wave B/T6 charter → §6 findings #41 must respect → §7 runbook.
+**Read order:** this file → §0 ground truth (verify live, FIRST — CI was in-flight at
+handover) → §1 headline → §5 successor charter (T6 items 2/3/5/6/7) → §6 findings #42 must
+respect (one is a correction to #40's own charter — read it before touching item 6) → §8
+runbook.
 
 **Guardrails unchanged:** do NOT touch `.planning/MANAGER-HANDOVER.md` (separate document,
 separate owner — the manager, pane w1:p7). No tag push by any coordinator. No git surgery
@@ -15,120 +17,114 @@ separate owner — the manager, pane w1:p7). No tag push by any coordinator. No 
 only, never `git add -A`/`.`. ONE cargo invocation machine-wide. Leaf isolation in `/tmp`
 same-Bash-invocation. opus complex / sonnet default / haiku mechanical, never fable at a leaf.
 
-**MODEL NOTE (unchanged from #39→#40, load-bearing for dispatch):** the session model is
-**Fable 5**. If #41 runs on fable at top level, delegate per fable-top-level doctrine —
-**fable coordinators only**, explicit model overrides at leaves (opus complex / sonnet
-default / haiku mechanical), **NEVER fable at a leaf**.
+**MODEL NOTE (unchanged, load-bearing for dispatch):** the session model is **Fable 5**. If
+#42 runs on fable at top level, delegate per fable-top-level doctrine — **fable coordinators
+only**, explicit model overrides at leaves (opus complex / sonnet default / haiku
+mechanical), **NEVER fable at a leaf**.
 
-## 0. Ground truth (git)
+## 0. Ground truth (git) — verify live before acting
 
-**Verify live before acting:**
 ```
 git rev-parse HEAD && git status --porcelain && \
   git rev-list --left-right --count HEAD...origin/main && \
   gh run list --branch main --workflow CI --limit 3
 ```
 
-**As of #40's handover commit:**
-- `HEAD` == `origin/main` == **`b460008`** (before this handover commit lands; this
-  handover is the next commit atop it and L0 pushes it — #41's first-act re-verifies 0/0
-  after the push).
-- Chain atop `28a9c50` (#39's relief handover, last known-clean sha), all on `main`, all CI
-  green:
-  1. `5366d29` — `perf(115-05): rewrite token-economy-bench GREEN contract to JSONL-usage
-     methodology`. Catalog-first rewrite (GREEN contract lands before the implementation,
-     per project convention).
-  2. `1cdb381` — `feat(115-05): JSONL session-usage headline path for token-economy bench`.
-     The headline-computation path in `quality/gates/perf/bench_token_economy.py`.
-  3. `fd098c7` — `docs(115-05): regen token-economy.md from live GitHub captures + honest
-     provenance`. `docs/benchmarks/token-economy.md` regenerated + `PROGRESS.md` refresh.
-  4. `211f794` — `docs(115-05): file T5 close-out noticings + minted_at fix-it-twice line`.
-  5. `63cb505` — `chore(115-05): persist post-push code/ci-green-on-main grade`.
-  6. `2103d0c` — `fix(115-05): restore literal content_hash term in fixtures README` (a
-     `code/fixtures-valid` regression fix — the fixtures README had lost a literal
-     `content_hash` term the gate asserts on).
-  7. `b460008` — `chore(115-05): close T5 wave — re-mint post-push P0 grade at CI-green`.
-     The T5 wave-close boundary commit — P0 grade re-minted PASS at the CI-green
-     conclusion + `PROGRESS.md` wave-close note.
-- **CI:** run **`29487716448`** on `b460008` — **completed / success** (verified live by
-  #40 via `gh run view --json status,conclusion,headSha`). P0 `code/ci-green-on-main`
-  PASS (minted in `b460008`).
-- **This handover commit will be pushed BY L0** (not by #40 — L0 pushes). #41's §0
-  first-act re-verifies the tip independently.
+**As of #41's handover commit:**
+
+- `HEAD` == `origin/main` == **`c9c2aee`** (before this handover commit lands; this
+  handover is the next commit atop it and **L0 pushes it** — #42's first-act re-verifies
+  0/0 after the push).
+- Chain atop `0953ebd` (#40's relief handover commit, last known-clean sha), 4 commits, all
+  on `main`, pushed ~2026-07-16 10:41 UTC:
+  1. `d2fd85c` — `feat: T6 item 1 hero-surface reframe` — `README.md`, `docs/index.md`,
+     `docs/concepts/reposix-vs-mcp-and-sdks.md` re-anchored from the retired synthetic
+     89.1% to the live GitHub-capture figures (~94.3% output / ~74.9% cost, ~1.2k vs ~21k
+     output tokens), folding in the two honesty findings (GitHub write-back read-only this
+     cut; MCP `issue_read` lossy vs reposix byte-fidelity). Committed LOCAL first — its own
+     push attempt BLOCKED on 4 newly-`STALE_DOCS_DRIFT` doc-alignment rows (no waiver yet).
+  2. `fc232ee` — `docs(115-06): refresh PROGRESS for T6 headline-reframe (item 1)` — filed
+     while still push-blocked, so its wording ("push BLOCKS as designed... not landed
+     yet ⏳") predates the eventual landing — **this handover's PROGRESS.md companion
+     commit corrects that framing** (see this rotation's PROGRESS refresh, done alongside
+     this handover).
+  3. `9a2b6f1` — `refresh(doc-alignment): re-grade 6 stale rows in docs/index.md +
+     docs/concepts/reposix-vs-mcp-and-sdks.md` — top-level-only `/reposix-quality-refresh`
+     run on BOTH drifted docs (NOT `latency.md` — confirmed untouched by the reframe, see
+     §6 finding 1). 6 rows re-graded: `conflict-semantics-native-git` re-bound **GREEN**;
+     `docs/index/mcp-loop-4883-tokens` + `docs/index/reposix-loop-531-tokens` re-cited to
+     live figures (~21k / ~1.2k) → **MISSING_TEST**; `latency-cached-read-8ms` →
+     **MISSING_TEST**; `token-baseline-mcp-4883` + `token-baseline-reposix-531` →
+     **RETIRE_PROPOSED** (genuine supersession, human-only confirm-retire pending).
+  4. `c9c2aee` — `chore(115-06): time-box waive 5 post-refresh rows pending T6 bind/retire`
+     — walk still blocked (walker treats `MISSING_TEST`/`RETIRE_PROPOSED` as blocking
+     states). Used the binary's sanctioned `waive` verb (T5 precedent): all 5 rows from
+     step 3 waived `until: 2026-08-15T00:00:00Z`, `tracked_in: "P115 T6
+     (115-UNWAIVE-PATH.md)"`. `doc-alignment.json` catalog summary `claims_waived` moved
+     14→19 (the pre-existing 8 hero + 6 token-economy.md waivers, +5 new). Walk exit 0,
+     push landed, pre-push **61 PASS / 0 FAIL**.
+- **CI:** run `29488471287` on `0953ebd` (before T6 dispatch) — completed/success, P0 PASS,
+  verified live by #41 as first-act. Run **`29491742214`** on `c9c2aee` was **IN FLIGHT at
+  handover time** (`in_progress`, started `2026-07-16T10:41:52Z`, ~2m43s elapsed at last
+  check) — **NOT yet confirmed green**.
+- **This handover commit will be pushed BY L0** (not by #41 — L0 pushes). #42's §0 first-act
+  re-verifies the tip AND the CI conclusion independently — do not assume green.
 - Milestone **v0.15.0 "Floor"**, phase **P115 executing** (`Execution mode: top-level`).
-  P114 CLOSED GREEN (`dc26302`).
 - Working tree clean at handover time; **no background shells, monitors, or live
-  subagents** left running for #41 to inherit.
-- **#41's FIRST ACT (before anything else):**
+  subagents** left running for #42 to inherit.
+- **#42's FIRST ACT (before anything else):**
   ```
   git rev-list --left-right --count HEAD...origin/main   # expect 0/0
-  gh run list --branch main --workflow CI --limit 3      # expect top row completed/success
-                                                           # (will be in-flight right after
-                                                           # L0's push — watch it bounded,
-                                                           # e.g. `gh run watch`, ≥300s timeout)
+  gh run list --branch main --workflow CI --limit 3      # confirm c9c2aee's run (29491742214)
+                                                           # concluded — watch bounded if still
+                                                           # in flight (`gh run watch 29491742214`,
+                                                           # Bash timeout ≥360s)
   python3 quality/runners/run.py --cadence post-push --persist   # P0 ci-green-on-main
   ```
   If the flaky `test` job is red, re-run it ONCE before treating it as real. If still red
-  after one retry, STOP — do NOT open T6 execution over a red main; escalate per §8.
+  after one retry, **STOP** — do NOT open further T6 work over a red main; escalate per §9.
 
-## 1. THE HEADLINE: T5 is CLOSED (live-capture token-economy headline SHIPPED + CI GREEN)
+## 1. THE HEADLINE: T6 item 1 (headline reframe) LANDED + PUSHED; CI verifying; 5 items remain
 
-- **`docs/benchmarks/token-economy.md` regenerated** from the T4 live GitHub captures
-  (`benchmarks/captures/*.json`, 6 files) via a deterministic, offline, no-`ANTHROPIC_API_KEY`
-  JSONL session-usage parse — **NOT** `count_tokens`. Catalog-first: the GREEN contract
-  (`5366d29`) landed before the implementation (`1cdb381`), per project convention.
-- **RECOMPUTED headline (four axes, from committed captures):**
+- Hero surfaces (`README.md`, `docs/index.md`,
+  `docs/concepts/reposix-vs-mcp-and-sdks.md`) re-anchored from the retired synthetic
+  **89.1%** to the live GitHub-capture headline **~94% fewer output tokens, ~75% cheaper
+  per session** (output ~94.3% / cache-create ~66.0% / total input-context ~55.6% / cost
+  ~74.9%), matching `docs/benchmarks/token-economy.md`'s existing provenance framing —
+  hero copy and the benchmark page now tell one consistent story.
+- Both honesty findings from T4/T5 folded into the reframe: (1) reposix's GitHub connector
+  cannot push writes in this cut — read-only, comparison unaffected; (2) MCP
+  `issue_read` HTML-escapes/drops raw markdown — reposix round-trips bytes faithfully.
+- The reframe's own push attempt BLOCKED as designed on 4 newly-drifted doc-alignment rows
+  (no waiver existed yet for post-reframe drift). #41 cleared the block via the sanctioned
+  path: top-level `/reposix-quality-refresh` (re-graded 6 rows, 1 GREEN + 3 MISSING_TEST +
+  2 RETIRE_PROPOSED) then a time-boxed `waive` on the still-blocking 5 (until 2026-08-15,
+  tracked to `115-UNWAIVE-PATH.md`) — see §0 for the exact commits.
+- **What's still open (5 remaining T6 items + phase-close):** `115-UNWAIVE-PATH.md` does
+  not exist yet; the 6 `token-economy.md` rows and 8 hero-number rows T5 waived remain
+  waived (un-waive/retire is T6's job, not done); the `perf/headline-numbers-cross-check`
+  regen-clobber guard is unwritten; the 5 `[SELF]` `CONSULT-DECISIONS.md` entries are
+  undeleted. **None of this blocks main** — the waivers hold until 2026-08-15 — but P115
+  cannot phase-close until all of it lands.
 
-  | Axis | reposix advantage |
-  |---|---|
-  | Output tokens | ~94.3% fewer |
-  | Cache-create tokens | ~66.0% fewer |
-  | Total input-context | ~55.6% fewer |
-  | Cost / session | ~74.9% cheaper |
+## 2. What #41 did this rotation
 
-  Top-line framing: **~94.3% fewer output tokens, ~74.9% cheaper per session.**
-- **Synthetic 89.1%/85.5% figures RETIRED** with an explicit provenance note (old
-  `count_tokens`-on-fixtures methodology). False `scripts/demo.sh` / "modeled on Forge"
-  claims killed.
-- **Honesty caveats added** (from the T4 findings, carried into the doc): (1)
-  read-only-write-back — reposix's GitHub connector cannot push writes in this cut, the
-  token comparison is unaffected; (2) MCP-lossy-reads — `github-probe issue_read`
-  HTML-escapes/drops raw markdown, reposix round-trips bytes faithfully.
-- **`reposix_session.txt.tokens.json` stale sidecar DELETED** — GTH-V15-26 RESOLVED (the
-  JSONL-usage methodology made the sidecar obsolete rather than requiring a live-key regen).
-- `bench_token_economy_io.py` re-export surface + the module-level
-  `FIXTURES`/`BENCH_DIR`/`RESULTS` monkeypatch contract **preserved**.
-  `scripts/bench_token_economy.py` remains a shim (not a symlink).
-- **Close-out noticings filed** at `211f794` (includes a `minted_at` fix-it-twice line —
-  the P0 persist script's minted-timestamp handling was tightened in the same commit that
-  noticed it, per OP-3-adjacent "fix it twice" discipline).
-- **`code/fixtures-valid` regression caught + fixed same-wave** (`2103d0c`) — a literal
-  `content_hash` term the gate asserts on had been dropped from the fixtures README during
-  the regen; restored before the wave-close commit.
-
-## 2. What #40 did this rotation
-
-1. First-act verify inherited from #39: rev-list 0/0, CI green (`29477874579`), P0 PASS.
-2. Confirmed GTH-V15-25 step-1 fixture (`benchmarks/fixtures/reposix_trajectory.json`)
-   already committed at `4db6b64` — no salvage needed. Reconciled the owner's "four
-   `[SELF]` entries" instruction against the actual ledger — **FIVE** exist (verified
-   live: `grep -n '\[SELF\]' .planning/CONSULT-DECISIONS.md` → lines 71, 96, 114, 123,
-   153); the fifth (T4 GitHub-pivot, line 153) self-documents "delete when T4 captures
-   land" — T6 deletes all five, not four.
-3. Dispatched T5 to a fable phase-coordinator (opus executor at the leaf). Ruled a
-   mid-wave scope question: the plan wins — `benchmarks/fixtures/README.md` regen IS in
-   T5 scope; L0's earlier "token-economy.md only" framing was a regen-clobber guard
-   against overwriting CI-canonical sections, not a scope cut.
-4. **MANAGER HEALTH-CHECK RECOVERY (named incident):** the C1→executor chain died
-   silently post-push, mid-`--persist` (symptom: `TaskOutput: no task found`; the
-   notification chain broke). L0 recovered per manager instruction: the dying executor's
-   last persist had honestly graded **NOT-VERIFIED** (written 3s after CI run
-   `29482425246` STARTED, before it could conclude). L0 re-minted PASS only after
-   independently confirming the run concluded success, then landed the wave-close
-   boundary commit `b460008` and watched CI to green with a bounded `gh run watch`.
-5. Relieved at ~115k own-context at the T5/T6 wave boundary per the standing ~100k soft
-   rule (the manager had said "proceed to Wave B" pre-context-check; the absolute-context
-   rule governs regardless — Wave B is chartered below for #41 to dispatch fresh instead).
+1. First-act verify inherited from #40: rev-list 0/0, CI green (`29488471287`), P0 PASS.
+2. Dispatched T6 to a fable phase-coordinator (per #40's §5 charter). It completed item 1
+   (reframe, `d2fd85c` local + `fc232ee` PROGRESS) then **checkpointed exactly as
+   chartered** when the push BLOCKed on docs-alignment/walk P0 (`STALE_DOCS_DRIFT`) — this
+   is the documented "orchestration-shaped work resolves at top-level" pattern
+   (`.planning/CLAUDE.md`), not a coordinator failure.
+3. Ran the top-level-only `/reposix-quality-refresh` flow on BOTH drifted docs
+   (`docs/index.md` + `docs/concepts/reposix-vs-mcp-and-sdks.md`; **NOT** `latency.md` —
+   verified pre-edit that its 14 rows did not re-drift, see §6 finding 1). 6 stale rows
+   re-graded by parallel graders per the refresh playbook — see §0 step 3 for the verdict
+   breakdown. Committed `9a2b6f1`.
+4. Walk still blocked (walker treats `MISSING_TEST` + `RETIRE_PROPOSED` as blocking states,
+   `walk.sh:71-73`). Used the binary's sanctioned `waive` verb (loud+tracked, T5 precedent):
+   5 rows waived until 2026-08-15, `tracked_in: "P115 T6 (115-UNWAIVE-PATH.md)"` (`c9c2aee`).
+   Walk exit 0, push landed, pre-push 61 PASS / 0 FAIL.
+5. Relieved at ~146k own-context at this wave boundary.
 
 ## 3. PROGRESS.md refresh contract (owner directive — carry into EVERY future handover)
 
@@ -142,14 +138,17 @@ git rev-parse HEAD && git status --porcelain && \
   `PROGRESS.md` is worse than no `PROGRESS.md` — it actively misleads the owner. Route
   `PROGRESS.md` edits through `/gsd-quick` or a delegated executor; it's a planning
   artifact, not a hand-edit target.
-- This contract is part of the SESSION-HANDOVER replacement obligation — #41 and every
+- This contract is part of the SESSION-HANDOVER replacement obligation — #42 and every
   successor MUST carry it forward in their own handover, verbatim if unchanged.
-- **This rotation:** `PROGRESS.md` is **current as of `b460008`** (verified live by #40 —
-  the T5 SHIPPED row carries the `1cdb381` landing SHA with the wave-close annotation, NOW
-  reads as **T6** with the full un-waive/reframe/retire scope, NEXT is P115-close →
-  P116 → P117-128). #40 made **no edits** to `PROGRESS.md` — it was already fresh from the
-  T5 executor's `fd098c7`/`b460008` commits. #41: verify freshness at first-act; edit only
-  if stale.
+- **This rotation:** `PROGRESS.md` WAS stale (the mid-wave `fc232ee` refresh predates the
+  eventual push landing — it still framed item 1 as blocked/⏳ and its NOW list used
+  different item numbering than the T6 charter). #41 refreshed it in the SAME commit as
+  this handover: SHIPPED's item-1 entry corrected to reflect the landed push (still
+  carrying `d2fd85c` as the primary SHA per instruction, since that SHA was already
+  present and not absent), NOW rewritten to name T6 items 2/3/5/6/7 (item 4's second
+  `latency.md` refresh dropped — not needed, see §6 finding 1) using the charter's own
+  item numbers so the two documents stay addressable against each other. #42: verify
+  freshness at first-act; edit only if stale.
 
 ## 4. Wave/cycle state
 
@@ -157,132 +156,169 @@ git rev-parse HEAD && git status --porcelain && \
 |---|---|---|---|
 | Wave 1 / T1 | A1-gate (benchmark session-definition ruling) | DONE | `3278abc` |
 | Wave 1 / T2 | Latency re-measure + CI-canonical correction | DONE + PUSHED | `9384ca6`, `3845b13` |
-| Refresh-recovery (#33) | `/reposix-quality-refresh docs/benchmarks/latency.md` | DONE + PUSHED | `92c3ab5` |
 | Wave 2 / T3 | Session-spend ledger scaffold | DONE + PUSHED | `4351d48` |
-| Interleave (#35) | Public roadmap diagram gsd-quick | DONE + PUSHED | `1db48e4`, `16fb356`, `fa58ad6` |
-| Methodology (#35) | T5 JSONL-usage token-economy methodology [SELF] + 115-PLAN amendment | RULED (not executed) | `9be5439` |
-| Pre-work (#36) | READ-ONLY Rovo MCP **auth** check | DONE + PUSHED — auth blocker REFUTED (HIGH) | `5374fe0` |
-| Pre-work (#36) | Pre-push over-budget spike diagnosis | DONE + FILED (not applied) | `fcddf90` |
-| Pre-work (#37) | T4 MCP-wiring mechanism viability probe | DONE — RESOLVED: MCP arm IS wireable headlessly | — |
-| Pre-work (#38) | T4 Jira/atlassian-rovo feasibility probe | DONE — REFUTED: no CRUD tool, token authz-denied, KAN empty. Path DEAD | `ece072f` |
-| Pivot (#38) | T4 backend pivot to GitHub [SELF] | DECIDED — recipe grounded, mechanism proven | — |
-| Owner directive (#38) | PROGRESS.md owner-watch pipeline stood up | DONE + PUSHED | `de06e00` |
-| Wave 3 / T4 | Live-MCP token capture, GitHub arm | DONE + PUSHED + CI GREEN — 6/6 valid, ledger 7/50, CAPTURE_OK | `4db6b64`, `40613f8`, `bf43c2c` |
-| **Wave 4 / T5** | **Token-economy JSONL-usage regen + live headline** | **CLOSED + PUSHED + CI GREEN — headline shipped, `code/fixtures-valid` regression caught+fixed same-wave** | `5366d29`, `1cdb381`, `fd098c7`, `211f794`, `63cb505`, `2103d0c`, `b460008` |
-| **Wave 5 / T6** | **Un-waive + headline reframe + phase-close (delete FIVE `[SELF]` entries)** | **READY TO DISPATCH — no upstream blocker, full charter in §5 below** | — |
+| Wave 3 / T4 | Live-MCP token capture, GitHub arm | DONE + PUSHED + CI GREEN | `4db6b64`, `40613f8`, `bf43c2c` |
+| Wave 4 / T5 | Token-economy JSONL-usage regen + live headline | CLOSED + PUSHED + CI GREEN | `5366d29`, `1cdb381`, `fd098c7`, `211f794`, `63cb505`, `2103d0c`, `b460008` |
+| **Wave 5 / T6** | **Un-waive + headline reframe + phase-close (delete FIVE `[SELF]` entries)** | **item 1 (reframe) LANDED + PUSHED, CI verifying; items 2/3/5/6/7 REMAIN; item 4 NOT NEEDED (see §6 finding 1); item 8 (phase-close) blocked on 2–7** | `d2fd85c`, `fc232ee`, `9a2b6f1`, `c9c2aee` |
 | Post-P115 | P116 ADR-010 packet → MANAGER ruling | blocked on P115 close | — |
 
-## 5. Wave B (T6) — READY TO DISPATCH, full charter for #41
+(Earlier pre-Wave-1 rows and the #33/#35/#36/#37/#38 pre-work rows from prior rotations are
+compressed out of this table — see `git log` / #40's handover for that history if needed.)
 
-Owner directives in force: finish P115 end-to-end; reset-gating RETIRED (cap-hit →
-commit+push, refresh handover+PROGRESS, clean end). PROGRESS.md refresh discipline (§3)
-applies to every T6 boundary commit.
+## 5. Successor #42 charter — T6 items 2, 3, 5, 6, 7 then phase-close then P116
 
-T6 work items (source: `PROGRESS.md` NOW section + owner charter + T5 close-out RAISE list):
+Re-dispatch a **FRESH fable phase-coordinator** for items 2, 3, 5, 6, 7 (item 1 is done,
+item 4 is dropped per §6 finding 1). Charter, unchanged in substance from #40's original
+8-item list except as corrected below:
 
-1. **Headline-framing reframe of hero surfaces** (README, `docs/index`, `docs/why`):
-   re-anchor to the live GitHub numbers (~94.3% output-token / ~74.9% cost) OR keep 89.1%
-   with an explicit GitHub-regime caveat. NOTE: `token-economy.md` ALREADY retired the
-   89.1%/85.5% figures with a provenance note, so re-anchoring is the
-   consistency-preserving move; executing this decision also executes the T6-headline
-   `[SELF]` entry (line 96 of `CONSULT-DECISIONS.md`). MUST fold in **finding 1** (no
-   claim that reposix→GitHub push write-back works — read-only in this cut) and
-   **finding 2** (MCP `issue_read` lossy vs reposix byte-fidelity — a positioning
-   talking point), both in §6 below.
-2. Write `115-UNWAIVE-PATH.md` (per `PROGRESS.md` NOW).
-3. **Retire+rebind the 6 `token-economy.md` doc-alignment rows** T5 left
-   `WAIVED-STALE_DOCS_DRIFT` until 2026-08-15 (76.4% / 85.5% / 4883 / 531 / 89.1% /
-   jira-real-adapter). **CONSTRAINT: confirm-retire is human-only** — if the
-   reposix-quality binary blocks the retire step, escalate to the **MANAGER (pane w1:p7)**
-   rather than working around it.
-4. **SECOND** `/reposix-quality-refresh docs/benchmarks/latency.md` **AFTER** the reframe
-   edits land (the reframe re-drifts its 14 doc-alignment rows — grep
-   `quality/catalogs/doc-alignment.json` BEFORE editing docs). Top-level-only skill — run
-   from L0, not inside a coordinator.
-5. Regen-clobber guard: `emit-markdown.sh` must NOT overwrite CI-canonical latency
-   sections.
+1. ~~Headline reframe~~ — **DONE** (`d2fd85c`, `9a2b6f1`, `c9c2aee`).
+2. **Write `115-UNWAIVE-PATH.md`** in the P115 phase dir
+   (`.planning/phases/115-live-mcp-benchmark-re-measurement/`) — does not exist yet
+   (verified live by #41). It MUST name **all 19** currently-waived doc-alignment rows
+   that reference it via `tracked_in`, not just the original 14 — i.e. the 8 hero-number
+   rows + 6 `token-economy.md` rows (T5) **AND** the 5 new rows from `c9c2aee` (3
+   MISSING_TEST: `docs/index/mcp-loop-4883-tokens`, `docs/index/reposix-loop-531-tokens`,
+   `latency-cached-read-8ms`; 2 RETIRE_PROPOSED: `token-baseline-mcp-4883`,
+   `token-baseline-reposix-531`), plus the `perf/token-economy-bench` un-waive path and the
+   pre-existing `perf/headline-numbers-cross-check` dangling-verifier waiver (see item 6
+   correction below — that row is older than P115 and also tracked to a launch-readiness
+   slot in its own waiver, but item 6 now closes it, so name it here too).
+3. **Retire+rebind the 6 `token-economy.md` doc-alignment rows** (76.4% / 85.5% / 4883 /
+   531 / 89.1% / jira-real-adapter) — **human-only confirm-retire constraint is binding**:
+   if the reposix-quality binary blocks the retire step, escalate to the **MANAGER (pane
+   w1:p7)** rather than working around it. The 2 concepts-page rows from `9a2b6f1`
+   (`token-baseline-mcp-4883`, `token-baseline-reposix-531`, currently `RETIRE_PROPOSED` +
+   waived) need the SAME human confirm-retire — batch both asks into ONE manager message
+   (see §5 escalation note below).
+4. ~~Second `/reposix-quality-refresh docs/benchmarks/latency.md`~~ — **NOT NEEDED**, see
+   §6 finding 1 (latency.md did not re-drift; only run it if a future edit actually drifts
+   its rows).
+5. **Regen-clobber guard**: `emit-markdown.sh` must NOT overwrite CI-canonical
+   `latency.md` sections.
 6. **Un-waive the 8 hero-number rows** (`WAIVED-MISSING_TEST` until 2026-08-15); un-waive
-   `perf/token-economy-bench` by adding the ~94% headline assertion; **WRITE the absent**
-   `perf/headline-numbers-cross-check` catalog row (grep `index.md` + README heroes
-   against fixtures) — confirmed absent by #40 (`grep -c perf/headline-numbers-cross-check
-   quality/catalogs/*.json` → 0 everywhere), T6's to write.
-7. **DELETE all FIVE `[SELF]` entries** in `.planning/CONSULT-DECISIONS.md` (verified live
-   by #40 at their actual line numbers: A1 line 71; T6-headline line 96;
-   T2-latency-canonical line 114; T5-JSONL-methodology line 123; T4-GitHub-pivot line 153).
-8. **Phase-close cadence:** `git push origin main` BEFORE verifier dispatch →
+   `perf/token-economy-bench` by adding the ~94% headline assertion; **ALSO un-waive the 3
+   newly-waived MISSING_TEST rows** from `c9c2aee` (`docs/index/mcp-loop-4883-tokens`,
+   `docs/index/reposix-loop-531-tokens`, `latency-cached-read-8ms`).
+   **CORRECTION to #40's original framing — read before starting this item:** the
+   `perf/headline-numbers-cross-check` catalog row is **NOT absent**. #41 verified it
+   already EXISTS in `quality/catalogs/perf-targets.json` (added at P90, 2026-07-04,
+   currently `WAIVED until 2026-09-15`, flagged as a **dangling verifier** — its
+   `verifier.script`, `quality/gates/perf/headline-numbers-cross-check.py`, is confirmed
+   absent from `quality/gates/perf/`, per that row's own `owner_hint`). #40's grep
+   (`grep -c perf/headline-numbers-cross-check quality/catalogs/*.json` → reported 0
+   everywhere) was **stale or mistaken** — re-running it live today returns non-zero
+   matches in `perf-targets.json` (the row itself, id/command/artifact/owner_hint text)
+   AND in `docs-reproducible.json` (2 cross-references) AND in `doc-alignment.json` (2
+   fresh mentions from the `c9c2aee` waiver reasons). **Item 6's real task is: WRITE the
+   missing verifier SCRIPT (`quality/gates/perf/headline-numbers-cross-check.py`) and
+   un-waive the EXISTING row** — not create a new catalog row. Also check/update that
+   row's `sources` line refs (`docs/index.md:13-14`, `README.md:21,23`) since `d2fd85c`
+   likely shifted line numbers in both files. Also fold in **§6 finding 2** (8ms-hero vs
+   6/7ms-canonical latency mismatch) — the cross-check WILL fail if hero prose and
+   canonical `latency.md` disagree, so reconcile the prose (or the gate) as part of this
+   item, not after.
+7. **Delete ALL FIVE `[SELF]` entries** in `.planning/CONSULT-DECISIONS.md` — re-grep line
+   numbers first (verified live by #41 today, unchanged from #40's count: lines 71 (A1),
+   96 (T6-headline), 114 (T2-latency-canonical), 123 (T5-JSONL-methodology), 153
+   (T4-GitHub-pivot) — note line 159 has a companion note "fold into T6 [SELF]-deletion
+   sweep" that should also be cleaned up as part of deleting line 153's entry).
+8. **Phase-close cadence** (unchanged): `git push origin main` BEFORE verifier dispatch →
    `python3 quality/runners/run.py --cadence post-push --persist` P0 → gsd-verifier
    subagent grades catalog rows (RED loops back) → advance `.planning/STATE.md` cursor →
    `PROGRESS.md` refresh in the close push → never open the next phase over a red main.
 
-**Post-close:** P116 ADR-010 packet (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
-durable-create; options + tradeoffs) → route to **MANAGER w1:p7 for ruling — NO
-pre-ruling implementation.**
+**MANAGER ESCALATION PENDING (batch into ONE message to w1:p7):** human-only confirm-retire
+needed for (a) 2 concepts-page rows (`token-baseline-mcp-4883`, `token-baseline-reposix-531`,
+`RETIRE_PROPOSED` at `9a2b6f1`, currently waived at `c9c2aee`) + (b) the 6 T5-waived
+`token-economy.md` rows item 3 retires. `confirm-retire` is `$CLAUDE_AGENT_CONTEXT`-guarded
+— likely owner-relay via manager. This escalation was ALREADY PENDING from #40's handover
+and remains pending — #42 should confirm whether it has been actioned before re-raising it.
 
-## 6. Litmus / gate / REOPEN state
+**Post-close:** P116 ADR-010 packet (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
+durable-create; options + tradeoffs) → route to **MANAGER w1:p7 for ruling — NO pre-ruling
+implementation.**
+
+## 6. Findings (new this rotation, #42 must respect)
+
+1. **§5-item-4's predicted second `/reposix-quality-refresh` of `docs/benchmarks/
+   latency.md` is NOT needed**: `latency.md` was untouched by the reframe, its 14 rows did
+   NOT re-drift (coordinator verified pre-edit; #41 confirmed this by reading the file
+   list touched by `d2fd85c` — `latency.md` is absent from it). Only run it if a future
+   edit actually drifts them.
+2. **LOAD-BEARING grader noticing, still live**: canonical `docs/benchmarks/latency.md`
+   measures "Get one record = 6 ms / List records = 7 ms" (verified live by #41,
+   `latency.md` lines 41–42), so the "8 ms" hero figure (`docs/index.md:18,:87`,
+   `README.md:23,25`, `docs/concepts/reposix-vs-mcp-and-sdks.md:14` — verified all four
+   locations live, plus carried by 3 catalog rows incl. canonical
+   `docs/index/latency-8ms-read`) no longer matches its cited source. Item 6's cross-check
+   gate (once its script exists) must reconcile — fix prose to canonical values or the
+   gate will (correctly) fail. `latency-bench.sh` applies NO assertion to read latencies
+   (soft WARN >500ms only; cross-check deferred since v0.12.1 MIGRATE-03,
+   `docs/index/latency-8ms-read`'s own `rationale` field says this explicitly).
+3. **CORRECTION to #40's charter (load-bearing, see §5 item 6 for the full writeup):** the
+   `perf/headline-numbers-cross-check` catalog row is NOT absent — it already exists in
+   `quality/catalogs/perf-targets.json` (P90-era, WAIVED until 2026-09-15, dangling
+   verifier). #40's "confirmed absent... 0 everywhere" claim does not hold against a live
+   grep today. Do not write a duplicate row; write the missing verifier script and
+   un-waive the existing one.
+4. **Walker semantics** (unchanged from #40's handover, reconfirmed): `MISSING_TEST` and
+   `RETIRE_PROPOSED` are BLOCKING pre-push states (`walk.sh` header); the `waive`/`unwaive`
+   verbs are the sanctioned time-box (≤90 days, loud+tracked, `last_extracted_by:
+   "waive-call"` in the JSON). A refresh that lands honest non-GREEN states does NOT
+   unblock a push by itself — the waive step is a separate, deliberate action.
+5. **zsh trap** (unchanged): `$?` after a pipeline reports the LAST pipe stage (e.g.
+   `tail`). Use `${pipestatus[1]}` for the real exit. Also `===` as a bare word triggers
+   zsh equals-expansion — quote it.
+6. **Pre-push duration** measured ~128s this rotation (WARN, stated budget ~60s) — every
+   push needs Bash timeout ≥300s. Re-baseline still FILED not APPLIED
+   (`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md`, 2026-07-15 17:18 entry,
+   verified live still present) — apply during the OP-8 drain, not now.
+7. **Liveness discipline worked**: bounded backstops caught nothing stalled this rotation
+   (no repeat of #40's silent-chain incident). Keep arming backstops when yielding on
+   children; health-check quiet children ≤30min.
+8. **MCP state unchanged**: `github-probe` connected (leave it — evidence surface for the
+   T5/T6 headline claims). `atlassian-rovo` removable after P115 close, discretionary.
+   `mcp-mermaid` DOWN — re-check before any diagram task.
+
+## 7. Litmus / gate / REOPEN state
 
 - **8 hero-number rows** (docs/index + README) remain **WAIVED-MISSING_TEST until
   2026-08-15** — T6 un-waives per §5 item 6.
-- **6 `token-economy.md` doc-alignment rows** (76.4% / 85.5% / 4883 / 531 / 89.1% /
-  jira-real-adapter) left **WAIVED-STALE_DOCS_DRIFT until 2026-08-15** by T5 — T6
-  retires+rebinds per §5 item 3 (human-only confirm-retire).
-- **`perf/headline-numbers-cross-check` catalog row is ABSENT** (verified live — 0
-  matches across all `quality/catalogs/*.json`) — T6 writes it per §5 item 6.
+- **6 `token-economy.md` doc-alignment rows** remain **WAIVED-STALE_DOCS_DRIFT until
+  2026-08-15** — T6 retires+rebinds per §5 item 3 (human-only confirm-retire).
+- **5 NEW rows waived this rotation** (`c9c2aee`, until 2026-08-15, `tracked_in: "P115 T6
+  (115-UNWAIVE-PATH.md)"`): 3 `MISSING_TEST` (`docs/index/mcp-loop-4883-tokens`,
+  `docs/index/reposix-loop-531-tokens`, `latency-cached-read-8ms`) + 2 `RETIRE_PROPOSED`
+  (`token-baseline-mcp-4883`, `token-baseline-reposix-531`). `doc-alignment.json` catalog
+  summary `claims_waived` now **19** (was 14).
+- **`perf/headline-numbers-cross-check` catalog row EXISTS** (correction — see §6 finding
+  3), WAIVED until 2026-09-15, dangling verifier — T6 writes the script + un-waives per
+  §5 item 6.
 - **File-size soft-ceiling WARNs** (waived until 2026-08-08, class `GTH-V15-21`):
-  `115-PLAN.md` ~32.6kB, `GOOD-TO-HAVES.md` and `SURPRISES-INTAKE.md` both still over
-  soft-ceiling — waiver class covers them. Progressive-disclosure split eventually, not
-  urgent.
-- **Pre-push budget WARN re-baseline is a LIVE regression, not just filed**: this
-  rotation's pushes measured **~121s** (dominated by kcov shell-coverage + full-workspace
-  clippy/mkdocs), up from the earlier ~55→75s trajectory — root CLAUDE.md's Push cadence
-  section now documents `pre-push ≈55s` as stale; the actual figure has moved further.
-  Still **FILED not APPLIED** (`SURPRISES-INTAKE.md` 2026-07-15 17:18 entry) — apply
-  during the OP-8 drain. **Operational consequence for #41: always push with a Bash
-  timeout ≥300s** (see §6 findings, item 2).
+  unchanged, still over soft-ceiling. Waiver class covers them, not urgent.
+- **Pre-push budget WARN re-baseline** is a live, growing regression (~121s → ~128s this
+  rotation) — still **FILED not APPLIED**. **Every push in this rotation needs a Bash
+  timeout ≥300s.**
 - **No REOPEN state pending.**
-- **GTH-V15-26 RESOLVED** this rotation (stale sidecar deleted, methodology moved off the
-  fixture entirely — see §1).
 
-## 7. Operational findings #41 must respect (new this rotation)
+## 8. Precise next steps (successor #42 runbook)
 
-1. **Bound every wait (manager directive, standing):** never end a turn relying solely on
-   a child notification — the T5 chain died silently and only a manager health-check
-   caught it (§2 item 4). Use bounded backstops: `gh run watch` foreground with ≥300s
-   Bash timeout for CI; git-poll monitors for child lanes; TaskOutput non-blocking checks.
-2. **Default Bash 120s timeout KILLS `git push` mid-hook** (pre-push is now ≈121s) —
-   **always push with timeout ≥300s.** The pre-push duration WARN re-baseline (~55→121s)
-   remains FILED not APPLIED (`SURPRISES-INTAKE.md` 2026-07-15 17:18) — apply during the
-   OP-8 drain.
-3. **Post-push `--persist` re-mint convention:** persisting after a push flips only
-   `last_verified` (timestamp churn); the established pattern is the persist rides the
-   NEXT boundary commit — do not chase an eternal persist→push→CI→persist regression.
-4. **Fable-top-level dispatch rules in force** (session model = Fable 5): delegate only to
-   fable coordinators; explicit model overrides at leaves (opus complex / sonnet default /
-   haiku mechanical); NEVER fable at a leaf.
-5. **File-size WARNs** (waived to 2026-08-08, `GTH-V15-21`) unchanged.
-6. **PROGRESS.md is current as of `b460008`** (T5 SHIPPED with wave-close annotation,
-   NOW=T6, NEXT=P115-close→P116→P117-128) — verify freshness at first-act, edit only if
-   stale.
-
-**MCP state (outside the git tree, load-bearing):** `github-probe` registered +
-connected — **leave it** (evidence surface for the T5/T6 headline claims). `atlassian-rovo`
-still registered — safe to `claude mcp remove atlassian-rovo` after P115 closes,
-discretionary. `mcp-mermaid` still **DOWN** — re-check before any diagram task.
-
-## 8. Precise next steps (successor #41 runbook)
-
-1. **FIRST ACT — the §0 verify block** (rev-list 0/0, `gh run list` top row completed/
-   success — watch bounded if in-flight, post-push `--persist` P0 probe). Flaky `test`
-   job → re-run ONCE; still red → STOP, never open T6 over a red main.
-2. **T6 — dispatch to a fresh-context executor/coordinator** per the full §5 charter
-   (8 numbered items). Order matters: reframe (item 1) before the second
-   `/reposix-quality-refresh` (item 4), since the reframe is what re-drifts the
-   latency-doc rows the refresh fixes.
-3. **Item 3's human-only constraint is binding**: if the reposix-quality binary blocks
-   the doc-alignment confirm-retire step, escalate to the MANAGER (w1:p7) — do not work
-   around it.
+1. **FIRST ACT — the §0 verify block**: rev-list 0/0, confirm `c9c2aee`'s CI run
+   (`29491742214`) concluded success — watch bounded if still in flight (`gh run watch
+   29491742214`, Bash timeout ≥360s) — then run the post-push `--persist` P0 probe. Flaky
+   `test` job → re-run ONCE; still red → STOP, escalate, never proceed over red main.
+2. **T6 — dispatch a FRESH fable phase-coordinator** for items 2, 3, 5, 6, 7 per the full
+   §5 charter. Read §6 finding 3 BEFORE starting item 6 — the catalog row already exists,
+   only the verifier script and the un-waive are outstanding.
+3. **Item 3's human-only constraint is binding**: if the reposix-quality binary blocks the
+   doc-alignment confirm-retire step, escalate to the MANAGER (w1:p7) — do not work
+   around it. Batch BOTH pending confirm-retire asks (the 2 concepts rows + the 6
+   token-economy.md rows) into ONE manager message; check first whether #40's original
+   escalation was already actioned.
 4. **Item 7 — delete all FIVE `[SELF]` entries** in `CONSULT-DECISIONS.md` (line numbers
-   verified live by #40: 71, 96, 114, 123, 153 — re-verify with a fresh grep before
-   deleting, since line numbers shift as the file is edited).
+   verified live by #41 today: 71, 96, 114, 123, 153 — re-verify with a fresh grep before
+   deleting, since line numbers shift as the file is edited; also clean the companion note
+   at line 159).
 5. **Phase-close cadence (§5 item 8):** `git push origin main` BEFORE verifier dispatch →
    post-push `--persist` P0 (`ci-green-on-main`) → gsd-verifier subagent for catalog-row
    PASS → advance `.planning/STATE.md` cursor → refresh `PROGRESS.md` in the close push →
@@ -291,11 +327,10 @@ discretionary. `mcp-mermaid` still **DOWN** — re-check before any diagram task
    FIX-03 GTH-09 slug→id durable-create, options + tradeoffs) and route it to the
    **MANAGER (w1:p7) for ruling — NO pre-ruling implementation.**
 7. **Every push in this rotation: use a Bash timeout ≥300s** — the 120s default kills
-   `git push` mid pre-push-hook (§7 finding 2).
+   `git push` mid pre-push-hook (§6 finding 6).
 8. **If the weekly subscription cap hits mid-work:** commit+push whatever landed, REPLACE
    this handover, refresh `PROGRESS.md`, end cleanly. Reset-gating is RETIRED (owner
-   ruling, `c7cea90`) — never defer or schedule work AROUND a reset; only react to a cap
-   that hits.
+   ruling) — never defer or schedule work AROUND a reset; only react to a cap that hits.
 
 ## 9. Binding constraints (carry verbatim, unchanged)
 
@@ -303,9 +338,9 @@ One tree-writer at a time; ONE cargo invocation machine-wide (prefer `-p`); no
 `--no-verify`; targeted staging (never `-A`/`.`); don't touch
 `.planning/MANAGER-HANDOVER.md`; no tag push; no git surgery on main; leaf isolation in
 `/tmp` same-invocation; opus complex / sonnet default / haiku mechanical, **never fable at a
-leaf** (and if #41 runs on fable at top level, delegate fable-coordinators-only per the
+leaf** (and if #42 runs on fable at top level, delegate fable-coordinators-only per the
 MODEL NOTE); relieve past ~100k own-context (hard 150k, absolute not %) at a wave boundary;
 push at green, then confirm `code/ci-green-on-main` P0 AFTER push (with a Bash timeout
-≥300s, per §7 finding 2); never open the next phase over a red main; reset-gating RETIRED —
-never defer or schedule work for a weekly reset, only react to a cap that actually hits (if
-it hits: commit+push, refresh this handover + `PROGRESS.md`, end cleanly).
+≥300s); never open the next phase over a red main; reset-gating RETIRED — never defer or
+schedule work for a weekly reset, only react to a cap that actually hits (if it hits:
+commit+push, refresh this handover + `PROGRESS.md`, end cleanly).
