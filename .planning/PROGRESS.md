@@ -37,20 +37,28 @@ list + copy-paste commands; verb needs a real TTY, refuses `$CLAUDE_AGENT_CONTEX
 agents never pass `--i-am-human`). `.planning/STATE.md`'s cursor stays put until that
 batch lands — checkpointed, not held open idle.
 
-**Both checkpoint-housekeeping quicks shipped green this session:** `260716-f6o`
-(fix-it-twice for owner ruling `5a5dd29` — stripped the retired-narrative section from
-the token-economy perf-gate GENERATOR, not just the doc; offline regen re-verified
-byte-for-byte against the committed doc) and `260716-fmt` (`GTH-V15-35` docs/index.md
-install-IA fix with both addenda — nested build-from-source, surfaced bootstrap prose,
-destaled the L93 claim, mechanically rebound all 11 shifted doc-alignment rows;
-`GTH-V15-35` now DONE). Both pushed, CI green on the tip (`2398b34`, run `29525256773`).
+**P116 ENTERED via `/gsd-plan-phase 116` this session.** Init query resolved (researcher
+sonnet / planner opus / checker sonnet; mode yolo; research/plan_check/nyquist gates
+enabled; `commit_docs: true`; `auto_advance: true`); phase dir created at
+`.planning/phases/116-adr-010-mirror-fanout-decision-packet-slug-id-durable-create/`;
+`116-CONTEXT.md` authored via the workflow's PRD-express-path semantics (locked decisions
+= the two verbatim `[MANAGER]` rulings dated 2026-07-16 in `CONSULT-DECISIONS.md`
+`8212373` + the packet at
+`.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`)
+and committed at `31ac414`. **Planning is NOT complete** — no research, no
+`VALIDATION.md`/`PATTERNS.md`, no `*-PLAN.md`, no checker pass yet; planning resumes at
+the research step. `auto_advance: true` means a bare re-run would auto-chain into
+execution at workflow step 15 — it must NOT, since ROADMAP marks Phase 116 `Execution
+mode: top-level` (the top-level coordinator is the executor, never
+`/gsd-execute-phase`).
 
-**L0 relieved #45→#46 at this clean wave boundary** (own-context past the ~100k soft
-threshold, next item is a full phase that must not start this deep) — see
-`.planning/SESSION-HANDOVER.md`. **Next: P116 execution through GSD**, per both
-`[MANAGER]` rulings encoded verbatim in `.planning/CONSULT-DECISIONS.md` (doc-truth
-mirror-fan-out rewrite; FIX-03 slug→id design-only this milestone), sequenced now that
-checkpoint housekeeping is complete.
+**L0 relieved #46→#47 at this checkpoint** (own-context past the ~100k soft threshold
+mid-workflow, ~122k after `CONTEXT.md` authoring; the next workflow step — research — is
+exactly the kind of full sub-pass that must not start this deep) — see
+`.planning/SESSION-HANDOVER.md`. **Next actor: #47.** Primary work item: resume `/gsd-plan-
+phase 116` at the research step (treat `116-CONTEXT.md` as the locked contract, do not
+rewrite it), complete planning, THEN — as a separate top-level orchestration pass — execute
+P116 per the completed plan.
 
 ## NEXT
 
