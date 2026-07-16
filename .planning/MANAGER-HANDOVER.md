@@ -76,43 +76,50 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (manager #10 on station; mid-shift refresh 2026-07-15 ~17:40 PT)
 
-- **SHIFT SUMMARY (#10 so far):** Workhorses #35 and #36 launched+closed clean.
-  #35: roadmap-diagram quick SHIPPED (`1db48e4`/`16fb356`/`fa58ad6`), T5
-  JSONL-usage methodology ENCODED (`9be5439`: 115-PLAN.md amendment +
-  CONSULT-DECISIONS `[SELF]`), noticing filed (`4b38e62`). #36: Rovo MCP auth
-  check — #34's "API-token-endpoint blocker" **REFUTED** (`5374fe0`:
-  ATLASSIAN_API_KEY authenticates `mcp.atlassian.com/v1/mcp` via BOTH Basic and
-  Bearer; 401 no-auth control; probing stopped at initialize) → **T4→T6 has NO
-  remaining owner-gated item**; pre-push 109s spike root-caused+filed
-  (`fcddf90`); relief handover #36→#37 pushed (`1780641`); GTH-V15-25 filed
-  (`e1c71c4`, owner-approved token-bloat CI tripwire). CI GREEN on tip
-  `e1c71c4` (run 29461500358). Seat IDLE at the T4 capture gate.
-- **#37 RUNNING (launched 2026-07-15 ~20:40 PT — owner directive "finish it
-  all"; reset-wait overridden, and reset-gating retired entirely per the
-  standing instruction above):** full P115 charter = read
-  `.planning/SESSION-HANDOVER.md` (`1780641`, authoritative) → T4 captures
-  (≤18 sessions, session-spend ledger ≤50 ceiling, throwaway `/tmp` clone for
-  the reposix arm, MCP arm via verified ATLASSIAN_API_KEY auth `5374fe0`; on
-  any cap-hit: commit+push progress, update handover, clean turn end,
-  successor resumes) → **FOLD-IN (owner timing note 2026-07-15): during T4,
-  extract the agent command list from the captured session JSONL into a
-  committed trajectory fixture — GTH-V15-25 step 1, <1h byproduct while the
-  data is fresh; the rest of that row stays a post-T4 lane** → T5 (JSONL-usage
-  path per `9be5439`, token-economy.md regen) → T6 (honest-headline reframe +
-  second latency.md refresh; delete all FOUR `[SELF]` entries: A1,
-  T2-latency-canonical, T6-headline, T5-JSONL-methodology) → close P115 per
-  push cadence → then P116 ADR-010 packet routed to MANAGER for ruling, no
-  pre-ruling implementation. Watch items: latency.md regen-clobber tension;
-  doc-alignment 14-row re-drift budget in T6.
-- **Seat-rotation craft (learned #35→#36):** do NOT pane-clear a workhorse
-  whose wrap says "awaiting CI green" — its final turn hasn't ended; killing
-  its gh-run-watch shell injects a failure event and costs an investigation
-  detour. Wait for manager-poll TRUE-IDLE (idle + zero shells) first. A /clear
-  sent mid-turn QUEUES ("Press up to edit queued messages") and fires at turn
-  end — harmless but confusing. Workhorse charters now include "never end your
-  final turn with a background shell running" (#36 complied via bounded
-  in-turn polls). Also retained from #9: never load the claude-api skill at
-  manager tier (~300k context); delegate API-mechanics to a subagent.
+- **SHIFT SUMMARY (#10, through 2026-07-16 ~16:45 UTC):** Workhorses #35–#43
+  launched+closed clean; **#44 RUNNING** (phase-close + P116 packet delivery).
+  P115 T1–T6 COMPLETE: T4 pivoted to GitHub after Jira/Rovo proved infeasible
+  live (`ece072f` honest capture; pivot manager-RATIFIED) — 6/6 real sessions
+  (`4db6b64`), headline **~94.3% fewer output tokens / ~74.9% cheaper per
+  session vs official GitHub MCP**; T5 JSONL-usage regen shipped (`5366d29`/
+  `1cdb381`/`fd098c7`); T6 hero reframe + un-waives complete (`d2fd85c`..
+  `776ca85`). Owner rulings executed: retirement-narrative STRIPPED from all
+  user-facing docs (`5a5dd29`, recorded `a1f2494`); PROGRESS.md owner-watch
+  briefing live (`de06e00`, refresh discipline in every charter); reset-gating
+  retired. Owner directives FILED for post-close (`187809f`): index.md
+  install-section eager-fix + P117/P119 "furnished product" docs mandate +
+  animation-embed lane (feasibility spike VERIFIED renders/scales; mp4 at
+  `~/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4`, 7.1MB,
+  release-asset NOT repo).
+- **OPEN GATES/THREADS (successor: check these FIRST):** (1) **Human gate
+  OPEN** — owner's 11-command confirm-retire batch (list: `.planning/phases/
+  115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md`); #44 checkpoints
+  phase-close at this gate if not landed. (2) **P116 ADR-010 packet** (drafted
+  `f5652b2`, #44 finalizing) routes to MANAGER for decide-and-disclose ruling —
+  NO pre-ruling implementation. (3) PR #75 dependabot: `@dependabot rebase`
+  requested, merge iff CI green after (squash); watch the freshness-test job —
+  red post-rebase = real main-side issue. (4) PR #74 release-plz v0.14.1
+  (ships P114 fix): OWNER-GATED (outward publishing), recommended CUT, awaiting
+  owner word. (5) PR #67 closed as superseded (done). (6) GTH-V15-34
+  confirm-retire --batch mode filed.
+- **Liveness incident (2026-07-16, 2nd dead-watcher):** #40 froze ~30min —
+  child notification chain died silently (subagent+shell gone, parent never
+  resumed, dirty tree). Caught by shortened 20-min poll; nudge recovered it.
+  Charters now carry: bounded backstop ≤20min on EVERY child wait; shorten the
+  manager poll to 1200s when a wave looks quiet-but-alive.
+- **Seat-rotation craft (learned #35→#36, extended #39→#44):** do NOT
+  pane-clear a workhorse whose wrap says "awaiting CI green" — its final turn
+  hasn't ended; killing its gh-run-watch shell injects a failure event and
+  costs an investigation detour. Wait for manager-poll TRUE-IDLE (idle + zero
+  shells) first. A /clear sent mid-turn QUEUES and fires at turn end. Ghost
+  text after `❯` (e.g. a lingering "/clear" or "continue") is an autocomplete
+  hint — Enter does nothing; a real send overwrites it harmlessly. KNOWN GAPS:
+  `pane-tasks.sh` missed a live background CI-poll shell once (#39 rotation) —
+  treat "Clean" as advisory, prefer TRUE-IDLE; `manager-poll.sh` once reported
+  HEARTBEAT despite origin moving (race near cap) — `wake-triage.sh` (added
+  this shift, `.home` commit `ac88eba`) re-checks origin on every wake and is
+  the standard triage entry. Also retained from #9: never load the claude-api
+  skill at manager tier (~300k context); delegate API-mechanics to a subagent.
 - **#32 outcome: P115 Wave 1 CLOSED** — T1 preflight 3/3 backends; T4 GA
   de-risked (Rovo + GitHub remote MCP both GA → CONDITIONAL GO); T2 caught a
   real finding: sim cold-init is environment-dependent (27ms legacy dev → 278ms
