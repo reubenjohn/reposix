@@ -88,3 +88,46 @@ target/release/reposix-quality doc-alignment confirm-retire --row-id <ID>
 ```
 
 (run from a real terminal — refuses under `CLAUDE_AGENT_CONTEXT` / non-TTY stdin).
+
+---
+
+## Wave 2 — item 2
+
+**Scope:** Write `115-UNWAIVE-PATH.md` (inventory + exit route for every currently-waived
+doc-alignment/perf row owed to T6), file the pre-push wall-time-creep intake row, commit
++ push. Executed 2026-07-16 by the Wave-2 tree-writer (gsd-executor).
+
+**Row count found vs expected:** live-grepped `quality/catalogs/doc-alignment.json`
+(all 396 rows) filtered by `waiver.until == "2026-08-15T00:00:00Z"` → exactly **19** rows.
+Cross-checked `quality/catalogs/perf-targets.json` (all 4 rows) for the 2 rows this plan
+owns → exactly **2**. Total **21**, matching the plan's expected "~19 + 2" exactly — no
+count discrepancy. Full breakdown: `115-UNWAIVE-PATH.md`.
+
+**Discrepancies found (state description, not count):**
+1. The plan's shorthand "8 hero-number rows ... WAIVED-MISSING_TEST" undersells reality —
+   live data is a 4/4 split: 4 `MISSING_TEST` (latency figures, still-live claims) + 4
+   `STALE_DOCS_DRIFT` (89.1%-token claims, already superseded by the ~94% reframe on the
+   page). Practical effect: those 4 `STALE_DOCS_DRIFT` rows are item-6 **retire**
+   candidates, not bind candidates — the old claim text no longer exists on the page to
+   bind a test to.
+2. 8 of the 19 doc-alignment rows (the hero group) carry a stale `tracked_in` pointing at
+   the 2026-07-12 reality-check audit, not literally "P115 T6" — they were never
+   re-tagged when T6 inherited them. Confirmed owed to T6 via `PROGRESS.md` NOW-item-6,
+   not via the catalog's own `tracked_in` text.
+3. `perf/headline-numbers-cross-check`'s `tracked_in` still says `P97`, not `P115 T6` —
+   same class of stale-tag drift as (2). Row confirmed to exist (P90-era) with its
+   verifier script confirmed ABSENT from `quality/gates/perf/` (directory listing run,
+   no `headline-numbers-cross-check.py` present) — matches the plan's expectation, no
+   duplicate row needed.
+4. Possible row-ID duplication: `docs/why/token-economy-89-1-percent` and
+   `docs/index/token-reduction-89-percent` cite the identical source line
+   (`docs/index.md:17`) with near-identical claim text — flagged for item 6 to dedupe,
+   not fixed here (catalogs read-only in this lane).
+
+**Intake row filed:** `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md`,
+2026-07-16 12:00 entry — third corroborating data point (141s at `d7da383`, 128s the push
+before) on the pre-push wall-time creep already tracked by the `2026-07-15 06:35` and
+`2026-07-15 17:18` entries; filed as a cross-referencing addition, not a duplicate.
+
+**Owner confirm-retire mid-lane:** none landed during this lane's execution window (see
+final commit/push report for the immediately-pre-push state).

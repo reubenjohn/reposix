@@ -20,14 +20,18 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 ## NOW
 
 **T6 remaining — item 1 (reframe) LANDED + PUSHED, CI-green confirmation pending; item 3
-agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5/6/7 open.** Numbering
-matches the T6 charter in `.planning/SESSION-HANDOVER.md` §5
-(item 4's second `latency.md` refresh is DROPPED — not needed, `latency.md` never
-re-drifted):
-1. **(item 2)** Write `115-UNWAIVE-PATH.md` in the P115 phase dir — must name all 19
-   currently-waived doc-alignment rows (the pre-existing 8 hero + 6 token-economy.md rows,
-   plus the 5 newly time-boxed at `c9c2aee`) plus the `perf/token-economy-bench` and
-   `perf/headline-numbers-cross-check` waiver paths.
+agent-side DONE (HUMAN-ONLY confirm-retire pending); item 2 DONE this wave; items 5/7/6
+open (in that order — next up).** Numbering matches the T6 charter in
+`.planning/SESSION-HANDOVER.md` §5 (item 4's second `latency.md` refresh is DROPPED — not
+needed, `latency.md` never re-drifted):
+1. **(item 2) — DONE.** `115-UNWAIVE-PATH.md` written in the P115 phase dir — live-grepped
+   both catalogs and confirmed exactly 19 waived doc-alignment rows (8 pre-existing hero +
+   6 token-economy.md + 5 newly time-boxed at `c9c2aee`) + 2 perf rows
+   (`perf/token-economy-bench` / `perf/headline-numbers-cross-check`), matching the
+   expected count exactly. Discrepancies found (state descriptions, stale `tracked_in`
+   tags, a likely row-ID dup) documented in the doc + `115-T6-CLOSEOUT.md` § Wave 2 —
+   item 2. Pre-push wall-time creep (141s at `d7da383`) filed as a third corroborating
+   `SURPRISES-INTAKE.md` entry.
 2. **(item 3) — AGENT-SIDE DONE, HUMAN CONFIRM-RETIRE PENDING.** The 6 `token-economy.md`
    rows (76.4% / 85.5% / 4883 / 531 / 89.1% / jira-real-adapter) are now `RETIRE_PROPOSED`
    and the live four-axis replacements are `BOUND`/GREEN (`output-reduction-94-percent` /

@@ -230,6 +230,42 @@ was to duplicate what `docs/roadmap.md` now covers — one source of truth beats
 
 **STATUS:** OPEN
 
+## 2026-07-16 12:00 | discovered-by: P115-T6 Wave 2 item 2 executor (115-UNWAIVE-PATH.md inventory pass) | severity: MEDIUM
+
+> **Corroborates, does NOT duplicate, the existing `2026-07-15 06:35` pre-push-timing
+> item and its `2026-07-15 17:18` root-cause deep-dive above.** Third data point in the
+> same creep; the drain phase should resolve all three together.
+
+**What:** Pre-push hook wall-clock measured **~141s** on the push landing `d7da383`
+(T6 Wave 1 item 3 agent-side retire+bind), following **~128s** on the immediately
+preceding push. Both are well above the **~55–60s** budget documented in root
+`CLAUDE.md` § GSD workflow ("pre-push ≈55s, dominated by kcov shell-coverage +
+full-workspace clippy/mkdocs, not by what changed") and above even the **~75s**
+re-baseline the `2026-07-15 17:18` entry already proposed. Pre-push cost is a fixed
+whole-repo cost (NOT diff-size-scaled per the same CLAUDE.md line), so two consecutive
+~128-141s runs read as the creep continuing past the point the prior entry's
+re-baseline anticipated, not a one-off variance tail.
+
+**Why out-of-scope for the discovering session:** This session's charter was a bounded
+Wave-2 item-2 lane (write `115-UNWAIVE-PATH.md`, file this intake row, commit+push) —
+profiling the pre-push gate stages or re-baselining `quality/CLAUDE.md` § Cadences is a
+distinct investigation already owned by the two entries above; re-doing that work here
+would duplicate scope rather than close it.
+
+**Sketched resolution:** Same sketch as the two entries above, now with a third
+corroborating measurement: (1) profile the pre-push gate stage-by-stage (the
+`2026-07-15 17:18` entry's timed breakdown — `code/shell-coverage` 37.16s dominant — is
+the starting point, re-run it against current `main` to see if the dominant row grew
+further); (2) decide whether to cache kcov/clippy output across runs (biggest lever —
+kcov + full-workspace clippy are both re-executed from scratch every push regardless of
+diff size) or scope `mkdocs-strict` to only changed docs pages; (3) once a stable new
+baseline is established, update root `CLAUDE.md` § GSD workflow's "≈55s" figure to match
+reality (currently three data points — 91.7s, 128s, 141s — all exceed even the ~75s
+re-baseline already proposed, suggesting the creep is ongoing past that estimate, not
+just newly-discovered).
+
+**STATUS:** OPEN
+
 ## 2026-07-16 07:50 | discovered-by: P115-T5 close-out executor (SURPRISES-INTAKE filing pass, relaying a T5 executor mid-task noticing) | severity: MEDIUM
 
 **What:** Orchestration doctrine (`.planning/ORCHESTRATION.md` + the coordinator-dispatch skill) assumes a coordinator can `SendMessage` a running lane to deliver a mid-task scope correction, but the phase-coordinator harness exposes only `Agent`/`Bash`/`Read` as tools — no `SendMessage`. During T5, an L0 mid-task scope correction could NOT be delivered to the running executor; it was saved only because the executor's charter carried a "plan wins" clause that happened to keep it on the correct path anyway. This is a silent single-point-of-failure: if a future mid-flight correction is safety-critical (not just a redirection nicety) and the "plan wins" fallback doesn't happen to cover it, there is no delivery mechanism at all — a coordinator can only wait for the lane to finish or return, never interrupt it.
