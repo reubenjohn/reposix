@@ -8,6 +8,11 @@ Every phase's FIRST commit writes the catalog rows defining that phase's GREEN c
 later commits cite the row id. The unbiased verifier subagent reads catalog rows that
 existed BEFORE the implementation landed.
 
+**Mint `minted_at` in that same first commit.** Any row minted with `last_verified` >=
+2026-07-05 but no `minted_at` is rejected at catalog load by
+`quality/runners/_audit_field.py::validate_row` (invoked from `run.py:121`) — add it
+up front rather than discovering the rejection on your first pre-push run.
+
 ## Verifier-subagent dispatch
 
 Phase close MUST dispatch an unbiased subagent that grades catalog rows from committed
