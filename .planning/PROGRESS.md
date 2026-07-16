@@ -28,37 +28,18 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **L0 #47 boundary — uncatalogued-hero-number intake filed (manager finding)** — three hero surfaces (`docs/index.md:17`, `README.md:27`, `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31`) present the live ~94.3%/~74.9% token-economy figures with NO doc-alignment binding; once the pending 11-row confirm-retire batch lands they become entirely uncatalogued. Filed to `SURPRISES-INTAKE.md` (MEDIUM, HIGH-visibility) with the manager's remedy: `/reposix-quality-refresh` per doc binding to `bench_token_economy.py` / `headline-numbers-cross-check.py` (same as `output-reduction-94-percent` rows), execute before P117. CI green on tip (CI/Docs/release-plz/Push-on-main all success). — `029bde7` ✅
 - 2026-07-16 — **L0 #48 boundary — manager-priority hero-number refresh lanes SHIPPED** — minted 3 doc-alignment rows via the surgical `bind` verb for the previously-uncatalogued hero surfaces (`docs/index/hero-token-economy-94-75`, `README/hero-token-economy-94-75`, `docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost`); manager intake marked RESOLVED. Full detail in the #48→#49 handover archived at `b325caf`. CI green. — `c35f993`/`7553c36`/`aa75e96`/`e185e6e` ✅
 - 2026-07-16 — **L0 #49 boundary — P116 research + validation skeleton SHIPPED (one subagent-run sub-step, per #46's split-across-reliefs doctrine)** — dispatched `gsd-phase-researcher` (sonnet) → `116-RESEARCH.md` (52,340 bytes, HIGH confidence); hand-authored the `116-VALIDATION.md` step-5.5 skeleton (frontmatter filled, body explicitly planner-owned) so re-entry sails past the step-7.5 Nyquist gate. Research corrected `116-CONTEXT.md`'s mechanical framing (rulings unchanged): the false "`sync --reconcile` heals the external mirror" claim lives only in an ARCHIVED v0.14.0 intake row, NOT in any live doc-alignment catalog row (jq-verified: zero rows bind any `CLAUDE.md`); the row to actually retire is the LIVE `SURPRISES-INTAKE.md:108-116` litmus-non-idempotency entry. Pushed, CI green (`Docs`/`CI`/`Push on main` all `success`). — `05085fe` ✅
+- 2026-07-16 — **L0 #50 boundary — P116 planning tail advanced by one sub-step (pattern map), plus one filed noticing + one eager fix** — filed `GTH-V15-39` (catalog row-id-prefix inconsistency, manager-routed noticing carried from #49) and eager-fixed the adjacent `GTH-V15-37`/`GTH-V15-38` copy-paste bleed in the same commit, pushed, CI green (`6d21cae`); then dispatched `gsd-pattern-mapper` (sonnet, standalone — not via `/gsd-plan-phase`) → `116-PATTERNS.md` (22,259 bytes, 8 edit-target analogs), committed, pending push. Research + validation + patterns are now ALL on disk for P116 planning; only `gsd-planner`/`gsd-plan-checker`/coverage-gates remain. — `6d21cae`, `08e94a4` (pending push)
 
 ## NOW
 
-**P116 research + validation skeleton — SHIPPED, pushed, CI-GREEN.** L0 #49 advanced
-the ONE foundational P116-planning sub-step that runs in a subagent (context not
-charged to L0): `gsd-phase-researcher` (sonnet) wrote `116-RESEARCH.md` (52,340 bytes,
-HIGH confidence); #49 hand-authored the `116-VALIDATION.md` step-5.5 skeleton so the
-successor's re-entry sails past the step-7.5 Nyquist gate without re-triggering
-research. The research CORRECTED `116-CONTEXT.md`'s mechanical framing (the RULINGS
-stay locked, unchanged) — see `.planning/SESSION-HANDOVER.md` §5 item 2 for the full
-reconciliation the planner must apply. Pushed `b325caf..05085fe`; CI GREEN on
-`05085fe`, re-verified live by #49 — `Docs`/`CI`/`Push on main` all `success`
-(`release-plz` non-blocking, in-progress at verify time).
-
-**P115 stays CHECKPOINTED GREEN at the human gate — re-verified live by #49,
-unchanged.** `grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` →
-**11**, all 11 rows still open. The verifier's **GREEN-CHECKPOINT** verdict
-(`115-VERIFICATION.md`, `ce4d3b7`) stands; the **sole remaining action is the human-only
-11-row confirm-retire batch** (`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire
-batch" — authoritative row-ID list + copy-paste commands; verb needs a real TTY, refuses
-`$CLAUDE_AGENT_CONTEXT`, agents never pass `--i-am-human`). Owner has the commands in
-hand and may run them at any moment — re-check this count at EVERY boundary; when it
-drops below 11, advance `.planning/STATE.md`'s cursor past P115 and close the checkpoint.
-
-**P116 planning TAIL (pattern-mapper → planner → checker) is now the ONE remaining
-heavy top-level pass — next actor's primary work.** `116-CONTEXT.md` (locked, do NOT
-rewrite) + `116-RESEARCH.md` + `116-VALIDATION.md` skeleton are all on disk and
-committed. Re-entering `/gsd-plan-phase 116` should find `has_research=true` and skip
-straight to `gsd-pattern-mapper` (sonnet) → `PATTERNS.md`; `gsd-planner` (opus) →
-`PLAN.md`(s); `gsd-plan-checker`; coverage gates → `state.planned-phase` → ROADMAP
-annotation → commit. Planner MUST cover the ROADMAP criterion-1 packet-location gap
+**P116 planning tail in progress — research + validation skeleton (`05085fe`) + pattern
+map (`08e94a4`, `116-PATTERNS.md`, 22,259 bytes, 8 edit-target analogs) all SHIPPED and
+on disk; planner → checker → coverage-gates remain.** `116-CONTEXT.md` (locked, do NOT
+rewrite) + `116-RESEARCH.md` + `116-VALIDATION.md` + `116-PATTERNS.md` are all committed.
+Re-entering `/gsd-plan-phase 116` should find `has_research=true` and skip straight to
+`gsd-planner` (opus) → `PLAN.md`(s); `gsd-plan-checker`; coverage gates →
+`state.planned-phase` → ROADMAP annotation → commit — this is the LAST heavy pass in the
+P116 planning tail. Planner MUST cover the ROADMAP criterion-1 packet-location gap
 (cross-link only, per research recommendation — NOT a file move) and reconcile the
 RESEARCH.md corrections vs CONTEXT.md's mislabels (retire the LIVE
 `SURPRISES-INTAKE.md:108-116` row, not the archived v0.14.0 twin). **Do NOT auto-chain
@@ -66,17 +47,36 @@ into execution at workflow step 15** (ROADMAP marks Phase 116 `Execution mode:
 top-level`, the top-level coordinator is the executor); actively clear
 `workflow._auto_chain_active` if the resumed workflow set it.
 
-**L0 relieved #49→#50 at this same checkpoint boundary.** #49's rotation: hit ~93k
-own-context on ONBOARDING ALONE (long #48 handover + capped workflow read) before
-reaching primary work — a new wrinkle on #46/#47/#48's context-budget doctrine (now
-FOUR corroborations of roughly-one-heavy-pass-per-rotation). Applied #46's
-split-across-reliefs mitigation: dispatched only the subagent-run research step, then
-relieved clean rather than gamble entering the heavier planner chain near the hard
-stop. **Next actor: #50 — P116 planning TAIL is the sole remaining heavy pass; budget
+**P115 human confirm-retire gate stays OPEN at 11 rows — re-verified live by #50 at
+THREE separate boundaries this rotation, unchanged.** `grep -c
+'"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` → **11**, every
+time. The verifier's **GREEN-CHECKPOINT** verdict (`115-VERIFICATION.md`, `ce4d3b7`)
+stands; the **sole remaining action is the human-only 11-row confirm-retire batch**
+(`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch" — authoritative
+row-ID list + copy-paste commands; verb needs a real TTY, refuses
+`$CLAUDE_AGENT_CONTEXT`, agents never pass `--i-am-human`). Owner has the commands in
+hand and may run them at any moment — re-check this count at EVERY boundary; when it
+drops below 11, advance `.planning/STATE.md`'s cursor past P115 and close the checkpoint.
+**`STATE.md`'s cursor is held at P114-closed (P115 CHECKPOINTED, P116 mid-plan) until the
+batch lands.**
+
+**L0 relieved #50→#51 at this same checkpoint boundary.** #50's rotation: filed
+`GTH-V15-39` + eager-fixed the `GTH-V15-37`/`GTH-V15-38` copy-paste bleed (`6d21cae`,
+pushed, CI green), then dispatched `gsd-pattern-mapper` standalone → `116-PATTERNS.md`
+(`08e94a4`, committed, pending push — the L0 orchestrator pushes it together with the
+new handover as the rotation's final act). This is now a FIFTH corroboration that a
+rotation fits roughly one heavy top-level pass — even the "lighter" planning-tail
+sub-steps plus routine boundary hygiene (verify, human-gate re-check, one noticing-file,
+one bug-fix, one standalone subagent dispatch) filled #50's rotation to the soft-relief
+line with no `gsd-planner` pass attempted. **Next actor: #51 — `gsd-planner` →
+`gsd-plan-checker` → coverage gates is the sole remaining P116-planning pass; budget
 entry well under ~50k own-context; do NOT auto-chain into execution.** Also carries one
-MUST-FILE noticing (catalog row-id prefix inconsistency, `README-md/*` vs `README/*` —
-LOW, → P126) that #49 did not have budget to file; see
-`.planning/SESSION-HANDOVER.md` (#49→#50) §5 item 6.
+NEW noticing not yet filed (a `doc-alignment.json` row whose `.source` field is an
+array, not an object — crashes a naive `jq '.source.file'` filter; LOW, candidate P126)
+— see `.planning/SESSION-HANDOVER.md` (#50→#51) §5 item 7b.
+
+**1/15 v0.15.0 "Floor" phases complete (P115 CHECKPOINTED pending the human gate; P116
+mid-planning; P117–P128 not started).**
 
 ## NEXT
 
