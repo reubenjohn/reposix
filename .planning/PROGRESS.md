@@ -50,10 +50,26 @@ checkpoints without it per that instruction):
 
 ## NEXT
 
-1. **P116 — ADR-010 decision packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
+1. **Post-P115-close eager-fix (owner-directed, tracked `/gsd-quick`):** nest
+   `docs/index.md`'s "Build from source (advanced)" material under the "30-second
+   install" section. Two execution cautions (verbatim, MUST hold): (a) the
+   `structure/install-leads-with-pkg-mgr-docs-index` freshness gate must stay green
+   (install path leads with package manager); (b) doc-alignment catalog rows bound to
+   `docs/index.md` must be checked BEFORE the edit and refreshed in the same wave. Full
+   text: `GOOD-TO-HAVES.md` GTH-V15-35.
+2. **P117/P119 shaping input (owner mandate, 2026-07-16):** the docs site should read as
+   a FURNISHED PRODUCT with streamlined documentation — owner verbatim: *"Its good, but we
+   can do so much better!"* Covers information architecture, progressive disclosure,
+   visual polish, and a cold-reader rubric pass over every landing surface; both P117 and
+   P119 planners must fold this in as an explicit acceptance-bar input. Also owner-approved
+   same session: embed the owner's 80s launch animation on the mkdocs home page as a P117
+   scope addition (productionization checklist filed). Full text: `GOOD-TO-HAVES.md`
+   GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
+   `.planning/ROADMAP.md` Phase 117 + Phase 119.
+3. **P116 — ADR-010 decision packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
    durable-create; options + tradeoffs, NO implementation) → route to **MANAGER (w1:p7)
    for ruling** — end turn and await the ruling before any implementation.
-2. Then the remaining milestone phases:
+4. Then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started
    - P119 — Docs/planning simplification (the "P112 RAISE") — not started

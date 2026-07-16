@@ -83,3 +83,28 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Evidence:** commit 5a5dd29, mkdocs-strict + mermaid + banned-words + docs-alignment
   walk all green, zero rows orphaned (2 latency rows re-bound for line shift).
 
+---
+
+## 2026-07-16 [OWNER] docs site must read as a furnished product — P117/P119 quality bar
+
+- **Context:** received after commit `a1f2494`, alongside the SPECIFIC eager-fix directive
+  to nest "Build from source (advanced)" under "30-second install" in `docs/index.md`
+  (filed as `GOOD-TO-HAVES.md` GTH-V15-35, scheduled immediately post-P115-close as a
+  tracked `/gsd-quick`).
+- **Decision (owner quote, verbatim):** *"Its good, but we can do so much better!"* — the
+  mkdocs docs site should read as a **FURNISHED PRODUCT** with streamlined documentation,
+  not merely factually correct or destaled. This is the explicit quality bar for **P117**
+  (doc-truth purge) and **P119** (docs simplification), covering information architecture,
+  progressive disclosure (30-second path first, advanced/edge material pushed down),
+  visual polish of the mkdocs site, and a cold-reader rubric pass over every landing
+  surface.
+- **Filed:** `GOOD-TO-HAVES.md` GTH-V15-36 (full text + fix-sketch); annotated inline on
+  both `.planning/ROADMAP.md` Phase 117 and Phase 119 entries as "REQUIRED planning
+  input" (the milestone-scoped `v0.15.0-phases/ROADMAP.md` is a superseded stub per
+  GTH-V15-27 — the live P117/P119 entries are in the top-level `.planning/ROADMAP.md`).
+- **Also owner-approved same session:** a P117 scope addition embedding the owner's 80s
+  launch animation on the mkdocs home page, productionization checklist filed as
+  `GOOD-TO-HAVES.md` GTH-V15-37, referenced from the P117 ROADMAP annotation.
+- **Status:** OPEN — shaping input for the P117/P119 planners; not itself an
+  implementation task.
+

@@ -131,6 +131,13 @@
   5. `docs/benchmarks/token-economy.md` no longer claims a fabricated demo-script provenance for `reposix_session.txt`, and `docs/social/twitter.md` no longer describes the deleted FUSE architecture.
 **Plans**: TBD
 
+> **Owner mandate (2026-07-16) — REQUIRED planning input.** The docs site should read as
+> a FURNISHED PRODUCT, not merely doc-truth-correct — owner verbatim: *"Its good, but we
+> can do so much better!"* This phase's plan MUST fold in a cold-reader/IA polish pass, not
+> just clear the Success Criteria above. Full text: `GOOD-TO-HAVES.md` GTH-V15-36.
+> Also: owner-approved animation-embed lane (80s launch animation on the mkdocs home page)
+> — see `GOOD-TO-HAVES.md` GTH-V15-37.
+
 ### Phase 118: Post-bench honesty corrections
 **Goal**: The disputed token-count figure and the stale tag-cut premise are corrected with accurate, current information.
 **Depends on**: Phase 115 (BENCH-01's re-measured figure feeds DOCS-07)
@@ -153,6 +160,11 @@
   5. The SURPRISES-INTAKE/GOOD-TO-HAVES progressive-disclosure bloat files are explicitly left untouched (deferred to the v0.17 meta-milestone per Arc D — different mechanic, split vs. delete, would compete with this phase's work).
 **Plans**: TBD
 **Execution mode**: top-level (full inventory + audit of what's stale across `.planning/` before any deletion — fan-out/gather/interpret, not a pre-scoped write-code-test-commit plan)
+
+> **Owner mandate (2026-07-16) — REQUIRED planning input.** Beyond deletion of stale
+> content, the docs site should read as a FURNISHED PRODUCT — owner verbatim: *"Its good,
+> but we can do so much better!"* Fold a cold-reader/progressive-disclosure polish pass
+> into this phase's plan. Full text: `GOOD-TO-HAVES.md` GTH-V15-36.
 
 ### Phase 120: CLI + helper error hardening to Rust-compiler-grade
 **Goal**: Every user-facing `reposix` CLI subcommand error and every `reposix-remote` git helper error teaches the fix, suggests the alternative, and gives copy-paste recovery.
