@@ -15,7 +15,7 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
 <div class="grid cards" markdown>
 
 -   **`~94% fewer output tokens`** · **`~75% cheaper`** than GitHub-MCP for the same read-3-issues + edit-1 + push task, from 6 live agentic sessions ([token economy](benchmarks/token-economy.md))
--   **`8 ms`** cached read · **`27 ms`** cold init — simulator, interim ([latency](benchmarks/latency.md))
+-   **`6 ms`** cached read · **`27 ms`** cold init — simulator, interim ([latency](benchmarks/latency.md))
 -   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
 </div>
@@ -84,13 +84,13 @@ The audit trail is `git log`. No SDK to vendor; no schemas to load.
 
 ## Tested against
 
-reposix's `8 ms` cache read is measured against the in-process simulator, but the architecture is exercised end-to-end against three real backends sanctioned by the project owner for aggressive testing:
+reposix's `6 ms` cache read is measured against the in-process simulator, but the architecture is exercised end-to-end against three real backends sanctioned by the project owner for aggressive testing:
 
 - **Confluence — [TokenWorld space](reference/testing-targets.md#confluence-tokenworld-space)** (Atlassian Cloud).
 - **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github-reubenjohnreposix-issues)** (this project's own tracker).
 - **JIRA — [project `TEST`](reference/testing-targets.md#jira-project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
 
-Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `27 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
+Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `27 ms` (soft threshold `500 ms`); list-issues `7 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
 ## Connector capability matrix
 

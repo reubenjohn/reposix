@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 396,
-    "claims_bound": 266,
-    "claims_missing_test": 7,
+    "claims_bound": 268,
+    "claims_missing_test": 5,
     "claims_retire_proposed": 8,
     "claims_retired": 57,
-    "alignment_ratio": 0.7846607669616519,
+    "alignment_ratio": 0.7905604719764012,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T11:12:10Z",
+    "last_walked": "2026-07-16T12:11:50Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -222,27 +222,30 @@
     },
     {
       "id": "docs/index/latency-8ms-read",
-      "claim": "8 ms cached read against simulator",
+      "claim": "6 ms cached read against simulator",
       "source": {
         "file": "docs/index.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
+      "source_hash": "67942d863902cf702a3dd5e39f8ac9692d69fcf37be5a9182fca8c86e2d8116a",
       "source_hashes": [
-        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
+        "67942d863902cf702a3dd5e39f8ac9692d69fcf37be5a9182fca8c86e2d8116a"
       ],
-      "rationale": "IMPL_GAP: sim.sh measures SIM_GET_MS but applies NO threshold or assertion to it at all (only SIM_INIT_MS/SIM_LIST_MS get soft WARN at >500ms); never asserts 8ms. v0.12.0 stub, cross-check deferred to v0.12.1",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "0394b33bc2e1f3afb991ef7ac568868e712b38560506cb7a131ed0db192de63d",
+        "23faa95b3be8306504601928b10092eef263a1bc0fd67fbbce18cbd6b9bf3df6"
+      ],
+      "rationale": "P115 T6 item 6a: 8ms hero prose reconciled to canonical 6ms (docs/benchmarks/latency.md 'Get one record' sim); bound to the new headline-numbers-cross-check gate + its offline test (AND-drift watch), clearing the MISSING_TEST waiver.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:11:50Z",
+      "last_extracted": "2026-07-16T12:13:48Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "use-case-80-percent-routine-ops",
@@ -754,9 +757,9 @@
         "line_start": 86,
         "line_end": 91
       },
-      "source_hash": "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7",
+      "source_hash": "baa10e128962daf566229cb12f8a3c9d76e9d40053f82744974ab8bf69162796",
       "source_hashes": [
-        "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7"
+        "baa10e128962daf566229cb12f8a3c9d76e9d40053f82744974ab8bf69162796"
       ],
       "tests": [
         "quality/gates/docs-alignment/three-backends-tested.sh"
@@ -764,11 +767,11 @@
       "test_body_hashes": [
         "5da12c4e98ef21584dc1df18c33b2c4bea31f8db391e7cfda9e29ec66994c45c"
       ],
-      "rationale": "Hash-shape bind per P74 D-05; verifier under quality/gates/docs-alignment/.",
+      "rationale": "P115 T6 item 6a re-cite: line 87's cached-read figure changed 8ms->6ms within this bound range; refreshing source_hash, test binding unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T20:54:42Z",
-      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_run": "2026-07-16T12:11:21Z",
+      "last_extracted": "2026-07-16T12:11:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6895,27 +6898,30 @@
     },
     {
       "id": "latency-cached-read-8ms",
-      "claim": "reposix cached read = 8 ms (sim)",
+      "claim": "reposix cached read = 6 ms (sim)",
       "source": {
         "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
         "line_start": 14,
         "line_end": 14
       },
-      "source_hash": "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5",
+      "source_hash": "d5dcaa18f9e256865649da37b6b738a0d3bb9f892aec5cf882f5c7bad727d2c2",
       "source_hashes": [
-        "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5"
+        "d5dcaa18f9e256865649da37b6b738a0d3bb9f892aec5cf882f5c7bad727d2c2"
       ],
-      "rationale": "IMPL_GAP: comparison-page mirror of canonical docs/index 8ms read; latency-bench.sh (sim.sh) measures SIM_GET_MS/SIM_LIST_MS via median3_step but applies NO assertion/threshold to it (only soft WARN >500ms on init/list) — never asserts 8ms. v0.12.0 stub, headline-copy cross-check deferred to v0.12.1 MIGRATE-03. Follows canonical row docs/index/latency-8ms-read.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-16T10:31:00Z",
-      "last_extracted": "2026-07-16T10:39:27Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "latency-bench.sh measures sim cached-read but never asserts the figure (headline cross-check deferred since v0.12.1 MIGRATE-03); T6 item 6's cross-check gate closes it — NOTE canonical latency.md now reads 6ms get / 7ms list vs 8ms hero prose",
-        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "0394b33bc2e1f3afb991ef7ac568868e712b38560506cb7a131ed0db192de63d",
+        "23faa95b3be8306504601928b10092eef263a1bc0fd67fbbce18cbd6b9bf3df6"
+      ],
+      "rationale": "P115 T6 item 6a: comparison-page 8ms mirror reconciled to canonical 6ms (docs/benchmarks/latency.md 'Get one record' sim); bound to the headline-numbers-cross-check gate + its offline test (AND-drift watch), clearing MISSING_TEST.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:11:50Z",
+      "last_extracted": "2026-07-16T12:13:48Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
@@ -8410,21 +8416,21 @@
         "line_start": 93,
         "line_end": 93
       },
-      "source_hash": "6e10439c5991cec52ed0f339803b5e874d0d42c614d9004499f02ffbf8d72822",
+      "source_hash": "832509f5cb964bcdf5ded32adca7dd9e07d2efad94b5616c5c4f466c5c44b101",
       "source_hashes": [
-        "6e10439c5991cec52ed0f339803b5e874d0d42c614d9004499f02ffbf8d72822"
+        "832509f5cb964bcdf5ded32adca7dd9e07d2efad94b5616c5c4f466c5c44b101"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
+        "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "docs/index.md:93 states cold init w/ 500ms soft threshold; latency-bench.sh WARNs when SIM_INIT_MS > 500ms and measures cold init",
+      "rationale": "P115 T6 item 6a re-cite: line 93's list-issues figure changed 9ms->7ms (canonical docs/benchmarks/latency.md 'List records' sim); the cold-init soft-threshold claim is unchanged; refreshing source_hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-16T12:11:21Z",
+      "last_extracted": "2026-07-16T12:11:21Z",
       "last_extracted_by": "bind-call"
     },
     {

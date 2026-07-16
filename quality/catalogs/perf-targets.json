@@ -92,17 +92,28 @@
       "id": "perf/headline-numbers-cross-check",
       "dimension": "perf",
       "kind": "mechanical",
+      "transport_claim": false,
+      "coverage_kind": "mechanical",
       "sources": [
-        "docs/index.md:13-14",
-        "README.md:21,23",
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py",
+        "docs/index.md:18",
+        "docs/index.md:87",
+        "docs/index.md:93",
+        "README.md:23",
+        "README.md:25",
+        "docs/concepts/reposix-vs-mcp-and-sdks.md:14",
         "docs/benchmarks/latency.md",
         "docs/benchmarks/token-economy.md"
       ],
       "command": "python3 quality/gates/perf/headline-numbers-cross-check.py",
       "expected": {
         "asserts": [
-          "[v0.12.1] every headline number in docs/index.md + README.md is greppable from a benchmark fixture file",
-          "[v0.12.1] the cross-check fails RED if any headline drifts from its bench source"
+          "python3 quality/gates/perf/headline-numbers-cross-check.py exits 0 when every hero headline matches its canonical source (offline; committed markdown only)",
+          "the 'cached read' figure on docs/index.md + README.md + docs/concepts/reposix-vs-mcp-and-sdks.md equals docs/benchmarks/latency.md 'Get one record' (sim), currently 6 ms",
+          "the 'list-issues' figure on docs/index.md equals docs/benchmarks/latency.md 'List records' (sim), currently 7 ms",
+          "the '~94% fewer output tokens' / '~75% cheaper' hero headlines match docs/benchmarks/token-economy.md's Output-tokens / Cost-per-session reductions",
+          "on any drift the gate exits 1 and names the surface:line, the stale value, the canonical value + source, and a copy-paste fix"
         ]
       },
       "verifier": {
@@ -112,18 +123,14 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/headline-numbers-cross-check.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "PASS",
+      "minted_at": "2026-07-16T00:00:00Z",
+      "last_verified": "2026-07-14T01:07:54Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: full v0.13.x implementation; the verifier compares headline numbers in docs/index.md + README.md against benchmark fixture files -- WAIVED until 2026-09-15. NOTE (P90 90-05 R2 § A.2/H): the verifier script quality/gates/perf/headline-numbers-cross-check.py is confirmed ABSENT entirely from quality/gates/perf/ -- this is a dangling-verifier row, flagged in quality/reports/raise-list-p90.md § 1, not just a soft-target row.",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04) + dangling-verifier flag: quality/gates/perf/headline-numbers-cross-check.py confirmed absent (R2 § A.2/H). Full perf-dimension implementation remains out of v0.13.0 REQUIREMENTS.md scope. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- perf-dimension full implementation incl. this row's missing verifier script"
-      },
-      "claim_vs_assertion_audit": "If a headline number drifted from its benchmark source, the cross-check script would need to grep docs/index.md + README.md against the fixture files and exit non-zero on mismatch; since quality/gates/perf/headline-numbers-cross-check.py is confirmed absent, no such comparison can run today and drift would go undetected.",
+      "owner_hint": "if RED: a hero-surface headline number drifted from its canonical source -- the gate names the exact surface:line, the stale value, the canonical value (docs/benchmarks/latency.md sim get/list; docs/benchmarks/token-economy.md four-axis medians), and a copy-paste fix. Un-waived P115 T6 (115-UNWAIVE-PATH.md): the verifier quality/gates/perf/headline-numbers-cross-check.py now EXISTS and PASSES (was a dangling-verifier row).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If a hero-surface headline number drifted from its canonical benchmark source -- e.g. an 8 ms cached-read figure lingering after docs/benchmarks/latency.md moved to 6 ms -- headline-numbers-cross-check.py parses the canonical get/list ms from latency.md and the four-axis reductions from token-economy.md, compares each registered hero claim on docs/index.md + README.md + docs/concepts/reposix-vs-mcp-and-sdks.md, and exits 1 naming the surface:line + canonical value; a matching set exits 0. A drift is therefore caught at grade time, not silently shipped.",
       "cadences": [
         "weekly"
       ]

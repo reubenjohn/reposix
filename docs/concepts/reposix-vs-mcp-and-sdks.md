@@ -11,7 +11,7 @@ reposix **complements** REST and MCP — it does not stand in their place. The 8
 | Axis | reposix | MCP | Raw REST SDK |
 |---|---|---|---|
 | **Tokens before first useful op** | `~0` (POSIX is in pre-training) | `~100k` schema discovery per server | `~5k` SDK boilerplate per backend |
-| **Latency, cached read** | `8 ms` ([sim](../benchmarks/latency.md)) | `200–500 ms` tool dispatch + LLM | `100–300 ms` HTTPS round-trip |
+| **Latency, cached read** | `6 ms` ([sim](../benchmarks/latency.md)) | `200–500 ms` tool dispatch + LLM | `100–300 ms` HTTPS round-trip |
 | **Latency, cold init / first call** | `24 ms` cold init ([sim](../benchmarks/latency.md)) | one tool-list at session start | per-call HTTPS handshake |
 | **Conflict semantics** | native git merge conflicts; standard `git pull --rebase` recovery | 409 retry in tool runtime | 409 retry in caller code |
 | **Pre-training overlap** | ~100% — POSIX + git are in every model | ~0% — protocol is post-training | ~80% — REST patterns are pre-trained |
