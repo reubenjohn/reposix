@@ -3,38 +3,34 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-15T21:12:30.254Z"
-last_activity: 2026-07-15 -- Phase 115 planning complete
+last_updated: "2026-07-16T23:50:09.000Z"
+last_activity: 2026-07-16 -- Phase 115 CLOSED GREEN (human confirm-retire gate closed, 11 rows retired); P116 execution next
 progress:
   total_phases: 21
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
   completed_plans: 2
-  percent: 5
+  percent: 10
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: **P114 CLOSED GREEN** — t4 Confluence oid-drift fix-first + reconcile audit. **1/15
-phases complete** (P114–P128); P114 was the milestone's FIRST phase, 14 remain. Next:
-`/gsd-plan-phase 115` (BENCH-01 live MCP benchmark re-measurement; `Execution mode:
-top-level`; hard deadline **2026-08-15**).
-Plan: 114-01 (FIX-01 list-vs-get render-parity) + 114-02 (FIX-02 `sync --reconcile`
-recovery-claim audit) — both SHIPPED GREEN.
-Status: Ready to execute
-refs/reposix/origin/main`, incl. page 7766017 → zero `OidDrift`) + SC2
-(`agent-ux/t4-conflict-rebase-ancestry-real-backend` P0 gate exit 0) both PASS live
-(coordinator-run 2026-07-15T17:56Z, tenant `reuben-john` / space `REPOSIX`);
-artifact-verifiable SC3/SC4 + Wave-1/Wave-2 truths GREEN (`114-VERIFICATION.md`). Next:
-`/gsd-plan-phase 115`.
-Last activity: 2026-07-15 -- Completed quick task 260715-mk5: public birds-eye roadmap diagram
-`reposix-scope-test-DELETEME` scratch-repo KEEP-policy in `docs/reference/testing-targets.md`
-(never-delete / force-push-reset / unarchive-via-`gh api`-before-reuse; grounded on live
-`gh api` → `archived:true`) + eager-fixed a stale "Phase 36 cleanup automation" lying-doc
-forward-ref → present-tense manual cleanup (commit `a165d48`, quick `260715-h1d`). Next:
-`/gsd-plan-phase 115` (BENCH-01) as the fresh opening move for successor #30.
+Phase: **P115 CLOSED GREEN** — BENCH-01 live MCP benchmark re-measurement (`Execution
+mode: top-level`). Verifier GREEN-CHECKPOINT (`115-VERIFICATION.md`, `ce4d3b7`); the sole
+remaining gate — the human-only `confirm-retire` batch (11 `RETIRE_PROPOSED` doc-alignment
+rows) — **CLOSED 2026-07-16** (owner-executed, landed `4bb0596`; live `grep -c
+'"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` → **0**,
+`RETIRE_CONFIRMED` → 68). **2/15 phases complete** (P114–P128); 13 remain.
+Next: **P116 EXECUTION** — ADR-010 decision packet (FIX-03 slug→id + ADR-01 mirror
+fan-out amendments; `Execution mode: top-level`). Planning COMPLETE — planner PASS +
+plan-checker VERDICT PASS (`9dbb860`); 3 wave-1 parallel plans on disk
+(`116-01/02/03-PLAN.md`), dispatched **sequentially** (one git-index writer at a time,
+zero file-overlap). FIX-03 is **DESIGN-ONLY** — no `crates/` edit.
+Status: Ready to execute over certified-green main (tip `bda0576` CI GREEN 2026-07-16 —
+the GitHub Actions API 503 outage that blocked #51/#52 has cleared; both real-github
+integration jobs GREEN this run).
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
