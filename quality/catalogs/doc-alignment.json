@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 265,
+    "claims_bound": 262,
     "claims_missing_test": 8,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7886904761904762,
+    "alignment_ratio": 0.7797619047619048,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-15T22:17:45Z",
-    "coverage_ratio": 0.17509444928799767,
+    "last_walked": "2026-07-16T07:22:30Z",
+    "coverage_ratio": 0.17275985663082438,
     "lines_covered": 1205,
-    "total_eligible_lines": 6882,
+    "total_eligible_lines": 6975,
     "coverage_floor": 0.1,
     "claims_waived": 8
   },
@@ -2341,11 +2341,16 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/confluence_pages.json and emits the Confluence raw-API reduction row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-06-landing",
@@ -4098,11 +4103,16 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/github_issues.json and emits the GitHub raw-API reduction row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/reference/testing-targets/github-token",
@@ -4864,11 +4874,16 @@
         "339fa7d6f68df6d0a7005b9e4201b5219300176bafe47e5afe131f9243d006fe"
       ],
       "rationale": "P73 CONNECTOR-GAP-04 path (a) per D-05: prose updated to reflect adapter shipped v0.11.x; verifier asserts manifest exists; full bench rerun deferred to perf-dim P67.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T20:29:36Z",
-      "last_extracted": "2026-04-29T20:29:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/reference/testing-targets/jira-token",
@@ -5314,7 +5329,7 @@
         "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
       "rationale": "docs/index.md:35-39 mirrors MCP-baseline token count; bench_token_economy.py computes mcp_tokens via get_or_count(mcp_text)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T07:19:26Z",
       "last_extracted": "2026-07-04T07:19:26Z",
@@ -5358,11 +5373,16 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py load_mcp_bytes + count_tokens loop emits the MCP baseline character/token row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/credential-resolution",
@@ -6808,11 +6828,16 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py load_reposix_bytes + count_tokens emits the reposix baseline row",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/social/twitter/token-reduction-92pct",
@@ -7717,7 +7742,7 @@
         "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
       "rationale": "docs/index.md:31-34 mirrors reposix-side token count; bench_token_economy.py computes reposix_tokens via get_or_count(reposix_text)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T07:19:44Z",
       "last_extracted": "2026-07-04T07:19:44Z",
@@ -7892,11 +7917,16 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py computes MCP vs reposix token counts via Anthropic count_tokens and emits the reduction% to docs/benchmarks/token-economy.md -- IS the regenerator",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted": "2026-07-16T07:22:50Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "conflict-semantics-native-git",
