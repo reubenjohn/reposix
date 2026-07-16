@@ -66,5 +66,5 @@ cargo run -p reposix-cli -- init sim::demo /tmp/repo \
 That's the whole loop. Next:
 
 - [How reposix complements MCP and SDKs →](reposix-vs-mcp-and-sdks.md)
-- [Latency envelope (`8 ms` cache read · `24 ms` cold init) →](../benchmarks/latency.md)
+- [Latency envelope (`6 ms` cache read · `278 ms` cold init) →](../benchmarks/latency.md)
 - [Sanctioned real-backend test targets →](../reference/testing-targets.md)

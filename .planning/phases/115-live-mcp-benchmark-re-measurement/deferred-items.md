@@ -33,3 +33,14 @@ folding this into that same drain-phase item rather than opening a fourth separa
 since it is the identical fix pattern applied to a third file.
 
 **STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: P115-T6 Wave 2 item 6b executor
+
+**What:** `115-T6-CLOSEOUT.md` is over the `structure/file-size-limits` 20,000-char `*.md`
+ceiling (23,636 chars before this lane's terse item-6b append; larger after). WARN-only
+(the gate is `WAIVED` with `--warn-only` until 2026-08-08), so non-blocking — but the
+living T6 evidence log has outgrown a single file. **Split candidate at phase close:** the
+per-wave/item sections (Wave 1 item 3, Wave 2 items 2/5/6a/6b/CI-hotfix) are independent
+append-only records; move older/closed sections to a `115-T6-CLOSEOUT-history.md` companion
+and keep the live file lean, mirroring the `GOOD-TO-HAVES.md`/`SURPRISES-INTAKE.md` split
+pattern (Arc D v0.17 bloat-remediation bucket). **STATUS:** OPEN.

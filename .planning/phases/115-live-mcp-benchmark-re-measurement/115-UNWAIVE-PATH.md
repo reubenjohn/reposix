@@ -201,6 +201,66 @@ Remaining for 6b: rows #3, #5, #6, #8 (STALE_DOCS_DRIFT hero retire candidates),
 (mcp-loop/reposix-loop), #20 (`perf/token-economy-bench` assertion), the 8 HUMAN
 confirm-retire rows, and the cold-init reconciliation above.
 
+## Wave 2 — item 6b (FINAL — closes the agent-side T6 un-waive path)
+
+Executed 2026-07-16 by the Wave-2 item-6b tree-writer. Evidence: `115-T6-CLOSEOUT.md`
+§ Wave 2 — item 6b. Every row from the 21-row inventory is now at its terminal
+agent-side state; the ONLY remaining waived rows are the human-confirm-retire batch.
+
+**Cold-init reconcile (Task 1):** hero 27 ms → canonical **278 ms** (docs/benchmarks/
+latency.md `reposix init` cold sim, CI-canonical; the 24/27 ms figures were superseded
+dev-machine artifacts per latency.md § Provenance — SAME operation, different env, so
+"fix to canonical"). Extended `headline-numbers-cross-check.py` with a cold-init axis +
+4 hero cold-init claims + 2 absolute loop-figure claims.
+
+| Row | Was | Now |
+|---|---|---|
+| #1 `docs/index/latency-24ms-cold-init` | WAIVED-MISSING_TEST→STALE_DOCS_DRIFT | **BOUND** (278 ms, gate+test); unwaived |
+| #4 `latency-hero-24ms-mismatch` | WAIVED-STALE_DOCS_DRIFT | **BOUND** (278 ms, gate+test); unwaived |
+| #7 `README-md/init-24ms` | WAIVED-MISSING_TEST | **BOUND** (278 ms, gate+test); unwaived |
+| #15 `docs/index/mcp-loop-4883-tokens` | WAIVED-MISSING_TEST | **BOUND** (~21k live, gate parses MCP median 21,171); unwaived |
+| #16 `docs/index/reposix-loop-531-tokens` | WAIVED-MISSING_TEST | **BOUND** (~1.2k live, gate parses reposix median 1,213); unwaived |
+| #6 `README-md/latency-8ms` | WAIVED-STALE_DOCS_DRIFT | **BOUND** — re-cited README.md:23→:25, 8→6 ms (gate+test); unwaived |
+| #3 `docs/index/token-reduction-89-percent` | WAIVED-STALE_DOCS_DRIFT | **RETIRE_PROPOSED** (waiver reason refreshed→P115 T6); HUMAN confirm-retire |
+| #8 `docs/why/token-economy-89-1-percent` | WAIVED-STALE_DOCS_DRIFT | **RETIRE_PROPOSED** (dup of #3, same docs/index.md:17); HUMAN confirm-retire |
+| #5 `README-md/token-89-percent` | WAIVED-STALE_DOCS_DRIFT | **RETIRE_PROPOSED** (reason refreshed→P115 T6); HUMAN confirm-retire |
+| #20 `perf/token-economy-bench` | WAIVED (2026-09-15) | **PASS** — bench main() now asserts ~94.3% ±1.0pp; unwaived + minted |
+| #21 `perf/headline-numbers-cross-check` | (6a) PASS | PASS — gate extended (cold-init + loop), still PASS |
+
+**Re-cite side-effects (my index.md 27→278 / README 27→278 / filesystem 8→6 edits shifted
+cited bytes):** re-bound `docs/index/latency-8ms-read` (L18, claim unchanged), `docs/index/
+soft-threshold-24ms` (L93, claim→278, +cross-check binding), `docs/index/bootstrap-latency-24ms`
+(L134, claim→278), `filesystem-layer/blob-lazy-first-cat` (L42, claim unchanged) — all stay BOUND.
+
+**Dedupe (Task 3):** #3 and #8 cite the IDENTICAL docs/index.md:17 line (same source_hash) —
+a true duplicate (the `docs/why/*` id was mis-attributed to docs/index). Both retired together;
+no distinct claim lost.
+
+**Task 5:** `bench_token_economy.py` main() now calls `_assert_headline_reduction()` (94.3% ±1.0pp,
+computed 94.27%); un-waived + minted PASS via `run.py --cadence weekly --persist` (only
+perf-targets.json flipped).
+
+**Task 6 (validate-only flips):** BENIGN stale state, not regressions — `code/shell-coverage`
+on-disk FAIL→fresh PASS (kcov 70s, above floor; stale FAIL from a prior sub-floor run) and
+`security/cargo-audit-rustsec-posture` NOT-VERIFIED→PASS. Persisted surgically via
+`run.py --cadence pre-push --persist` (diffs = status + timestamp only; 61 PASS, 0 FAIL).
+
+**Task 7 (non-hero 8 ms):** `mental-model-in-60-seconds.md:69` 8→6 ms + 24→278 ms (no bound
+row on L69, safe); `how-it-works/filesystem-layer.md:42` 8→6 ms (re-cited); `docs/concepts/
+reposix-vs-mcp-and-sdks.md:15` 24→278 ms cold init (hero surface, no bound row). LEFT:
+`docs/reference/simulator.md:18` (explicit "on the dev host" framing — a legitimately
+different env from CI-canonical, not a hero surface, no bound row) and `mental-model:21`
+(bound to 3 STALE_TEST_DRIFT rows — filed GTH-V15-33, out of scope to avoid flipping
+non-blocking drift to blocking).
+
+### Remaining waived (expected count = 11, ALL RETIRE_PROPOSED = the human-confirm-retire batch)
+
+The 8 pre-existing (Groups B + C: token-economy/* ×6, token-baseline-{mcp-4883,reposix-531})
++ my 3 new 89.1% rows (#3, #5, #8) = **11 rows**, all `WAIVED-RETIRE_PROPOSED`, all owed a
+single HUMAN-ONLY `confirm-retire` from a real TTY. NO other T6-owned row remains waived
+(`perf/token-economy-bench` un-waived; `perf/latency-bench` stays waited-until-2026-09-15 but
+is NOT a T6 obligation). Walk rc=0, headline gate exit 0, perf pytest 26/26.
+
 ## Cross-references
 
 - Group B state transition + human-relay batch: `115-T6-CLOSEOUT.md` § Wave 1 — item 3.

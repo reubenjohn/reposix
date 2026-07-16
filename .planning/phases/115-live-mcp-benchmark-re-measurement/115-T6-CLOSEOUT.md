@@ -355,3 +355,50 @@ see final push report.
   file) — env sets REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE="1".
 - Regression net: regen-guard.selftest.sh case (f) greps both workflow
   wirings — 15/15 PASS locally. Green-run id: fixing lane report.
+
+---
+
+## Wave 2 — item 6b (FINAL T6 lane, 2026-07-16)
+
+Terse (file over 20k warn — full row table lives in `115-UNWAIVE-PATH.md` § Wave 2 item 6b).
+
+**Verdict: GREEN.** Walk rc=0, headline gate exit 0, perf pytest 26/26, banned-words/mkdocs/
+mermaid all pass.
+
+- **T1 cold-init reconcile:** hero 27 ms → canonical **278 ms** (latency.md `reposix init` cold
+  sim; the 24/27 ms were superseded dev-machine artifacts per latency.md § Provenance — same
+  operation, different env → fix-to-canonical). Extended `headline-numbers-cross-check.py`:
+  +cold-init axis, +4 cold-init hero claims, +2 absolute loop-figure claims (18 headlines,
+  all match). Bound+unwaived `latency-24ms-cold-init`, `latency-hero-24ms-mismatch`,
+  `README-md/init-24ms`.
+- **T2/T3 retire+dedupe:** propose-retired the 3 superseded 89.1% rows (`docs/index/
+  token-reduction-89-percent`, `docs/why/token-economy-89-1-percent` [true dup — identical
+  docs/index.md:17 source_hash], `README-md/token-89-percent`); re-waived with fresh
+  P115-T6 attribution. (The charter's "4th STALE_DOCS_DRIFT hero row" = `README-md/latency-8ms`,
+  an 8 ms LATENCY row → rebound to 6 ms + gate, NOT retired.)
+- **T4 loop rows:** claims live post-reframe (d2fd85c) → bound+unwaived `mcp-loop-4883`
+  (~21k, gate parses MCP median 21,171) + `reposix-loop-531` (~1.2k, reposix median 1,213).
+- **T5 perf bench:** `bench_token_economy.py` main() now `_assert_headline_reduction()`
+  (94.3% ±1.0pp; computed 94.27%); un-waived + minted `perf/token-economy-bench` PASS.
+- **T6 validate-only flips:** BENIGN (code/shell-coverage FAIL→PASS stale kcov; security/
+  cargo-audit NOT-VERIFIED→PASS) — persisted surgically (diffs = status+timestamp only).
+- **T7 non-hero 8 ms:** mental-model:69 (8→6, 24→278), filesystem-layer:42 (8→6, re-cited),
+  concepts-vs-mcp:15 (24→278). LEFT simulator.md:18 (dev-host framing) + mental-model:21
+  (3 STALE_TEST_DRIFT rows → GTH-V15-33).
+- **Re-cites (my edits shifted cited bytes):** `latency-8ms-read`, `soft-threshold-24ms`,
+  `bootstrap-latency-24ms`, `filesystem-layer/blob-lazy-first-cat` — all stay BOUND.
+- **Human relay updated:** confirm-retire batch is now **11 rows** (8 pre-existing + my 3).
+
+### Human relay — action pending (SUPERSEDES the Wave-1 "8 rows" total)
+
+`confirm-retire` (HUMAN-ONLY, TTY-guarded) is owed on **11 rows**: the 6 `docs/benchmarks/
+token-economy/*` + 2 `token-baseline-{mcp-4883,reposix-531}` (Waves 1/prior) **plus** the 3
+new 89.1%-era hero rows retired here (`docs/index/token-reduction-89-percent`,
+`docs/why/token-economy-89-1-percent`, `README-md/token-89-percent`). One batch, per row:
+
+```
+target/release/reposix-quality doc-alignment confirm-retire --row-id <ID>
+```
+
+**Paper cuts filed:** GTH-V15-29..33 (`GOOD-TO-HAVES.md`); closeout-size split candidate
+(`deferred-items.md`).

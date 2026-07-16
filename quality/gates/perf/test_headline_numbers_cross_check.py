@@ -52,22 +52,27 @@ TOKEN_MD = """\
 
 INDEX_MD = """\
 -   **`~94% fewer output tokens`** · **`~75% cheaper`** than GitHub-MCP.
--   **`6 ms`** cached read · **`27 ms`** cold init — simulator, interim.
+-   **`6 ms`** cached read · **`278 ms`** cold init — simulator, CI-canonical.
+
+    Note over Agent,reposix: git-native loop · ~1.2k output tokens (live)
+    Note over Agent,MCP: MCP tool loop · ~21k output tokens (live)
 
 reposix's `6 ms` cache read is measured against the in-process simulator, but ...
 
-Sim cold init is `27 ms` (soft threshold `500 ms`); list-issues `7 ms`; capabilities probe `5 ms`.
+Sim cold init is `278 ms` (soft threshold `500 ms`); list-issues `7 ms`; capabilities probe `5 ms`.
 """
 
 README_MD = """\
-*`6 ms` / `27 ms` are simulator-measured (pending live-backend re-measurement); ...*
+*`6 ms` / `278 ms` are simulator-measured (CI-canonical sim figures); ...*
 
 - **`~94% fewer output tokens` · `~75% cheaper per session`** — for the identical task.
 - **`6 ms`** — read one issue from the local cache after first fetch.
+- **`278 ms`** — `reposix init` cold bootstrap against the simulator (CI-canonical).
 """
 
 CONCEPTS_MD = """\
 | **Latency, cached read** | `6 ms` ([sim](../benchmarks/latency.md)) | `200 ms` | `100 ms` |
+| **Latency, cold init / first call** | `278 ms` cold init ([sim](../benchmarks/latency.md)) | one tool-list | per-call HTTPS |
 
     identical task the git-native (`reposix`) arm is **~94.3% fewer output
     tokens** and **~74.9% cheaper per session** than the GitHub-MCP arm.
@@ -99,7 +104,7 @@ def _write_repo(
 
 
 def test_parse_latency_canonical() -> None:
-    assert gate.parse_latency_canonical(LATENCY_MD) == {"get": 6, "list": 7}
+    assert gate.parse_latency_canonical(LATENCY_MD) == {"get": 6, "list": 7, "init": 278}
 
 
 def test_parse_latency_canonical_missing_raises() -> None:
@@ -108,8 +113,21 @@ def test_parse_latency_canonical_missing_raises() -> None:
     assert "latency" in str(exc.value.code).lower()
 
 
+def test_parse_latency_canonical_missing_init_raises() -> None:
+    """A latency table with get+list but no 'reposix init cold' row is a hard failure."""
+    no_init = "| Step | sim |\n| List records | 7 ms |\n| Get one record | 6 ms |\n"
+    with pytest.raises(SystemExit) as exc:
+        gate.parse_latency_canonical(no_init)
+    assert "init" in str(exc.value.code).lower()
+
+
 def test_parse_token_canonical() -> None:
-    assert gate.parse_token_canonical(TOKEN_MD) == {"output": 94.3, "cost": 74.9}
+    assert gate.parse_token_canonical(TOKEN_MD) == {
+        "output": 94.3,
+        "cost": 74.9,
+        "output_reposix": 1213,
+        "output_mcp": 21171,
+    }
 
 
 def test_parse_token_canonical_missing_raises() -> None:
@@ -127,8 +145,13 @@ def test_run_cross_check_green_on_matching_surfaces(tmp_path: pathlib.Path) -> N
     repo = _write_repo(tmp_path)
     failures, latency, token = gate.run_cross_check(repo)
     assert failures == []
-    assert latency == {"get": 6, "list": 7}
-    assert token == {"output": 94.3, "cost": 74.9}
+    assert latency == {"get": 6, "list": 7, "init": 278}
+    assert token == {
+        "output": 94.3,
+        "cost": 74.9,
+        "output_reposix": 1213,
+        "output_mcp": 21171,
+    }
 
 
 def test_run_cross_check_flags_stale_latency(tmp_path: pathlib.Path) -> None:
@@ -139,6 +162,26 @@ def test_run_cross_check_flags_stale_latency(tmp_path: pathlib.Path) -> None:
     assert any("8 ms" in f and "6 ms" in f for f in failures)
     # Teaching: names the surface line and a copy-paste fix.
     assert any("docs/index.md:" in f and "Fix:" in f for f in failures)
+
+
+def test_run_cross_check_flags_stale_cold_init(tmp_path: pathlib.Path) -> None:
+    """A lingering 27 ms cold-init hero figure against a 278 ms canonical is caught."""
+    stale = INDEX_MD.replace("**`278 ms`** cold init", "**`27 ms`** cold init")
+    repo = _write_repo(tmp_path, index=stale)
+    failures, _, _ = gate.run_cross_check(repo)
+    assert any("27 ms" in f and "278 ms" in f for f in failures)
+    assert any("docs/index.md:" in f and "Fix:" in f for f in failures)
+
+
+def test_run_cross_check_flags_stale_loop_figure(tmp_path: pathlib.Path) -> None:
+    """A homepage loop figure that drifts from the canonical median is caught + taught."""
+    stale = INDEX_MD.replace(
+        "git-native loop · ~1.2k output tokens (live)",
+        "git-native loop · ~5k output tokens (live)",
+    )
+    repo = _write_repo(tmp_path, index=stale)
+    failures, _, _ = gate.run_cross_check(repo)
+    assert any("~1.2k output tokens (live)" in f and "1,213" in f for f in failures)
 
 
 def test_run_cross_check_flags_stale_list(tmp_path: pathlib.Path) -> None:

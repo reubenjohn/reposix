@@ -20,9 +20,11 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 
 ## NOW
 
-**T6 remaining — item 1 (reframe) LANDED + PUSHED; item 3
-agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5/7 + 6a DONE; item 6b next.**
-CI hotfix `3eacb53` restored a RED main (bench-latency-v09 vs item-5 regen-guard), rides out on 6a's push. Numbering matches the T6 charter in
+**T6 items 1-7 ALL COMPLETE (agent-side) — phase-close cadence next.** item 1 (reframe)
+LANDED + PUSHED; items 2/5/6a/6b/7 DONE; item 3 + 6b retires agent-side DONE, HUMAN-ONLY
+confirm-retire pending on an **11-row batch** (8 prior + 3 new 89.1% rows). Every T6-owned
+doc-alignment/perf row is at its terminal agent-side state; the only remaining waived rows
+are that human-confirm-retire batch. Numbering matches the T6 charter in
 `.planning/SESSION-HANDOVER.md` §5 (item 4's second `latency.md` refresh is DROPPED — not
 needed, `latency.md` never re-drifted):
 1. **(item 2) — DONE.** `115-UNWAIVE-PATH.md` written in the P115 phase dir — live-grepped
@@ -60,12 +62,21 @@ needed, `latency.md` never re-drifted):
    gate" exit route is void (gate does not cover cold-init; canonical init is 278ms) — 6b
    must reconcile cold-init separately. **CI hotfix `3eacb53`** (concurrent lane) fixed a
    RED main (`bench-latency-v09` vs the item-5 regen-guard); it rides out on 6a's push.
-6. **(item 6b) — NEXT.** Retire/handle the 4 STALE_DOCS_DRIFT hero rows (89.1% token
-   claims, retire candidates) + `docs/index/mcp-loop-4883-tokens` / `reposix-loop-531-tokens`;
-   un-waive `perf/token-economy-bench` by adding the ~94% output-token-reduction assertion;
-   dedupe the token-89% row pair; the cold-init reconciliation flagged above.
-7. **(item 8)** Phase-close cadence: push → `code/ci-green-on-main` P0 → gsd-verifier →
-   `STATE.md` cursor → `PROGRESS.md` refresh in the close push.
+6. **(item 6b) — DONE.** Cold-init hero 27 ms → canonical **278 ms** (latency.md `reposix
+   init` cold sim; same operation, superseded dev-machine figure → fix-to-canonical);
+   extended `headline-numbers-cross-check.py` with a cold-init axis + 2 absolute loop-figure
+   checks (18 hero headlines, all match). Bound+unwaived the 3 cold-init rows + the 2 loop
+   rows + `README-md/latency-8ms` (re-cited 8→6 ms); propose-retired + re-attributed the 3
+   superseded 89.1% rows (the token-89% pair is a true docs/index.md:17 duplicate — both
+   retired); un-waived + minted `perf/token-economy-bench` PASS (main() now asserts 94.3%
+   ±1.0pp); persisted the benign code/shell-coverage + security/cargo-audit validate-only
+   flips (stale FAIL/NOT-VERIFIED → PASS, surgical). Non-hero 8 ms fixed on mental-model:69 /
+   filesystem-layer:42 / concepts-vs-mcp:15 (simulator.md:18 left — dev-host framing).
+   Walk rc=0, gate exit 0, perf pytest 26/26, docs-build all green. **Human relay: the
+   confirm-retire batch is now 11 rows** (8 prior + 3 new). Filed GTH-V15-29..33. Evidence:
+   `115-T6-CLOSEOUT.md` + `115-UNWAIVE-PATH.md` § Wave 2 — item 6b. **T6 items 1-7 complete.**
+7. **(item 8) — NEXT (phase-close cadence).** push → `code/ci-green-on-main` P0 → gsd-verifier
+   → `STATE.md` cursor → `PROGRESS.md` refresh in the close push.
 
 ## NEXT
 

@@ -137,8 +137,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/security/cargo-audit-posture.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-16T13:10:10Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: (a) cargo audit reported a NEW live advisory -- read the named RUSTSEC id and bump the affected crate's floor via a dependabot/cargo-update PR; (b) memmap2 dropped below 0.9.11 or quinn-proto below 0.11.15 -- a lockfile regen pulled an unpatched floor; (c) SECURITY.md lost its Advisory posture section naming both advisory ids. Network-flaky cargo-audit (advisory-db fetch failure) is distinguished in the artifact via a fetch-failure marker, NOT counted as a live advisory. CI counterpart: .github/workflows/audit.yml.",

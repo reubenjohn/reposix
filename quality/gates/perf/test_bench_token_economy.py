@@ -223,6 +223,9 @@ def test_main_offline_regenerates_doc_from_captures(
     monkeypatch.setattr(bench, "CAPTURES", captures)
     monkeypatch.setattr(bench, "BENCH_DIR", tmp_path)
     monkeypatch.setattr(bench, "RESULTS", results_path)
+    # Synthetic seeds compute a 90.0% reduction by construction; point the headline
+    # guard at that so main() exercises end-to-end without tripping the ~94% band.
+    monkeypatch.setattr(bench, "EXPECTED_OUTPUT_REDUCTION_PCT", 90.0)
 
     assert bench.main(["--offline"]) == 0
     content = results_path.read_text()
@@ -239,3 +242,27 @@ def test_main_offline_regenerates_doc_from_captures(
     first = content
     assert bench.main(["--offline"]) == 0
     assert results_path.read_text() == first
+
+
+# ---------------------------------------------------------------------------
+# B2: the ~94% headline assertion (P115 T6 un-waive of perf/token-economy-bench)
+# ---------------------------------------------------------------------------
+
+
+def test_headline_reduction_guard_fires_outside_band() -> None:
+    """A wrong-but-present headline (output reduction far from ~94%) fails loud."""
+    with pytest.raises(SystemExit) as exc:
+        bench._assert_headline_reduction({"output": 80.0})
+    assert "94" in str(exc.value.code)
+    # within-band values do NOT raise
+    bench._assert_headline_reduction({"output": bench.EXPECTED_OUTPUT_REDUCTION_PCT})
+
+
+def test_real_captures_support_headline_reduction() -> None:
+    """The committed benchmarks/captures/*.json compute an output reduction inside
+    the published ~94% band -- so main() (which asserts it) passes the gate."""
+    records = bench.load_headline_captures(bench.CAPTURES)
+    reductions = bench.compute_reductions(bench.compute_arm_medians(records))
+    assert abs(reductions["output"] - bench.EXPECTED_OUTPUT_REDUCTION_PCT) <= bench.OUTPUT_REDUCTION_TOL_PCT
+    # main() against the real captures therefore does not raise the guard.
+    bench._assert_headline_reduction(reductions)

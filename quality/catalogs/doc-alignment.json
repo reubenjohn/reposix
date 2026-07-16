@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 396,
-    "claims_bound": 268,
-    "claims_missing_test": 5,
-    "claims_retire_proposed": 8,
+    "claims_bound": 274,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 11,
     "claims_retired": 57,
-    "alignment_ratio": 0.7905604719764012,
+    "alignment_ratio": 0.8082595870206489,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T12:11:50Z",
+    "last_walked": "2026-07-16T12:58:30Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -79,27 +79,30 @@
     },
     {
       "id": "docs/index/latency-24ms-cold-init",
-      "claim": "27 ms cold init against simulator",
+      "claim": "278 ms cold init against simulator (CI-canonical)",
       "source": {
         "file": "docs/index.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
+      "source_hash": "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02",
       "source_hashes": [
-        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
+        "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02"
       ],
-      "rationale": "IMPL_GAP: latency-bench sim.sh measures SIM_INIT_MS but the only check is a non-fatal soft WARN at >500ms (line 48); never asserts 27ms. Self-labeled v0.12.0 file-relocate stub; headline cross-check is the deferred v0.12.1 deliverable",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Reconciled hero 27 ms -> canonical 278 ms (docs/benchmarks/latency.md 'reposix init' cold sim, CI-canonical run 29452237641). The extended perf/headline-numbers-cross-check gate now PARSES that canonical init figure and asserts the docs/index.md:18 hero cold-init line matches it (exit 1 on drift, naming surface:line + fix); test_headline_numbers_cross_check.py::test_hero_surfaces_match_canonical is the offline integration check. P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:08Z",
+      "last_extracted": "2026-07-16T12:57:20Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "mcp-fixture-synthesized-not-live",
@@ -228,24 +231,24 @@
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "67942d863902cf702a3dd5e39f8ac9692d69fcf37be5a9182fca8c86e2d8116a",
+      "source_hash": "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02",
       "source_hashes": [
-        "67942d863902cf702a3dd5e39f8ac9692d69fcf37be5a9182fca8c86e2d8116a"
+        "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02"
       ],
       "tests": [
         "quality/gates/perf/headline-numbers-cross-check.py",
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "0394b33bc2e1f3afb991ef7ac568868e712b38560506cb7a131ed0db192de63d",
-        "23faa95b3be8306504601928b10092eef263a1bc0fd67fbbce18cbd6b9bf3df6"
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "P115 T6 item 6a: 8ms hero prose reconciled to canonical 6ms (docs/benchmarks/latency.md 'Get one record' sim); bound to the new headline-numbers-cross-check gate + its offline test (AND-drift watch), clearing the MISSING_TEST waiver.",
+      "rationale": "Hash refresh: the docs/index.md:18 cold-init figure on the same hero line moved 27->278 ms (P115 T6 6b), shifting the cited line's bytes; the 6 ms cached-read claim + its headline-numbers-cross-check binding are unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:11:50Z",
-      "last_extracted": "2026-07-16T12:13:48Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-16T12:58:19Z",
+      "last_extracted": "2026-07-16T12:58:19Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "use-case-80-percent-routine-ops",
@@ -278,16 +281,16 @@
       "source_hashes": [
         "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
-      "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct and regenerates the doc but never asserts it equals 89.1% (main() returns 0 for any value). v0.12.0 file-relocate stub; headline cross-check deferred to v0.12.1",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
+      "rationale": "Superseded by the live four-axis reframe: docs/index.md:17 now reads '~94% fewer output tokens' (94.3% median-of-3, live GitHub captures). The synthetic 89.1% count_tokens-over-fixture figure no longer exists on the page; replacement is docs/benchmarks/token-economy/output-reduction-94-percent (BOUND) plus the perf/headline-numbers-cross-check gate. Retire. P115 T6 6b.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T12:56:45Z",
+      "last_extracted": "2026-07-16T13:10:53Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
+        "reason": "89.1% synthetic count_tokens-over-fixture figure superseded by the live ~94.3% four-axis GitHub-capture reframe (docs/index.md:17 / README.md:27 now read ~94% fewer output tokens). RETIRE_PROPOSED by P115 T6 6b; live replacement rows already BOUND (output-reduction-94-percent / cost-reduction-75-percent). Only HUMAN-ONLY confirm-retire remains -- batch with the other retire rows.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
     {
@@ -1642,27 +1645,27 @@
     },
     {
       "id": "docs/index/bootstrap-latency-24ms",
-      "claim": "Bootstrap takes <= 27 ms against the simulator",
+      "claim": "Bootstrap takes <= 278 ms against the simulator (CI-canonical)",
       "source": {
         "file": "docs/index.md",
         "line_start": 134,
         "line_end": 134
       },
-      "source_hash": "1a1b9bf294989a75387993f0117aaf775b1a6d77bcf8819210ebf2ccbe743729",
+      "source_hash": "2155c27ecefd1ee62adeed6f707bd433e2bf8c9067447bfbdf7a3fc64e5e40aa",
       "source_hashes": [
-        "1a1b9bf294989a75387993f0117aaf775b1a6d77bcf8819210ebf2ccbe743729"
+        "2155c27ecefd1ee62adeed6f707bd433e2bf8c9067447bfbdf7a3fc64e5e40aa"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
+        "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "docs/index.md:134 claims bootstrap <=27ms vs sim; latency-bench.sh spawns reposix-sim and measures SIM_INIT_MS bootstrap latency (27 ms per docs/benchmarks/latency.md)",
+      "rationale": "Reconciled the <= 27 ms bootstrap upper bound to the CI-canonical <= 278 ms (latency.md 'reposix init' cold sim); binding to the latency-bench.sh regenerator is unchanged. P115 T6 6b.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-16T12:58:30Z",
+      "last_extracted": "2026-07-16T12:58:30Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4349,27 +4352,30 @@
     },
     {
       "id": "latency-hero-24ms-mismatch",
-      "claim": "Homepage hero: reposix cold init = 27 ms",
+      "claim": "Homepage hero: reposix cold init = 278 ms (CI-canonical sim)",
       "source": {
         "file": "docs/index.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
+      "source_hash": "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02",
       "source_hashes": [
-        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
+        "a21954a74d8e3719bd5df52f4a1fa4cc583a23999b6a05466bb1f399ed478b02"
       ],
-      "rationale": "IMPL_GAP: sim.sh measures SIM_INIT_MS but only soft-WARNs at >500ms and never asserts the 27ms hero number. v0.12.0 stub; headline cross-check deferred to v0.12.1",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Reconciled hero 27 ms -> canonical 278 ms; the extended headline-numbers-cross-check gate parses docs/benchmarks/latency.md 'reposix init' cold sim and asserts the docs/index.md:18 hero cold-init figure matches (offline). P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:20Z",
+      "last_extracted": "2026-07-16T12:57:20Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "trust-model/http-redirects-not-followed",
@@ -4452,16 +4458,16 @@
       "source_hashes": [
         "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884"
       ],
-      "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct (L204) but returns 0 unconditionally (L283) — never asserts ==89.1%; gate self-declares WAIVED until 2026-07-26. Deferred v0.12.1/MIGRATE-03 cross-check. Corrects a per-doc-batch grader false-BOUND that conflated compute/emit with assert.",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:30:51Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
+      "rationale": "Superseded: README.md:27 now reads '~94% fewer output tokens' and '~56% smaller total input-context' from the live GitHub captures; the synthetic 89.1% input-context figure is gone. Replacement is the live four-axis token-economy rows + perf/headline-numbers-cross-check gate. Retire. P115 T6 6b.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T12:56:54Z",
+      "last_extracted": "2026-07-16T13:10:53Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
+        "reason": "89.1% synthetic count_tokens-over-fixture figure superseded by the live ~94.3% four-axis GitHub-capture reframe (docs/index.md:17 / README.md:27 now read ~94% fewer output tokens). RETIRE_PROPOSED by P115 T6 6b; live replacement rows already BOUND (output-reduction-94-percent / cost-reduction-75-percent). Only HUMAN-ONLY confirm-retire remains -- batch with the other retire rows.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
     {
@@ -5330,17 +5336,20 @@
       "source_hashes": [
         "b7951af32ba726110c32eed643e2f3c3925b3a8c30a15996b1e4349dca6d74dd"
       ],
-      "rationale": "Cited 4,883-token synthetic figure retired (see docs/concepts/reposix-vs-mcp-and-sdks.md:43); prose at docs/index.md:35 now reads '~21k output tokens (live)'. bench_token_economy.py was rewritten to the JSONL captures path (get_or_count demoted; main() no longer calls it); test_bench_token_economy.py asserts synthetic-seed median math (mcp output==2000, 90.0% reduction) and the structure of docs/benchmarks/token-economy.md, not the ~21k live figure in index.md. Feature alive; needs a test asserting the index hero figure matches the captures-computed GitHub-MCP median (~21,171).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-16T10:25:29Z",
-      "last_extracted": "2026-07-16T10:39:26Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "Hero figure re-cited to live ~21k output-token GitHub-capture figure (d2fd85c); binding test is T6 item 6's perf/headline-numbers-cross-check gate, minted this wave",
-        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Live figure. The extended headline-numbers-cross-check gate parses the GitHub-MCP output-token median (21,171) from docs/benchmarks/token-economy.md and asserts the docs/index.md:35 mermaid note reads '~21k output tokens (live)' (offline). P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:40Z",
+      "last_extracted": "2026-07-16T12:57:40Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "mcp-schema-discovery-100k-tokens",
@@ -6435,27 +6444,30 @@
     },
     {
       "id": "README-md/latency-8ms",
-      "claim": "Read one issue from local cache takes 8ms (measured on simulator)",
+      "claim": "6 ms cached read: read one issue from the local cache after first fetch (sim)",
       "source": {
         "file": "README.md",
-        "line_start": 23,
-        "line_end": 23
+        "line_start": 25,
+        "line_end": 25
       },
-      "source_hash": "4bef4f5ee0af137f235cc514b79c3279212d89a0b71e92b9ea0a32c781010e17",
+      "source_hash": "1cf1b0d5cff368b77ba885bedc529cf26694546a5334814c3e4369b1b01af72f",
       "source_hashes": [
-        "4bef4f5ee0af137f235cc514b79c3279212d89a0b71e92b9ea0a32c781010e17"
+        "1cf1b0d5cff368b77ba885bedc529cf26694546a5334814c3e4369b1b01af72f"
       ],
-      "rationale": "IMPL_GAP: latency-bench.sh is a v0.12.0 stub; its header states the cross-check comparing bench output against README/docs headline copy is a deferred v0.12.1 deliverable (MIGRATE-03). The only thresholds are soft 500ms WARNs on SIM_INIT_MS/SIM_LIST_MS (sim.sh:48-49) — no assertion binds the 8ms cache-read number. SIM_GET_MS (sim.sh:25) curls the sim REST endpoint, not a local-cache read, so it does not even measure the claimed quantity.",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:15:36Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Re-cited README.md:23 (caveat) -> README.md:25 (the read-one-issue bullet) and reconciled 8 ms -> canonical 6 ms; the headline-numbers-cross-check gate asserts the README read-one-issue figure equals docs/benchmarks/latency.md 'Get one record' sim. P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:40Z",
+      "last_extracted": "2026-07-16T12:57:40Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/read-only-not-supported",
@@ -7210,27 +7222,30 @@
     },
     {
       "id": "README-md/init-24ms",
-      "claim": "reposix init cold bootstrap against simulator takes 27ms",
+      "claim": "reposix init cold bootstrap against simulator takes 278 ms (CI-canonical)",
       "source": {
         "file": "README.md",
         "line_start": 26,
         "line_end": 26
       },
-      "source_hash": "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02",
+      "source_hash": "c07bc68dff8e0c5f3aac4498c0df66b04bfbef84ab80d503e51e202c577ad791",
       "source_hashes": [
-        "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02"
+        "c07bc68dff8e0c5f3aac4498c0df66b04bfbef84ab80d503e51e202c577ad791"
       ],
-      "rationale": "IMPL_GAP: README.md:26 states '27 ms — reposix init cold bootstrap against the simulator (soft threshold 500 ms)'. The cited quality/gates/perf/latency-bench.sh is a benchmark REGENERATOR: it spawns the sim, times the golden path, emits measured rows to docs/benchmarks/latency.md, and only WARNs (never fails) above the 500ms soft threshold. It asserts NO 27ms value. The bench-vs-README/index headline cross-check is explicitly DEFERRED to v0.12.1 (MIGRATE-03, per the script header), so no test asserts the 27ms hero number.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:28:22Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Reconciled README 27 ms -> canonical 278 ms; headline-numbers-cross-check gate asserts the README.md:26 cold-bootstrap bullet matches docs/benchmarks/latency.md 'reposix init' cold sim (offline). P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:20Z",
+      "last_extracted": "2026-07-16T12:57:20Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/why/cold-init-24ms-sim",
@@ -7739,7 +7754,7 @@
     },
     {
       "id": "docs/index/reposix-loop-531-tokens",
-      "claim": "reposix git-native loop uses ~1.2k output tokens (live) for the 3-issue read+edit+push task (from token-economy benchmark)",
+      "claim": "reposix git-native loop uses ~1.2k output tokens (live) for the 3-issue read+edit+push task",
       "source": {
         "file": "docs/index.md",
         "line_start": 31,
@@ -7749,17 +7764,20 @@
       "source_hashes": [
         "fba640b9268a5ff2598be70811afd2ea8581086e5e46ccfe140a4d0f1b50698f"
       ],
-      "rationale": "Test quality/gates/perf/bench_token_economy.py exists but its unit tests (test_bench_token_economy.py::test_compute_arm_medians_and_reductions / test_main_offline_regenerates_doc_from_captures) assert the median-of-3 capture machinery on SYNTHETIC seeded captures (90% reduction by construction), NOT the ~1.2k live-capture reposix output-token figure the doc now quotes. The old ~531 count (get_or_count over reposix_text) was retired when the headline pivoted to JSONL session-usage medians (P115 amendment #10; d2fd85c reframed index.md 531 -> ~1.2k live). Feature alive, doc already correct; no test pins the current published figure.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-16T10:26:52Z",
-      "last_extracted": "2026-07-16T10:39:27Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-08-15T00:00:00Z",
-        "reason": "Hero figure re-cited to live ~1.2k output-token GitHub-capture figure (d2fd85c); binding test is T6 item 6's perf/headline-numbers-cross-check gate, minted this wave",
-        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
-      }
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py"
+      ],
+      "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
+      ],
+      "rationale": "Live figure. The extended headline-numbers-cross-check gate parses the reposix output-token median (1,213) from docs/benchmarks/token-economy.md and asserts the docs/index.md:31 mermaid note reads '~1.2k output tokens (live)' (offline; exit 1 + fix on drift). P115 T6 6b.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T12:57:40Z",
+      "last_extracted": "2026-07-16T12:57:40Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/reference/cli.md/mount_removed_v0.9.0",
@@ -8410,27 +8428,31 @@
     },
     {
       "id": "docs/index/soft-threshold-24ms",
-      "claim": "Sim cold init is 27 ms (soft threshold 500 ms)",
+      "claim": "Sim cold init is 278 ms (soft threshold 500 ms)",
       "source": {
         "file": "docs/index.md",
         "line_start": 93,
         "line_end": 93
       },
-      "source_hash": "832509f5cb964bcdf5ded32adca7dd9e07d2efad94b5616c5c4f466c5c44b101",
+      "source_hash": "c08934a714440d82c8c452f8b0c366ba5ad4ba369ef565bd586881e20bed54c2",
       "source_hashes": [
-        "832509f5cb964bcdf5ded32adca7dd9e07d2efad94b5616c5c4f466c5c44b101"
+        "c08934a714440d82c8c452f8b0c366ba5ad4ba369ef565bd586881e20bed54c2"
       ],
       "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/test_headline_numbers_cross_check.py",
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
+        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce",
         "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "P115 T6 item 6a re-cite: line 93's list-issues figure changed 9ms->7ms (canonical docs/benchmarks/latency.md 'List records' sim); the cold-init soft-threshold claim is unchanged; refreshing source_hash.",
+      "rationale": "Reconciled 27->278 ms (canonical latency.md 'reposix init' cold sim); now bound to the extended headline-numbers-cross-check gate (asserts the docs/index.md:93 'Sim cold init is' figure equals canonical) AND the latency-bench.sh regenerator. P115 T6 6b.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:11:21Z",
-      "last_extracted": "2026-07-16T12:11:21Z",
+      "last_run": "2026-07-16T12:58:30Z",
+      "last_extracted": "2026-07-16T12:58:30Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8816,9 +8838,9 @@
         "line_start": 42,
         "line_end": 42
       },
-      "source_hash": "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f",
+      "source_hash": "23252979b66495109f6b2495f13b592cc9383b8f9b5e9dfc298dc75dbf1a5c77",
       "source_hashes": [
-        "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f"
+        "23252979b66495109f6b2495f13b592cc9383b8f9b5e9dfc298dc75dbf1a5c77"
       ],
       "tests": [
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
@@ -8826,11 +8848,11 @@
       "test_body_hashes": [
         "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
       ],
-      "rationale": "Tests that after build_from, zero blob objects exist locally — they are lazy",
+      "rationale": "Hash refresh: reconciled the cached-read figure on this line 8->6 ms (P115 T6 6b, canonical latency.md 'Get one record' sim); the lazy-blob claim + its Rust test binding are unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:05Z",
-      "last_extracted": "2026-04-28T09:06:05Z",
+      "last_run": "2026-07-16T12:58:19Z",
+      "last_extracted": "2026-07-16T12:58:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8920,16 +8942,16 @@
       "source_hashes": [
         "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
-      "rationale": "IMPL_GAP: bench_token_economy.py computes+emits reduction_pct into token-economy.md but never asserts 89.1% (exit 0 for any value). v0.12.0 stub; headline cross-check deferred to v0.12.1",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:48:50Z",
+      "rationale": "DUPLICATE of docs/index/token-reduction-89-percent: identical source line (docs/index.md:17) + identical superseded 89.1% claim (row id says docs/why but cites docs/index). Both retire together; the live ~94.3% figure replaced the synthetic 89.1% count. P115 T6 6b dedupe.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T12:56:54Z",
+      "last_extracted": "2026-07-16T13:10:53Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "interim qualified figure; retired/re-bound by funded live MCP re-measurement, Q1 2026-07-12",
-        "tracked_in": ".planning/milestones/audits/2026-07-12-reality-check.md §5 Q1 (funded live MCP re-measurement; carry-forward v0.12.1/MIGRATE-03)"
+        "reason": "89.1% synthetic count_tokens-over-fixture figure superseded by the live ~94.3% four-axis GitHub-capture reframe (docs/index.md:17 / README.md:27 now read ~94% fewer output tokens). RETIRE_PROPOSED by P115 T6 6b; live replacement rows already BOUND (output-reduction-94-percent / cost-reduction-75-percent). Only HUMAN-ONLY confirm-retire remains -- batch with the other retire rows.",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
     {

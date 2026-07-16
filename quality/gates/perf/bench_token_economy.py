@@ -79,6 +79,32 @@ FIXTURES = BENCH_DIR / "fixtures"
 # Results doc; regenerated in place, published by mkdocs.
 RESULTS = REPO_ROOT / "docs" / "benchmarks" / "token-economy.md"
 
+# Published output-token-reduction headline ("~94% fewer output tokens" on
+# docs/benchmarks/token-economy.md, docs/index.md, and README.md). main() asserts
+# the committed captures still support it within a tolerance band -- closing the
+# "wrong-but-present headline" hole the perf/token-economy-bench row tracked
+# (main() used to return 0 for ANY computed value; see 115-UNWAIVE-PATH.md).
+# Tests monkeypatch EXPECTED_OUTPUT_REDUCTION_PCT to exercise main() on synthetic
+# seeds; the real committed captures compute 94.27% (median-of-3, P115 Task 4).
+EXPECTED_OUTPUT_REDUCTION_PCT = 94.3
+OUTPUT_REDUCTION_TOL_PCT = 1.0
+
+
+def _assert_headline_reduction(reductions: dict) -> None:
+    """Fail loud if the measured output-token reduction drifts from the published
+    ~94% headline (beyond ``OUTPUT_REDUCTION_TOL_PCT``)."""
+    measured = reductions["output"]
+    if abs(measured - EXPECTED_OUTPUT_REDUCTION_PCT) > OUTPUT_REDUCTION_TOL_PCT:
+        raise SystemExit(
+            f"bench_token_economy: output-token reduction {measured:.2f}% is outside "
+            f"the published headline band {EXPECTED_OUTPUT_REDUCTION_PCT}% "
+            f"+/- {OUTPUT_REDUCTION_TOL_PCT}%. The committed benchmarks/captures/*.json "
+            f"no longer support the '~94% fewer output tokens' claim on "
+            f"docs/benchmarks/token-economy.md / docs/index.md / README.md. Re-measure "
+            f"and reconcile the hero copy, or update EXPECTED_OUTPUT_REDUCTION_PCT here "
+            f"if the benchmark legitimately moved."
+        )
+
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -120,6 +146,10 @@ def main(argv: Optional[list] = None) -> int:
     records = load_headline_captures(CAPTURES)
     arm_medians = compute_arm_medians(records)
     reductions = compute_reductions(arm_medians)
+
+    # Un-waive gate (115-UNWAIVE-PATH.md, T6): assert the ~94% headline instead of
+    # returning 0 for any computed value.
+    _assert_headline_reduction(reductions)
 
     md = render_token_economy_markdown(
         arm_medians=arm_medians,

@@ -48,6 +48,8 @@
       "id": "perf/token-economy-bench",
       "dimension": "perf",
       "kind": "mechanical",
+      "transport_claim": false,
+      "coverage_kind": "mechanical",
       "sources": [
         "quality/gates/perf/bench_token_economy.py",
         "quality/gates/perf/bench_token_economy_captures.py",
@@ -59,7 +61,7 @@
           "python3 quality/gates/perf/bench_token_economy.py --offline exits 0 with NO ANTHROPIC_API_KEY set (JSONL-usage methodology, P115 amendment #10)",
           "the headline four-axis medians (output-token / cache-create / total-input-context / cost reduction) are greppable from docs/benchmarks/token-economy.md",
           "the doc is regenerated deterministically + offline from the committed benchmarks/captures/*.json live-GitHub session-usage records (median-of-3 per arm, 2 arms), NOT from the Anthropic count_tokens endpoint",
-          "[un-waive, future code phase per 115-UNWAIVE-PATH.md] bench_token_economy.py asserts the measured output-token reduction (~94%) instead of returning 0 unconditionally"
+          "bench_token_economy.py asserts the measured output-token reduction is within 1.0pp of the published ~94.3% headline (EXPECTED_OUTPUT_REDUCTION_PCT +/- OUTPUT_REDUCTION_TOL_PCT); a wrong-but-present headline now fails the gate (P115 T6 6b un-waive)"
         ]
       },
       "verifier": {
@@ -71,19 +73,14 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/token-economy-bench.json",
-      "status": "WAIVED",
+      "status": "PASS",
       "minted_at": "2026-07-16T00:00:00Z",
-      "last_verified": "2026-07-16T00:00:00Z",
+      "last_verified": "2026-07-16T12:09:41Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: the bench no longer regenerates docs/benchmarks/token-economy.md deterministically from benchmarks/captures/*.json, or ANTHROPIC_API_KEY leaked back into the headline path; WAIVED until 2026-09-15 pending the headline assertion (see 115-UNWAIVE-PATH.md, T6)",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "P115 T5 (2026-07-16) switched the headline to the JSONL session-usage methodology (amendment #10): the doc is now regenerated deterministically + offline (no ANTHROPIC_API_KEY) from the committed benchmarks/captures/*.json live-GitHub session records (median-of-3 x 2 arms, task 'read 3 issues, edit 1, push' against reubenjohn/reposix). The bench REGENERATES + emits the four-axis medians but still returns 0 unconditionally -- it does not yet ASSERT the ~94% output-token reduction, so a WRONG-but-present headline would not fail the gate. Un-waive requires adding that assertion; the precise value + assertion site are documented in 115-UNWAIVE-PATH.md (T6 documents the path; a future code phase implements it). Plan Task 6 explicitly assigns the un-waive to that path, so T5 rewrites the contract text but leaves the waiver active.",
-        "dimension_owner": "v0.15.0 P115 T5 -- see 115-UNWAIVE-PATH.md (T6 owns the un-waive path)",
-        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md) -> a future code phase adds the headline assertion"
-      },
-      "claim_vs_assertion_audit": "If the captures-derived token-economy regen broke, `python3 quality/gates/perf/bench_token_economy.py --offline` would exit non-zero (e.g. missing/invalid benchmarks/captures/*.json) or the docs/benchmarks/token-economy.md four-axis table would go missing; a WRONG-but-present headline percentage would NOT be caught because main() still returns 0 for any computed value -- that assertion is the still-deferred half of this row's claim (un-waive path: 115-UNWAIVE-PATH.md).",
+      "owner_hint": "if RED: the bench no longer regenerates docs/benchmarks/token-economy.md deterministically from benchmarks/captures/*.json, or ANTHROPIC_API_KEY leaked back into the headline path, or the committed captures drifted so the output-token reduction left the 94.3% +/- 1.0pp band (the ~94% hero headline no longer holds). Un-waived P115 T6 6b: bench main() now calls _assert_headline_reduction().",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If the captures-derived token-economy regen broke, `python3 quality/gates/perf/bench_token_economy.py --offline` would exit non-zero (missing/invalid benchmarks/captures/*.json). As of P115 T6 6b a WRONG-but-present headline IS also caught: main() calls _assert_headline_reduction(reductions), which raises SystemExit (exit 1) when the measured output-token reduction is more than OUTPUT_REDUCTION_TOL_PCT (1.0pp) from EXPECTED_OUTPUT_REDUCTION_PCT (94.3%). The committed captures compute 94.27%, inside the band. Regression cases: test_bench_token_economy.py::test_headline_reduction_guard_fires_outside_band + ::test_real_captures_support_headline_reduction.",
       "cadences": [
         "weekly"
       ]

@@ -20,10 +20,10 @@ and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
 ## Three measured numbers
 
-*`6 ms` / `27 ms` are simulator-measured (pending live-backend re-measurement); the token/cost figures are **live** — 6 real agentic sessions, median-of-3 per arm, against the same GitHub backend on 2026-07-16, from committed session-usage records ([`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md)).*
+*`6 ms` / `278 ms` are simulator-measured (CI-canonical sim figures; real-backend latency columns pending); the token/cost figures are **live** — 6 real agentic sessions, median-of-3 per arm, against the same GitHub backend on 2026-07-16, from committed session-usage records ([`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md)).*
 
 - **`6 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/latency.md`](docs/benchmarks/latency.md)).
-- **`27 ms`** — `reposix init` cold bootstrap against the simulator (soft threshold `500 ms`).
+- **`278 ms`** — `reposix init` cold bootstrap against the simulator (CI-canonical; soft threshold `500 ms`).
 - **`~94% fewer output tokens` · `~75% cheaper per session`** — for the identical read-3-issues + edit-1 + push task against a live GitHub backend, the git-native arm generates ~94.3% fewer output tokens and costs ~74.9% less per session than the GitHub-MCP arm (cache-creation ~66% fewer, total input-context ~56% smaller), measured in [`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md). Write-back to GitHub is read-only in this cut — the push was correctly rejected by the read-only adapter, so these numbers measure agent context size, not write persistence.
 
 ## What it is

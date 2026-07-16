@@ -1,33 +1,21 @@
 #!/usr/bin/env python3
 """quality/gates/perf/headline-numbers-cross-check.py -- perf-dimension headline cross-check.
 
-Cross-checks the headline numbers printed on the reposix HERO SURFACES against
-their CANONICAL SOURCES, so a re-measurement of the benchmark docs can never
-silently diverge from the marketing copy (or vice-versa).
+Cross-checks the headline numbers on the HERO SURFACES (docs/index.md, README.md,
+docs/concepts/reposix-vs-mcp-and-sdks.md) against their CANONICAL SOURCES, so a
+benchmark re-measurement can never silently diverge from the marketing copy:
 
-  Hero surfaces (the pages a first-time reader lands on):
-    * docs/index.md
-    * README.md
-    * docs/concepts/reposix-vs-mcp-and-sdks.md
+    docs/benchmarks/latency.md (CI-canonical sim table):
+        Get one record / List records / `reposix init` cold (sim)
+        -> the "cached read" / "list" / "cold init" (278 ms) hero figures
+    docs/benchmarks/token-economy.md (live GitHub-capture medians):
+        Output/Cost reductions -> "~94% fewer output tokens" / "~75% cheaper"
+        Output-token medians   -> the mermaid loop figures ("~1.2k" / "~21k")
 
-  Canonical sources of truth (regenerated from measured data):
-    * docs/benchmarks/latency.md      -- CI-canonical sim latency table
-        Get one record (sim)  -> the "cached read" hero figure
-        List records   (sim)  -> the "list" hero figure
-    * docs/benchmarks/token-economy.md -- live GitHub-capture four-axis medians
-        Output tokens reduction  -> the "~94% fewer output tokens" headline
-        Cost per session reduction -> the "~75% cheaper" headline
-
-The gate NEVER hardcodes the numbers: it PARSES them out of the canonical docs
-at run time and compares. If someone re-measures latency.md to a new figure but
-forgets the hero prose (the exact drift this closes -- an "8 ms" hero figure
-lingering after latency.md moved to 6 ms / 7 ms), this gate goes RED and names
-the surface line, the stale value, the canonical value, and the copy-paste fix.
-
-Exit 0 = every hero headline matches its canonical source.
-Exit 1 = at least one drift (teaching output on stderr/stdout).
-
-Deterministic + offline: reads committed markdown only. No network, no API key.
+The gate NEVER hardcodes the numbers: it PARSES them from the canonical docs at
+run time. On drift it exits 1 and names the surface line, the stale value, the
+canonical value, and a copy-paste fix. Exit 0 = every hero headline matches.
+Deterministic + offline (committed markdown only; no network, no API key).
 
 CATALOG ROW: quality/catalogs/perf-targets.json -> perf/headline-numbers-cross-check.
 """
@@ -69,9 +57,10 @@ def _table_rows(text: str):
 
 
 def parse_latency_canonical(text: str) -> dict:
-    """Extract the sim-column 'Get one record' and 'List records' ms figures."""
+    """Extract the sim-column 'Get one record', 'List records', and cold-init figures."""
     get_ms: Optional[int] = None
     list_ms: Optional[int] = None
+    init_ms: Optional[int] = None
     for cells in _table_rows(text):
         if len(cells) < 2:
             continue
@@ -83,20 +72,37 @@ def parse_latency_canonical(text: str) -> dict:
             get_ms = int(m.group(1))
         elif "list records" in label:
             list_ms = int(m.group(1))
-    if get_ms is None or list_ms is None:
+        elif "reposix init" in label and "cold" in label:
+            init_ms = int(m.group(1))
+    if get_ms is None or list_ms is None or init_ms is None:
         raise SystemExit(
             f"headline-cross-check: could not parse canonical latency figures from "
-            f"{LATENCY_DOC} (need a 'Get one record' and a 'List records' table row "
-            f"with a sim-column 'N ms' cell). Got get={get_ms}, list={list_ms}. "
+            f"{LATENCY_DOC} (need a 'Get one record', a 'List records', and a "
+            f"'reposix init cold' table row with a sim-column 'N ms' cell). Got "
+            f"get={get_ms}, list={list_ms}, init={init_ms}. "
             f"If the table shape changed, update parse_latency_canonical()."
         )
-    return {"get": get_ms, "list": list_ms}
+    return {"get": get_ms, "list": list_ms, "init": init_ms}
+
+
+def _int_cell(cell: str) -> Optional[int]:
+    """Parse a comma-grouped integer token count out of a table cell (e.g. '21,171')."""
+    m = re.search(r"(\d[\d,]*)", cell)
+    return int(m.group(1).replace(",", "")) if m else None
 
 
 def parse_token_canonical(text: str) -> dict:
-    """Extract the output-token and cost reduction percentages (last table column)."""
+    """Extract the output-token / cost reduction percentages AND the absolute
+    output-token medians (reposix + MCP) for the loop-figure cross-check.
+
+    Table shape (docs/benchmarks/token-economy.md):
+        | Axis | reposix (median) | GitHub MCP (median) | reposix advantage |
+        | Output tokens ... | 1,213 | 21,171 | **~94.3% fewer** |
+    """
     output_pct: Optional[float] = None
     cost_pct: Optional[float] = None
+    output_reposix: Optional[int] = None
+    output_mcp: Optional[int] = None
     for cells in _table_rows(text):
         if len(cells) < 2:
             continue
@@ -106,28 +112,33 @@ def parse_token_canonical(text: str) -> dict:
             continue
         if "output tokens" in label:
             output_pct = float(m.group(1))
+            if len(cells) >= 4:  # reposix median = col 1, MCP median = col 2
+                output_reposix = _int_cell(cells[1])
+                output_mcp = _int_cell(cells[2])
         elif "cost per session" in label:
             cost_pct = float(m.group(1))
-    if output_pct is None or cost_pct is None:
+    if output_pct is None or cost_pct is None or output_reposix is None or output_mcp is None:
         raise SystemExit(
             f"headline-cross-check: could not parse canonical token figures from "
-            f"{TOKEN_DOC} (need an 'Output tokens ...' and a 'Cost per session ...' "
-            f"table row with a trailing 'N% ...' reduction cell). Got "
-            f"output={output_pct}, cost={cost_pct}. If the table shape changed, "
-            f"update parse_token_canonical()."
+            f"{TOKEN_DOC} (need an 'Output tokens ...' row with reposix + MCP median "
+            f"columns and a trailing 'N% ...' reduction cell, plus a 'Cost per session "
+            f"...' reduction row). Got output={output_pct}, cost={cost_pct}, "
+            f"output_reposix={output_reposix}, output_mcp={output_mcp}. If the table "
+            f"shape changed, update parse_token_canonical()."
         )
-    return {"output": output_pct, "cost": cost_pct}
+    return {
+        "output": output_pct,
+        "cost": cost_pct,
+        "output_reposix": output_reposix,
+        "output_mcp": output_mcp,
+    }
 
 
-# ---------------------------------------------------------------------------
-# Hero-surface claim registries.
-#
-# LATENCY_CLAIMS: each entry names a hero line whose `N ms` figure MUST equal a
-# canonical latency axis. The regex has exactly one capture group (the integer
-# ms). A claim that no longer matches its regex is itself a failure (the prose
-# was restructured or the figure format changed) -- the gate refuses to silently
-# pass a claim it can no longer locate.
-# ---------------------------------------------------------------------------
+# Hero-surface claim registries. LATENCY_CLAIMS: each entry names a hero line
+# whose `N ms` figure MUST equal a canonical latency axis; the regex has one
+# capture group (the integer ms). A claim whose regex no longer matches is itself
+# a failure (prose restructured / format changed) -- the gate never silently
+# passes a claim it cannot locate.
 
 LATENCY_CLAIMS = [
     {
@@ -165,6 +176,47 @@ LATENCY_CLAIMS = [
         "label": "'Latency, cached read' comparison-table row",
         "regex": r"\*\*Latency, cached read\*\* \| `(\d+) ms`",
         "axis": "get",
+    },
+    # --- cold-init (canonical: latency.md 'reposix init' cold sim, currently 278 ms) ---
+    {
+        "file": HERO_INDEX,
+        "label": "hero card 'cold init'",
+        "regex": r"\*\*`(\d+) ms`\*\* cold init",
+        "axis": "init",
+    },
+    {
+        "file": HERO_INDEX,
+        "label": "'Tested against' sim cold init",
+        "regex": r"Sim cold init is `(\d+) ms`",
+        "axis": "init",
+    },
+    {
+        "file": HERO_README,
+        "label": "'reposix init cold bootstrap' bullet",
+        "regex": r"\*\*`(\d+) ms`\*\* — `reposix init` cold bootstrap",
+        "axis": "init",
+    },
+    {
+        "file": HERO_CONCEPTS,
+        "label": "'Latency, cold init' comparison-table row",
+        "regex": r"\*\*Latency, cold init / first call\*\* \| `(\d+) ms` cold init",
+        "axis": "init",
+    },
+]
+
+# TOKEN_LOOP_CLAIMS: the two homepage mermaid-note loop figures assert the ABSOLUTE
+# per-arm output-token medians. `{reposix_k_1dp}` = reposix median / 1000 to 1dp
+# (1,213 -> "1.2"); `{mcp_k_int}` = MCP median / 1000 rounded (21,171 -> "21").
+TOKEN_LOOP_CLAIMS = [
+    {
+        "file": HERO_INDEX,
+        "template": "git-native loop · ~{reposix_k_1dp}k output tokens (live)",
+        "axis": "output_reposix",
+    },
+    {
+        "file": HERO_INDEX,
+        "template": "MCP tool loop · ~{mcp_k_int}k output tokens (live)",
+        "axis": "output_mcp",
     },
 ]
 
@@ -205,6 +257,7 @@ def run_cross_check(repo_root: pathlib.Path):
     axis_source = {
         "get": f"{LATENCY_DOC} 'Get one record' (sim)",
         "list": f"{LATENCY_DOC} 'List records' (sim)",
+        "init": f"{LATENCY_DOC} 'reposix init' cold (sim)",
     }
 
     # --- Latency cross-check ---
@@ -254,6 +307,26 @@ def run_cross_check(repo_root: pathlib.Path):
                 f"the canonical figure, or regenerate {TOKEN_DOC} if it genuinely moved."
             )
 
+    # --- Loop-figure cross-check (absolute output-token medians) ---
+    loop_fmt = {
+        "reposix_k_1dp": _fmt1(token["output_reposix"] / 1000),
+        "mcp_k_int": round(token["output_mcp"] / 1000),
+    }
+    loop_source = {
+        "output_reposix": f"{TOKEN_DOC} 'Output tokens' reposix median ({token['output_reposix']:,})",
+        "output_mcp": f"{TOKEN_DOC} 'Output tokens' MCP median ({token['output_mcp']:,})",
+    }
+    for claim in TOKEN_LOOP_CLAIMS:
+        expected = claim["template"].format(**loop_fmt)
+        text = (repo_root / claim["file"]).read_text(encoding="utf-8")
+        if expected not in text:
+            failures.append(
+                f"{claim['file']} — expected the canonical loop-figure substring "
+                f"{expected!r} (derived from {loop_source[claim['axis']]}) but it is "
+                f"absent. Fix: update the loop figure on {claim['file']} to match the "
+                f"captures-computed median, or regenerate {TOKEN_DOC} if it genuinely moved."
+            )
+
     return failures, latency, token
 
 
@@ -261,9 +334,13 @@ def main(argv: Optional[list] = None) -> int:
     failures, latency, token = run_cross_check(REPO_ROOT)
 
     print("headline-numbers-cross-check — hero surfaces vs canonical sources")
-    print(f"  canonical latency ({LATENCY_DOC}): get={latency['get']} ms, list={latency['list']} ms")
     print(
-        f"  canonical token ({TOKEN_DOC}): output -{token['output']}%, cost -{token['cost']}%"
+        f"  canonical latency ({LATENCY_DOC}): get={latency['get']} ms, "
+        f"list={latency['list']} ms, init={latency['init']} ms"
+    )
+    print(
+        f"  canonical token ({TOKEN_DOC}): output -{token['output']}%, cost -{token['cost']}%; "
+        f"medians reposix={token['output_reposix']:,} MCP={token['output_mcp']:,} output tokens"
     )
     print(
         f"  hero surfaces checked: {HERO_INDEX}, {HERO_README}, {HERO_CONCEPTS}"
@@ -276,8 +353,8 @@ def main(argv: Optional[list] = None) -> int:
         return 1
 
     print(
-        f"\nPASS — all {len(LATENCY_CLAIMS)} latency + {len(TOKEN_CLAIMS)} token hero "
-        f"headlines match their canonical sources."
+        f"\nPASS — all {len(LATENCY_CLAIMS)} latency + {len(TOKEN_CLAIMS)} token + "
+        f"{len(TOKEN_LOOP_CLAIMS)} loop-figure hero headlines match their canonical sources."
     )
     return 0
 
