@@ -274,4 +274,60 @@ just newly-discovered).
 
 **Sketched resolution:** Either (a) add `SendMessage` to the phase-coordinator agent definition's tool list so a coordinator can interrupt/redirect a running lane mid-task, or (b) if `SendMessage` is intentionally withheld from coordinators (e.g. a deliberate isolation boundary), document the gap explicitly in `.planning/ORCHESTRATION.md` §11 alongside the "plan wins" clause as the documented mitigation pattern, so a future coordinator does not assume SendMessage works and silently rely on an undocumented fallback. Owner should decide (a) vs (b) — this is a capability/tooling decision, not a mechanical fix.
 
+**Cross-reference (2026-07-16, filed by the P115 owner-directive lane):** per
+`SESSION-HANDOVER.md` §6 finding 1, the T6 coordinator forked a fable-tier leaf to
+deliver a mid-task scope correction (`SendMessage` unavailable in the subagent harness),
+creating a momentary second tree-writer and a fable-at-leaf tiering violation; it executed
+cleanly, no corruption. Judged the SAME underlying gap as this entry — cross-referenced
+here rather than filed as a new row.
+
+**STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: P115 owner-directive lane doc sweep | severity: MEDIUM
+
+**What:** `docs/social/twitter.md:18` and `docs/social/linkedin.md:21` (plus
+`docs/social/assets/_build_benchmark.py`, `_build_combined.py`, `benchmark.svg`) still
+present the OLD 89.1% token-reduction figure as current, with no retirement language —
+verified live: both files read "89.1% fewer tokens" today. Catalog rows
+`docs/social/twitter/token-reduction-92pct` and `docs/social/linkedin/token-reduction-92pct`
+sit at `STALE_TEST_DRIFT` with `next_action: BIND_GREEN`, actively tracking the old
+number (confirmed by direct catalog read).
+
+**Why out-of-scope for the discovering session:** The owner-directive lane's charter was
+narrowly scoped to removing retirement-HISTORY narrative from user-facing docs (the
+89.1%/85.5% retirement-story sections, not stale numbers still presented as current); the
+social drafts are a distinct staleness class — an old live number, not a narrative — and
+deciding whether to refresh/freeze/retire them is an owner call, not a mechanical doc edit
+inside this lane.
+
+**Sketched resolution:** Owner decision needed: (a) refresh the drafts + assets to the
+current live ~94.3%/~75% four-axis figures, (b) freeze them as intentionally-dated
+snapshots (add a "as of <date>" caveat so they read honestly), or (c) retire the two
+catalog rows if the social posts themselves are considered historical artifacts not meant
+to track current numbers. Whichever is chosen, update the two catalog rows to match
+(re-bind if refreshed, retire if frozen/historical).
+
+**STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: P115 owner-directive Wave-1 executor | severity: MEDIUM
+
+**What:** 34 catalog rows (the `docs/benchmarks/latency.md` L38-44 block,
+`bench-latency-cron.yml`, `docs/index.md` hero rows) carry stale `test_body_hashes` for
+`quality/gates/perf/latency-bench.sh` even though the script content is identical to
+HEAD — pre-existing `STALE_TEST_DRIFT` bit-rot that `walk.sh` does NOT block on (verified:
+its documented blocking list is `STALE_DOCS_DRIFT` / `MISSING_TEST` / `STALE_TEST_GONE` /
+`TEST_MISALIGNED` / `RETIRE_PROPOSED` — `STALE_TEST_DRIFT` is silent, `walk.sh:71-72`).
+
+**Why out-of-scope for the discovering session:** Wave 1's charter was the doc-narrative
+strip (removing retirement-history prose from four docs); re-binding 34 unrelated
+`test_body_hashes` on a script that hasn't actually changed is a distinct catalog-hygiene
+sweep, not a doc-narrative edit, and touching 34 rows is far larger than the Wave 1 diff.
+
+**Sketched resolution:** Dedicated re-bind pass on the 34 affected rows (re-hash
+`quality/gates/perf/latency-bench.sh` and refresh each row's `test_body_hashes` to match,
+since the content itself is unchanged — this is a hash-refresh, not a content fix).
+Separately, consider surfacing `STALE_TEST_DRIFT` at pre-push or in post-push reporting
+(even non-blocking) so this class of drift can't decay silently across future script
+edits.
+
 **STATUS:** OPEN

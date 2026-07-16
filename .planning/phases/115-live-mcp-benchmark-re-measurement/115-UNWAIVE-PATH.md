@@ -268,3 +268,81 @@ is NOT a T6 obligation). Walk rc=0, headline gate exit 0, perf pytest 26/26.
   `.planning/SESSION-HANDOVER.md` §5.
 - `perf/token-economy-bench` waiver text names this file as the un-waive path
   (`quality/catalogs/perf-targets.json`, row `perf/token-economy-bench`).
+
+## FINAL consolidated confirm-retire batch (post owner-directive lane, 2026-07-16)
+
+This section is THE single authoritative surface for the owner's ONE `confirm-retire`
+batch. It supersedes the "11 rows" mention scattered across `PROGRESS.md` and
+`115-T6-CLOSEOUT.md` — read this section, not those, when actually running the batch.
+
+**The owner-directive doc-narrative removal (commit `5a5dd29`, strips the
+retirement-history narrative from `docs/benchmarks/token-economy.md`,
+`docs/concepts/reposix-vs-mcp-and-sdks.md`, `docs/index.md`, `docs/benchmarks/latency.md`)
+propose-retired ZERO new doc-alignment rows.** It removed prose describing already-retired
+figures, not live claims with their own catalog rows — so the batch is unchanged: it is
+exactly the **11 rows** T6 item 6b already assembled (Groups B + C + the 3 new 89.1%-era
+rows from item 6b). All 11 were re-verified live in `quality/catalogs/doc-alignment.json`
+by this lane (grep + direct read) immediately before writing this section — every one
+carries `"last_verdict": "RETIRE_PROPOSED"` today:
+
+1. `docs/benchmarks/token-economy/confluence-reduction-76-percent`
+2. `docs/benchmarks/token-economy/github-reduction-85-percent`
+3. `docs/benchmarks/token-economy/jira-real-adapter-not-implemented`
+4. `docs/benchmarks/token-economy/mcp-mediated-baseline-4883-tokens`
+5. `docs/benchmarks/token-economy/reposix-baseline-531-tokens`
+6. `docs/benchmarks/token-economy/reduction-89-percent`
+7. `token-baseline-mcp-4883`
+8. `token-baseline-reposix-531`
+9. `docs/index/token-reduction-89-percent`
+10. `docs/why/token-economy-89-1-percent`
+11. `README-md/token-89-percent`
+
+**Note — true-duplicate pair, intentionally both in the batch.** Rows #9
+(`docs/index/token-reduction-89-percent`) and #10 (`docs/why/token-economy-89-1-percent`)
+are flagged in the catalog as true duplicates: both cite the identical source line
+`docs/index.md:17` with identical `source_hash` and near-identical claim text (row #10's
+`rationale` explicitly says "DUPLICATE of docs/index/token-reduction-89-percent"). This is
+NOT a mistake in this batch — both rows are real catalog entries and both must be retired;
+retiring only one would leave a dangling `RETIRE_PROPOSED` row citing a claim that no
+longer exists on the page.
+
+**Verb syntax (verified via `--help`, never executed against a row):**
+
+```
+$ /home/reuben/workspace/reposix/target/debug/reposix-quality doc-alignment confirm-retire --help
+Confirm a retirement -- HUMAN ONLY (env-guarded)
+
+Usage: reposix-quality doc-alignment confirm-retire [OPTIONS] --row-id <ROW_ID>
+
+Options:
+      --catalog <CATALOG>  Path to the docs-alignment catalog (override for tests) [default: quality/catalogs/doc-alignment.json]
+      --row-id <ROW_ID>
+      --i-am-human         EXPLICIT human authorization to bypass the env-guard. Use only when you are a human running confirm-retire from a Claude Code session rather than a fresh TTY. Audit-trailed in `last_extracted_by` as `confirm-retire-i-am-human`. Subagents must not pass this
+  -h, --help               Print help
+```
+
+This confirms the syntax already used elsewhere in this file (`--row-id <ID>`, real TTY,
+no other required flags). `--i-am-human` is NOT needed for a genuine TTY session — it
+exists only for the (different) case of a human typing the command inside a Claude Code
+session rather than a fresh terminal; ignore it for a normal owner terminal session.
+
+**Copy-paste batch (owner runs each line from a real terminal, one invocation per row):**
+
+```bash
+cd /home/reuben/workspace/reposix
+
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/confluence-reduction-76-percent
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/github-reduction-85-percent
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/jira-real-adapter-not-implemented
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/mcp-mediated-baseline-4883-tokens
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/reposix-baseline-531-tokens
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/benchmarks/token-economy/reduction-89-percent
+target/release/reposix-quality doc-alignment confirm-retire --row-id token-baseline-mcp-4883
+target/release/reposix-quality doc-alignment confirm-retire --row-id token-baseline-reposix-531
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/index/token-reduction-89-percent
+target/release/reposix-quality doc-alignment confirm-retire --row-id docs/why/token-economy-89-1-percent
+target/release/reposix-quality doc-alignment confirm-retire --row-id README-md/token-89-percent
+```
+
+After running all 11, `git status` should show only `quality/catalogs/doc-alignment.json`
+modified; commit + push that one file as the phase-close human-gate landing.

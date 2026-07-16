@@ -68,3 +68,18 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   Tag-timing settled separately (T1, git history).
 - **Commit:** 131315c (+ amendment).
 
+---
+
+## 2026-07-16 [OWNER] strip retirement-history narrative from user-facing docs
+
+- **Rationale:** owner directive 2026-07-16 — user-facing docs carry current truth only;
+  correction history lives in git history + planning artifacts; removing complexity.
+- **What was removed:** old-figure retirement stories — the 89.1%/85.5% section in
+  `docs/benchmarks/token-economy.md`, the 4,883/531 origin sentence in
+  `docs/concepts/reposix-vs-mcp-and-sdks.md`, the retired-figure clause in `docs/index.md`,
+  and the "Superseded figures" paragraph in `docs/benchmarks/latency.md`.
+- **What was kept:** current live numbers and all current-measurement caveats (read-only
+  write-back scope, MCP-lossy caveat, live-capture provenance).
+- **Evidence:** commit 5a5dd29, mkdocs-strict + mermaid + banned-words + docs-alignment
+  walk all green, zero rows orphaned (2 latency rows re-bound for line shift).
+

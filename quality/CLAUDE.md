@@ -159,3 +159,8 @@ total_eligible); the walker BLOCKs when either drops below floor. Recovery:
 `/reposix-quality-backfill` (full extraction) or `/reposix-quality-refresh <doc>` (single
 doc). Both slash commands are top-level only (depth-2 fan-out unreachable inside
 `gsd-executor`). Full spec: `quality/catalogs/README.md` § "docs-alignment dimension".
+
+**Verification walks MUST use the wrapper.** Always run `bash
+quality/gates/docs-alignment/walk.sh` (grades against a `/tmp` copy) — never invoke the
+raw `reposix-quality doc-alignment walk` subcommand directly, which mutates the committed
+catalog's coverage/summary counters as a side effect.
