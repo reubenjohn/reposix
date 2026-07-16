@@ -50,6 +50,9 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           REPOSIX_JIRA_INSTANCE: ${{ secrets.REPOSIX_JIRA_INSTANCE }}
+          # Sanctioned canonical producer: this workflow rewrites the tracked
+          # latency.md in its ephemeral checkout to open the refresh PR.
+          REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE: "1"
         run: |
           allowed='http://127.0.0.1:*,https://api.github.com'
           if [ -n "$REPOSIX_CONFLUENCE_TENANT" ]; then

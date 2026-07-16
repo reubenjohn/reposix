@@ -364,13 +364,16 @@ jobs:
             allowed="${allowed},https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
           fi
           export REPOSIX_ALLOWED_ORIGINS="$allowed"
+          # Artifact-only job: regenerate to scratch — the tracked latency.md is
+          # regen-guard-protected; the cron workflow owns the overwrite path.
+          export OUT="${RUNNER_TEMP}/latency-preview.md"
           bash quality/gates/perf/latency-bench.sh
       - name: Upload regenerated latency table
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: latency-table
-          path: docs/benchmarks/latency.md
+          path: ${{ runner.temp }}/latency-preview.md
           if-no-files-found: error
           retention-days: 90
 

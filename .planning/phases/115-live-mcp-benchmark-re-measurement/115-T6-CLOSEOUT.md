@@ -259,3 +259,14 @@ tree-writer (gsd-executor).
   EOF at line 70 (no orphaned list markers, no broken headers).
 - No regression in nearby content: read lines 60–70 confirmed boundary intact, no 
   extraneous deletions.
+
+## Wave 2 — CI hotfix: bench-latency-v09 vs regen-clobber guard
+
+- RED: run 29495972731 (e7a1fd2) — the item-5 guard fired inside CI;
+  latency-bench.sh defaults OUT to the tracked latency.md (line 53).
+- Fix (a) ci.yml: job is artifact-only (never publishes the file) — run
+  step exports OUT="${RUNNER_TEMP}/latency-preview.md", uploads that path.
+- Fix (b) cron: it IS the sanctioned producer (cp/diff/PR of the tracked
+  file) — env sets REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE="1".
+- Regression net: regen-guard.selftest.sh case (f) greps both workflow
+  wirings — 15/15 PASS locally. Green-run id: fixing lane report.

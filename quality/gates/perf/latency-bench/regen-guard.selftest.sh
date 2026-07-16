@@ -12,6 +12,8 @@
 #   (d) same as (c) but with the override env var set  -> safe (rc=0)
 #   (e) the REAL docs/benchmarks/latency.md as committed actually trips
 #       the guard -- catches accidental marker removal in that file
+#   (f) workflow wiring: ci.yml regenerates to a scratch OUT (artifact-only)
+#       and the cron workflow carries the sanctioned override env var
 #
 # Run: bash quality/gates/perf/latency-bench/regen-guard.selftest.sh
 # Exit 0 = all assertions pass; exit 1 = a regression.
@@ -81,6 +83,13 @@ if [[ -f "$REAL_LATENCY" ]]; then
 else
   echo "  SKIP: $REAL_LATENCY not found (unexpected repo layout)"
 fi
+
+echo "== Case (f): workflow wiring keeps the guard out of CI =="
+CI_YML="${REPO_ROOT}/.github/workflows/ci.yml"
+CRON_YML="${REPO_ROOT}/.github/workflows/bench-latency-cron.yml"
+check "ci.yml exports scratch OUT" "$(grep -cF 'export OUT="${RUNNER_TEMP}/latency-preview.md"' "$CI_YML")" 1
+check "ci.yml uploads scratch artifact" "$(grep -cF 'path: ${{ runner.temp }}/latency-preview.md' "$CI_YML")" 1
+check "cron sets canonical-overwrite override" "$(grep -cF 'REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE: "1"' "$CRON_YML")" 1
 
 echo
 echo "regen-guard.selftest: ${pass} passed, ${fail} failed"
