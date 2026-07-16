@@ -12,24 +12,23 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-15 — Public roadmap diagram shipped — `fa58ad6` ✅
 - 2026-07-15 — JSONL-usage token-economy methodology adopted — `9be5439` ✅
 - 2026-07-15 — Real MCP tool surface captured; the planned Jira/atlassian-rovo benchmark path found infeasible (no write tool + token denied + empty project) — recorded honestly, no fabricated numbers — `ece072f` ✅
+- 2026-07-16 — Live token-economy benchmark captured on the GitHub backend — 6 real sessions (median-of-3 × 2 arms) running read-3-issues / edit-1 / push against reubenjohn/reposix; the reposix (git-native) arm is cheaper on every axis vs the GitHub MCP arm (≈77% cheaper per session, ≈94% fewer output tokens, ≈68% less context loaded). Real per-session captures + GitHub MCP catalog (44 tools) + live git-native transcript committed; CAPTURE_OK green. (Findings for follow-up: reposix's GitHub write-back is read-only in this build cut so the reposix push doesn't persist — comparison unaffected; and the GitHub MCP's issue-read is lossy for raw markdown while reposix round-trips bytes faithfully.) — `<pending>` ✅
 
 ## NOW
 
-Capturing the live token benchmark on the GitHub backend — both arms (GitHub's official
-issue MCP vs reposix's git-native checkout) running the same read-3-issues / edit-1 / push
-task against reubenjohn/reposix. The GitHub pivot was chosen after the planned Jira path
-proved infeasible; GitHub's MCP loads and functions with the existing token and the reposix
-arm syncs 9 real issues. Done = 6 real capture sessions recorded in the ledger, the GitHub
-MCP catalog and reposix transcript fixtures replaced with live data, and the CAPTURE_OK
-acceptance check green.
+Regenerating `docs/benchmarks/token-economy.md` from the captured GitHub session JSONL —
+replacing the synthetic-fixture baseline with the live-measured GitHub token regime, sourced
+from the committed `benchmarks/captures/*.json` extracts (which are offline/CI-stable, since
+CI cannot read `~/.claude`). Done = the token-economy numbers are provenance-labelled to the
+real captures, the exact "% fewer tokens" headline is defined from the measured medians, and
+the doc-alignment rows are refreshed.
 
 ## NEXT
 
-1. token-economy.md regenerated from the captured GitHub session JSONL (live 85.5% GitHub regime replaces synthetic baseline)
-2. latency.md honest-headline refresh + the 8 waived hero-number rows un-waived
-3. P115 closed, CI green on main
-4. P116 ADR-010 decision packet (mirror-fanout + slug→id durable-create) → manager ruling
-5. then the remaining milestone phases:
+1. latency.md honest-headline refresh + the 8 waived hero-number rows un-waived
+2. P115 closed, CI green on main
+3. P116 ADR-010 decision packet (mirror-fanout + slug→id durable-create) → manager ruling
+4. then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started
    - P119 — Docs/planning simplification (the "P112 RAISE") — not started

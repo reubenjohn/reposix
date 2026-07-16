@@ -1,14 +1,57 @@
-# 115-MCP-SERVER-CHOICE.md — ratified MCP-server choice for the P115 token benchmark
+# 115-MCP-SERVER-CHOICE.md — MCP-server choice for the P115 token benchmark
 
-**Author:** P115 Task-4 capture executor (L0 workhorse #38) · **Date:** 2026-07-16 (UTC) ·
-**Status:** ratified-with-blocker (the server is chosen; it cannot execute the benchmark
-task as specified — see § Blockers, escalated to owner).
+**Author:** P115 Task-4 capture executor (L0 workhorse #38, amended #39) · **Date:**
+2026-07-16 (UTC) · **Status:** **RESOLVED — live-capture ran on `github-probe`.** The
+originally-ratified `atlassian-rovo` (Jira) path is retained below as the infeasible-attempt
+evidence trail (not deleted).
 
-This is the Task-1 residual formal note. It is **grounded, not a rubber-stamp**: the
-ratified choice is recorded together with the reality captured while wiring it, including
-the reasons it does not currently satisfy the T4 mcp-arm capture.
+This is the Task-1 residual formal note. It is **grounded, not a rubber-stamp**: the choice
+is recorded together with the reality captured while wiring it.
 
-## Ratified choice
+## LIVE-CAPTURE CHOICE (resolved 2026-07-16, #39) — `github-probe`
+
+The T4 mcp-arm capture ran on the **official GitHub remote MCP server**, registered as
+`github-probe` (`https://api.githubcopilot.com/mcp/`, plain PAT Bearer from `GITHUB_TOKEN`).
+Backend: **`reubenjohn/reposix` issues** — a sanctioned OP-6 real-backend test target. This
+was a **[SELF] backend pivot** (§1 of `.planning/SESSION-HANDOVER.md`, within the
+escalation-valve bar) because the Jira/`atlassian-rovo` path was exhausted (below), while
+the published headline claim is backend-agnostic and already carries a per-backend GitHub
+split (85.5%).
+
+| Field | Value |
+|---|---|
+| Server | `github-probe` (official GitHub remote MCP) |
+| URL | `https://api.githubcopilot.com/mcp/` · streamable-HTTP · PAT Bearer |
+| Tool surface | **44 tools**, full issue-CRUD present (`list_issues`, `issue_read`, `search_issues`, `issue_write`, `add_issue_comment`) — captured live at `benchmarks/fixtures/mcp_github_catalog.json` |
+| Task executed | "read 3 issues (#56, #57, #60), edit 1 (#60 body marker), push" |
+| Sessions | **6 = median-of-3 × 2 arms**, all valid (ledger rows 2–7; `running_total` 7/50) |
+| mcp-arm proof | JSONL shows real `mcp__github-probe__{issue_read,issue_write,search_issues}` calls in all 3 runs |
+| reposix-arm proof | JSONL shows **zero** `mcp__*` calls (pure git/POSIX) in all 3 runs |
+
+**Key results (medians, real captures):** mcp-arm ≈ 21.2k output / 56.1k cache-creation /
+550k total input-context / $0.83 per session; reposix-arm ≈ 1.2k output / 18.0k
+cache-creation / 242k total input-context / $0.19 per session. reposix is cheaper on every
+axis (output ≈94% fewer, cost ≈77% cheaper). The exact published "% fewer tokens" figure is
+T5's to define from these captures.
+
+**Two findings captured alongside (evidence trail):**
+1. **`reposix-github` is READ-ONLY in this build cut** (`crates/reposix-github/src/lib.rs`
+   `create/update/delete_record` return not-supported; documented in `doctor.rs`). The
+   reposix arm completed read+edit+local-commit; its `git push` was correctly rejected with
+   the read-only-cut error. The token-economy comparison is unaffected (it measures agent
+   context size, not backend write capability), but the T4 recipe's assumption that "the
+   push writes back to GitHub" does not hold for this cut. Filed for L0.
+2. **`github-probe` `issue_read` is lossy for raw markdown** — it HTML-escapes body content
+   (`>=` → `&gt;=`) and drops literal angle-bracket content, so an MCP read-modify-write
+   round-trip corrupts the body; the reposix arm round-trips raw bytes faithfully. Strong
+   evidence for the reposix bytes-in-bytes-out fidelity story.
+
+## Original attempt (SUPERSEDED — infeasible; retained as evidence trail)
+
+> The sections below record the originally-ratified `atlassian-rovo` choice and the three
+> independent findings that made it infeasible for the T4 capture. They are **kept, not
+> deleted** — the pivot to `github-probe` (above) rests on this evidence. `atlassian-rovo`
+> can be revisited if org-admin API-token access + a CRUD-capable Jira MCP are provisioned.
 
 **Official Atlassian remote MCP server ("Rovo") — `atlassian-rovo`.**
 
