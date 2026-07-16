@@ -24,8 +24,13 @@ budget (CI `bench-latency-v09`) and are **not** recorded here.
 
 ## Running total
 
-**Sessions spent: 0 / 50.** (No live session has been spent yet — this scaffold is the
-committed empty schema.)
+**Sessions spent: 1 / 50.** (One live session spent: the P115 Task-4 MCP-arm smoke
+test, 2026-07-15. The planned 6-session median-of-3 capture is **BLOCKED** — see
+`.planning/phases/115-live-mcp-benchmark-re-measurement/115-MCP-SERVER-CHOICE.md` and the
+v0.15.0 `SURPRISES-INTAKE.md` BLOCKER entry: the ratified `atlassian-rovo` MCP has no
+Jira issue-CRUD tool and its API token is permission-denied on `tools/call`, and Jira
+project KAN currently holds 0 issues. Awaiting an owner ruling before spending the
+remaining capture sessions.)
 
 ## Ledger
 
@@ -34,3 +39,4 @@ committed empty schema.)
 <!-- Append one row per live-MCP session here, in order. Increment running_total each
      row; verify ≤ 50 BEFORE starting the next session. Flag any session > ~5× the
      running median token cost. Do not backfill. -->
+| 1 | 2026-07-16T04:56:06Z | kan (context only) | mcp-mediated | smoke: list every available tool (verify mcp__atlassian-rovo__* load) | 1 | 1 | benchmarks/captures/mcp-kan-smoke.json + benchmarks/fixtures/mcp_jira_catalog.json |

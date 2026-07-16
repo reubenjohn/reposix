@@ -1,0 +1,17 @@
+{
+  "_note": "Scrubbed usage extract of the ONE real live session spent by P115 Task-4 (the mandatory MCP-arm smoke test). This is the only session captured because the 6-session median-of-3 capture is BLOCKED (see 115-MCP-SERVER-CHOICE.md + v0.15.0 SURPRISES-INTAKE): the atlassian-rovo MCP exposes no Jira CRUD tool and its Bearer token is permission-denied on tools/call, and KAN has 0 issues. This session ran a nested `claude -p` from cwd=reposix repo (inheriting atlassian-rovo) and asked it to list its tools — confirming the mcp__atlassian-rovo__* tools LOAD into context (the tool-loading cost is real) but making no tools/call. No backend body content, no secrets.",
+  "arm": "mcp-mediated",
+  "backend": "kan (context only — no KAN read/write performed)",
+  "task": "smoke: list every available tool (verifies mcp__atlassian-rovo__* load)",
+  "session_id": "52b94471-2c68-4d96-9dcf-7b4674b325a7",
+  "model": "claude-opus-4-8[1m]",
+  "input_tokens": 2,
+  "output_tokens": 832,
+  "cache_creation_input_tokens": 25798,
+  "cache_read_input_tokens": 15036,
+  "num_turns": 1,
+  "total_cost_usd": 0.286308,
+  "duration_ms": 9732,
+  "tool_calls": [],
+  "mcp_tools_loaded": ["mcp__atlassian-rovo__getTeamworkGraphContext", "mcp__atlassian-rovo__getTeamworkGraphObject", "mcp__atlassian-rovo__addTeamworkGraphContext"]
+}

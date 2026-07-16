@@ -1,357 +1,68 @@
 {
-  "_note": "Synthesized representative MCP tool catalog for a Jira-style issue tracker, modeled on the public Atlassian Forge surface and the actual schemas produced by mcp-atlassian. 35 tools. This is what an agent loads BEFORE taking its first real action. Char-length and token estimate are computed by scripts/bench_token_economy.py.",
+  "_note": "REAL captured tool catalog of the official Atlassian remote MCP server (atlassian-rovo) as it advertised tools on 2026-07-15, replacing the prior SYNTHETIC 35-tool file (which was modeled on the community `sooperset/mcp-atlassian` server, a DIFFERENT server with full Jira CRUD). This is the actual surface an agent loads before its first action. IMPORTANT FINDINGS captured alongside this file (see .planning/phases/115-live-mcp-benchmark-re-measurement/115-MCP-SERVER-CHOICE.md): (1) the official atlassian-rovo server exposes only THESE 3 Teamwork Graph tools — there is NO editJiraIssue / createJiraIssue / updateJiraIssue / JQL-search tool, so it cannot perform the P115 benchmark task's 'edit 1 issue' step; (2) an actual tools/call with the ratified Bearer API-token is REJECTED with 'You don't have permission to connect via API token. Please ask your organization admin for access.' — the tools LOAD but do NOT function with this credential. No secrets are stored in this file.",
+  "_provenance": {
+    "server_name": "atlassian-rovo",
+    "server_url": "https://mcp.atlassian.com/v1/mcp",
+    "transport": "streamable-HTTP",
+    "server_info": {"name": "atlassian-mcp-server", "version": "1.0.0"},
+    "auth": "Bearer API-token (Personal API Token; org-admin-gated) — value NOT stored here",
+    "captured_by": "P115 Task-4 capture executor (L0 #38)",
+    "captured_at_utc": "2026-07-15",
+    "capture_method": "Claude Code ToolSearch deferred-tool schema fetch from a session with cwd=reposix repo (atlassian-rovo local-scoped there); cross-checked against a nested `claude -p --output-format json` smoke session (session_id 52b94471-2c68-4d96-9dcf-7b4674b325a7) whose tool listing showed exactly these 3 mcp__atlassian-rovo__* tools",
+    "tool_count": 3,
+    "crud_tools_present": false,
+    "invocation_authorized_with_current_token": false,
+    "invocation_error": "You don't have permission to connect via API token. Please ask your organization admin for access."
+  },
+  "server_instructions": "Use getTeamworkGraphContext when retrieving or reasoning about relationships and connections between Atlassian entities - such as work items, people, teams, goals, projects, or third-party objects. Do not use Teamwork Graph tools for basic CRUD operations. After calling getTeamworkGraphContext, call getTeamworkGraphObject on key linked entities to retrieve richer detail.",
   "tools": [
     {
-      "name": "jira_search_issues",
-      "description": "Search for Jira issues using JQL (Jira Query Language). Supports pagination via `startAt` and `maxResults` parameters. Returns a paginated list of issues matching the JQL expression. Common JQL patterns: 'project = KEY AND status = Open', 'assignee = currentUser()', 'updated >= -7d'. Note that complex JQL may require specific permissions.",
+      "name": "getTeamworkGraphContext",
+      "description": "Retrieves connected context from Teamwork Graph for any Atlassian entity. Returns all relationships and linked objects within one traversal – including cross-product and third-party connections. Use when the answer requires connections between entities, not just a single entity's fields. Supported entry points: Jira issues/projects/sprints/versions/comments; Confluence pages/blogposts/whiteboards/databases/spaces; Goals, Projects, Focus Areas, Tags and updates; People (users, teams, organisations); DevOps (PRs, repos, deployments, services, builds, designs); Loom videos/meetings; Compass components; Assets objects; Incidents, conversations, calendar events, external documents. After calling this tool, call getTeamworkGraphObject on returned ARIs to get full content.",
       "inputSchema": {
         "type": "object",
+        "required": ["cloudId", "objectType", "objectIdentifier"],
+        "additionalProperties": false,
         "properties": {
-          "jql": {"type": "string", "description": "JQL query string. Examples: 'project = DEMO', 'assignee = currentUser() AND status != Done'"},
-          "fields": {"type": "array", "items": {"type": "string"}, "description": "Fields to return. Use '*all' for all fields. Default: ['summary', 'status', 'assignee', 'priority']"},
-          "startAt": {"type": "integer", "description": "Pagination offset. Default 0."},
-          "maxResults": {"type": "integer", "description": "Max issues per page. Default 50, max 100."},
-          "expand": {"type": "array", "items": {"type": "string", "enum": ["changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta", "versionedRepresentations"]}, "description": "Additional data to include"}
-        },
-        "required": ["jql"]
-      }
-    },
-    {
-      "name": "jira_get_issue",
-      "description": "Fetch a single Jira issue by key or ID. Returns the complete issue record including all custom fields, comments, attachments metadata, and workflow transitions available. Use `expand=renderedFields` to get HTML-rendered description and comments.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string", "description": "Issue key (e.g. 'PROJ-123') or numeric ID"},
-          "fields": {"type": "array", "items": {"type": "string"}},
-          "expand": {"type": "array", "items": {"type": "string"}},
-          "properties": {"type": "array", "items": {"type": "string"}, "description": "Entity properties to fetch"},
-          "updateHistory": {"type": "boolean", "description": "Record this view in the user's recent-issues history"}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_create_issue",
-      "description": "Create a new Jira issue. Requires at minimum a project, issue type, and summary. Custom fields can be set via the `customfield_NNNNN` convention. Parent issue is required for subtasks.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "fields": {
-            "type": "object",
-            "properties": {
-              "project": {"type": "object", "properties": {"key": {"type": "string"}, "id": {"type": "string"}}},
-              "issuetype": {"type": "object", "properties": {"name": {"type": "string"}, "id": {"type": "string"}}},
-              "summary": {"type": "string"},
-              "description": {"type": "object", "description": "ADF (Atlassian Document Format) object. Prefer simpler `summary`-only creation if possible."},
-              "priority": {"type": "object", "properties": {"name": {"type": "string"}, "id": {"type": "string"}}},
-              "assignee": {"type": "object", "properties": {"accountId": {"type": "string"}}},
-              "reporter": {"type": "object", "properties": {"accountId": {"type": "string"}}},
-              "labels": {"type": "array", "items": {"type": "string"}},
-              "components": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}}}},
-              "fixVersions": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}}}},
-              "duedate": {"type": "string", "format": "date"},
-              "customfield_10014": {"type": "string", "description": "Epic Link field — parent epic key"},
-              "customfield_10020": {"type": "integer", "description": "Sprint field — sprint ID"}
-            },
-            "required": ["project", "issuetype", "summary"]
-          },
-          "update": {"type": "object", "description": "Update operations to apply immediately after creation"}
-        },
-        "required": ["fields"]
-      }
-    },
-    {
-      "name": "jira_update_issue",
-      "description": "Update fields on an existing Jira issue. Supports both set (replace value) and add/remove for multi-value fields. Returns 204 on success. Requires 'Edit Issues' permission on the issue's project.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "fields": {"type": "object", "description": "Fields to set, same schema as create"},
-          "update": {
-            "type": "object",
-            "properties": {
-              "summary": {"type": "array", "items": {"type": "object", "properties": {"set": {"type": "string"}}}},
-              "description": {"type": "array", "items": {"type": "object", "properties": {"set": {"type": "object"}}}},
-              "labels": {"type": "array", "items": {"type": "object", "properties": {"add": {"type": "string"}, "remove": {"type": "string"}}}},
-              "components": {"type": "array", "items": {"type": "object"}},
-              "fixVersions": {"type": "array", "items": {"type": "object"}}
-            }
-          },
-          "notifyUsers": {"type": "boolean", "description": "Send email notifications (default true)"},
-          "overrideScreenSecurity": {"type": "boolean"},
-          "overrideEditableFlag": {"type": "boolean"}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_delete_issue",
-      "description": "Delete a Jira issue permanently. Subtasks are deleted by default. Cannot be undone. Requires 'Delete Issues' permission.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "deleteSubtasks": {"type": "boolean", "description": "Also delete subtasks. Default true."}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_add_comment",
-      "description": "Add a comment to a Jira issue. Body uses Atlassian Document Format (ADF) — the simpler rendering supports plain text via `{type:'doc', content:[{type:'paragraph', content:[{type:'text', text:'...'}]}]}`. Comment visibility can be restricted to a role or group.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "body": {"type": "object", "description": "ADF document"},
-          "visibility": {"type": "object", "properties": {"type": {"type": "string", "enum": ["role", "group"]}, "value": {"type": "string"}}},
-          "properties": {"type": "array", "items": {"type": "object"}}
-        },
-        "required": ["issueIdOrKey", "body"]
-      }
-    },
-    {
-      "name": "jira_get_comments",
-      "description": "List comments on a Jira issue. Paginated. Use `expand=renderedBody` for HTML-rendered comments.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "startAt": {"type": "integer"},
-          "maxResults": {"type": "integer"},
-          "orderBy": {"type": "string", "enum": ["created", "-created", "updated", "-updated"]},
-          "expand": {"type": "array", "items": {"type": "string"}}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_update_comment",
-      "description": "Update an existing comment. Requires 'Edit Own Comments' or 'Edit All Comments' permission.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "commentId": {"type": "string"},
-          "body": {"type": "object"},
-          "visibility": {"type": "object"},
-          "notifyUsers": {"type": "boolean"}
-        },
-        "required": ["issueIdOrKey", "commentId", "body"]
-      }
-    },
-    {
-      "name": "jira_delete_comment",
-      "description": "Delete a comment from a Jira issue. Requires appropriate permissions.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "commentId": {"type": "string"}
-        },
-        "required": ["issueIdOrKey", "commentId"]
-      }
-    },
-    {
-      "name": "jira_list_transitions",
-      "description": "List the workflow transitions currently available for an issue. Only transitions the current user is authorized to perform are returned. Transitions are workflow-specific and may include validators (e.g. require a resolution to be set before closing).",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "expand": {"type": "array", "items": {"type": "string", "enum": ["transitions.fields"]}},
-          "transitionId": {"type": "string", "description": "Filter to a specific transition ID"},
-          "skipRemoteOnlyCondition": {"type": "boolean"},
-          "includeUnavailableTransitions": {"type": "boolean"}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_transition_issue",
-      "description": "Execute a workflow transition on an issue (e.g. move from 'Open' to 'In Progress'). The transition ID comes from `jira_list_transitions`. Some transitions require fields to be set (resolution, comment, etc.) — these go in the `fields` or `update` object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "transition": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
-          "fields": {"type": "object"},
-          "update": {"type": "object"},
-          "historyMetadata": {"type": "object"}
-        },
-        "required": ["issueIdOrKey", "transition"]
-      }
-    },
-    {
-      "name": "jira_add_attachment",
-      "description": "Attach a file to a Jira issue. Request must be multipart/form-data. Max file size is configured per-instance (commonly 10 MB).",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "filename": {"type": "string"},
-          "data": {"type": "string", "format": "byte", "description": "Base64-encoded file bytes"}
-        },
-        "required": ["issueIdOrKey", "filename", "data"]
-      }
-    },
-    {
-      "name": "jira_list_attachments",
-      "description": "List attachments on a Jira issue.",
-      "inputSchema": {"type": "object", "properties": {"issueIdOrKey": {"type": "string"}}, "required": ["issueIdOrKey"]}
-    },
-    {
-      "name": "jira_delete_attachment",
-      "description": "Delete an attachment.",
-      "inputSchema": {"type": "object", "properties": {"attachmentId": {"type": "string"}}, "required": ["attachmentId"]}
-    },
-    {
-      "name": "jira_assign_issue",
-      "description": "Assign an issue to a user (or unassign by passing accountId=null). Requires 'Assign Issues' permission.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "issueIdOrKey": {"type": "string"},
-          "accountId": {"type": ["string", "null"]}
-        },
-        "required": ["issueIdOrKey"]
-      }
-    },
-    {
-      "name": "jira_add_watcher",
-      "description": "Add a watcher to an issue.",
-      "inputSchema": {"type": "object", "properties": {"issueIdOrKey": {"type": "string"}, "accountId": {"type": "string"}}, "required": ["issueIdOrKey", "accountId"]}
-    },
-    {
-      "name": "jira_remove_watcher",
-      "description": "Remove a watcher.",
-      "inputSchema": {"type": "object", "properties": {"issueIdOrKey": {"type": "string"}, "accountId": {"type": "string"}}, "required": ["issueIdOrKey", "accountId"]}
-    },
-    {
-      "name": "jira_list_watchers",
-      "description": "List watchers on an issue.",
-      "inputSchema": {"type": "object", "properties": {"issueIdOrKey": {"type": "string"}}, "required": ["issueIdOrKey"]}
-    },
-    {
-      "name": "jira_add_link",
-      "description": "Link two issues (e.g. 'blocks', 'is blocked by', 'duplicates', 'relates to'). Link types are configured per instance.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "type": {"type": "object", "properties": {"name": {"type": "string"}, "id": {"type": "string"}}},
-          "inwardIssue": {"type": "object", "properties": {"key": {"type": "string"}}},
-          "outwardIssue": {"type": "object", "properties": {"key": {"type": "string"}}},
-          "comment": {"type": "object"}
-        },
-        "required": ["type", "inwardIssue", "outwardIssue"]
-      }
-    },
-    {
-      "name": "jira_remove_link",
-      "description": "Remove an issue link.",
-      "inputSchema": {"type": "object", "properties": {"linkId": {"type": "string"}}, "required": ["linkId"]}
-    },
-    {
-      "name": "jira_list_projects",
-      "description": "List visible Jira projects.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "startAt": {"type": "integer"},
-          "maxResults": {"type": "integer"},
-          "orderBy": {"type": "string", "enum": ["category", "-category", "key", "-key", "name", "-name", "owner", "-owner", "issueCount", "-issueCount", "lastIssueUpdatedDate", "-lastIssueUpdatedDate", "archivedDate", "-archivedDate", "deletedDate", "-deletedDate"]},
-          "query": {"type": "string"},
-          "typeKey": {"type": "string"},
-          "categoryId": {"type": "integer"},
-          "expand": {"type": "array", "items": {"type": "string", "enum": ["description", "projectKeys", "lead", "issueTypes", "url", "insight"]}}
+          "cloudId": {"type": "string", "description": "Cloud ID (UUID or site URL)"},
+          "objectType": {"type": "string", "description": "Type of object to fetch context for.", "enum": ["AtlassianGoal", "AtlassianGoalUpdate", "AtlassianHomeComment", "AtlassianHomeTag", "AtlassianProject", "AtlassianProjectUpdate", "AtlassianTeam", "AtlassianUser", "CompassComponent", "ConfluenceBlogPost", "ConfluenceComment", "ConfluenceDatabase", "ConfluencePage", "ConfluenceSpace", "ConfluenceWhiteboard", "ExternalCalendarEvent", "ExternalConversation", "ExternalDeployment", "ExternalDesign", "ExternalDocument", "ExternalOrganisation", "ExternalPosition", "ExternalPullRequest", "ExternalRepository", "ExternalService", "FocusFocusArea", "JiraSpace", "JiraSprint", "JiraVersion", "JiraWorkItem", "JiraWorkItemComment", "AssetsObject", "LoomMeeting", "LoomMeetingRecurrence", "LoomVideo"]},
+          "objectIdentifier": {"type": "string", "maxLength": 500, "description": "Identifier for the object. It could be a key (e.g. ENG-1234), ID, ARI, or full URL; format depends on objectType."},
+          "after": {"type": "string", "description": "Pagination cursor for fetching the next page of results."},
+          "detailLevel": {"type": "string", "default": "summary", "enum": ["summary", "full"], "description": "'summary' (counts/metadata) or 'full' (detailed content)."},
+          "first": {"type": "integer", "default": 50, "maximum": 50, "description": "Max number of related items to return."},
+          "relationshipTypes": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 200}, "description": "Filter full results to specific relationship types to save tokens (e.g. 'jira-work-item-links-external-build' for Jira work items)."},
+          "targetObjectTypes": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 200}, "description": "Filter results to only include relationships targeting specific object types (e.g. AtlassianUser, ConfluenceComment)."},
+          "timeRange": {"type": "object", "additionalProperties": false, "description": "Optional time range to filter relationships by creation or update time.", "properties": {"from": {"type": "string", "format": "date-time", "description": "ISO 8601 date-time string for the start of the time range (e.g. \"2025-01-01T00:00:00Z\")."}, "to": {"type": "string", "format": "date-time", "description": "ISO 8601 date-time string for the end of the time range (e.g. \"2025-12-31T23:59:59Z\")."}}}
         }
       }
     },
     {
-      "name": "jira_get_project",
-      "description": "Fetch a Jira project by ID or key.",
-      "inputSchema": {"type": "object", "properties": {"projectIdOrKey": {"type": "string"}, "expand": {"type": "array", "items": {"type": "string"}}, "properties": {"type": "array", "items": {"type": "string"}}}, "required": ["projectIdOrKey"]}
-    },
-    {
-      "name": "jira_list_components",
-      "description": "List components within a project.",
-      "inputSchema": {"type": "object", "properties": {"projectIdOrKey": {"type": "string"}, "startAt": {"type": "integer"}, "maxResults": {"type": "integer"}, "orderBy": {"type": "string"}, "componentSource": {"type": "string", "enum": ["jira", "compass"]}, "query": {"type": "string"}}, "required": ["projectIdOrKey"]}
-    },
-    {
-      "name": "jira_list_versions",
-      "description": "List fix versions within a project.",
-      "inputSchema": {"type": "object", "properties": {"projectIdOrKey": {"type": "string"}, "startAt": {"type": "integer"}, "maxResults": {"type": "integer"}, "orderBy": {"type": "string"}, "query": {"type": "string"}, "status": {"type": "string", "enum": ["released", "unreleased", "archived"]}, "expand": {"type": "string"}}, "required": ["projectIdOrKey"]}
-    },
-    {
-      "name": "jira_list_sprints",
-      "description": "List sprints in a board. Requires the board to be a Scrum board.",
-      "inputSchema": {"type": "object", "properties": {"boardId": {"type": "integer"}, "startAt": {"type": "integer"}, "maxResults": {"type": "integer"}, "state": {"type": "string", "enum": ["future", "active", "closed"]}}, "required": ["boardId"]}
-    },
-    {
-      "name": "jira_move_to_sprint",
-      "description": "Move one or more issues into a sprint.",
-      "inputSchema": {"type": "object", "properties": {"sprintId": {"type": "integer"}, "issues": {"type": "array", "items": {"type": "string"}}}, "required": ["sprintId", "issues"]}
-    },
-    {
-      "name": "jira_list_boards",
-      "description": "List boards the current user has access to.",
-      "inputSchema": {"type": "object", "properties": {"startAt": {"type": "integer"}, "maxResults": {"type": "integer"}, "type": {"type": "string", "enum": ["scrum", "kanban", "simple"]}, "name": {"type": "string"}, "projectKeyOrId": {"type": "string"}, "accountIdLocation": {"type": "string"}}}
-    },
-    {
-      "name": "jira_list_users",
-      "description": "List users in the Jira instance.",
-      "inputSchema": {"type": "object", "properties": {"startAt": {"type": "integer"}, "maxResults": {"type": "integer"}, "query": {"type": "string"}, "accountId": {"type": "string"}}}
-    },
-    {
-      "name": "jira_get_user",
-      "description": "Fetch a user by accountId.",
-      "inputSchema": {"type": "object", "properties": {"accountId": {"type": "string"}, "expand": {"type": "string"}}, "required": ["accountId"]}
-    },
-    {
-      "name": "jira_get_current_user",
-      "description": "Fetch the currently-authenticated user.",
-      "inputSchema": {"type": "object", "properties": {"expand": {"type": "string"}}}
-    },
-    {
-      "name": "jira_list_fields",
-      "description": "List all Jira fields including custom fields. Returns each field's ID, name, and schema. Useful when working with a Jira instance whose custom-field IDs you don't already know.",
-      "inputSchema": {"type": "object", "properties": {}}
-    },
-    {
-      "name": "jira_get_field_options",
-      "description": "List the possible values for an option-typed field (e.g. select lists, labels autocomplete).",
-      "inputSchema": {"type": "object", "properties": {"fieldId": {"type": "string"}, "startAt": {"type": "integer"}, "maxResults": {"type": "integer"}}, "required": ["fieldId"]}
-    },
-    {
-      "name": "jira_list_workflows",
-      "description": "List Jira workflows.",
-      "inputSchema": {"type": "object", "properties": {"workflowName": {"type": "array", "items": {"type": "string"}}, "expand": {"type": "string"}, "queryString": {"type": "string"}, "orderBy": {"type": "string"}, "isActive": {"type": "boolean"}}}
-    },
-    {
-      "name": "jira_get_workflow",
-      "description": "Fetch a single workflow including its statuses and transitions.",
-      "inputSchema": {"type": "object", "properties": {"workflowName": {"type": "string"}, "expand": {"type": "string"}}, "required": ["workflowName"]}
-    },
-    {
-      "name": "jira_bulk_edit",
-      "description": "Edit multiple issues in one call. Requires 'Bulk Change' permission. Use with care — an attacker-controlled input here can fan out into arbitrary state corruption across the entire project.",
+      "name": "getTeamworkGraphObject",
+      "description": "Fetches the entire available data for one or more objects (Atlassian or third-party) using their ARIs or URLs. Use for the objects gathered from getTeamworkGraphContext tool.",
       "inputSchema": {
         "type": "object",
+        "required": ["cloudId", "objects"],
+        "additionalProperties": false,
         "properties": {
-          "issueIds": {"type": "array", "items": {"type": "string"}},
-          "editedFieldsInput": {
-            "type": "object",
-            "properties": {
-              "overrideScreenSecurity": {"type": "boolean"},
-              "sendBulkNotificationEmails": {"type": "boolean"},
-              "selectedActions": {"type": "array", "items": {"type": "string"}},
-              "selectedActionsFields": {"type": "object"}
-            }
-          }
-        },
-        "required": ["issueIds", "editedFieldsInput"]
+          "cloudId": {"type": "string", "description": "Cloud ID (UUID or site URL)"},
+          "objects": {"type": "array", "maxItems": 25, "items": {"type": "string", "maxLength": 500}, "description": "A list of object identifiers to hydrate. Supports both ARIs (e.g., 'ari:cloud:jira::issue/123') and full browser URLs (e.g., 'https://mysite.atlassian.net/browse/PROJ-1')."}
+        }
+      }
+    },
+    {
+      "name": "addTeamworkGraphContext",
+      "description": "Adds a relationship between two entities in the Teamwork Graph (e.g. linking two Jira work items, marking one as blocking another, attaching a remote link, or connecting a Jira work item to an Atlas project or goal). NOTE: this is the ONLY mutating tool on this server, and it mutates the relationship graph only — it CANNOT edit an issue's own fields (summary, description, status).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["cloudId", "relationshipType", "objectIdentifier", "targetObjectIdentifier"],
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {"type": "string", "description": "Cloud ID (UUID or site URL)"},
+          "objectIdentifier": {"type": "string", "maxLength": 500, "description": "Identifier of the source entity. Accepts an ARI, a full URL, or a stable key (e.g. ENG-123 for a Jira work item). Format depends on relationshipType."},
+          "relationshipType": {"type": "string", "description": "Type of relationship to create. Determines which entity types 'objectIdentifier' and 'targetObjectIdentifier' must resolve to.", "enum": ["jira-work-item-links-jira-work-item", "jira-work-item-blocks-jira-work-item", "jira-work-item-links-jira-work-item-remote-link", "jira-work-item-tracks-atlassian-project", "jira-work-item-contributes-to-atlassian-goal"]},
+          "targetObjectIdentifier": {"type": "string", "maxLength": 500, "description": "Identifier of the target entity. Accepts an ARI, a full URL, or a stable key (e.g. ATLAS-20426 for an Atlas project). Format depends on relationshipType."},
+          "title": {"type": "string", "maxLength": 500, "description": "Optional display label for the target. Used by relationships that surface a title (e.g. remote links); ignored otherwise."}
+        }
       }
     }
   ]
