@@ -22,37 +22,39 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **T6 item 6a (headline-numbers-cross-check gate + 8ms→6/7ms reconcile) — SHIPPED** — wrote the missing `quality/gates/perf/headline-numbers-cross-check.py` verifier + 12-test suite; reconciled the "8 ms" hero prose to canonical "6 ms get / 7 ms list" across all 3 hero surfaces (6 edits); repaired + un-waived the EXISTING P90-era `perf/headline-numbers-cross-check` catalog row (dangling-verifier fixed, no duplicate row created) — minted PASS via `run.py --cadence weekly --persist`; rebound `docs/index/latency-8ms-read` + `latency-cached-read-8ms`. Gate GREEN (RED pre-edit → PASS post-edit); walk rc=0. **CI hotfix `3eacb53`** (concurrent lane) fixed a RED main (`bench-latency-v09` regression vs the item-5 regen-clobber guard) that rode out on this push. Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 6a. — `63fdd8d` (+ `cd125eb` closeout evidence, `3eacb53` CI hotfix) ✅
 - 2026-07-16 — **T6 item 6b (cold-init 27ms→278ms reconcile + un-waive loop/perf rows) — SHIPPED — T6 (all 7 items) COMPLETE** — cold-init hero **27 ms → canonical 278 ms** (same operation, superseded dev-machine figure fixed to canonical); extended `headline-numbers-cross-check.py` with a cold-init axis + 2 absolute loop-figure checks (18 hero headlines, all match). Bound+unwaived the 3 cold-init rows + the 2 loop-token rows (`~21k` MCP / `~1.2k` reposix) + `README-md/latency-8ms`; propose-retired + re-attributed 3 more superseded 89.1%-era rows (a true duplicate pair folded, no distinct claim lost); un-waived + minted `perf/token-economy-bench` PASS (`main()` now asserts ~94.3% ±1.0pp); persisted two benign validate-only status flips (stale FAIL/NOT-VERIFIED → PASS, surgical, code/shell-coverage + security/cargo-audit). Non-hero 8ms fixed on mental-model:69 / filesystem-layer:42 / concepts-vs-mcp:15. Walk rc=0, gate exit 0, perf pytest 26/26, docs-build all green. Filed `GTH-V15-29..33` (bind --test fn-resolution unenforced; row-ID↔claim cosmetic drift; webhook-latency deliberate-exception clarity; gate script near its char ceiling; mental-model-page L21/L69 inconsistency). CI green (`29501752893`), post-push P0 PASS. **Human relay: the confirm-retire batch is now ELEVEN rows** (8 prior + 3 new) — see NOW. — `776ca85` ✅
 - 2026-07-16 — **Pre-close owner-directive lane (strip retirement-history narrative) — SHIPPED** — owner ruling 2026-07-16: user-facing docs carry current truth only, correction history lives in git history + planning artifacts. Removed the old-figure retirement-story sections from `docs/benchmarks/token-economy.md` (89.1%/85.5%), `docs/concepts/reposix-vs-mcp-and-sdks.md` (4,883/531 origin sentence), `docs/index.md` (retired-figure clause), and `docs/benchmarks/latency.md` ("Superseded figures" paragraph) — current live numbers and all current-measurement caveats (read-only write-back scope, MCP-lossy caveat, live-capture provenance) kept intact. Re-bound 2 latency catalog rows for line shift; mkdocs-strict + mermaid + banned-words + docs-alignment walk all green. Zero new rows propose-retired (verified: the batch is unchanged at 11 rows). Ledger entry in `CONSULT-DECISIONS.md`; consolidated 11-row confirm-retire batch + copy-paste commands landed in `115-UNWAIVE-PATH.md` FINAL section; 3 intake filings + 1 GOOD-TO-HAVE routed. — `5a5dd29` (planning artifacts in this commit) ✅
-- 2026-07-16 — **Quick task 260716-f6o (fix-it-twice: strip retirement-history narrative from the perf-gate GENERATOR) — SHIPPED** — owner ruling `5a5dd29` deliberately removed the "## What retired the old 89.1% / 85.5% figures" section from `docs/benchmarks/token-economy.md`, but the GENERATOR (`bench_token_economy_captures.py::render_token_economy_markdown`) still templated it; the P115 phase-close gate-run regen re-added it in place, leaving a dirty `+12`-line working tree. **Manager-established provenance: accidental regression vector, NOT a deliberate override of the owner ruling.** Stripped the section from the template; offline regen (`bench_token_economy.py --offline`) now reproduces the committed doc byte-for-byte (sha256 `5620699b...364fcf` match, empty `git diff`). Discarded the stray working-tree re-add (belt-and-suspenders `git checkout --`). Verified no doc-alignment catalog rebind needed — committed doc bytes unchanged, BOUND rows are the live four-axis claims, catalog untouched. — pending commit (this quick task) ✅
+- 2026-07-16 — **Quick task 260716-f6o (fix-it-twice: strip retirement-history narrative from the perf-gate GENERATOR) — SHIPPED** — owner ruling `5a5dd29` deliberately removed the "## What retired the old 89.1% / 85.5% figures" section from `docs/benchmarks/token-economy.md`, but the GENERATOR (`bench_token_economy_captures.py::render_token_economy_markdown`) still templated it; the P115 phase-close gate-run regen re-added it in place, leaving a dirty `+12`-line working tree. **Manager-established provenance: accidental regression vector, NOT a deliberate override of the owner ruling.** Stripped the section from the template; offline regen (`bench_token_economy.py --offline`) now reproduces the committed doc byte-for-byte (sha256 `5620699b...364fcf` match, empty `git diff`). Discarded the stray working-tree re-add (belt-and-suspenders `git checkout --`). Verified no doc-alignment catalog rebind needed — committed doc bytes unchanged, BOUND rows are the live four-axis claims, catalog untouched. — `19f9ae2` (+ `ac9e717` STATE.md record) ✅
+- 2026-07-16 — **Quick task 260716-fmt (`GTH-V15-35` docs/index.md install-IA fix, both addenda) — SHIPPED** — nested "Build from source (advanced)" under the "30-second install" tabs (install-leads-with-pkg-mgr gate stays GREEN); surfaced the `reposix sim` / `reposix init` bootstrap lines in visible prose; split + destaled the two-claim `docs/index.md:93` line (stale "Phase 36" claim replaced with the real GitHub 320 ms / Confluence 202 ms figures from `docs/benchmarks/latency.md:42`); all 11 shifted doc-alignment rows mechanically rebound (walk exit 0, zero `STALE_DOCS_DRIFT`); filed one MEDIUM `SURPRISES-INTAKE.md` row (the token-economy regen test's missing byte-compare-against-committed-doc coverage — the exact gap class behind the `260716-f6o` regression). `GTH-V15-35` STATUS → DONE. — `97fad0d` (+ `2398b34` STATE.md record) ✅
 
 ## NOW
 
-**P115 CHECKPOINTED GREEN at the human gate.** The verifier ran and returned
-**GREEN-CHECKPOINT** (`115-VERIFICATION.md`, `ce4d3b7`): the phase goal (live MCP
-benchmark re-measurement + honest headline re-anchoring) is achieved in the codebase.
-The **sole remaining action is the human-only 11-row confirm-retire batch**
+**P115 stays CHECKPOINTED GREEN at the human gate — re-verified live TWICE this session
+(start + end), unchanged.** `grep -c '"last_verdict": "RETIRE_PROPOSED"'
+quality/catalogs/doc-alignment.json` → **11**, all 11 rows still open. The verifier's
+**GREEN-CHECKPOINT** verdict (`115-VERIFICATION.md`, `ce4d3b7`) stands; the **sole
+remaining action is the human-only 11-row confirm-retire batch**
 (`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch" — authoritative row-ID
 list + copy-paste commands; verb needs a real TTY, refuses `$CLAUDE_AGENT_CONTEXT`,
-agents never pass `--i-am-human`). The cold-reader pass on `docs/index.md` + `README.md`
-is **DONE** — hero numbers are all clean, the README dead link is fixed, and the one
-remaining cold-reader finding (the stale Phase-36 claim at `docs/index.md:93`) is folded
-into `GTH-V15-35` as an addendum, to be fixed together with its required doc-alignment
-catalog rebind in the same wave. **P116 (ADR-010) is RULED and encoded** — both manager
-rulings landed verbatim in `CONSULT-DECISIONS.md`; the successor's next substantive work
-is executing P116 through GSD (doc-truth rewrites, ADR-010 §2/§3 amendments,
-litmus-non-idempotency intake-row retirement), sequenced after this checkpoint.
-`.planning/STATE.md`'s cursor advances past P115 only when the human confirm-retire batch
-lands — the phase is checkpointed, not held open idle-waiting on it.
+agents never pass `--i-am-human`). `.planning/STATE.md`'s cursor stays put until that
+batch lands — checkpointed, not held open idle.
+
+**Both checkpoint-housekeeping quicks shipped green this session:** `260716-f6o`
+(fix-it-twice for owner ruling `5a5dd29` — stripped the retired-narrative section from
+the token-economy perf-gate GENERATOR, not just the doc; offline regen re-verified
+byte-for-byte against the committed doc) and `260716-fmt` (`GTH-V15-35` docs/index.md
+install-IA fix with both addenda — nested build-from-source, surfaced bootstrap prose,
+destaled the L93 claim, mechanically rebound all 11 shifted doc-alignment rows;
+`GTH-V15-35` now DONE). Both pushed, CI green on the tip (`2398b34`, run `29525256773`).
+
+**L0 relieved #45→#46 at this clean wave boundary** (own-context past the ~100k soft
+threshold, next item is a full phase that must not start this deep) — see
+`.planning/SESSION-HANDOVER.md`. **Next: P116 execution through GSD**, per both
+`[MANAGER]` rulings encoded verbatim in `.planning/CONSULT-DECISIONS.md` (doc-truth
+mirror-fan-out rewrite; FIX-03 slug→id design-only this milestone), sequenced now that
+checkpoint housekeeping is complete.
 
 ## NEXT
 
-1. **Post-P115-close eager-fix (owner-directed, tracked `/gsd-quick`):** nest
-   `docs/index.md`'s "Build from source (advanced)" material under the "30-second
-   install" section. Two execution cautions (verbatim, MUST hold): (a) the
-   `structure/install-leads-with-pkg-mgr-docs-index` freshness gate must stay green
-   (install path leads with package manager); (b) doc-alignment catalog rows bound to
-   `docs/index.md` must be checked BEFORE the edit and refreshed in the same wave. Full
-   text: `GOOD-TO-HAVES.md` GTH-V15-35.
-2. **P117/P119 shaping input (owner mandate, 2026-07-16):** the docs site should read as
+1. **P117/P119 shaping input (owner mandate, 2026-07-16):** the docs site should read as
    a FURNISHED PRODUCT with streamlined documentation — owner verbatim: *"Its good, but we
    can do so much better!"* Covers information architecture, progressive disclosure,
    visual polish, and a cold-reader rubric pass over every landing surface; both P117 and
@@ -61,7 +63,7 @@ lands — the phase is checkpointed, not held open idle-waiting on it.
    scope addition (productionization checklist filed). Full text: `GOOD-TO-HAVES.md`
    GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
    `.planning/ROADMAP.md` Phase 117 + Phase 119.
-3. **P116 — ADR-010 decision packet: RULED 2026-07-16** (manager, decide-and-disclose,
+2. **P116 — ADR-010 decision packet: RULED 2026-07-16** (manager, decide-and-disclose,
    owner veto window open). Decision 1 (ADR-01 mirror fan-out): **Option B with A folded
    in** — doc-truth rewrite of the conflated "mirror" docs + bless webhook/30-min-cron as
    authoritative convergence; D rejected (keep `files_touched>0` gate); C filed as
@@ -71,9 +73,10 @@ lands — the phase is checkpointed, not held open idle-waiting on it.
    2026-07-16 `[MANAGER]` entries in `CONSULT-DECISIONS.md`; packet at
    `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`.
    **P116 execution (doc rewrites, ADR-010 §2/§3 amendments, litmus-non-idempotency
-   intake retirement) unblocked AFTER the P115 close/checkpoint** per the ruling's
-   sequencing. Owner's mp4 export path also filed onto GTH-V15-37 (charter addendum).
-4. Then the remaining milestone phases:
+   intake retirement) is now #46's PRIMARY work item** — checkpoint housekeeping
+   (`GTH-V15-35`) is complete, so this is no longer sequenced behind anything but the
+   P115 human gate confirmation (which does not block it).
+3. Then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started
    - P119 — Docs/planning simplification (the "P112 RAISE") — not started
