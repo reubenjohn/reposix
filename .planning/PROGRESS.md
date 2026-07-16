@@ -25,6 +25,8 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **Quick task 260716-f6o (fix-it-twice: strip retirement-history narrative from the perf-gate GENERATOR) — SHIPPED** — owner ruling `5a5dd29` deliberately removed the "## What retired the old 89.1% / 85.5% figures" section from `docs/benchmarks/token-economy.md`, but the GENERATOR (`bench_token_economy_captures.py::render_token_economy_markdown`) still templated it; the P115 phase-close gate-run regen re-added it in place, leaving a dirty `+12`-line working tree. **Manager-established provenance: accidental regression vector, NOT a deliberate override of the owner ruling.** Stripped the section from the template; offline regen (`bench_token_economy.py --offline`) now reproduces the committed doc byte-for-byte (sha256 `5620699b...364fcf` match, empty `git diff`). Discarded the stray working-tree re-add (belt-and-suspenders `git checkout --`). Verified no doc-alignment catalog rebind needed — committed doc bytes unchanged, BOUND rows are the live four-axis claims, catalog untouched. — `19f9ae2` (+ `ac9e717` STATE.md record) ✅
 - 2026-07-16 — **Quick task 260716-fmt (`GTH-V15-35` docs/index.md install-IA fix, both addenda) — SHIPPED** — nested "Build from source (advanced)" under the "30-second install" tabs (install-leads-with-pkg-mgr gate stays GREEN); surfaced the `reposix sim` / `reposix init` bootstrap lines in visible prose; split + destaled the two-claim `docs/index.md:93` line (stale "Phase 36" claim replaced with the real GitHub 320 ms / Confluence 202 ms figures from `docs/benchmarks/latency.md:42`); all 11 shifted doc-alignment rows mechanically rebound (walk exit 0, zero `STALE_DOCS_DRIFT`); filed one MEDIUM `SURPRISES-INTAKE.md` row (the token-economy regen test's missing byte-compare-against-committed-doc coverage — the exact gap class behind the `260716-f6o` regression). `GTH-V15-35` STATUS → DONE. — `97fad0d` (+ `2398b34` STATE.md record) ✅
 
+- 2026-07-16 — **L0 #47 boundary — uncatalogued-hero-number intake filed (manager finding)** — three hero surfaces (`docs/index.md:17`, `README.md:27`, `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31`) present the live ~94.3%/~74.9% token-economy figures with NO doc-alignment binding; once the pending 11-row confirm-retire batch lands they become entirely uncatalogued. Filed to `SURPRISES-INTAKE.md` (MEDIUM, HIGH-visibility) with the manager's remedy: `/reposix-quality-refresh` per doc binding to `bench_token_economy.py` / `headline-numbers-cross-check.py` (same as `output-reduction-94-percent` rows), execute before P117. CI green on tip (CI/Docs/release-plz/Push-on-main all success). — `029bde7` ✅
+
 ## NOW
 
 **P115 stays CHECKPOINTED GREEN at the human gate — re-verified live TWICE this session
@@ -52,13 +54,23 @@ execution at workflow step 15 — it must NOT, since ROADMAP marks Phase 116 `Ex
 mode: top-level` (the top-level coordinator is the executor, never
 `/gsd-execute-phase`).
 
-**L0 relieved #46→#47 at this checkpoint** (own-context past the ~100k soft threshold
-mid-workflow, ~122k after `CONTEXT.md` authoring; the next workflow step — research — is
-exactly the kind of full sub-pass that must not start this deep) — see
-`.planning/SESSION-HANDOVER.md`. **Next actor: #47.** Primary work item: resume `/gsd-plan-
-phase 116` at the research step (treat `116-CONTEXT.md` as the locked contract, do not
-rewrite it), complete planning, THEN — as a separate top-level orchestration pass — execute
-P116 per the completed plan.
+**L0 relieved #47→#48 at this same checkpoint boundary.** #47's rotation: full first-act
+verify (CI green on `69f0814` then re-confirmed green on its own tip `029bde7` — CI/Docs/
+release-plz/Push-on-main all success; human gate re-verified live = **11**, unchanged);
+filed the manager's HIGH-visibility MEDIUM intake (three hero surfaces — `docs/index.md:17`,
+`README.md:27`, `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31` — carry the new
+~94.3%/~74.9% figures with NO doc-alignment binding; once the 11-row retire batch lands
+they go entirely uncatalogued) at `029bde7`. #47 relieved WITHOUT starting either heavy
+pass: at ~88k own-context, both remaining items (P116 planning + the 3 refresh lanes) are
+~60k top-level passes and #46's item-5 doctrine says enter these "well under ~50k" — so
+starting either would land ~150k mid-pass (the anti-pattern #46 relieved to avoid). **Next
+actor: #48.** Two heavy passes queued, sequence by fresh budget: **(a) MANAGER PRIORITY —
+execute the 3 doc-alignment refresh lanes** (`/reposix-quality-refresh` per doc, top-level,
+bind live figures to `bench_token_economy.py` / `headline-numbers-cross-check.py` same as
+the `output-reduction-94-percent` rows; manager deadline: **do not slip past P117**); **(b)
+resume `/gsd-plan-phase 116` at the research step** (treat `116-CONTEXT.md` as the locked
+contract, do not rewrite it), then execute P116 top-level per the completed plan. See
+`.planning/SESSION-HANDOVER.md` (#47→#48).
 
 ## NEXT
 
