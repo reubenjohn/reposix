@@ -608,7 +608,11 @@ edited (this research task is read-only):
 | A2 | The archived `.planning/milestones/v0.14.0-phases/surprises-intake/part-02.md` entry does not need editing (archived milestones are frozen/git-history-is-the-archive) and `116-CONTEXT.md`'s reference to it is a labeling imprecision, not a literal instruction to edit an archived file. | § 1.3, § Noticed #1 | If the verifier subagent (or the owner) actually wants that archived entry's STATUS field updated for completeness, this is a trivial one-line addendum to add — low risk, easily absorbed as an extra task if flagged wrong. |
 | A3 | Updating `GOOD-TO-HAVES-09`'s `TAG`/`STATUS` fields (root `.planning/GOOD-TO-HAVES.md`) is an acceptable durable home for "propose a dedicated design+build phase at the next milestone boundary," rather than requiring new prose in the top-level `.planning/ROADMAP.md` itself. | § 3, next-milestone proposal placement | If next-milestone roadmapping conventionally reads ROADMAP.md rather than GOOD-TO-HAVES.md at boundary time, the proposal could be missed; low risk since GTH-09 is already the established cross-reference for this exact hazard and next-milestone drain phases explicitly consume GOOD-TO-HAVES.md per OP-8. |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Both questions were resolved by the planner's choices at planning time (commit `011096b`);
+> markers added by L0 #51 after the `gsd-plan-checker` PASS flagged the missing resolution
+> suffix (traceability, not a blocker).
 
 1. **Should the ADR-010 §2/§3 amendments be literal edits to the existing numbered
    Decision list, or appended dated blockquotes (matching the existing "RESOLVED in
@@ -622,6 +626,9 @@ edited (this research task is read-only):
    - Recommendation: follow the existing in-place blockquote precedent for consistency —
      this is explicitly left as Claude's Discretion in `116-CONTEXT.md`, so this is not a
      blocker, just worth the planner picking deliberately rather than defaulting.
+   - **RESOLVED (planning, `011096b`):** Plan 02 adopts the **in-place dated-blockquote**
+     convention for both the §2 and §3 amendments (matching the existing v0.14.0 precedent),
+     not a new top-level "## Amendments" section.
 2. **Does the plan-checker / verifier subagent expect a NEW doc-alignment catalog row for
    the corrected mirror-truth claim, or is grep-level verification (§6 table) sufficient
    for phase close?**
@@ -636,6 +643,10 @@ edited (this research task is read-only):
      following the exact style already used by `dvcs-topology-three-roles.sh`), closes a
      real gap, and directly serves the "noticing is a deliverable" / "don't let a metric
      you generate but don't watch silently decay" standing principles.
+   - **RESOLVED (planning, `011096b`):** Plan 01 Task 1 **mints** the catalog-first
+     doc-alignment regression row (`quality/gates/docs-alignment/mirror-convergence-blessed.sh`),
+     tooling-gated with a documented grep-fallback if `reposix-quality doc-alignment bind`
+     is unavailable — strengthens without blocking the graded deliverables.
 
 ## Sources
 
