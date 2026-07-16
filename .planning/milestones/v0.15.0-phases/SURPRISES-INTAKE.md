@@ -492,3 +492,38 @@ row's claim to all four axes. Until then the two extra axes remain correct-but-u
 (same class as the parent row above, one layer finer).
 
 **STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: L0 #48 doc-alignment bind executor | severity: LOW
+
+**What:** `reposix-quality doc-alignment bind --help` advertises the `--test` flag
+generically as accepting `<file>::<fn>` citations ("Test fn citation (`<file>::<fn>`).
+Repeatable -- one per binding"), but the validator (`parse_test` in
+`crates/reposix-quality/src/commands/doc_alignment.rs`) only resolves the `::fn` form to
+a hashable function when the file part ends in `.rs` (`TestRef::RustFn`); for any other
+extension — Python included — the split never happens: the WHOLE `<file>::<fn>` string
+is treated as a literal file path and existence-checked as `TestRef::File`, producing an
+opaque `bind: --test #<i> \`<file>::<fn>\`: test file \`<file>::<fn>\` does not exist`
+error (confirmed live against `headline-numbers-cross-check.py::run_cross_check`). Every
+existing BOUND row pointing at a Python verifier — including the 3 minted this rotation —
+stores the BARE path with no `::fn` suffix, matching the form the validator actually
+accepts, so this is a help-text/validator mismatch, not a live bug blocking any row; it's
+a sharp edge for the next agent who reads `--help` literally and tries to pin a specific
+Python function.
+
+**Why out-of-scope for the discovering session:** Discovered incidentally while minting
+the 3 hero-number rows (task was to bind, not audit CLI help text). Fixing either side —
+extending the validator to hash a specific Python function the way `.rs::fn` hashes a
+Rust fn body, or narrowing the help text to say `::fn` is Rust-only — touches a shared
+CLI/hash-computation code path used by every existing bound row, and warrants its own
+review rather than a drive-by edit mid-mint.
+
+**Sketched resolution:** Either (a) extend `parse_test`/`TestRef` to recognize
+`<file>.py::<fn>` (needs a Python-side fn-body hash, e.g. AST-based, analogous to
+`test_body_hash`'s syn-based Rust parse) so Python bindings can pin one function instead
+of the whole file; or (b) the cheaper fix — reword the `--test` help string in
+`crates/reposix-quality/src/commands/doc_alignment.rs` to state the `::fn` form is
+Rust-only (`<file>.rs::<fn>`) and non-Rust verifiers always bind to the bare file path.
+(b) matches the code comment already at `doc_alignment.rs:1550-1560`, which documents the
+intended two-form contract — only the `--help` string is stale.
+
+**STATUS:** OPEN

@@ -29,48 +29,51 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 
 ## NOW
 
-**P115 stays CHECKPOINTED GREEN at the human gate — re-verified live TWICE this session
-(start + end), unchanged.** `grep -c '"last_verdict": "RETIRE_PROPOSED"'
-quality/catalogs/doc-alignment.json` → **11**, all 11 rows still open. The verifier's
-**GREEN-CHECKPOINT** verdict (`115-VERIFICATION.md`, `ce4d3b7`) stands; the **sole
-remaining action is the human-only 11-row confirm-retire batch**
-(`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch" — authoritative row-ID
-list + copy-paste commands; verb needs a real TTY, refuses `$CLAUDE_AGENT_CONTEXT`,
-agents never pass `--i-am-human`). `.planning/STATE.md`'s cursor stays put until that
-batch lands — checkpointed, not held open idle.
+**Manager-priority refresh lanes — SHIPPED, pushed, CI-GREEN.** L0 #48 executed the 3
+doc-alignment refresh/bind lanes #47 queued: confirmed live that `reposix-quality
+doc-alignment plan-refresh <doc>` returns `{"stale_rows": []}` for all 3 target docs —
+the refresh flow structurally CANNOT mint net-new/unbound rows (only re-grades existing
+drifted rows), validating the manager's flagged risk with real output. Per the DP-3
+inversion (`[SELF]` ledger entry, now CLOSED + deleted per the bounded-ledger rule — the
+archive is commit `a679d03`), minted the 3 rows via the surgical `bind` verb instead of
+the named backfill fallback: `docs/index/hero-token-economy-94-75` (`c35f993`),
+`README/hero-token-economy-94-75` (`7553c36`), and
+`docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost` (`aa75e96` —
+deliberately NARROWED to the two test-pinned axes, output + cost; the four-axis claim's
+untested cache-creation/input-context axes filed as a new LOW `SURPRISES-INTAKE.md` row).
+Manager intake marked **RESOLVED** (`e185e6e`). `headline-numbers-cross-check.py` exit 0;
+`bash quality/gates/docs-alignment/walk.sh` exit 0, zero BLOCK. Pushed `b4044ad..e185e6e`;
+pre-push 61 PASS / 1 WAIVED, secret-scan clean; **CI GREEN on `e185e6e`, re-verified live
+by #48** — CI/Docs/release-plz/Push-on-main all `success`.
 
-**P116 ENTERED via `/gsd-plan-phase 116` this session.** Init query resolved (researcher
-sonnet / planner opus / checker sonnet; mode yolo; research/plan_check/nyquist gates
-enabled; `commit_docs: true`; `auto_advance: true`); phase dir created at
-`.planning/phases/116-adr-010-mirror-fanout-decision-packet-slug-id-durable-create/`;
-`116-CONTEXT.md` authored via the workflow's PRD-express-path semantics (locked decisions
-= the two verbatim `[MANAGER]` rulings dated 2026-07-16 in `CONSULT-DECISIONS.md`
-`8212373` + the packet at
-`.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`)
-and committed at `31ac414`. **Planning is NOT complete** — no research, no
-`VALIDATION.md`/`PATTERNS.md`, no `*-PLAN.md`, no checker pass yet; planning resumes at
-the research step. `auto_advance: true` means a bare re-run would auto-chain into
-execution at workflow step 15 — it must NOT, since ROADMAP marks Phase 116 `Execution
-mode: top-level` (the top-level coordinator is the executor, never
-`/gsd-execute-phase`).
+**P115 stays CHECKPOINTED GREEN at the human gate — re-verified live by #48, unchanged.**
+`grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` →
+**11**, all 11 rows still open. The verifier's **GREEN-CHECKPOINT** verdict
+(`115-VERIFICATION.md`, `ce4d3b7`) stands; the **sole remaining action is the human-only
+11-row confirm-retire batch** (`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire
+batch" — authoritative row-ID list + copy-paste commands; verb needs a real TTY, refuses
+`$CLAUDE_AGENT_CONTEXT`, agents never pass `--i-am-human`). Owner has the commands in
+hand and may run them at any moment — re-check this count at EVERY boundary; when it
+drops below 11, advance `.planning/STATE.md`'s cursor past P115 and close the checkpoint.
 
-**L0 relieved #47→#48 at this same checkpoint boundary.** #47's rotation: full first-act
-verify (CI green on `69f0814` then re-confirmed green on its own tip `029bde7` — CI/Docs/
-release-plz/Push-on-main all success; human gate re-verified live = **11**, unchanged);
-filed the manager's HIGH-visibility MEDIUM intake (three hero surfaces — `docs/index.md:17`,
-`README.md:27`, `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31` — carry the new
-~94.3%/~74.9% figures with NO doc-alignment binding; once the 11-row retire batch lands
-they go entirely uncatalogued) at `029bde7`. #47 relieved WITHOUT starting either heavy
-pass: at ~88k own-context, both remaining items (P116 planning + the 3 refresh lanes) are
-~60k top-level passes and #46's item-5 doctrine says enter these "well under ~50k" — so
-starting either would land ~150k mid-pass (the anti-pattern #46 relieved to avoid). **Next
-actor: #48.** Two heavy passes queued, sequence by fresh budget: **(a) MANAGER PRIORITY —
-execute the 3 doc-alignment refresh lanes** (`/reposix-quality-refresh` per doc, top-level,
-bind live figures to `bench_token_economy.py` / `headline-numbers-cross-check.py` same as
-the `output-reduction-94-percent` rows; manager deadline: **do not slip past P117**); **(b)
-resume `/gsd-plan-phase 116` at the research step** (treat `116-CONTEXT.md` as the locked
-contract, do not rewrite it), then execute P116 top-level per the completed plan. See
-`.planning/SESSION-HANDOVER.md` (#47→#48).
+**P116 planning is now the ONE remaining heavy top-level pass — next actor's primary
+work.** Entered via `/gsd-plan-phase 116` (#46); `116-CONTEXT.md` authored + committed
+(`31ac414`) as the locked contract — do NOT re-run `discuss-phase`, do NOT rewrite
+CONTEXT. Planning is **NOT complete** — no research, no `VALIDATION.md`/`PATTERNS.md`, no
+`*-PLAN.md`, no checker pass yet; resumes at the research step. `auto_advance: true` means
+a bare re-run would auto-chain into execution at workflow step 15 — it must NOT (ROADMAP
+marks Phase 116 `Execution mode: top-level`, the top-level coordinator is the executor);
+actively clear `workflow._auto_chain_active` if the resumed workflow set it. The planner
+MUST also cover the ROADMAP criterion-1 packet-location gap (the packet physically lives
+at `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`;
+ROADMAP text says "alongside `docs/decisions/010-l2-l3-cache-coherence.md`").
+
+**L0 relieved #48→#49 at this same checkpoint boundary.** #48's rotation: executed the
+manager-priority refresh lanes above to completion — the only heavy pass its fresh
+budget fit, a second corroborating datapoint for #46/#47's context-budget doctrine
+(roughly ONE heavy top-level pass per rotation). **Next actor: #49 — P116 planning is the
+sole remaining heavy pass; do NOT auto-chain into execution.** See
+`.planning/SESSION-HANDOVER.md` (#48→#49).
 
 ## NEXT
 
