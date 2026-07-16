@@ -74,54 +74,51 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed at rotation #10→#11, 2026-07-16 ~17:10 UTC)
+## Live state (refreshed mid-shift #11 after seat rotation #44→#45, 2026-07-16 ~18:05 UTC)
 
-- **SUCCESSOR #11 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (#10's one-shots
-  are consumed; nothing is watching) — standard entry:
+- **IF YOU ARE A FRESH SUCCESSOR:** arm your poll IMMEDIATELY (prior one-shots are
+  consumed) — standard entry:
   `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 3300 ""
   /home/reuben/workspace/reposix`; triage every wake with `wake-triage.sh`.
-  (2) **#44 is RUNNING** (Fable 5 seat) — mid P115 phase-close: cold-reader done
-  (`8212373`), phase-close verifier next; it CHECKPOINTS at the human
-  confirm-retire gate if the owner's 11-command batch hasn't landed. Do NOT
-  rotate the seat mid-turn; wait for TRUE-IDLE. (3) P116 rulings are DELIVERED
-  and ENCODED (`8212373`, [MANAGER] entries in CONSULT-DECISIONS.md; packet at
-  `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`)
-  — owner veto window open; P116 execution (doc-truth rewrites, ADR-010 §3
-  amendment) proceeds under them after P115 close/checkpoint. (4) Owner threads
-  live in this conversation's tail: 11-command confirm-retire batch (sole P115
-  human action), v0.14.1 cut decision on PR #74 (recommended CUT, owner-gated).
-  (5) Watch PR #75: dependabot rebase requested; merge iff CI green (squash);
-  red freshness-test post-rebase = real main-side issue → dispatch fix.
 
-- **SHIFT SUMMARY (#10, through 2026-07-16 ~16:45 UTC):** Workhorses #35–#43
-  launched+closed clean; **#44 RUNNING** (phase-close + P116 packet delivery).
-  P115 T1–T6 COMPLETE: T4 pivoted to GitHub after Jira/Rovo proved infeasible
-  live (`ece072f` honest capture; pivot manager-RATIFIED) — 6/6 real sessions
-  (`4db6b64`), headline **~94.3% fewer output tokens / ~74.9% cheaper per
-  session vs official GitHub MCP**; T5 JSONL-usage regen shipped (`5366d29`/
-  `1cdb381`/`fd098c7`); T6 hero reframe + un-waives complete (`d2fd85c`..
-  `776ca85`). Owner rulings executed: retirement-narrative STRIPPED from all
-  user-facing docs (`5a5dd29`, recorded `a1f2494`); PROGRESS.md owner-watch
-  briefing live (`de06e00`, refresh discipline in every charter); reset-gating
-  retired. Owner directives FILED for post-close (`187809f`): index.md
-  install-section eager-fix + P117/P119 "furnished product" docs mandate +
-  animation-embed lane (feasibility spike VERIFIED renders/scales; mp4 at
-  `~/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4`, 7.1MB,
-  release-asset NOT repo).
-- **OPEN GATES/THREADS (successor: check these FIRST):** (1) **Human gate
-  OPEN** — owner's 11-command confirm-retire batch (list: `.planning/phases/
-  115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md`); #44 checkpoints
-  phase-close at this gate if not landed. (2) **P116 rulings MADE + ENCODED**
+- **SHIFT #11 SO FAR (2026-07-16 17:10–18:05 UTC):** **P115 CHECKPOINTED GREEN
+  at the human gate** — verifier GREEN-CHECKPOINT (`ce4d3b7`, 7/7 goal-backward
+  truths); #44 wrapped clean (handover #44→#45 REPLACED at `3b78292`; post-push
+  P0 probe re-minted PASS at `5411761` after a benign race with the manager's
+  PR #76 merge). Seat rotated via pane-clear (clean, no leftover shells);
+  **workhorse #45 RUNNING** with charter = SESSION-HANDOVER.md §6 runbook + 5
+  manager addenda (probe status, token-economy provenance+ruling below, gate
+  still open, GTH-V15-35 quick, then P116 execution). PR #75 self-closed by
+  dependabot ("updatable in another way"); successor **PR #76 squash-MERGED**
+  (`8439085`, CI on main green, manager-verified).
+- **MANAGER RULING (this shift): token-economy.md dirty-tree mystery SOLVED.**
+  The unstaged +12 lines re-adding the retired 89.1%/85.5% narrative were the
+  perf gate GENERATOR regen — `quality/gates/perf/bench_token_economy_captures.py:211`
+  still templates the section owner ruling `5a5dd29` stripped from the doc; the
+  P115 phase-close gate run (17:18 UTC artifact mtime) rewrote the doc in place.
+  Ruled: accidental regression vector, NOT deliberate override. #45 executes as
+  ONE /gsd-quick (strip from generator, regenerate byte-for-byte, discard tree
+  diff, rebind check, PROGRESS note). Fix-it-twice: doc fixed at `5a5dd29`,
+  generator wasn't.
+- **GHOST-TEXT INCIDENT (craft, verified live):** post-wrap, w1:p5's box showed
+  "done, ran the 11 confirm-retire commands and pushed — close P115" — checked
+  against reality: origin unmoved AND catalog still 11/11 RETIRE_PROPOSED ⇒
+  ghost text (predicted next-user-message), NOT owner input. Never close the
+  human gate on box text; only a real catalog-count drop closes it.
+- **OPEN GATES/THREADS:** (1) **Human gate OPEN** — owner's 11-command
+  confirm-retire batch (list: `.planning/phases/
+  115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md`), verified 11/11
+  still open ~17:55 UTC; nothing registered. STATE.md cursor holds at P115
+  until it lands (#45 re-checks per runbook). (2) **P116 rulings MADE + ENCODED**
   (`8212373`): Decision 1 = Option B (doc-truth + bless webhook/cron
   convergence; D rejected; C filed as GTH with incident trigger); Decision 2 =
-  Option A design-only, B sanctioned target design, SC4 = no build in v0.15,
-  D pre-sanctioned stopgap only on a real incident. Owner veto window open.
-  (3) PR #75 dependabot: `@dependabot rebase` requested, merge iff CI green
-  after (squash); watch the freshness-test job — red post-rebase = real
-  main-side issue. (4) PR #74 release-plz v0.14.1 (ships P114 fix):
-  OWNER-GATED (outward publishing), recommended CUT, awaiting owner word.
-  (5) PR #67 closed as superseded (done). (6) GTH-V15-34 confirm-retire
-  --batch mode filed.
+  Option A design-only, B sanctioned target design, no build in v0.15,
+  D incident-only stopgap. Owner veto window open; #45 executing under them.
+  (3) PR #74 release-plz v0.14.1 (ships P114 fix): OWNER-GATED (outward
+  publishing), recommended CUT, awaiting owner word. (4) GTH-V15-34
+  confirm-retire --batch mode filed. (5) Headline stands: **~94.3% fewer output
+  tokens / ~74.9% cheaper per session vs official GitHub MCP** (6/6 real
+  sessions, `4db6b64`).
 - **Liveness incident (2026-07-16, 2nd dead-watcher):** #40 froze ~30min —
   child notification chain died silently (subagent+shell gone, parent never
   resumed, dirty tree). Caught by shortened 20-min poll; nudge recovered it.
