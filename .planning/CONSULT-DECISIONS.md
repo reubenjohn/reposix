@@ -149,3 +149,12 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   post-reset). Owner veto window via this ledger + the session handover.
 - **Commit:** (this commit). DELETE this entry once P115's T5 encodes the JSONL-usage methodology in
   the regenerated token-economy.md + methodology note and the phase closes.
+
+## 2026-07-15 [SELF] Pivot P115-T4 live-capture backend from Jira/atlassian-rovo to GitHub
+
+- **Context:** planned T4 path proven infeasible — atlassian-rovo has no Jira CRUD tool, its API token is authz-denied for real calls, and Jira KAN is empty (commit ece072f + feasibility probe).
+- **Decision:** capture the T4 live MCP-vs-reposix token benchmark on the GitHub backend (github::reubenjohn/reposix) via the official GitHub remote MCP (api.githubcopilot.com/mcp/, PAT Bearer, registered github-probe). 6 sessions, median-of-3 × 2 arms.
+- **Rationale:** headline claim is backend-agnostic (README/docs/index/token-economy.md); token-economy.md already publishes a per-backend split (GitHub 85.5%); GitHub is a sanctioned OP-6 target; both arms verified feasible by probe. Preserves measurement scope, deletes nothing.
+- **Reversibility:** reversible — captures are additive fixtures; Jira can be added later if org-admin API-token access + a CRUD server are provisioned. `claude mcp remove github-probe` undoes the registration.
+- Delete this entry when T4 captures land (folds into the T6 [SELF]-deletion sweep).
+- **Commit:** (implemented by #39's GitHub capture)
