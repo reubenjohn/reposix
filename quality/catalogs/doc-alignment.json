@@ -4,15 +4,15 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 393,
-    "claims_bound": 263,
+    "claims_total": 396,
+    "claims_bound": 266,
     "claims_missing_test": 7,
-    "claims_retire_proposed": 2,
+    "claims_retire_proposed": 8,
     "claims_retired": 57,
-    "alignment_ratio": 0.7827380952380952,
+    "alignment_ratio": 0.7846607669616519,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T10:39:27Z",
+    "last_walked": "2026-07-16T11:12:10Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -2340,15 +2340,15 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/confluence_pages.json and emits the Confluence raw-API reduction row",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the synthetic count_tokens-over-fixture 76.4% Confluence figure is retired -- docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -4102,15 +4102,15 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/github_issues.json and emits the GitHub raw-API reduction row",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the synthetic count_tokens-over-fixture 85.5% GitHub figure is retired -- docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -4873,15 +4873,15 @@
       "test_body_hashes": [
         "339fa7d6f68df6d0a7005b9e4201b5219300176bafe47e5afe131f9243d006fe"
       ],
-      "rationale": "P73 CONNECTOR-GAP-04 path (a) per D-05: prose updated to reflect adapter shipped v0.11.x; verifier asserts manifest exists; full bench rerun deferred to perf-dim P67.",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T20:29:36Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the JIRA synthetic-fixture bench placeholder is retired -- the live methodology benchmarks a single live GitHub backend (reubenjohn/reposix), not per-backend synthetic fixtures. docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -5376,15 +5376,15 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "bench_token_economy.py load_mcp_bytes + count_tokens loop emits the MCP baseline character/token row",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the synthetic 4,883-token MCP baseline is retired -- the live GitHub-MCP arm now measures a ~21,171 output-token median. docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -6831,15 +6831,15 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "bench_token_economy.py load_reposix_bytes + count_tokens emits the reposix baseline row",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the synthetic 531-token reposix baseline is retired -- the live reposix git-native arm now measures a ~1,213 output-token median. docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -7923,15 +7923,15 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "bench_token_economy.py computes MCP vs reposix token counts via Anthropic count_tokens and emits the reduction% to docs/benchmarks/token-economy.md -- IS the regenerator",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-07-16T07:22:50Z",
+      "rationale": "P115 T6 retirement: the synthetic 89.1% headline reduction is retired -- superseded by the live four-axis headline (~94.3% fewer output tokens / ~74.9% cheaper per session). docs/benchmarks/token-economy.md was regenerated (T5 amendment #10) to the live GitHub-capture JSONL session-usage methodology (four axes: output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), replacing this claim with a DIFFERENT measurement, not a rebinding. confirm-retire is human-only; agent proposes only (P115 T6 Wave1 item3).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T11:11:25Z",
+      "last_extracted": "2026-07-16T11:13:36Z",
       "last_extracted_by": "waive-call",
       "waiver": {
         "until": "2026-08-15T00:00:00Z",
-        "reason": "P115 T5 regenerated docs/benchmarks/token-economy.md to the live JSONL session-usage methodology (amendment #10); the synthetic count_tokens figure this row cites is retired and no longer in the doc. Proper retire (confirm-retire is human-only) + rebind to the live four-axis numbers is T6's headline-reframe job.",
+        "reason": "P115 T6 Wave1 item3 DONE agent-side: this synthetic count_tokens-over-fixture figure is RETIRE_PROPOSED; the live four-axis replacement rows are already BOUND (output-reduction-94-percent / cost-reduction-75-percent / live-github-capture-methodology, all GREEN vs token-economy.md + bench_token_economy.py). Only HUMAN-ONLY confirm-retire remains -- deferred to the human relay (manager w1:p7).",
         "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
       }
     },
@@ -9439,6 +9439,87 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:08:52Z",
       "last_extracted": "2026-05-01T21:08:52Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/output-reduction-94-percent",
+      "claim": "For the identical live GitHub task, the reposix git-native arm generates ~94.3% fewer output tokens than the GitHub-MCP arm (1,213 vs 21,171 median-of-3).",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 37,
+        "line_end": 37
+      },
+      "source_hash": "6c85a716a1115e44164645b5c7363cee753cb3102324fb9a8cb50b46dc767ddf",
+      "source_hashes": [
+        "6c85a716a1115e44164645b5c7363cee753cb3102324fb9a8cb50b46dc767ddf"
+      ],
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py",
+        "quality/gates/perf/test_bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "6b87ad598c61390e77b2539dd06696a4fe788027381b3686ebc0e70036bfc549",
+        "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
+      ],
+      "rationale": "bench_token_economy.py regenerates token-economy.md's four-axis table from the committed benchmarks/captures/*.json live session-usage records; test_bench_token_economy.py proves the per-axis median-of-3 reduction math (test_compute_arm_medians_and_reductions) and deterministic offline doc regeneration (test_main_offline_regenerates_doc_from_captures). The ~94.3% output-token figure is the regenerator's output over the real committed captures. Replaces the retired synthetic count_tokens 89.1%/85.5%/4883/531 rows (P115 T6 Wave1 item3).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T11:12:10Z",
+      "last_extracted": "2026-07-16T11:12:10Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/cost-reduction-75-percent",
+      "claim": "For the identical live GitHub task, the reposix arm is ~74.9% cheaper per session than the GitHub-MCP arm ($0.2076 vs $0.8278 median-of-3).",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 40,
+        "line_end": 40
+      },
+      "source_hash": "dfc8809b0554df3226a44abe308e91c942d8849602c375d12d28fbb6996065a5",
+      "source_hashes": [
+        "dfc8809b0554df3226a44abe308e91c942d8849602c375d12d28fbb6996065a5"
+      ],
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py",
+        "quality/gates/perf/test_bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "6b87ad598c61390e77b2539dd06696a4fe788027381b3686ebc0e70036bfc549",
+        "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
+      ],
+      "rationale": "bench_token_economy.py computes per-axis median-of-3 USD-cost reduction from the committed live captures and emits the cost row into token-economy.md; test_bench_token_economy.py::test_compute_arm_medians_and_reductions asserts cost is one of the four reduced axes and test_main_offline_regenerates_doc_from_captures asserts the doc is regenerated deterministically. The ~74.9% cost figure is the regenerator's output over the real committed captures (P115 T6 Wave1 item3).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T11:12:10Z",
+      "last_extracted": "2026-07-16T11:12:10Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/live-github-capture-methodology",
+      "claim": "token-economy figures are computed from live GitHub-capture Claude Code JSONL session-usage records (median-of-3 per arm), offline-reproducible with no API key or network.",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 8,
+        "line_end": 13
+      },
+      "source_hash": "2cb466d7ef5d9b91cbb36cdb045eb824f27757437633ba8a006efc716b255a2f",
+      "source_hashes": [
+        "2cb466d7ef5d9b91cbb36cdb045eb824f27757437633ba8a006efc716b255a2f"
+      ],
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py",
+        "quality/gates/perf/test_bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "6b87ad598c61390e77b2539dd06696a4fe788027381b3686ebc0e70036bfc549",
+        "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
+      ],
+      "rationale": "test_bench_token_economy.py::test_load_headline_captures_excludes_smoke proves the live-capture loader reads the 6 run-labelled captures (median-of-3 x 2 arms) and excludes the smoke probe; test_main_offline_regenerates_doc_from_captures proves main(['--offline']) reads captures and regenerates the doc with no ANTHROPIC_API_KEY. bench_token_economy.py is the JSONL-session-usage regenerator these tests exercise. Supersedes the retired synthetic count_tokens-over-fixture methodology (P115 T6 Wave1 item3).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T11:12:10Z",
+      "last_extracted": "2026-07-16T11:12:10Z",
       "last_extracted_by": "bind-call"
     }
   ]
