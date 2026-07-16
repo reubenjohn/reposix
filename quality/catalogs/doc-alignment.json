@@ -12,12 +12,12 @@
     "alignment_ratio": 0.7827380952380952,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T10:31:37Z",
+    "last_walked": "2026-07-16T10:39:27Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
     "coverage_floor": 0.1,
-    "claims_waived": 14
+    "claims_waived": 19
   },
   "rows": [
     {
@@ -5307,8 +5307,13 @@
       "last_verdict": "RETIRE_PROPOSED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-07-16T10:25:47Z",
-      "last_extracted": "2026-07-16T10:25:47Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_extracted": "2026-07-16T10:39:27Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "RETIRE_PROPOSED by post-reframe refresh grader (synthetic 4883/531/89.1% triple retired in prose d2fd85c); awaiting HUMAN-ONLY confirm-retire, escalated to manager w1:p7",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/index/mcp-loop-4883-tokens",
@@ -5326,8 +5331,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-16T10:25:29Z",
-      "last_extracted": "2026-07-16T10:25:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-16T10:39:26Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "Hero figure re-cited to live ~21k output-token GitHub-capture figure (d2fd85c); binding test is T6 item 6's perf/headline-numbers-cross-check gate, minted this wave",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "mcp-schema-discovery-100k-tokens",
@@ -6899,8 +6909,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "FIX_IMPL_THEN_BIND",
       "last_run": "2026-07-16T10:31:00Z",
-      "last_extracted": "2026-07-16T10:31:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-16T10:39:27Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "latency-bench.sh measures sim cached-read but never asserts the figure (headline cross-check deferred since v0.12.1 MIGRATE-03); T6 item 6's cross-check gate closes it — NOTE canonical latency.md now reads 6ms get / 7ms list vs 8ms hero prose",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
@@ -7708,8 +7723,13 @@
       "last_verdict": "RETIRE_PROPOSED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-07-16T10:25:52Z",
-      "last_extracted": "2026-07-16T10:25:52Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_extracted": "2026-07-16T10:39:27Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "RETIRE_PROPOSED by post-reframe refresh grader (531-on-simulator figure retired in prose d2fd85c); awaiting HUMAN-ONLY confirm-retire, escalated to manager w1:p7",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/index/reposix-loop-531-tokens",
@@ -7727,8 +7747,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-16T10:26:52Z",
-      "last_extracted": "2026-07-16T10:26:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-16T10:39:27Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "Hero figure re-cited to live ~1.2k output-token GitHub-capture figure (d2fd85c); binding test is T6 item 6's perf/headline-numbers-cross-check gate, minted this wave",
+        "tracked_in": "P115 T6 (115-UNWAIVE-PATH.md)"
+      }
     },
     {
       "id": "docs/reference/cli.md/mount_removed_v0.9.0",
