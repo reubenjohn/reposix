@@ -284,6 +284,8 @@ the reverse pointer is deferred to whenever those part files are themselves prog
   `/home/reuben/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4` (7.1MB,
   verified on disk 2026-07-16) — video fallback + Show-HN/social asset; attach to a
   GitHub release, never commit to the repo.
+- **Fix-sketch:** P117 planner adds a dedicated task implementing the 5-item checklist above in order (bundle precompile → font self-host → embed-mode config → video-fallback hosting → docs-gate coverage), each item independently verifiable; feasibility already de-risked by the manager's headless-playwright spike, so this is an implementation lane, not a research spike.
+- **Effort:** medium — new static asset pipeline + mkdocs page wiring; fits inside P117 as an owner-approved scope addition alongside the doc-truth purge.
 
 ### GTH-V15-38 — ADR-01 Option C: post-write snapshot fan-out (NOT sanctioned for v0.15; pull-forward gated)
 - **Source:** MANAGER ruling 2026-07-16 on
@@ -300,5 +302,9 @@ the reverse pointer is deferred to whenever those part files are themselves prog
 - **Fix-sketch:** packet § Decision 1, Option C. If triggered, propose as a phase at the
   then-current milestone boundary; do not fold into an unrelated lane.
 - **Effort:** medium-large (fan-out write path + litmus rework) — sized only if triggered.
-- **Fix-sketch:** P117 planner adds a dedicated task implementing the 5-item checklist above in order (bundle precompile → font self-host → embed-mode config → video-fallback hosting → docs-gate coverage), each item independently verifiable; feasibility already de-risked by the manager's headless-playwright spike, so this is an implementation lane, not a research spike.
-- **Effort:** medium — new static asset pipeline + mkdocs page wiring; fits inside P117 as an owner-approved scope addition alongside the doc-truth purge.
+
+### GTH-V15-39 — Catalog row-id prefixes inconsistent for the same doc (README-md/ vs README/)
+- **Source:** MANAGER-ROUTED noticing (2026-07-16, via #49→#50 handover §5 item 6); cost the manager a false-negative grep · **Severity: LOW** · STATUS: OPEN — tag P126 (doc-alignment polish).
+- **What:** `quality/catalogs/doc-alignment.json` uses two different row-id prefix conventions for the SAME underlying doc (`README.md`). Legacy rows use `README-md/` (e.g. `README-md/token-89-percent`, live at `doc-alignment.json:4450`); the hero row minted this milestone uses `README/` (e.g. `README/hero-token-economy-94-75`, live at line 9581). A grep keyed to one prefix silently misses rows under the other — this already produced a false-negative lookup for the manager.
+- **Fix-sketch:** pick ONE canonical prefix convention (proposal: derive deterministically from the doc path — e.g. `README.md` → `README-md/`, matching the legacy majority and the slug-safe `.`→`-` encoding used elsewhere) and either (a) migrate the divergent new rows to it, or (b) add a `reposix-quality` linter check that BLOCKS a catalog row whose prefix doesn't match the canonical encoding of its bound file path. Option (b) is the durable fix (prevents recurrence); option (a) alone would re-drift.
+- **Effort:** small — either a one-time row-id rename (touch the two `README/`-prefixed rows) or a ~1 linter rule in the catalog validator; no new dependency. Natural home: P126 (doc-alignment polish lane).
