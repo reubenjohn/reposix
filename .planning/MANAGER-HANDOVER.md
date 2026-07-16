@@ -74,51 +74,59 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed mid-shift #11 after seat rotation #44→#45, 2026-07-16 ~18:05 UTC)
+## Live state (refreshed mid-shift #11, 2026-07-16 ~21:20 UTC, after seat rotations #44→#49)
 
 - **IF YOU ARE A FRESH SUCCESSOR:** arm your poll IMMEDIATELY (prior one-shots are
   consumed) — standard entry:
   `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 3300 ""
   /home/reuben/workspace/reposix`; triage every wake with `wake-triage.sh`.
+  Seat is **Opus 4.8 (1M ctx)** since #46 (was Fable 5 through #45; flip noted to
+  owner, no objection); on 1M seats the ~100k-ABSOLUTE relief line arrives at
+  ~10% gauge → legs are short (one wave each, ~15–60 min) — this is
+  doctrine-correct, do not "fix" it; keep successor charters terse (handover
+  carries the content; addenda only for deltas).
 
-- **SHIFT #11 SO FAR (2026-07-16 17:10–18:05 UTC):** **P115 CHECKPOINTED GREEN
-  at the human gate** — verifier GREEN-CHECKPOINT (`ce4d3b7`, 7/7 goal-backward
-  truths); #44 wrapped clean (handover #44→#45 REPLACED at `3b78292`; post-push
-  P0 probe re-minted PASS at `5411761` after a benign race with the manager's
-  PR #76 merge). Seat rotated via pane-clear (clean, no leftover shells);
-  **workhorse #45 RUNNING** with charter = SESSION-HANDOVER.md §6 runbook + 5
-  manager addenda (probe status, token-economy provenance+ruling below, gate
-  still open, GTH-V15-35 quick, then P116 execution). PR #75 self-closed by
-  dependabot ("updatable in another way"); successor **PR #76 squash-MERGED**
-  (`8439085`, CI on main green, manager-verified).
-- **MANAGER RULING (this shift): token-economy.md dirty-tree mystery SOLVED.**
-  The unstaged +12 lines re-adding the retired 89.1%/85.5% narrative were the
-  perf gate GENERATOR regen — `quality/gates/perf/bench_token_economy_captures.py:211`
-  still templates the section owner ruling `5a5dd29` stripped from the doc; the
-  P115 phase-close gate run (17:18 UTC artifact mtime) rewrote the doc in place.
-  Ruled: accidental regression vector, NOT deliberate override. #45 executes as
-  ONE /gsd-quick (strip from generator, regenerate byte-for-byte, discard tree
-  diff, rebind check, PROGRESS note). Fix-it-twice: doc fixed at `5a5dd29`,
-  generator wasn't.
-- **GHOST-TEXT INCIDENT (craft, verified live):** post-wrap, w1:p5's box showed
-  "done, ran the 11 confirm-retire commands and pushed — close P115" — checked
-  against reality: origin unmoved AND catalog still 11/11 RETIRE_PROPOSED ⇒
-  ghost text (predicted next-user-message), NOT owner input. Never close the
-  human gate on box text; only a real catalog-count drop closes it.
-- **OPEN GATES/THREADS:** (1) **Human gate OPEN** — owner's 11-command
-  confirm-retire batch (list: `.planning/phases/
-  115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md`), verified 11/11
-  still open ~17:55 UTC; nothing registered. STATE.md cursor holds at P115
-  until it lands (#45 re-checks per runbook). (2) **P116 rulings MADE + ENCODED**
-  (`8212373`): Decision 1 = Option B (doc-truth + bless webhook/cron
-  convergence; D rejected; C filed as GTH with incident trigger); Decision 2 =
-  Option A design-only, B sanctioned target design, no build in v0.15,
-  D incident-only stopgap. Owner veto window open; #45 executing under them.
-  (3) PR #74 release-plz v0.14.1 (ships P114 fix): OWNER-GATED (outward
-  publishing), recommended CUT, awaiting owner word. (4) GTH-V15-34
-  confirm-retire --batch mode filed. (5) Headline stands: **~94.3% fewer output
-  tokens / ~74.9% cheaper per session vs official GitHub MCP** (6/6 real
-  sessions, `4db6b64`).
+- **SHIFT #11 SUMMARY (17:10–21:20 UTC):** **P115 CHECKPOINTED GREEN at the
+  human gate** (`ce4d3b7` GREEN-CHECKPOINT 7/7; probe re-minted `5411761` after
+  a benign race with my PR #76 merge). Relay legs #45–#49 all clean, each
+  shipped+pushed at green boundaries: #45 = token-economy GENERATOR fix
+  (`19f9ae2`, fix-it-twice on owner ruling `5a5dd29`; provenance was manager-
+  established: perf-gate regen, accidental) + GTH-V15-35 install-IA quick
+  (`97fad0d`, 11 rows rebound); #46 = P116 phase context locked (`31ac414`);
+  #47 = filed manager finding (below); #48 = hero-number bindings MINTED on all
+  3 surfaces (`c35f993` index, `7553c36` README → row `README/hero-token-
+  economy-94-75`, `aa75e96` concepts) + intake RESOLVED (`e185e6e`); #49 = P116
+  research+validation skeleton (`05085fe`). **#50 next: P116 planning tail**
+  (handover `f5f7e8e`). PR #75 self-closed by dependabot; **PR #76 squash-
+  MERGED** (`8439085`, green).
+- **MANAGER FINDING (verified, then fixed by #48): retiring hero rows had NO
+  successors on 3 surfaces.** Subagent-mapped + grep-verified: docs/index.md:17
+  hero bullet, README.md:27, concepts:29-31 carried the new 94.3%/74.9% figures
+  unbound. Now bound (see #48 commits above). Residual noticings filed:
+  concepts four-axis coverage gap (#48), row-id prefix inconsistency
+  (`README-md/` legacy vs `README/` new — cost a false-negative grep; routed to
+  P126 via #49's charter).
+- **OWNER INTERACTION (this shift):** answered 4 owner questions with verified
+  facts — docs badge v0.13.1 sighting = browser sessionStorage cache (live site
+  fresh-browser reads v0.14.0; `releases/latest` = v0.14.0); short workhorse
+  sessions = relay doctrine; animation ETA ≈ Jul 18–20 via P117 (GTH-V15-37);
+  roadmap = docs/roadmap.md refreshes at milestone close, phase order in
+  `.planning/ROADMAP.md`. **Handed the owner the 11 confirm-retire commands**
+  (from 115-UNWAIVE-PATH.md § FINAL, binaries verified present) + the
+  commit/push landing step — the batch may land AT ANY MOMENT; every workhorse
+  charter since carries the gate re-check + STATE.md-advance instruction.
+- **GHOST-TEXT INCIDENT (craft, verified live):** w1:p5's box showed "done, ran
+  the 11 confirm-retire commands and pushed — close P115" — reality check:
+  origin unmoved AND catalog still 11/11 ⇒ ghost text, NOT owner input. Never
+  close the human gate on box text; only a real catalog-count drop closes it.
+- **OPEN GATES/THREADS:** (1) **Human gate OPEN** — 11/11 RETIRE_PROPOSED;
+  owner has commands in hand. (2) **P116 rulings ENCODED** (`8212373`), owner
+  veto window open; execution in flight (research+validation shipped, planning
+  tail → execute next). (3) PR #74 release-plz v0.14.1: OWNER-GATED, recommended
+  CUT, awaiting owner word. (4) GTH-V15-34 confirm-retire --batch mode filed.
+  (5) Headline stands: **~94.3% fewer output tokens / ~74.9% cheaper per
+  session vs official GitHub MCP** (6/6 real sessions, `4db6b64`), now
+  catalog-bound on every hero surface.
 - **Liveness incident (2026-07-16, 2nd dead-watcher):** #40 froze ~30min —
   child notification chain died silently (subagent+shell gone, parent never
   resumed, dirty tree). Caught by shortened 20-min poll; nudge recovered it.
