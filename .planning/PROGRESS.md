@@ -20,8 +20,9 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 
 ## NOW
 
-**T6 remaining — item 1 (reframe) LANDED + PUSHED, CI-green confirmation pending; item 3
-agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5/7 DONE; item 6 next.** Numbering matches the T6 charter in
+**T6 remaining — item 1 (reframe) LANDED + PUSHED; item 3
+agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5/7 + 6a DONE; item 6b next.**
+CI hotfix `3eacb53` restored a RED main (bench-latency-v09 vs item-5 regen-guard), rides out on 6a's push. Numbering matches the T6 charter in
 `.planning/SESSION-HANDOVER.md` §5 (item 4's second `latency.md` refresh is DROPPED — not
 needed, `latency.md` never re-drifted):
 1. **(item 2) — DONE.** `115-UNWAIVE-PATH.md` written in the P115 phase dir — live-grepped
@@ -44,15 +45,26 @@ needed, `latency.md` never re-drifted):
    overwrite `latency.md`'s CI-canonical sections (marker + teaching error +
    `regen-guard.selftest.sh`). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 5.
 4. **(item 7) — DONE.** All FIVE `[SELF]` decision entries deleted from `.planning/CONSULT-DECISIONS.md`: A1 (line 71), T6 (line 96), T2 (line 114), T5 (line 123), T4 (line 153). Companion note at line 159 deleted. Post-grep confirms only the definition at line 6 remains; file structure intact (70 lines, clean EOF). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 7.
-5. **(item 6) — NEXT.** Un-waive the 8 hero-number rows + the 3 newly-waived
-   MISSING_TEST rows from `c9c2aee`; un-waive `perf/token-economy-bench` by adding the
-   ~94% headline assertion; write the missing
-   `quality/gates/perf/headline-numbers-cross-check.py` verifier and un-waive the
-   EXISTING `perf/headline-numbers-cross-check` catalog row (correction: this row
-   already exists, P90-era — it is NOT absent, only its verifier script is). Must also
-   reconcile the "8 ms" hero figure against the canonical `latency.md` (now "6 ms get /
-   7 ms list").
-6. **(item 8)** Phase-close cadence: push → `code/ci-green-on-main` P0 → gsd-verifier →
+5. **(item 6a) — DONE.** Wrote the missing `quality/gates/perf/headline-numbers-cross-check.py`
+   verifier + `test_headline_numbers_cross_check.py` (12 tests); reconciled the "8 ms" hero
+   prose to canonical "6 ms get / 7 ms list" across all 3 hero surfaces (6 edits); repaired
+   + un-waived the EXISTING P90-era `perf/headline-numbers-cross-check` row (minted PASS via
+   `run.py --cadence weekly --persist`, surgical — only `perf-targets.json` flipped);
+   rebound `docs/index/latency-8ms-read` + `latency-cached-read-8ms` (claim `8→6 ms`,
+   MISSING_TEST waiver cleared) and re-cited the two line-shifted BOUND rows
+   (`tested-three-backends`, `soft-threshold-24ms`). Gate GREEN (RED pre-edit → PASS
+   post-edit); walk rc=0; banned-words/mkdocs-strict/mermaid green. Evidence:
+   `115-T6-CLOSEOUT.md` § Wave 2 — item 6a. **NOTE for 6b:** the `docs/index.md:18` edit
+   re-graded the two WAIVED cold-init rows (`latency-24ms-cold-init`, `latency-hero-24ms-mismatch`)
+   `MISSING_TEST → STALE_DOCS_DRIFT` (non-blocking); their "bind 27ms to the cross-check
+   gate" exit route is void (gate does not cover cold-init; canonical init is 278ms) — 6b
+   must reconcile cold-init separately. **CI hotfix `3eacb53`** (concurrent lane) fixed a
+   RED main (`bench-latency-v09` vs the item-5 regen-guard); it rides out on 6a's push.
+6. **(item 6b) — NEXT.** Retire/handle the 4 STALE_DOCS_DRIFT hero rows (89.1% token
+   claims, retire candidates) + `docs/index/mcp-loop-4883-tokens` / `reposix-loop-531-tokens`;
+   un-waive `perf/token-economy-bench` by adding the ~94% output-token-reduction assertion;
+   dedupe the token-89% row pair; the cold-init reconciliation flagged above.
+7. **(item 8)** Phase-close cadence: push → `code/ci-green-on-main` P0 → gsd-verifier →
    `STATE.md` cursor → `PROGRESS.md` refresh in the close push.
 
 ## NEXT

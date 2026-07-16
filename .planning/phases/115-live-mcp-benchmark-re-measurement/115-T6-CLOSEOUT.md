@@ -260,6 +260,91 @@ tree-writer (gsd-executor).
 - No regression in nearby content: read lines 60–70 confirmed boundary intact, no 
   extraneous deletions.
 
+---
+
+## Wave 2 — item 6a
+
+**Scope:** (1) write the missing `quality/gates/perf/headline-numbers-cross-check.py`
+verifier + its offline pytest; (2) reconcile the "8 ms" hero prose to the canonical
+"6 ms get / 7 ms list" (`docs/benchmarks/latency.md` sim column); (3) repair + un-waive
+the EXISTING P90-era `perf/headline-numbers-cross-check` catalog row (a dangling-verifier
+row, NOT absent — no duplicate created); (4) rebind the two `MISSING_TEST` latency rows
+whose claim changed + re-cite the two BOUND rows whose cited lines shifted. Executed
+2026-07-16 by the Wave-2 item-6a tree-writer (gsd-executor). Sibling lane 6b follows.
+
+**Gate written + proven (verify against reality):**
+- `quality/gates/perf/headline-numbers-cross-check.py` — PARSES canonical get/list ms from
+  `latency.md` + the four-axis reductions from `token-economy.md` (never hardcodes the
+  numbers), cross-checks 6 latency + 6 token hero headlines across the 3 hero surfaces;
+  teaching output names surface:line + the stale value + the canonical value + source + a
+  copy-paste fix.
+- **PRE-edit run: FAIL, exit 1, 6 drifts detected** (5×`8 ms` get + 1×`9 ms` list) —
+  proves the gate actually fires. **POST-edit run: `PASS — all 6 latency + 6 token hero
+  headlines match their canonical sources`, exit 0.**
+- `quality/gates/perf/test_headline_numbers_cross_check.py` — **12 tests, all pass offline**
+  (canonical parse + missing-structure raise, GREEN path, each RED drift class, teaching
+  assertions, and `test_hero_surfaces_match_canonical` integration against the real docs —
+  the fn the two rebound rows point at conceptually via the gate/test binding).
+- **Minted via `run.py --cadence weekly --persist`:** row `perf/headline-numbers-cross-check`
+  flipped `WAIVED → PASS`. Validate-only preview first confirmed **only `perf-targets.json`
+  flips** (every `release-assets.json` row stayed PASS — surgical, no cross-catalog churn).
+  Row now: `status=PASS, waiver=null, minted_at=2026-07-16, transport_claim=false,
+  coverage_kind=mechanical`, `sources`+`tracked_in` refreshed to `P115 T6
+  (115-UNWAIVE-PATH.md)`. (`transport_claim:false` is honest — this gate reads committed
+  markdown and makes no transport/latency claim of its own; `coverage_kind:mechanical`.)
+
+**Prose reconciled (6 edits, 3 hero surfaces):**
+- `docs/index.md`: `:18` `8 ms`→`6 ms` (hero card cached read); `:87` `8 ms`→`6 ms`
+  (Tested-against cache read); `:93` `9 ms`→`7 ms` (list-issues).
+- `README.md`: `:23` `8 ms`→`6 ms` (simulator-measured caveat); `:25` `8 ms`→`6 ms`
+  (read-one-issue bullet).
+- `docs/concepts/reposix-vs-mcp-and-sdks.md`: `:14` `8 ms`→`6 ms` (Latency, cached read row).
+- The `27 ms` cold-init figures were LEFT (out of scope; canonical init is `278 ms` — a
+  separate, larger reconciliation, framed "simulator, interim / pending re-measurement" on
+  the page). The gate deliberately does NOT check cold-init.
+
+**Doc-alignment rows (via `reposix-quality doc-alignment bind`/`unwaive`):**
+- **REBOUND** (claim `8 ms`→`6 ms`, bound to `headline-numbers-cross-check.py` +
+  `test_headline_numbers_cross_check.py` AND-drift, MISSING_TEST waiver CLEARED via
+  `unwaive`): `docs/index/latency-8ms-read` (`docs/index.md:18`), `latency-cached-read-8ms`
+  (`docs/concepts/reposix-vs-mcp-and-sdks.md:14`) — both now `BOUND`, no waiver.
+- **RE-CITED** (line-shift hash refresh, claim + test binding unchanged):
+  `docs/index/tested-three-backends` (86-91 range — line 87's figure changed within it),
+  `docs/index/soft-threshold-24ms` (line 93 — list figure changed; the cold-init soft-
+  threshold claim is unchanged) — both stay `BOUND`.
+- `bash quality/gates/docs-alignment/walk.sh` → **rc=0, zero blocking lines**.
+
+**Expected side-effect (RAISED for 6b):** the `:18` edit changed the cited content of two
+WAIVED cold-init rows (`docs/index/latency-24ms-cold-init`, `latency-hero-24ms-mismatch`) —
+they re-grade `WAIVED-STALE_DOCS_DRIFT` (was `MISSING_TEST`), still non-blocking, waivers
+untouched (not my scope). Their `115-UNWAIVE-PATH.md` exit route ("bind the 27 ms figure to
+the cross-check gate") **no longer holds**: this gate deliberately does not cover cold-init
+(canonical init `278 ms` ≠ hero `27 ms`). 6b must reconcile `27→278 ms` separately or extend
+the gate — it cannot simply bind these rows to `headline-numbers-cross-check`.
+
+**Gates:** headline gate GREEN (exit 0); pytest 12/12; walk rc=0; `banned-words-lint --all`
+PASS; `mkdocs-strict` OK; `mermaid-renders` 7/7 OK.
+
+**P0 independently discovered — main CI was RED — already fixed by a concurrent lane (NOT
+me).** While inspecting the tree I found main's latest CI run (`29495972731`) had FAILED on
+`bench-latency-v09` → step "Run latency bench against sim": item 5's regen-guard refuses to
+overwrite the tracked `docs/benchmarks/latency.md`, and `.github/workflows/ci.yml` still ran
+`latency-bench.sh` with the default OUT. **A concurrent CI-hotfix lane had already landed
+the complete fix as local commit `3eacb53` ("fix(115-T6): let CI/cron bench through the
+regen-clobber guard")** — ci.yml regen-to-scratch + the cron `ALLOW_CANONICAL_OVERWRITE`
+producer path + a `regen-guard.selftest.sh` case (f) regression net (see the "Wave 2 — CI
+hotfix" section below, authored by that lane). **I did NOT touch `ci.yml`** — I verified the
+`OUT` override is wired end-to-end (`latency-bench.sh:53` default-override +
+`emit-markdown.sh:11` `regen_guard_check "$OUT"` keys off the output path) and confirmed
+`3eacb53` did not touch any of my files. `3eacb53` is local (1 ahead of `origin/main`) and
+will ride out on this lane's push, turning main green — noted per the charter's mid-lane
+landing clause.
+
+**Concurrent-writer / owner commit mid-lane:** YES — `3eacb53` (CI hotfix) landed on local
+HEAD during this lane; it is orthogonal to 6a (no file overlap) and left my gate GREEN +
+catalog rows intact. Re-checked via `git pull --rebase origin main` immediately pre-push —
+see final push report.
+
 ## Wave 2 — CI hotfix: bench-latency-v09 vs regen-clobber guard
 
 - RED: run 29495972731 (e7a1fd2) — the item-5 guard fired inside CI;

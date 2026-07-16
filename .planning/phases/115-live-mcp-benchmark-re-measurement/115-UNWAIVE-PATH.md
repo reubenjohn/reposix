@@ -174,6 +174,33 @@ not a retire.
 
 ---
 
+## Wave 2 item 6a — status update (2026-07-16)
+
+Rows resolved by lane 6a (evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 6a):
+
+| Row id | Was | Now | How |
+|---|---|---|---|
+| #2 `docs/index/latency-8ms-read` | WAIVED-MISSING_TEST | **BOUND, no waiver** | claim `8 ms`→`6 ms`; bound to `headline-numbers-cross-check.py` + its test; `unwaive`d |
+| #17 `latency-cached-read-8ms` | WAIVED-MISSING_TEST | **BOUND, no waiver** | claim `8 ms`→`6 ms`; bound to the same gate+test; `unwaive`d |
+| #21 `perf/headline-numbers-cross-check` | WAIVED (dangling verifier) | **PASS, no waiver** | wrote `headline-numbers-cross-check.py` + test; minted via `run.py --cadence weekly --persist`; `tracked_in`→`P115 T6`; `transport_claim:false`, `coverage_kind:mechanical` |
+
+Also re-cited (line-shift hash refresh, not in the 21-row inventory — were already BOUND):
+`docs/index/tested-three-backends` (86-91), `docs/index/soft-threshold-24ms` (93).
+
+**Exit-route correction for 6b (rows #1 `docs/index/latency-24ms-cold-init` and #4
+`latency-hero-24ms-mismatch`):** 6a's `docs/index.md:18` edit re-graded these two WAIVED
+cold-init rows `MISSING_TEST → STALE_DOCS_DRIFT` (still non-blocking, waivers untouched).
+Their exit route as written ("bind the 27 ms figure to the cross-check gate") **is no longer
+valid**: `headline-numbers-cross-check.py` deliberately does NOT check cold-init — canonical
+`latency.md` init is `278 ms`, not the hero `27 ms`, so binding the 27 ms hero figure to
+this gate would be false. 6b must reconcile `27 ms → 278 ms` (or the interim framing)
+separately, or extend the gate to cover cold-init, before those rows can bind. Row #7
+`README-md/init-24ms` (README.md:26) was NOT touched by 6a and is unchanged.
+
+Remaining for 6b: rows #3, #5, #6, #8 (STALE_DOCS_DRIFT hero retire candidates), #15/#16
+(mcp-loop/reposix-loop), #20 (`perf/token-economy-bench` assertion), the 8 HUMAN
+confirm-retire rows, and the cold-init reconciliation above.
+
 ## Cross-references
 
 - Group B state transition + human-relay batch: `115-T6-CLOSEOUT.md` § Wave 1 — item 3.
