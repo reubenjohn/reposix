@@ -5,19 +5,19 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 262,
-    "claims_missing_test": 8,
-    "claims_retire_proposed": 0,
+    "claims_bound": 263,
+    "claims_missing_test": 7,
+    "claims_retire_proposed": 2,
     "claims_retired": 57,
-    "alignment_ratio": 0.7797619047619048,
+    "alignment_ratio": 0.7827380952380952,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T07:22:30Z",
-    "coverage_ratio": 0.17275985663082438,
+    "last_walked": "2026-07-16T10:31:37Z",
+    "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
-    "total_eligible_lines": 6975,
+    "total_eligible_lines": 6982,
     "coverage_floor": 0.1,
-    "claims_waived": 8
+    "claims_waived": 14
   },
   "rows": [
     {
@@ -276,7 +276,7 @@
         "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
       "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct and regenerates the doc but never asserts it equals 89.1% (main() returns 0 for any value). v0.12.0 file-relocate stub; headline cross-check deferred to v0.12.1",
-      "last_verdict": "MISSING_TEST",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "FIX_IMPL_THEN_BIND",
       "last_run": "2026-07-14T15:25:54Z",
       "last_extracted": "2026-07-14T15:48:50Z",
@@ -4450,7 +4450,7 @@
         "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884"
       ],
       "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct (L204) but returns 0 unconditionally (L283) — never asserts ==89.1%; gate self-declares WAIVED until 2026-07-26. Deferred v0.12.1/MIGRATE-03 cross-check. Corrects a per-doc-batch grader false-BOUND that conflated compute/emit with assert.",
-      "last_verdict": "MISSING_TEST",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "FIX_IMPL_THEN_BIND",
       "last_run": "2026-07-14T15:30:51Z",
       "last_extracted": "2026-07-14T15:48:50Z",
@@ -5303,37 +5303,31 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "Comparison page mirror of full MCP/reposix/reduction triple",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Superseded by docs/concepts/reposix-vs-mcp-and-sdks.md:43-45, which explicitly RETIRES the 4,883/531/89.1% synthetic count_tokens-over-fixture triple (hero-number reframe, commit d2fd85c). The bound test bench_token_economy.py was rewritten to the live GitHub-capture JSONL session-usage methodology (P115 T5 amendment #10); its docstring demotes the count_tokens-over-fixtures path from headline source and main() no longer emits these numbers. Replacement is a DIFFERENT claim (94.3% output tokens etc. on token-economy.md), not a rebinding. Synthetic-fixture claim intentionally dropped with documented decision.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T10:25:47Z",
+      "last_extracted": "2026-07-16T10:25:47Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/index/mcp-loop-4883-tokens",
-      "claim": "MCP loop uses ~4,883 tokens for same 3-issue read+edit+push",
+      "claim": "MCP tool loop generates ~21k output tokens (live) for the same 3-issue read+edit+push",
       "source": {
         "file": "docs/index.md",
         "line_start": 35,
         "line_end": 39
       },
-      "source_hash": "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298",
+      "source_hash": "b7951af32ba726110c32eed643e2f3c3925b3a8c30a15996b1e4349dca6d74dd",
       "source_hashes": [
-        "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298"
+        "b7951af32ba726110c32eed643e2f3c3925b3a8c30a15996b1e4349dca6d74dd"
       ],
-      "tests": [
-        "quality/gates/perf/bench_token_economy.py"
-      ],
-      "test_body_hashes": [
-        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
-      ],
-      "rationale": "docs/index.md:35-39 mirrors MCP-baseline token count; bench_token_economy.py computes mcp_tokens via get_or_count(mcp_text)",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:19:26Z",
-      "last_extracted": "2026-07-04T07:19:26Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Cited 4,883-token synthetic figure retired (see docs/concepts/reposix-vs-mcp-and-sdks.md:43); prose at docs/index.md:35 now reads '~21k output tokens (live)'. bench_token_economy.py was rewritten to the JSONL captures path (get_or_count demoted; main() no longer calls it); test_bench_token_economy.py asserts synthetic-seed median math (mcp output==2000, 90.0% reduction) and the structure of docs/benchmarks/token-economy.md, not the ~21k live figure in index.md. Feature alive; needs a test asserting the index hero figure matches the captures-computed GitHub-MCP median (~21,171).",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-16T10:25:29Z",
+      "last_extracted": "2026-07-16T10:25:29Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "mcp-schema-discovery-100k-tokens",
@@ -6439,7 +6433,7 @@
         "4bef4f5ee0af137f235cc514b79c3279212d89a0b71e92b9ea0a32c781010e17"
       ],
       "rationale": "IMPL_GAP: latency-bench.sh is a v0.12.0 stub; its header states the cross-check comparing bench output against README/docs headline copy is a deferred v0.12.1 deliverable (MIGRATE-03). The only thresholds are soft 500ms WARNs on SIM_INIT_MS/SIM_LIST_MS (sim.sh:48-49) — no assertion binds the 8ms cache-read number. SIM_GET_MS (sim.sh:25) curls the sim REST endpoint, not a local-cache read, so it does not even measure the claimed quantity.",
-      "last_verdict": "MISSING_TEST",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "FIX_IMPL_THEN_BIND",
       "last_run": "2026-07-14T15:15:36Z",
       "last_extracted": "2026-07-14T15:48:50Z",
@@ -6901,18 +6895,12 @@
       "source_hashes": [
         "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
-      ],
-      "rationale": "Comparison page mirror of canonical 8ms read",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: comparison-page mirror of canonical docs/index 8ms read; latency-bench.sh (sim.sh) measures SIM_GET_MS/SIM_LIST_MS via median3_step but applies NO assertion/threshold to it (only soft WARN >500ms on init/list) — never asserts 8ms. v0.12.0 stub, headline-copy cross-check deferred to v0.12.1 MIGRATE-03. Follows canonical row docs/index/latency-8ms-read.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-16T10:31:00Z",
+      "last_extracted": "2026-07-16T10:31:00Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
@@ -7716,37 +7704,31 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "Comparison page mirror of reposix-side count",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Superseded by docs/concepts/reposix-vs-mcp-and-sdks.md:43-45, which explicitly declares the 531/4,883/89.1% synthetic count_tokens-over-fixture figures RETIRED (measured a fixture's size, not a live run). Replaced by the live GitHub-capture JSONL session-usage methodology (quality/gates/perf/bench_token_economy.py docstring: prior count_tokens-over-fixtures methodology retired as headline source; new figures in docs/benchmarks/token-economy.md). The 531-on-simulator measurement is intentionally dropped, not re-implemented.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-16T10:25:52Z",
+      "last_extracted": "2026-07-16T10:25:52Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/index/reposix-loop-531-tokens",
-      "claim": "reposix loop uses ~531 tokens for 3-issue read+edit+push (from token-economy benchmark)",
+      "claim": "reposix git-native loop uses ~1.2k output tokens (live) for the 3-issue read+edit+push task (from token-economy benchmark)",
       "source": {
         "file": "docs/index.md",
         "line_start": 31,
         "line_end": 34
       },
-      "source_hash": "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec",
+      "source_hash": "fba640b9268a5ff2598be70811afd2ea8581086e5e46ccfe140a4d0f1b50698f",
       "source_hashes": [
-        "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec"
+        "fba640b9268a5ff2598be70811afd2ea8581086e5e46ccfe140a4d0f1b50698f"
       ],
-      "tests": [
-        "quality/gates/perf/bench_token_economy.py"
-      ],
-      "test_body_hashes": [
-        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
-      ],
-      "rationale": "docs/index.md:31-34 mirrors reposix-side token count; bench_token_economy.py computes reposix_tokens via get_or_count(reposix_text)",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:19:44Z",
-      "last_extracted": "2026-07-04T07:19:44Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test quality/gates/perf/bench_token_economy.py exists but its unit tests (test_bench_token_economy.py::test_compute_arm_medians_and_reductions / test_main_offline_regenerates_doc_from_captures) assert the median-of-3 capture machinery on SYNTHETIC seeded captures (90% reduction by construction), NOT the ~1.2k live-capture reposix output-token figure the doc now quotes. The old ~531 count (get_or_count over reposix_text) was retired when the headline pivoted to JSONL session-usage medians (P115 amendment #10; d2fd85c reframed index.md 531 -> ~1.2k live). Feature alive, doc already correct; no test pins the current published figure.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-16T10:26:52Z",
+      "last_extracted": "2026-07-16T10:26:52Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/reference/cli.md/mount_removed_v0.9.0",
@@ -7944,13 +7926,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "agent_flow.rs:206 asserts the helper binary ships literal 'git pull --rebase' recovery teaching string",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "agent_flow.rs:196-199 still asserts the helper source ships literal 'git pull --rebase' recovery teaching string AND the 'error refs/heads/main fetch first' native-git non-fast-forward reject token (multi-file candidate sweep per P83-01 T02); prior STALE_TEST_DRIFT was mechanical refactor drift, claim intact at source line 16",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-07-16T10:28:49Z",
+      "last_extracted": "2026-07-16T10:28:49Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8908,7 +8890,7 @@
         "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
       "rationale": "IMPL_GAP: bench_token_economy.py computes+emits reduction_pct into token-economy.md but never asserts 89.1% (exit 0 for any value). v0.12.0 stub; headline cross-check deferred to v0.12.1",
-      "last_verdict": "MISSING_TEST",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "FIX_IMPL_THEN_BIND",
       "last_run": "2026-07-14T15:25:54Z",
       "last_extracted": "2026-07-14T15:48:50Z",
