@@ -318,7 +318,7 @@
       "artifact": "quality/reports/verifications/code/ci-green-on-main.json",
       "status": "PASS",
       "minted_at": "2026-07-12T15:39:06Z",
-      "last_verified": "2026-07-16T09:30:09Z",
+      "last_verified": "2026-07-16T17:43:32Z",
       "coverage_kind": "mechanical",
       "freshness_ttl": null,
       "blast_radius": "P0",
