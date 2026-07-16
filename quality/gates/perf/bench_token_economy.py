@@ -1,57 +1,44 @@
 #!/usr/bin/env python3
 """quality/gates/perf/bench_token_economy.py -- perf dimension token-economy benchmark.
 
-MIGRATED FROM: scripts/bench_token_economy.py per SIMPLIFY-11 (P59) -- file move only.
-SPLIT:         IO helpers + table renderers extracted to bench_token_economy_io.py
-               per the file-size-limits gate (15 000 char budget per .py file).
-CATALOG ROW:   quality/catalogs/perf-targets.json -> perf/token-economy-bench (WAIVED until 2026-07-26)
-CADENCE:       weekly (per docs/benchmarks/token-economy.md; ~1min wall time)
-STATUS:        v0.12.0 file-relocate stub; full gate logic deferred to v0.12.1 via MIGRATE-03.
+HEADLINE METHODOLOGY (P115 Task 5, amendment #10 "jsonl-usage-methodology"):
 
-Wave E chose Option B (underscore filename) so the test file at
-quality/gates/perf/test_bench_token_economy.py can keep its `import
-bench_token_economy as bench` import unchanged. The test surface
-(``bench.get_or_count``, ``bench._cache_path``, ``bench.COUNT_MODEL``,
-``bench.FIXTURES`` etc.) remains intact via the re-exports below; the
-hyphenated convention (used by other dimensions for entry-point scripts
-that are never imported) does not apply here. See SURPRISES.md
-2026-04-27 P59.
+The token-economy headline is computed from the committed Claude Code session
+JSONL **usage records** under ``benchmarks/captures/*.json`` -- the honest
+end-to-end cost of a real agentic run against a live GitHub backend
+(reubenjohn/reposix), median-of-3 per arm, two arms (reposix-mediated vs
+MCP-mediated). It requires **NO ANTHROPIC_API_KEY** and no network: the doc is
+regenerated deterministically + offline from the committed captures.
 
-Predecessor preserved as scripts/bench_token_economy.py shim per OP-5
-reversibility; P63 SIMPLIFY-12 audit may delete the shim.
+  python3 quality/gates/perf/bench_token_economy.py --offline   # regen the doc
 
-What it does:
+The ``--offline`` flag is accepted for backward-compatibility and CI symmetry;
+the headline path is always offline, so with or without it the result is
+identical.
 
-Measure the reposix token-economy claim using real Anthropic token counts.
-Compares byte- and real-token-cost an LLM agent ingests for the same
-task under MCP-mediated vs reposix scenarios. Also compares raw-JSON
-costs across backends (BENCH-02): GitHub, Confluence, Jira (real
-adapter placeholder).
+The prior methodology counted Anthropic ``count_tokens`` over static fixtures
+(``benchmarks/fixtures/*.tokens.json``). That is retired as the headline source
+and DEMOTED to an optional per-artifact enrichment. Its IO helpers
+(``get_or_count``, ``_cache_path``, ``COUNT_MODEL`` ...) remain importable from
+``bench_token_economy_io`` and re-exported below so the enrichment path and the
+existing unit tests keep working; ``main()`` no longer calls them.
 
-Emits a Markdown table to docs/benchmarks/token-economy.md and prints
-the same table to stdout. Token counts are produced by Anthropic's
-count_tokens endpoint; results are cached in
-benchmarks/fixtures/*.tokens.json (SHA-256 content hash as cache key)
-so subsequent runs -- including CI --offline -- require no API key.
+Emits a Markdown table to docs/benchmarks/token-economy.md and prints the same
+table to stdout.
 
-Usage:
-  # First run (populates cache):
-  ANTHROPIC_API_KEY=<key> python3 quality/gates/perf/bench_token_economy.py
-
-  # Subsequent runs (cache hit, no network):
-  python3 quality/gates/perf/bench_token_economy.py --offline
+MIGRATED FROM: scripts/bench_token_economy.py per SIMPLIFY-11 (P59); shim kept.
+CATALOG ROW:   quality/catalogs/perf-targets.json -> perf/token-economy-bench.
 """
 from __future__ import annotations
 
 import argparse
-import datetime
-import json
 import pathlib
 import sys
 from typing import Optional
 
-# Re-export from the IO sibling so tests doing `import bench_token_economy as bench`
-# can continue to access these symbols via `bench.<name>` (test surface contract).
+# Re-export the count_tokens / cache IO surface (retired as headline source,
+# kept for the optional enrichment path + the existing unit-test contract that
+# does `import bench_token_economy as bench` then `bench.<name>`).
 from bench_token_economy_io import (  # noqa: F401
     COUNT_MODEL,
     JIRA_REAL_PLACEHOLDER,
@@ -67,50 +54,30 @@ from bench_token_economy_io import (  # noqa: F401
     verify_fixture_cache_integrity,
 )
 
+# Re-export the JSONL-usage headline path (the live methodology).
+from bench_token_economy_captures import (  # noqa: F401
+    AXES,
+    compute_arm_medians,
+    compute_reductions,
+    load_headline_captures,
+    median,
+    render_token_economy_markdown,
+)
+
 # ---------------------------------------------------------------------------
 # Module-level constants (kept here so tests' monkeypatch.setattr(bench, ...)
-# continues to redirect FIXTURES / BENCH_DIR / RESULTS in main()).
+# continues to redirect CAPTURES / BENCH_DIR / RESULTS / FIXTURES in main()).
 # ---------------------------------------------------------------------------
 
-# Workspace root is three levels up from quality/gates/perf/ (was one
-# level up from scripts/ in the predecessor).
+# Workspace root is three levels up from quality/gates/perf/.
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 BENCH_DIR = REPO_ROOT / "benchmarks"
+# JSONL session-usage captures (the headline source).
+CAPTURES = BENCH_DIR / "captures"
+# Retired count_tokens fixtures (kept for the optional enrichment path only).
 FIXTURES = BENCH_DIR / "fixtures"
-# RESULTS.md was renamed and relocated to docs/benchmarks/token-economy.md so
-# mkdocs can publish it directly (§0.4 of HANDOVER.md). The file is still
-# regenerated in place by this script.
+# Results doc; regenerated in place, published by mkdocs.
 RESULTS = REPO_ROOT / "docs" / "benchmarks" / "token-economy.md"
-
-GITHUB_FIXTURE = FIXTURES / "github_issues.json"
-CONFLUENCE_FIXTURE = FIXTURES / "confluence_pages.json"
-
-
-# ---------------------------------------------------------------------------
-# FIXTURES-dependent loaders (kept in the entry point so monkeypatching
-# `bench.FIXTURES` redirects them, matching the predecessor behaviour).
-# ---------------------------------------------------------------------------
-
-
-def load_mcp_bytes() -> tuple:
-    """Return ``(serialized_text, fixture_path)`` for the MCP Jira catalog fixture.
-
-    Serialises compactly (no indentation) to match real wire-format JSON,
-    stripping the internal ``_note`` field.
-    """
-    path = FIXTURES / "mcp_jira_catalog.json"
-    with path.open() as f:
-        data = json.load(f)
-    data.pop("_note", None)
-    serialized = json.dumps(data, separators=(", ", ": "))
-    return serialized, path
-
-
-def load_reposix_bytes() -> tuple:
-    """Return ``(text, fixture_path)`` for the reposix session transcript fixture."""
-    path = FIXTURES / "reposix_session.txt"
-    text = path.read_text()
-    return text, path
 
 
 # ---------------------------------------------------------------------------
@@ -128,9 +95,9 @@ def _parse_args(argv: Optional[list] = None) -> argparse.Namespace:
         action="store_true",
         default=False,
         help=(
-            "Refuse to call the Anthropic API; read cache only. "
-            "For CI and offline builds. "
-            "Default: allow API calls when cache is missing and ANTHROPIC_API_KEY is set."
+            "Accepted for backward-compat + CI symmetry. The JSONL-usage headline "
+            "path is always offline (reads committed benchmarks/captures/*.json; "
+            "never calls any API), so this flag does not change the result."
         ),
     )
     return parser.parse_args(argv)
@@ -142,138 +109,26 @@ def _parse_args(argv: Optional[list] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[list] = None) -> int:
-    """Run the benchmark and write docs/benchmarks/token-economy.md.
+    """Regenerate docs/benchmarks/token-economy.md from the committed captures.
 
-    # Errors
-    Calls ``sys.exit()`` if cache is missing and ``ANTHROPIC_API_KEY`` is
-    unset (unless ``--offline`` is passed).
+    Deterministic + offline: parses the session-usage records, computes the
+    per-axis medians per arm and the reposix-vs-MCP reductions, and writes the
+    doc byte-for-byte reproducibly. No ANTHROPIC_API_KEY, no network.
     """
-    args = _parse_args(argv)
+    _parse_args(argv)  # parse for --help / validation; flag is a no-op by design
 
-    mcp_text, mcp_path = load_mcp_bytes()
-    reposix_text, reposix_path = load_reposix_bytes()
+    records = load_headline_captures(CAPTURES)
+    arm_medians = compute_arm_medians(records)
+    reductions = compute_reductions(arm_medians)
 
-    # Per-backend fixtures (optional — skip gracefully if absent).
-    # Resolve dynamically from FIXTURES so monkeypatching FIXTURES in tests works.
-    gh_path = FIXTURES / "github_issues.json"
-    conf_path = FIXTURES / "confluence_pages.json"
-    gh_available = gh_path.exists()
-    conf_available = conf_path.exists()
-
-    gh_text: Optional[str] = None
-    conf_text: Optional[str] = None
-    if gh_available:
-        gh_text, _ = load_raw_text(gh_path)
-    if conf_available:
-        conf_text, _ = load_raw_text(conf_path)
-
-    # Baseline fixture list (always required)
-    baseline_fixture_paths = [mcp_path, reposix_path]
-    # Per-backend fixtures (include only if present)
-    per_backend_fixture_paths = []
-    if gh_available:
-        per_backend_fixture_paths.append(gh_path)
-    if conf_available:
-        per_backend_fixture_paths.append(conf_path)
-
-    all_fixture_paths = baseline_fixture_paths + per_backend_fixture_paths
-
-    # Stale-cache integrity check (warn, do not exit)
-    integrity_warnings = verify_fixture_cache_integrity(all_fixture_paths)
-    for w in integrity_warnings:
-        print(f"WARN: {w}", file=sys.stderr)
-
-    if not args.offline:
-        require_api_key_or_cached(all_fixture_paths)
-
-    # Count tokens for all fixtures
-    mcp_tokens = get_or_count(mcp_text, mcp_path, offline=args.offline)
-    reposix_tokens = get_or_count(reposix_text, reposix_path, offline=args.offline)
-
-    gh_tokens: Optional[int] = None
-    conf_tokens: Optional[int] = None
-    if gh_available and gh_text is not None:
-        gh_tokens = get_or_count(gh_text, gh_path, offline=args.offline)
-    if conf_available and conf_text is not None:
-        conf_tokens = get_or_count(conf_text, conf_path, offline=args.offline)
-
-    mcp_chars = len(mcp_text)
-    reposix_chars = len(reposix_text)
-
-    ratio = mcp_tokens / reposix_tokens if reposix_tokens else float("inf")
-    reduction_pct = 100 * (1 - reposix_tokens / mcp_tokens) if mcp_tokens else 0.0
-
-    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-
-    # Build per-backend table rows
-    per_backend_rows = [
-        {
-            "backend": "Jira (MCP)",
-            "fixture": "mcp_jira_catalog.json",
-            "chars": mcp_chars,
-            "raw_tokens": mcp_tokens,
-            "reposix_tokens": reposix_tokens,
-            "reduction_pct": reduction_pct,
-        },
-    ]
-    if gh_available and gh_tokens is not None and gh_text is not None:
-        gh_chars = len(gh_text)
-        gh_reduction = 100 * (1 - reposix_tokens / gh_tokens) if gh_tokens else 0.0
-        per_backend_rows.append(
-            {
-                "backend": "GitHub",
-                "fixture": "github_issues.json",
-                "chars": gh_chars,
-                "raw_tokens": gh_tokens,
-                "reposix_tokens": reposix_tokens,
-                "reduction_pct": gh_reduction,
-            }
-        )
-    if conf_available and conf_tokens is not None and conf_text is not None:
-        conf_chars = len(conf_text)
-        conf_reduction = 100 * (1 - reposix_tokens / conf_tokens) if conf_tokens else 0.0
-        per_backend_rows.append(
-            {
-                "backend": "Confluence",
-                "fixture": "confluence_pages.json",
-                "chars": conf_chars,
-                "raw_tokens": conf_tokens,
-                "reposix_tokens": reposix_tokens,
-                "reduction_pct": conf_reduction,
-            }
-        )
-    # Jira real adapter placeholder (always present)
-    per_backend_rows.append(
-        {
-            "backend": "Jira (real adapter)",
-            "fixture": "—",
-            "chars": None,
-            "raw_tokens": None,
-            "reposix_tokens": None,
-            "reduction_pct": None,
-        }
+    md = render_token_economy_markdown(
+        arm_medians=arm_medians,
+        reductions=reductions,
+        n_sessions=len(records),
     )
-
-    per_backend_table = render_per_backend_table(per_backend_rows)
-
-    md = render_results_markdown(
-        now=now,
-        mcp_chars=mcp_chars,
-        mcp_tokens=mcp_tokens,
-        reposix_chars=reposix_chars,
-        reposix_tokens=reposix_tokens,
-        reduction_pct=reduction_pct,
-        ratio=ratio,
-        per_backend_table=per_backend_table,
-    )
-
-    def _normalize(text: str) -> str:
-        return "\n".join(
-            line for line in text.splitlines() if not line.startswith("*Measured:")
-        )
 
     existing = RESULTS.read_text() if RESULTS.exists() else ""
-    if _normalize(existing) == _normalize(md):
+    if existing == md:
         print(md)
         print(f"(unchanged -- {RESULTS.relative_to(BENCH_DIR.parent)} already current)")
     else:
