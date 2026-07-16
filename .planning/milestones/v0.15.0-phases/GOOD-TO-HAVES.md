@@ -263,5 +263,9 @@ the reverse pointer is deferred to whenever those part files are themselves prog
   3. Embed mode: `TWEAK_DEFAULTS.motionEditor=false`, neutralize the `localStorage` `animstage:t` playhead persistence (returning visitors currently get a frozen end frame), poster + click-to-play rather than autoplay.
   4. Owner's 7MB mp4 export = video fallback + Show-HN/social asset, host as a GitHub release attachment NOT committed to the repo (file-size gates).
   5. Docs gates: assets under `docs/assets/animation/`, strip Windows `Zone.Identifier` files from uploads/, mkdocs-strict + playwright-walk coverage.
+- **Addendum (2026-07-16, L0 #44):** the checklist-item-4 mp4 export now EXISTS at
+  `/home/reuben/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4` (7.1MB,
+  verified on disk 2026-07-16) — video fallback + Show-HN/social asset; attach to a
+  GitHub release, never commit to the repo.
 - **Fix-sketch:** P117 planner adds a dedicated task implementing the 5-item checklist above in order (bundle precompile → font self-host → embed-mode config → video-fallback hosting → docs-gate coverage), each item independently verifiable; feasibility already de-risked by the manager's headless-playwright spike, so this is an implementation lane, not a research spike.
 - **Effort:** medium — new static asset pipeline + mkdocs page wiring; fits inside P117 as an owner-approved scope addition alongside the doc-truth purge.

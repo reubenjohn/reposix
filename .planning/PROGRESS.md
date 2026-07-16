@@ -67,8 +67,12 @@ checkpoints without it per that instruction):
    GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
    `.planning/ROADMAP.md` Phase 117 + Phase 119.
 3. **P116 — ADR-010 decision packet** (ADR-01 mirror-fanout + FIX-03 GTH-09 slug→id
-   durable-create; options + tradeoffs, NO implementation) → route to **MANAGER (w1:p7)
-   for ruling** — end turn and await the ruling before any implementation.
+   durable-create; options + tradeoffs, NO implementation) — **COMMITTED** at
+   `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`
+   (rescued from `/tmp` by #44, 2026-07-16; recommends B for ADR-01, A-now/B-as-target
+   for FIX-03) → route to **MANAGER (w1:p7) for ruling** — end turn and await the
+   ruling before any implementation. Owner's mp4 export path also filed onto
+   GTH-V15-37 (charter addendum).
 4. Then the remaining milestone phases:
    - P117 — Doc-truth launch-blocker purge — not started
    - P118 — Post-bench honesty corrections — not started
