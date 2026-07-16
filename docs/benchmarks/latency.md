@@ -129,12 +129,21 @@ than assumed clean by default.
 bash quality/gates/perf/latency-bench.sh
 ```
 
-The script regenerates this file in place from a local run — expect the
-sim figures it produces to differ from the CI figures above (see
-Provenance above); it does not overwrite the CI-sourced real-backend
-figures unless run with credentials for those backends. To capture
-real-backend columns locally, export the relevant credential bundle
-before running:
+**Regen-clobber guard.** This file carries a `reposix:regen-guard:protected-*`
+marker comment near the end (deliberately placed there, not wrapping the
+content above, so it never shifts line numbers the docs-alignment catalog
+cites into the sections above). `emit-markdown.sh` refuses to regenerate a
+file that carries that marker unless you set
+`REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE=1` — the refusal message
+names the exact recovery commands. To eyeball a local/sim run without
+touching this tracked file, redirect the output instead:
+
+```bash
+OUT=/tmp/latency-preview.md bash quality/gates/perf/latency-bench.sh
+```
+
+To capture real-backend columns locally, export the relevant credential
+bundle before running:
 
 ```bash
 # GitHub (reubenjohn/reposix issues)
@@ -150,3 +159,15 @@ bash quality/gates/perf/latency-bench.sh
 
 See `docs/reference/testing-targets.md` for the canonical safe-to-mutate
 test targets.
+
+<!-- reposix:regen-guard:protected-begin -- this document is a hand-curated
+     CI-canonical latency record (bench-latency-v09 run log figures above,
+     plus the Provenance/PATCH-caveat write-ups). quality/gates/perf/
+     latency-bench/emit-markdown.sh refuses to regenerate a file carrying
+     this marker, because its template cannot reproduce the curated prose
+     above and would silently drop it -- see that script's header comment
+     (and latency-bench/regen-guard.sh) for the teaching error + recovery
+     steps if you hit the guard. Deliberately placed at end-of-file (not
+     wrapping the content above) so it never shifts the line numbers the
+     docs-alignment catalog cites into this file's earlier sections.
+     reposix:regen-guard:protected-end -->

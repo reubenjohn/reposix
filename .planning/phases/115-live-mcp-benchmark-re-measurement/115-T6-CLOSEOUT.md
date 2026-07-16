@@ -131,3 +131,105 @@ before) on the pre-push wall-time creep already tracked by the `2026-07-15 06:35
 
 **Owner confirm-retire mid-lane:** none landed during this lane's execution window (see
 final commit/push report for the immediately-pre-push state).
+
+---
+
+## Wave 2 — item 5
+
+**Scope:** Regen-clobber guard — `emit-markdown.sh` must not overwrite the CI-canonical
+sections of `docs/benchmarks/latency.md`. Executed 2026-07-16 by the Wave-2 tree-writer
+(gsd-executor).
+
+**Reality found before fixing:** `quality/gates/perf/latency-bench/emit-markdown.sh`
+always does an unconditional `cat > "$OUT" <<MARKDOWN …`, stamping its own fixed template
+over whatever is at `$OUT`. That template has no "Corrected" banner, no "Provenance &
+methodology" section, no "PATCH figures — known caveat" section — all hand-curated
+content the current `docs/benchmarks/latency.md` carries on top of the CI-measured table.
+The doc's own "Reproduce" prose claimed "it does not overwrite the CI-sourced
+real-backend figures unless run with credentials for those backends" — that claim was
+**false**: any bare local run (sim-only, no creds) would blank the github/confluence/jira
+cells and delete the curated sections outright. Noted as a lying-doc-claim finding (see
+Noticing below); fixed by making the guard's refusal the actual behavior instead of
+rewriting prose to match a bug.
+
+**Guard design chosen:** refuse-and-explain, gated on marker presence, not a merge.
+1. New factored module `quality/gates/perf/latency-bench/regen-guard.sh` (follows this
+   dir's existing per-concern layout: `lib.sh`/`sim.sh`/`github.sh`/…) defines
+   `regen_guard_check <out_path>`: returns 0 if `$out_path` doesn't exist or has no
+   `reposix:regen-guard:protected-begin` marker; else refuses (rc=1, teaching error to
+   stderr) unless `REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE=1` is set.
+2. `emit-markdown.sh` sources it and calls `regen_guard_check "$OUT" || exit 1` as its
+   first executable lines (fail fast, before any cell formatting work).
+3. `docs/benchmarks/latency.md` carries the marker comment (both `-begin`/`-end` lines
+   together) **at end-of-file, not wrapping the content above** — an earlier draft that
+   wrapped the whole body (marker inserted right after frontmatter) shifted every line
+   below by 9, which tripped `STALE_DOCS_DRIFT` on all 14 doc-alignment rows bound into
+   this file's table/soft-threshold sections (citations are line-anchored). Caught by
+   running `quality/gates/docs-alignment/walk.sh` before committing; fixed by moving the
+   marker to end-of-file only — zero lines shift above it, walk re-run clean (rc=0, no
+   `latency.md` rows in output).
+4. `quality/gates/perf/latency-bench.sh`'s `OUT` var made overridable
+   (`OUT="${OUT:-...}"`) so the guard's own recovery command #1 (`OUT=/tmp/... bash
+   quality/gates/perf/latency-bench.sh`) is truthful, not aspirational.
+5. Teaching error covers all three Rust-compiler-grade UX elements: **what** was
+   protected (names the marker + the curated sections at risk), **why** (CI-reviewed
+   numbers vs. unreviewed laptop noise), **recovery** (two copy-paste commands: preview
+   via `OUT=` redirect, or explicit override + manual restore of the curated prose).
+
+**Verify against reality (all trials against `/tmp` destinations — the real
+`docs/benchmarks/latency.md` was only ever touched via reviewed `Edit` calls, never by
+running the generator against it):**
+- `regen_guard_check` unit-level (12 assertions, `regen-guard.selftest.sh`): no-file →
+  safe; unmarked file → safe; marked file no override → refuse + file byte-identical
+  before/after (sha256 compared) + all 4 teaching-content greps pass; marked file +
+  override → safe; **the real committed `docs/benchmarks/latency.md` itself trips the
+  guard** (rc=1) — confirms the marker is live in the shipped file, not just a synthetic
+  fixture. `bash quality/gates/perf/latency-bench/regen-guard.selftest.sh` → 12 passed, 0
+  failed.
+- Full `emit-markdown.sh` sourced directly (real script, stubbed timing vars, no
+  cargo/sim needed): (a) fresh `/tmp` destination → regenerates normally, rc=0; (b)
+  `/tmp` copy of the real `docs/benchmarks/latency.md` as destination → refuses, rc=1,
+  sha256 identical before/after; (c) same + explicit override env → proceeds, rc=0,
+  content changes. `git status --short -- docs/benchmarks/latency.md` after all trials
+  shows only this lane's own intentional edits — no generator output ever landed there.
+- `bash quality/gates/docs-alignment/walk.sh` → rc=0 (post end-of-file-marker fix; the 14
+  previously-drifted `docs/benchmarks/latency/*` rows are absent from the output).
+- `bash scripts/banned-words-lint.sh --all` → PASS. `bash
+  quality/gates/docs-build/mkdocs-strict.sh` → OK. `bash
+  quality/gates/docs-build/mermaid-renders.sh` → 7/7 OK.
+
+**Test added:** `quality/gates/perf/latency-bench/regen-guard.selftest.sh` (new,
+3874 chars), following the `quality/gates/structure/file-size-limits.selftest.sh`
+convention (throwaway `/tmp` fixtures, pass/fail counters, non-zero exit on any
+regression) — not wired into the kcov shell-coverage harness (neither is its
+precedent file), so it sits in the same "standalone, run-on-demand" bucket as that
+exemplar; not a new gap.
+
+**Files touched:** `quality/gates/perf/latency-bench/regen-guard.sh` (new, 4216 chars),
+`quality/gates/perf/latency-bench/regen-guard.selftest.sh` (new, 3874 chars),
+`quality/gates/perf/latency-bench/emit-markdown.sh` (+7/-1 lines: source + guard call),
+`quality/gates/perf/latency-bench.sh` (+4/-1: overridable `OUT`), `docs/benchmarks/
+latency.md` (+33/-8: guard marker + updated Reproduce prose; zero bytes changed above
+line 128, confirmed by `git diff` — the table/Provenance/PATCH-caveat/soft-threshold
+sections are untouched).
+
+**Noticing:**
+1. **Lying doc claim (fixed):** the pre-existing Reproduce prose asserted the script
+   "does not overwrite the CI-sourced real-backend figures unless run with credentials"
+   — false for the shipped code (see "Reality found" above). Now true, because the guard
+   enforces it instead of the prose merely claiming it.
+2. **Line-anchored doc-alignment citations are a sharp edge for ANY future doc edit
+   in this file** (not unique to this task): inserting content before a bound section
+   silently trips `STALE_DOCS_DRIFT` on every citation below the insertion point, even
+   when the actual cited *values* didn't change. Worth a one-line callout in
+   `quality/CLAUDE.md` § docs-alignment for the next editor of a heavily-bound doc —
+   filed as a GOOD-TO-HAVE rather than fixed here (touches a shared doc outside this
+   item's scope; `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md`).
+3. The guard is a refuse-and-explain shim, not a merge: even the "override" path still
+   can't make `emit-markdown.sh`'s template reproduce the Provenance/PATCH-caveat prose.
+   A future item (not this one) could teach the template to preserve those sections by
+   splicing rather than full-file replace — out of scope here, flagged in the script's
+   own header comment so it isn't lost.
+
+**Owner confirm-retire mid-lane:** re-checked via `git pull --rebase origin main`
+immediately pre-push — see final push report for whether anything landed.

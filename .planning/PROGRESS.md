@@ -16,12 +16,13 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — `docs/benchmarks/token-economy.md` regenerated from the live GitHub captures — the synthetic count_tokens-on-fixtures baseline (retired 89.1% / 85.5% figures) is replaced by a deterministic, offline, no-API-key headline computed from the committed `benchmarks/captures/*.json` session-usage records: **~94% fewer output tokens, ~75% cheaper per session** (four axes: output ~94.3% / cache-create ~66.0% / total input-context ~55.6% / cost ~74.9%). Provenance + methodology rewritten (kills the false `scripts/demo.sh` / "modeled on Forge" claims), read-only-write-back + MCP-lossy-reads honesty caveats added, stale sidecar deleted (GTH-V15-26 resolved). — `1cdb381` (wave closed `2103d0c`, CI green, post-push P0 PASS re-minted at conclusion) ✅
 - 2026-07-16 — **T6 headline reframe (item 1) — LANDED + PUSHED** — hero surfaces re-anchored from the retired synthetic **89.1%** to the live GitHub-capture headline **~94% fewer output tokens / ~75% cheaper per session** (output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), matching `token-economy.md`'s provenance framing so heroes + benchmark page tell one story. Touched: `README.md` "Three measured numbers", `docs/index.md` (token card + loop-diagram Notes + caption + token-economy card + honest-scope footer), `docs/concepts/reposix-vs-mcp-and-sdks.md` "About the MCP comparison". Both live findings folded in (GitHub write-back read-only this cut → comparison unaffected; MCP `issue_read` lossy vs reposix byte-fidelity). banned-words + mkdocs-strict + mermaid-renders green. Committed `d2fd85c`; its own push attempt BLOCKED as designed on 4 no-waiver doc-alignment rows freshly `STALE_DOCS_DRIFT` — cleared via the top-level `/reposix-quality-refresh` retire+rebind (`9a2b6f1`, 6 rows re-graded) + a time-boxed `waive` on the still-blocking 5 (`c9c2aee`, until 2026-08-15, tracked to `115-UNWAIVE-PATH.md`). Push landed, pre-push 61 PASS / 0 FAIL. `code/ci-green-on-main` P0 pending confirmation of the post-push CI run (`29491742214`, in flight at handover). — `d2fd85c` (refresh `9a2b6f1`, waive `c9c2aee`) ✅
 - 2026-07-16 — **T6 item 3 — AGENT-SIDE DONE** — the 6 synthetic `count_tokens`-over-fixture `token-economy.md` doc-alignment rows (76.4% / 85.5% / jira-real-adapter / 4,883 / 531 / 89.1%) are `RETIRE_PROPOSED` (agent-side propose-retire only; HUMAN-ONLY confirm-retire NOT run, env-guard untouched). Replacement rows for the LIVE four-axis figures are `BOUND`/GREEN with fresh hand-verified citations: `output-reduction-94-percent` (`token-economy.md:37`), `cost-reduction-75-percent` (`:40`), `live-github-capture-methodology` (`:8-13`) — each bound to `bench_token_economy.py` + `test_bench_token_economy.py` (AND-drift watch). Verified against reality: pytest 9 passed offline; doc regenerates byte-for-byte from committed captures; catalog delta +3 rows / 0 removed (`claims_bound` 263→266). Pre-push walk `rc=0`, zero blocking (6 rows `WAIVED-RETIRE_PROPOSED`, waiver reason refreshed to accurate post-rebind guidance, same `until=2026-08-15` / `tracked_in=115-UNWAIVE-PATH.md`). Evidence: `.planning/phases/115-live-mcp-benchmark-re-measurement/115-T6-CLOSEOUT.md` § Wave 1 — item 3 agent-side. **Pending human relay:** batch `confirm-retire` for these 6 + the 2 concepts-page `RETIRE_PROPOSED` rows (`token-baseline-mcp-4883` / `token-baseline-reposix-531`) into one manager ask. ✅
+- 2026-07-16 — **T6 item 5 — DONE** — `emit-markdown.sh` now refuses to clobber `docs/benchmarks/latency.md`'s CI-canonical sections. New `quality/gates/perf/latency-bench/regen-guard.sh` gates the write on a `reposix:regen-guard:protected-begin` marker (placed at end-of-file so it never shifts the 14 doc-alignment citations line-anchored above it — an earlier top-of-file placement tripped `STALE_DOCS_DRIFT` on all 14, caught by walk.sh before commit, fixed by relocating the marker); refuses with a teaching error (what/why/copy-paste recovery) unless `REPOSIX_LATENCY_BENCH_ALLOW_CANONICAL_OVERWRITE=1`. Verified against reality against `/tmp` destinations only: fresh regen still works, a `/tmp` copy of the real doc is refused byte-identical, override proceeds; the real committed `latency.md` itself trips the guard. New `regen-guard.selftest.sh` (12 assertions, follows the `file-size-limits.selftest.sh` convention) passes; docs-alignment walk / banned-words / mkdocs-strict / mermaid-renders all green. Also fixed a lying doc claim (Reproduce prose asserted a protection that didn't exist in code). Filed `GTH-V15-28` (line-anchored doc-alignment citations are a general sharp edge for future doc edits). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 5. ✅
 
 ## NOW
 
 **T6 remaining — item 1 (reframe) LANDED + PUSHED, CI-green confirmation pending; item 3
-agent-side DONE (HUMAN-ONLY confirm-retire pending); item 2 DONE this wave; items 5/7/6
-open (in that order — next up).** Numbering matches the T6 charter in
+agent-side DONE (HUMAN-ONLY confirm-retire pending); items 2/5 DONE; items 7/6 open (in
+that order — next up).** Numbering matches the T6 charter in
 `.planning/SESSION-HANDOVER.md` §5 (item 4's second `latency.md` refresh is DROPPED — not
 needed, `latency.md` never re-drifted):
 1. **(item 2) — DONE.** `115-UNWAIVE-PATH.md` written in the P115 phase dir — live-grepped
@@ -40,17 +41,19 @@ needed, `latency.md` never re-drifted):
    those 6 + the 2 concepts-page rows `9a2b6f1` marked `RETIRE_PROPOSED`
    (`token-baseline-mcp-4883` / `token-baseline-reposix-531`) — batch all 8 into one
    manager w1:p7 ask.
-3. **(item 5)** Regen-clobber guard: `emit-markdown.sh` must not overwrite CI-canonical
-   `latency.md` sections.
-4. **(item 6)** Un-waive the 8 hero-number rows + the 3 newly-waived MISSING_TEST rows
-   from `c9c2aee`; un-waive `perf/token-economy-bench` by adding the ~94% headline
-   assertion; write the missing `quality/gates/perf/headline-numbers-cross-check.py`
-   verifier and un-waive the EXISTING `perf/headline-numbers-cross-check` catalog row
-   (correction: this row already exists, P90-era — it is NOT absent, only its verifier
-   script is). Must also reconcile the "8 ms" hero figure against the canonical
-   `latency.md` (now "6 ms get / 7 ms list").
-5. **(item 7)** Delete all FIVE `[SELF]` entries in `.planning/CONSULT-DECISIONS.md`
-   (re-grep line numbers first — as of this handover: 71, 96, 114, 123, 153).
+3. **(item 5) — DONE.** Regen-clobber guard shipped: `emit-markdown.sh` refuses to
+   overwrite `latency.md`'s CI-canonical sections (marker + teaching error +
+   `regen-guard.selftest.sh`). Evidence: `115-T6-CLOSEOUT.md` § Wave 2 — item 5.
+4. **(item 7) — NEXT.** Delete all FIVE `[SELF]` entries in `.planning/CONSULT-DECISIONS.md`
+   (re-grep line numbers first — line numbers shift as the file is edited).
+5. **(item 6) — NEXT AFTER 7.** Un-waive the 8 hero-number rows + the 3 newly-waived
+   MISSING_TEST rows from `c9c2aee`; un-waive `perf/token-economy-bench` by adding the
+   ~94% headline assertion; write the missing
+   `quality/gates/perf/headline-numbers-cross-check.py` verifier and un-waive the
+   EXISTING `perf/headline-numbers-cross-check` catalog row (correction: this row
+   already exists, P90-era — it is NOT absent, only its verifier script is). Must also
+   reconcile the "8 ms" hero figure against the canonical `latency.md` (now "6 ms get /
+   7 ms list").
 6. **(item 8)** Phase-close cadence: push → `code/ci-green-on-main` P0 → gsd-verifier →
    `STATE.md` cursor → `PROGRESS.md` refresh in the close push.
 

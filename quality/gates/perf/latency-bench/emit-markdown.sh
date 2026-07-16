@@ -3,7 +3,12 @@
 #
 # Sourced by ../latency-bench.sh after all backend probe blocks have run.
 # Reads: WORKSPACE_ROOT, OUT, all SIM_/GH_/CF_/JR_ timing variables.
-# Writes: $OUT (the docs/benchmarks/latency.md artifact).
+# Writes: $OUT (the docs/benchmarks/latency.md artifact) -- UNLESS the
+# regen-clobber guard below refuses (see regen-guard.sh).
+
+# shellcheck source=regen-guard.sh
+source "${LIB_DIR}/regen-guard.sh"
+regen_guard_check "$OUT" || exit 1
 
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 GIT_SHA="$(git -C "$WORKSPACE_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"

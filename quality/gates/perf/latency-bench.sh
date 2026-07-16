@@ -47,7 +47,10 @@ LIB_DIR="${SCRIPT_DIR}/latency-bench"
 # Workspace root is three levels up from quality/gates/perf/ (was one
 # level up from scripts/ in the predecessor).
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-OUT="${WORKSPACE_ROOT}/docs/benchmarks/latency.md"
+# Overridable so a local preview run can target a scratch path instead of
+# the tracked doc -- see the regen-clobber guard's recovery step 1
+# (latency-bench/regen-guard.sh).
+OUT="${OUT:-${WORKSPACE_ROOT}/docs/benchmarks/latency.md}"
 
 SIM_BIND="127.0.0.1:7780"
 SIM_URL="http://${SIM_BIND}"
