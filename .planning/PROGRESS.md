@@ -14,19 +14,19 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-15 — Real MCP tool surface captured; the planned Jira/atlassian-rovo benchmark path found infeasible (no write tool + token denied + empty project) — recorded honestly, no fabricated numbers — `ece072f` ✅
 - 2026-07-16 — Live token-economy benchmark captured on the GitHub backend — 6 real sessions (median-of-3 × 2 arms) running read-3-issues / edit-1 / push against reubenjohn/reposix; the reposix (git-native) arm is cheaper on every axis vs the GitHub MCP arm (≈75% cheaper per session, ≈94% fewer output tokens, ≈56% less total input-context / ≈66% less newly-cached context). Real per-session captures + GitHub MCP catalog (44 tools) + live git-native transcript committed; CAPTURE_OK green. (Findings for follow-up: reposix's GitHub write-back is read-only in this build cut so the reposix push doesn't persist — comparison unaffected; and the GitHub MCP's issue-read is lossy for raw markdown while reposix round-trips bytes faithfully.) — `4db6b64` ✅
 - 2026-07-16 — `docs/benchmarks/token-economy.md` regenerated from the live GitHub captures — the synthetic count_tokens-on-fixtures baseline (retired 89.1% / 85.5% figures) is replaced by a deterministic, offline, no-API-key headline computed from the committed `benchmarks/captures/*.json` session-usage records: **~94% fewer output tokens, ~75% cheaper per session** (four axes: output ~94.3% / cache-create ~66.0% / total input-context ~55.6% / cost ~74.9%). Provenance + methodology rewritten (kills the false `scripts/demo.sh` / "modeled on Forge" claims), read-only-write-back + MCP-lossy-reads honesty caveats added, stale sidecar deleted (GTH-V15-26 resolved). — `1cdb381` (wave closed `2103d0c`, CI green, post-push P0 PASS re-minted at conclusion) ✅
+- 2026-07-16 — **T6 headline reframe (item 1)** — hero surfaces re-anchored from the retired synthetic **89.1%** to the live GitHub-capture headline **~94% fewer output tokens / ~75% cheaper per session** (output ~94.3% / cache-create ~66.0% / input-context ~55.6% / cost ~74.9%), matching `token-economy.md`'s provenance framing so heroes + benchmark page tell one story. Touched: `README.md` "Three measured numbers", `docs/index.md` (token card + loop-diagram Notes + caption + token-economy card + honest-scope footer), `docs/concepts/reposix-vs-mcp-and-sdks.md` "About the MCP comparison". Both live findings folded in (GitHub write-back read-only this cut → comparison unaffected; MCP `issue_read` lossy vs reposix byte-fidelity). banned-words + mkdocs-strict + mermaid-renders green. Committed local `d2fd85c`; **push BLOCKS as designed** on 4 no-waiver doc-alignment rows now `STALE_DOCS_DRIFT` (`docs/index/reposix-loop-531-tokens`, `docs/index/mcp-loop-4883-tokens`, `token-baseline-mcp-4883`, `token-baseline-reposix-531`) — retire+rebind is the top-level `/reposix-quality-refresh` step (a remaining T6 item), not landed yet. ⏳
 
 ## NOW
 
-**T6 — un-waive + headline reframe + phase close.** The live token-economy numbers now
-live in `docs/benchmarks/token-economy.md`; T6 re-anchors the *hero* surfaces to them.
-Decide the headline framing (re-anchor the README / `docs/index` / `docs/why` hero to the
-live GitHub number, OR keep 89.1% with an explicit GitHub-regime caveat), folding in the two
-T4 findings (no GitHub write-back claim; reposix byte-fidelity positioning). Then: the second
-`latency.md` honest-headline refresh; un-waive the 8 hero-number rows; **retire (confirm-retire
-is human-only) + rebind the 6 `token-economy.md` doc-alignment rows** T5 left `WAIVED-STALE_DOCS_DRIFT`
-until 2026-08-15 (76.4% / 85.5% / 4883 / 531 / 89.1% / jira-real-adapter); un-waive the
-`perf/token-economy-bench` catalog row by adding the ~94% headline assertion; write
-`115-UNWAIVE-PATH.md`; phase-close cadence (push → CI green → verifier).
+**T6 remaining — reframe landed local, blocked pending re-bind.** Hero surfaces now carry
+the live numbers (item 1 in SHIPPED, local `d2fd85c`); its push blocks on 4 newly-drifted
+doc-alignment rows. Remaining, roughly in order:
+1. **Top-level `/reposix-quality-refresh`** on `docs/index.md` + `docs/concepts/reposix-vs-mcp-and-sdks.md` — retire (confirm-retire is human-only) + rebind the 4 now-`STALE_DOCS_DRIFT` rows (`docs/index/reposix-loop-531-tokens`, `docs/index/mcp-loop-4883-tokens`, `token-baseline-mcp-4883`, `token-baseline-reposix-531`) to the new live content so pre-push unblocks and `d2fd85c` lands.
+2. **Retire + rebind the 6 `token-economy.md` doc-alignment rows** T5 left `WAIVED-STALE_DOCS_DRIFT` until 2026-08-15 (76.4% / 85.5% / 4883 / 531 / 89.1% / jira-real-adapter) to the live four-axis numbers.
+3. Un-waive the 8 hero-number rows once bound to live figures.
+4. Second `latency.md` honest-headline refresh (item 5 of this wave — `latency.md` untouched by item 1; CI-canonical sections protected).
+5. Un-waive `perf/token-economy-bench` by adding the ~94% headline assertion.
+6. Write `115-UNWAIVE-PATH.md`; phase-close cadence (push → CI green → verifier).
 
 ## NEXT
 
