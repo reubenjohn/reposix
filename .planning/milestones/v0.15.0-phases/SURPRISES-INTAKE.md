@@ -437,4 +437,58 @@ directive):** execute at the first clean boundary — before or right after P116
 locks — **do NOT let it slip past P117**. Once the 11-row retire batch lands, the README
 surface in particular has no token-economy binding at all until this runs.
 
+**STATUS:** **RESOLVED (2026-07-16, L0 #48 doc-alignment bind executor)** — all three
+hero surfaces now BOUND in `quality/catalogs/doc-alignment.json`:
+- `docs/index/hero-token-economy-94-75` (docs/index.md:17) → commit `c35f993`
+- `README/hero-token-economy-94-75` (README.md:27) → commit `7553c36`
+- `docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost` (concepts:29-31) → commit `aa75e96`
+
+Each binds to `quality/gates/perf/headline-numbers-cross-check.py`
+(`run_cross_check` asserts the exact hero substrings on the page vs canonical
+`token-economy.md`) + `quality/gates/perf/bench_token_economy.py`
+(`_assert_headline_reduction` pins the 94.3% median-of-3 output reduction from
+committed captures) — the same test surface the existing
+`output-reduction-94-percent` / `cost-reduction-75-percent` BOUND rows use.
+`bash quality/gates/docs-alignment/walk.sh` exits 0 (no blocking states).
+**NOTE:** the concepts-page row is conservatively scoped to the OUTPUT + COST axes
+only; the cache-creation/input-context axes were NOT false-bound and are filed
+separately below.
+
+---
+
+## 2026-07-16 | discovered-by: L0 #48 doc-alignment bind executor (OD-3 no-false-bound noticing) | severity: LOW
+
+**What:** The concepts page `docs/concepts/reposix-vs-mcp-and-sdks.md:29-31` states a
+FOUR-axis token-economy comparison: `~94.3% fewer output tokens`, `~66.0% fewer
+cache-creation tokens`, `~55.6% smaller total input-context`, `~74.9% cheaper per
+session`. Only the OUTPUT (94.3%) and COST (74.9%) axes are pinned by a test:
+`headline-numbers-cross-check.py::run_cross_check`'s `TOKEN_CLAIMS` registry (L232-233)
+cross-checks ONLY those two substrings on this file against canonical `token-economy.md`,
+and `bench_token_economy.py::_assert_headline_reduction` asserts ONLY the real-capture
+OUTPUT reduction (94.3% ±1.0%). The `~66.0% cache-creation` and `~55.6% input-context`
+figures are **stated-but-untested**: no test asserts the committed captures yield those
+specific real values. (`test_bench_token_economy.py::test_compute_arm_medians_and_reductions`
+iterates all four axes — but only over SYNTHETIC 90%-by-construction seeds, proving the
+reduction FORMULA is applied per-axis, NOT the real 66.0%/55.6% values.) The bind row
+`docs/concepts/reposix-vs-mcp-and-sdks/token-economy-output-cost` was deliberately
+NARROWED to the two tested axes rather than false-bound to all four (a FALSE BOUND is the
+worst catalog-integrity failure).
+
+**Why out-of-scope for the discovering session:** Closing this means either (a) adding two
+`TOKEN_CLAIMS`-style substring cross-checks (`~66.0% fewer cache-creation`, `~55.6%
+smaller total input-context`) for `HERO_CONCEPTS` to `headline-numbers-cross-check.py`,
+plus reduction-axis extraction in `parse_token_canonical`, then a doc-alignment refresh to
+widen the row's claim; or (b) a `bench_token_economy.py` assertion pinning the real-capture
+cache_create/input_context reductions to a band (analogous to `_assert_headline_reduction`).
+Both touch the perf-gate honesty surface and warrant their own catalog-row review — out of
+scope for an additive bind pass.
+
+**Sketched resolution:** Preferred = extend `TOKEN_CLAIMS` in
+`quality/gates/perf/headline-numbers-cross-check.py` with cache-creation + input-context
+entries for `HERO_CONCEPTS` (`compute_arm_medians` already yields both medians per arm — add
+the reduction axes to `parse_token_canonical` / `compute_reductions` surfacing), then
+`/reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md` to widen the bound
+row's claim to all four axes. Until then the two extra axes remain correct-but-unwatched
+(same class as the parent row above, one layer finer).
+
 **STATUS:** OPEN
