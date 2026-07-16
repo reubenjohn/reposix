@@ -25,28 +25,22 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 
 ## NOW
 
-**P115 phase-close cadence — the ONLY remaining item.** T6 (all 7 items) is COMPLETE,
-agent-side, on `main`; the pre-close owner-directive doc-narrative strip has also SHIPPED
-(`5a5dd29`, zero new rows propose-retired). The **sole remaining action is a HUMAN-ONLY
-confirm-retire** on an **11-row batch** of `WAIVED-RETIRE_PROPOSED` doc-alignment rows —
-authoritative list + copy-paste commands now consolidated in
-`.planning/phases/115-live-mcp-benchmark-re-measurement/115-UNWAIVE-PATH.md` § "FINAL
-consolidated confirm-retire batch" (supersedes the scattered "11 rows" mentions elsewhere).
-Verb: `reposix-quality doc-alignment confirm-retire --row-id <id>` (real TTY only, refuses
-`$CLAUDE_AGENT_CONTEXT`). Manager (w1:p7) pinged twice (initial 8-row ask, then the
-corrected 11-row ask) and relays to the owner; standing instruction is NOT to idle-wait —
-checkpoint at close-readiness if the pass hasn't landed. Once it lands (or the phase
-checkpoints without it per that instruction):
-
-1. Re-push + re-run `python3 quality/runners/run.py --cadence post-push --persist` if new
-   commits land.
-2. Dispatch a `gsd-verifier` subagent for catalog-row PASS grading (RED loops back;
-   expect the 11 waived rows to read as the documented human gate, not a silent failure).
-3. Advance `.planning/STATE.md` cursor past P115.
-4. Refresh `PROGRESS.md` in the close push.
-5. **Also owed before declaring the T6 hero-surface edits shipped:** a cold-reader pass
-   (`/doc-clarity-review` on `docs/index.md` + `README.md`) — T6's lanes made minimal
-   mechanical number swaps; the surrounding framing/prose was not re-reviewed.
+**P115 CHECKPOINTED GREEN at the human gate.** The verifier ran and returned
+**GREEN-CHECKPOINT** (`115-VERIFICATION.md`, `ce4d3b7`): the phase goal (live MCP
+benchmark re-measurement + honest headline re-anchoring) is achieved in the codebase.
+The **sole remaining action is the human-only 11-row confirm-retire batch**
+(`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch" — authoritative row-ID
+list + copy-paste commands; verb needs a real TTY, refuses `$CLAUDE_AGENT_CONTEXT`,
+agents never pass `--i-am-human`). The cold-reader pass on `docs/index.md` + `README.md`
+is **DONE** — hero numbers are all clean, the README dead link is fixed, and the one
+remaining cold-reader finding (the stale Phase-36 claim at `docs/index.md:93`) is folded
+into `GTH-V15-35` as an addendum, to be fixed together with its required doc-alignment
+catalog rebind in the same wave. **P116 (ADR-010) is RULED and encoded** — both manager
+rulings landed verbatim in `CONSULT-DECISIONS.md`; the successor's next substantive work
+is executing P116 through GSD (doc-truth rewrites, ADR-010 §2/§3 amendments,
+litmus-non-idempotency intake-row retirement), sequenced after this checkpoint.
+`.planning/STATE.md`'s cursor advances past P115 only when the human confirm-retire batch
+lands — the phase is checkpointed, not held open idle-waiting on it.
 
 ## NEXT
 
