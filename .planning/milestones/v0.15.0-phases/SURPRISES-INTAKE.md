@@ -187,3 +187,15 @@ internal file cannot drift out of sync again. Prefer (b) if the internal file's 
 was to duplicate what `docs/roadmap.md` now covers — one source of truth beats two.
 
 **STATUS:** OPEN
+
+## 2026-07-15 17:18 | discovered-by: L0 rotation #36 (read-only pre-push-spike diagnosis, charter item 2) | severity: LOW
+
+> **Root-cause deep-dive for the existing `2026-07-15 06:35` pre-push-timing item above — enriches, does NOT duplicate.** The drain phase should resolve both together.
+
+**What:** Root-caused the pre-push over-budget WARN (rotation #35 saw 109s; #25/#26 saw ~101s/~91.7s; budget doc says ≈55–60s). It is **mostly environment variance layered on a modest kcov-corpus-growth creep** — NOT a new gate and NOT a stable new floor. Evidence: (1) a fresh `python3 quality/runners/run.py --cadence pre-push` on the identical commit state measured **64s total**, proving large run-to-run variance on unchanged code; (2) the dominant row `code/shell-coverage` (kcov) genuinely grew from the documented **29s** (measured 2026-07-12 08:21, commit `fc8264d`) to **~37s now**, because two MORE kcov-traced shell harnesses landed hours *after* the budget doc was written that same day — `fbb7782` (08:42, `60-code-ci.sh`, 7 stub-binary invocations) and `fe8febb` (18:52, `real-backend-env-gate.sh`, 2 scrubbed-env invocations) — neither reflected in the "≈55s" budget text. Timed breakdown of the 64s run: `code/shell-coverage` 37.16s · `agent-ux/rebase-recovery-reconciles` 9.14s · `hook-throttle` 2.02s · `mkdocs-strict` 1.98s · `badges-resolve` 1.96s · `no-orphan-docs` 1.89s · `fleet-safety-leaf-isolation-enforce` 1.32s · ~45 other rows sub-1s (most 0.03s). So the "≈55–60s" budget is **stale** (never re-baselined after the two post-08:21 harness additions), AND #35's specific 109s is the high-variance tail of a distribution now centered nearer ~65–75s. (Adjacent, noticed not filed separately: `60-code-ci.sh` rebuilds a stub `gh` binary + fresh PATH in a `mktemp` dir on each of its 7 invocations — more IO-syscall-heavy per call than peer harnesses, a plausible amplifier of VM I/O-contention variance. `docs-alignment/link-resolution` double-counts `docs/index.md` — cosmetic, ALREADY noted in the handover, do NOT re-file.)
+
+**Why out-of-scope for the discovering session:** Rotation #36's charter item 2 was explicitly a **read-only investigation — "file findings, change nothing."** Re-baselining the budget doc + raising the WARN threshold (both mutating edits) were out of charter, so filed rather than applied.
+
+**Sketched resolution:** Re-baseline `quality/CLAUDE.md` § Cadences pre-push budget from ≈55–60s to **~75s** (median of several post-corpus-growth runs) and raise the WARN threshold from 90s to **~100s**, so normal kcov ptrace/IO jitter stops flagging as noise. Optionally, reduce `60-code-ci.sh`'s per-invocation stub-`gh` rebuild churn (build once, reuse) to shave the variance amplifier. Full evidence: this rotation's read-only diagnosis (no code touched); base commit `1b20c15`.
+
+**STATUS:** OPEN
