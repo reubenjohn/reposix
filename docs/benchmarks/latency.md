@@ -88,18 +88,6 @@ sample on a machine whose load state isn't recorded, and (b) it runs on
 every push, so a regression is caught continuously instead of relying on
 someone remembering to re-run a benchmark by hand.
 
-**Superseded figures.** Commit `9384ca6`'s sim cold-init figure of
-155 ms was a single dev-VM sample taken while the machine was under
-unrelated load — a cold, loaded first run, i.e. a noise outlier, not a
-representative measurement. It is superseded by the CI figure above. The
-legacy 24 ms / 27 ms sim cold-init figures quoted elsewhere in the docs
-predate this benchmark's real-backend rows and were themselves
-non-reproducible dev-machine artifacts (no run log, no recorded runner
-spec); they are likewise superseded by the CI reference. (Un-waiving the
-doc-alignment rows that still quote 24/27 ms elsewhere is tracked
-separately — see the 2026-07-15 P115-T2 entry in
-`.planning/CONSULT-DECISIONS.md`.)
-
 ## PATCH figures — known caveat
 
 The `PATCH record (no-op)` row above times the bench's PATCH probe

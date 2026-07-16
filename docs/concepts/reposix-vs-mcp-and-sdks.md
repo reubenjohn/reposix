@@ -40,10 +40,6 @@ The latency cells for reposix are measured ([`docs/benchmarks/latency.md`](../be
     literal angle-bracket text, so an MCP read-modify-write altered raw markdown
     — the reposix arm round-tripped the bytes unchanged.
 
-    The earlier `4,883` / `531` token counts and the `89.1%` headline came from
-    a synthetic `count_tokens`-over-a-fixture methodology and are **retired**:
-    they measured a fixture's size, not a live agent run.
-
 ## When each one earns its keep
 
 ### Use reposix for…

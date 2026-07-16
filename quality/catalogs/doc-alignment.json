@@ -12,7 +12,7 @@
     "alignment_ratio": 0.8082595870206489,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T12:58:30Z",
+    "last_walked": "2026-07-16T15:41:41Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -8510,8 +8510,8 @@
       "claim": "Soft threshold: real-backend step < 3s (regression-flagged, not CI-blocking)",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 119,
-        "line_end": 124
+        "line_start": 107,
+        "line_end": 112
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
       "source_hashes": [
@@ -8521,13 +8521,13 @@
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
+        "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "Added warn_if_over_3s() shared helper in quality/gates/perf/latency-bench/lib.sh, called from github.sh (init/list/get/patch), jira.sh (init/list/get/patch), and confluence.sh (init/list/get/patch) — mirrors the sim.sh WARN pattern (lines 47-49) but at the 3000ms real-backend threshold; emits 'WARN: <backend> <step> <ms>ms > 3000ms threshold' on stderr, non-fatal.",
+      "rationale": "Added warn_if_over_3s() shared helper in quality/gates/perf/latency-bench/lib.sh, called from github.sh (init/list/get/patch), jira.sh (init/list/get/patch), and confluence.sh (init/list/get/patch) — mirrors the sim.sh WARN pattern (lines 47-49) but at the 3000ms real-backend threshold; emits 'WARN: <backend> <step> <ms>ms > 3000ms threshold' on stderr, non-fatal. Line range refreshed 119-124 -> 107-112 (P115 pre-close owner-ruling doc strip removed the 12-line \"Superseded figures\" paragraph above this section; claim and test binding unchanged).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-15T22:17:45Z",
-      "last_extracted": "2026-07-15T22:17:45Z",
+      "last_run": "2026-07-16T15:41:00Z",
+      "last_extracted": "2026-07-16T15:41:00Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8535,8 +8535,8 @@
       "claim": "Soft threshold: sim cold init < 500ms (regression-flagged, not CI-blocking)",
       "source": {
         "file": "docs/benchmarks/latency.md",
-        "line_start": 119,
-        "line_end": 123
+        "line_start": 107,
+        "line_end": 111
       },
       "source_hash": "d77d9afc77fda569d44a81c215f0ebf2c77440308eaa9e6cb742b4b24e9760d3",
       "source_hashes": [
@@ -8546,13 +8546,13 @@
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
+        "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "latency-bench.sh header line 34 documents the sim-cold-init < 500ms soft threshold and sources latency-bench/sim.sh (dispatcher line 103), which enforces it at sim.sh:48 -- [[ SIM_INIT_MS -gt 500 ]] && echo WARN: sim cold init <N>ms > 500ms threshold >&2 || true (non-fatal WARN on stderr, not exit). Documented AND enforced.",
+      "rationale": "latency-bench.sh header line 34 documents the sim-cold-init < 500ms soft threshold and sources latency-bench/sim.sh (dispatcher line 103), which enforces it at sim.sh:48 -- [[ SIM_INIT_MS -gt 500 ]] && echo WARN: sim cold init <N>ms > 500ms threshold >&2 || true (non-fatal WARN on stderr, not exit). Documented AND enforced. Line-shift refresh only (source lines moved -12 after P115 retirement-narrative removal; claim text unchanged).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-15T22:11:25Z",
-      "last_extracted": "2026-07-15T22:11:25Z",
+      "last_run": "2026-07-16T15:41:41Z",
+      "last_extracted": "2026-07-16T15:41:41Z",
       "last_extracted_by": "bind-call"
     },
     {
