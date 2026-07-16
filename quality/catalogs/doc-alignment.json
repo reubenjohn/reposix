@@ -4,15 +4,15 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 396,
-    "claims_bound": 274,
+    "claims_total": 397,
+    "claims_bound": 275,
     "claims_missing_test": 0,
     "claims_retire_proposed": 11,
     "claims_retired": 57,
-    "alignment_ratio": 0.8082595870206489,
+    "alignment_ratio": 0.8088235294117647,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T18:32:51Z",
+    "last_walked": "2026-07-16T20:11:56Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -9548,6 +9548,33 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T11:12:10Z",
       "last_extracted": "2026-07-16T11:12:10Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/hero-token-economy-94-75",
+      "claim": "The docs/index.md hero card states the reposix git-native arm uses ~94% fewer output tokens and is ~75% cheaper than GitHub-MCP for the identical read-3-issues + edit-1 + push task (6 live agentic sessions, median-of-3 per arm).",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 17,
+        "line_end": 17
+      },
+      "source_hash": "15ae98d8c1038b562673c46eabf1a1ad30598d5e3554a79e095d75df235f0e07",
+      "source_hashes": [
+        "15ae98d8c1038b562673c46eabf1a1ad30598d5e3554a79e095d75df235f0e07"
+      ],
+      "tests": [
+        "quality/gates/perf/headline-numbers-cross-check.py",
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
+        "bfd1e8bb930a7f651433bd10bffc6222bab18e09f60a3c2f97c78a707c34a8dc"
+      ],
+      "rationale": "headline-numbers-cross-check.py::run_cross_check (:251) asserts docs/index.md contains the exact canonical-derived substrings '~94% fewer output tokens' (TOKEN_CLAIMS output axis, L228) and '~75% cheaper' (cost axis, L229), both parsed from docs/benchmarks/token-economy.md at run time so the hero copy can never silently diverge from the canonical table. bench_token_economy.py::_assert_headline_reduction (:93) pins the underlying figure: the committed benchmarks/captures/*.json compute a 94.3% median-of-3 output reduction inside a +/-1.0% band, and token-economy.md (the cross-check's canonical source for BOTH axes) is regenerated from those captures. Same test surface as the BOUND output-reduction-94-percent / cost-reduction-75-percent rows. Verified: headline-numbers-cross-check.py exits 0 in-tree 2026-07-16.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-16T20:11:56Z",
+      "last_extracted": "2026-07-16T20:11:56Z",
       "last_extracted_by": "bind-call"
     }
   ]
