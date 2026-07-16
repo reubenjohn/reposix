@@ -12,7 +12,7 @@
     "alignment_ratio": 0.8082595870206489,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T15:41:41Z",
+    "last_walked": "2026-07-16T18:32:51Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -757,8 +757,8 @@
       "claim": "Architecture tested end-to-end against Confluence TokenWorld, GitHub reubenjohn/reposix, JIRA TEST project",
       "source": {
         "file": "docs/index.md",
-        "line_start": 86,
-        "line_end": 91
+        "line_start": 112,
+        "line_end": 117
       },
       "source_hash": "baa10e128962daf566229cb12f8a3c9d76e9d40053f82744974ab8bf69162796",
       "source_hashes": [
@@ -770,11 +770,11 @@
       "test_body_hashes": [
         "5da12c4e98ef21584dc1df18c33b2c4bea31f8db391e7cfda9e29ec66994c45c"
       ],
-      "rationale": "P115 T6 item 6a re-cite: line 87's cached-read figure changed 8ms->6ms within this bound range; refreshing source_hash, test binding unchanged.",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:11:21Z",
-      "last_extracted": "2026-07-16T12:11:21Z",
+      "last_run": "2026-07-16T18:32:27Z",
+      "last_extracted": "2026-07-16T18:32:27Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -947,8 +947,8 @@
       "claim": "Audit trail is git log (no SDK vendoring required)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 78,
-        "line_end": 78
+        "line_start": 104,
+        "line_end": 104
       },
       "source_hash": "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55",
       "source_hashes": [
@@ -960,11 +960,11 @@
       "test_body_hashes": [
         "edd5caaad84327b221215a2a8598fe60d7dd7dda9275c5f3b2a8ed26285de838"
       ],
-      "rationale": "Hash-shape bind per P74 D-04; verifier under quality/gates/docs-alignment/.",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T20:54:42Z",
-      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_run": "2026-07-16T18:32:26Z",
+      "last_extracted": "2026-07-16T18:32:26Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1049,8 +1049,8 @@
       "claim": "BackendCapabilities struct exists in crates/reposix-core/src/backend.rs",
       "source": {
         "file": "docs/index.md",
-        "line_start": 116,
-        "line_end": 116
+        "line_start": 144,
+        "line_end": 144
       },
       "source_hash": "b07098fc3466c164678c30742a4dac019cdda8b99e2fac1dfa96ca9a78d9ca54",
       "source_hashes": [
@@ -1062,11 +1062,11 @@
       "test_body_hashes": [
         "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
       ],
-      "rationale": "docs/index.md:116 names BackendCapabilities in crates/reposix-core/src/backend.rs; check_backend_capabilities_reports_sim_supports_everything exercises check_backend_capabilities (struct deletion breaks compile) and asserts the sim row shows yes/in-body/strong",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-16T18:32:33Z",
+      "last_extracted": "2026-07-16T18:32:33Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1648,8 +1648,8 @@
       "claim": "Bootstrap takes <= 278 ms against the simulator (CI-canonical)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 134,
-        "line_end": 134
+        "line_start": 83,
+        "line_end": 83
       },
       "source_hash": "2155c27ecefd1ee62adeed6f707bd433e2bf8c9067447bfbdf7a3fc64e5e40aa",
       "source_hashes": [
@@ -1661,11 +1661,11 @@
       "test_body_hashes": [
         "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "Reconciled the <= 27 ms bootstrap upper bound to the CI-canonical <= 278 ms (latency.md 'reposix init' cold sim); binding to the latency-bench.sh regenerator is unchanged. P115 T6 6b.",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:58:30Z",
-      "last_extracted": "2026-07-16T12:58:30Z",
+      "last_run": "2026-07-16T18:32:45Z",
+      "last_extracted": "2026-07-16T18:32:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3351,8 +3351,8 @@
       "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
       "source": {
         "file": "docs/index.md",
-        "line_start": 152,
-        "line_end": 152
+        "line_start": 162,
+        "line_end": 162
       },
       "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
       "source_hashes": [
@@ -3364,11 +3364,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "docs/index.md:152 claims the fetch-size-limit stderr names git sparse-checkout as recovery; test asserts stateless_connect.rs contains the literal git sparse-checkout plus the BLOB_LIMIT_EXCEEDED_FMT constant",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:29Z",
-      "last_extracted": "2026-07-07T15:57:29Z",
+      "last_run": "2026-07-16T18:32:49Z",
+      "last_extracted": "2026-07-16T18:32:49Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3654,8 +3654,8 @@
       "claim": "git checkout -B main refs/reposix/origin/main switches to main branch",
       "source": {
         "file": "docs/index.md",
-        "line_start": 131,
-        "line_end": 131
+        "line_start": 80,
+        "line_end": 80
       },
       "source_hash": "7806a1743b9a8920abcc841319c8e1b31b456ddf5ec32dddccac4f8d96cd3d84",
       "source_hashes": [
@@ -3667,11 +3667,11 @@
       "test_body_hashes": [
         "83eb2460706cdb31b8b698d975399b249d29165e8d3f58a3f7f99379f0e08738"
       ],
-      "rationale": "docs/index.md:131 still asserts 'git checkout -B main refs/reposix/origin/main'; tutorial-replay.sh step 4 runs that exact command after rev-parse --verify of the ref and records PASS only on exit 0 (EXIT_CODE=1 on failure)",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-14T15:13:28Z",
-      "last_extracted": "2026-07-14T15:13:28Z",
+      "last_run": "2026-07-16T18:32:44Z",
+      "last_extracted": "2026-07-16T18:32:44Z",
       "last_extracted_by": "bind-call",
       "waiver": {
         "until": "2026-07-31T00:00:00Z",
@@ -6193,8 +6193,8 @@
       "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch first error",
       "source": {
         "file": "docs/index.md",
-        "line_start": 152,
-        "line_end": 152
+        "line_start": 162,
+        "line_end": 162
       },
       "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
       "source_hashes": [
@@ -6206,11 +6206,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "docs/index.md:152 claims the standard git fetch first reject with git pull --rebase recovery; test asserts reposix-remote/src (write_loop.rs/bus_handler.rs/main.rs) contains git pull --rebase plus error refs/heads/main fetch first",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:33Z",
-      "last_extracted": "2026-07-07T15:57:33Z",
+      "last_run": "2026-07-16T18:32:51Z",
+      "last_extracted": "2026-07-16T18:32:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7527,8 +7527,8 @@
       "claim": "reposix init sim::demo /tmp/reposix-demo creates partial-clone working tree",
       "source": {
         "file": "docs/index.md",
-        "line_start": 130,
-        "line_end": 130
+        "line_start": 79,
+        "line_end": 79
       },
       "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
       "source_hashes": [
@@ -7540,11 +7540,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "agent_flow.rs::dark_factory_sim_happy_path asserts 'reposix init sim::demo' yields the partial-clone config (extensions.partialClone==origin, remote.origin.promisor==true, remote.origin.partialclonefilter==blob:none) -- the definition of a partial-clone working tree",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:45:06Z",
-      "last_extracted": "2026-07-07T22:45:06Z",
+      "last_run": "2026-07-16T18:32:39Z",
+      "last_extracted": "2026-07-16T18:32:39Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7809,8 +7809,8 @@
       "claim": "reposix sim starts on port :7878 by default",
       "source": {
         "file": "docs/index.md",
-        "line_start": 129,
-        "line_end": 129
+        "line_start": 78,
+        "line_end": 78
       },
       "source_hash": "d7ca12bf9854d98ac7540461ffc76878a0040c7958c80571ec4adbdd0b9cbe4b",
       "source_hashes": [
@@ -7822,11 +7822,11 @@
       "test_body_hashes": [
         "9711053b2b00fddd6cacc627e74a1153efa3e73302dd7a3c4353e61506fd9e8a"
       ],
-      "rationale": "docs/index.md:129 'reposix sim &' starts the sim on :7878; default_bind_addr_is_7878 asserts Args::parse_from([reposix-sim]).bind resolves to 127.0.0.1:7878 (port 7878)",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-16T18:32:37Z",
+      "last_extracted": "2026-07-16T18:32:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8331,8 +8331,8 @@
       "claim": "sed -i edit to issues/0001.md followed by git commit -am and git push works",
       "source": {
         "file": "docs/index.md",
-        "line_start": 73,
-        "line_end": 75
+        "line_start": 99,
+        "line_end": 101
       },
       "source_hash": "4e2c8a0dec219f3c7adeea8fe63cf1d8eaeb21f76abe64ca66967279ece78cf6",
       "source_hashes": [
@@ -8344,11 +8344,11 @@
       "test_body_hashes": [
         "45ad33228fce32e4058b644e57d328a35aab09ef78e4ae891035b6dbcfa5a7cb"
       ],
-      "rationale": "clean_push_emits_ok_and_mutates_backend asserts a git push of an edited issue emits 'ok refs/heads/main' and fires exactly 1 backend PATCH -- the reposix-specific guarantee that an edit->commit->push reaches the SoT; sed and git commit -am are vanilla git",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:45:06Z",
-      "last_extracted": "2026-07-07T22:45:06Z",
+      "last_run": "2026-07-16T18:32:22Z",
+      "last_extracted": "2026-07-16T18:32:22Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8431,12 +8431,12 @@
       "claim": "Sim cold init is 278 ms (soft threshold 500 ms)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 93,
-        "line_end": 93
+        "line_start": 119,
+        "line_end": 119
       },
-      "source_hash": "c08934a714440d82c8c452f8b0c366ba5ad4ba369ef565bd586881e20bed54c2",
+      "source_hash": "ba7593af04e817dfa248f4e104c597cf7dd098ac5ba394b666e5b26289e6014c",
       "source_hashes": [
-        "c08934a714440d82c8c452f8b0c366ba5ad4ba369ef565bd586881e20bed54c2"
+        "ba7593af04e817dfa248f4e104c597cf7dd098ac5ba394b666e5b26289e6014c"
       ],
       "tests": [
         "quality/gates/perf/headline-numbers-cross-check.py",
@@ -8444,15 +8444,15 @@
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce",
         "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "Reconciled 27->278 ms (canonical latency.md 'reposix init' cold sim); now bound to the extended headline-numbers-cross-check gate (asserts the docs/index.md:93 'Sim cold init is' figure equals canonical) AND the latency-bench.sh regenerator. P115 T6 6b.",
+      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:58:30Z",
-      "last_extracted": "2026-07-16T12:58:30Z",
+      "last_run": "2026-07-16T18:32:31Z",
+      "last_extracted": "2026-07-16T18:32:31Z",
       "last_extracted_by": "bind-call"
     },
     {

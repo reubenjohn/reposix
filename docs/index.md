@@ -66,7 +66,33 @@ Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabula
 
 Full step-by-step in [first-run](tutorials/first-run.md).
 
+<details markdown>
+<summary><strong>Build from source (advanced)</strong></summary>
+
+The supported install path is the package-manager band above (curl / Homebrew / cargo binstall / PowerShell `irm`). Build-from-source is for contributors and for platforms not covered by the prebuilt binary archives.
+
+```bash
+git clone https://github.com/reubenjohn/reposix && cd reposix
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+reposix sim &                                             # start the simulator on :7878
+reposix init sim::demo /tmp/reposix-demo
+cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/1.md
+```
+
+After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `278 ms` against the simulator (CI-canonical; a warm dev machine is several times faster).
+
+</details>
+
 ## After — one commit
+
+Create the demo working tree, then edit, commit, and push:
+
+```bash
+reposix sim &                              # start the simulator on :7878
+reposix init sim::demo /tmp/reposix-demo   # create the demo working tree
+cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main
+```
 
 ```bash
 cd /tmp/reposix-demo
@@ -90,7 +116,9 @@ reposix's `6 ms` cache read is measured against the in-process simulator, but th
 - **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github-reubenjohnreposix-issues)** (this project's own tracker).
 - **JIRA — [project `TEST`](reference/testing-targets.md#jira-project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
 
-Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `278 ms` (soft threshold `500 ms`); list-issues `7 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
+Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `278 ms` (soft threshold `500 ms`); list-issues `7 ms`; capabilities probe `5 ms`.
+
+Real-backend numbers are already captured: get-one-record is `320 ms` against GitHub and `202 ms` against Confluence ([latency](benchmarks/latency.md)).
 
 ## Connector capability matrix
 
@@ -116,24 +144,6 @@ GitHub Issues is currently read-only — `create` / `update` / `delete` return
 `crates/reposix-core/src/backend.rs` (`BackendCapabilities`); each connector's
 `CAPABILITIES` row is regression-tested against its observable behavior
 (`capabilities_match_create_impl`).
-
-<details markdown>
-<summary><strong>Build from source (advanced)</strong></summary>
-
-The supported install path is the package-manager band above (curl / Homebrew / cargo binstall / PowerShell `irm`). Build-from-source is for contributors and for platforms not covered by the prebuilt binary archives.
-
-```bash
-git clone https://github.com/reubenjohn/reposix && cd reposix
-cargo build --release --workspace --bins
-export PATH="$PWD/target/release:$PATH"
-reposix sim &                                             # start the simulator on :7878
-reposix init sim::demo /tmp/reposix-demo
-cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/1.md
-```
-
-After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `278 ms` against the simulator (CI-canonical; a warm dev machine is several times faster).
-
-</details>
 
 ## Where to go next
 

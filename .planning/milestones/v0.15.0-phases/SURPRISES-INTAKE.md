@@ -376,3 +376,30 @@ from the unreproduced "intermittent Read/Edit harness failures" noticing in #43'
 handover §5.4 — that stays unfiled pending a live repro.
 
 **STATUS:** OPEN
+
+## 2026-07-16 | discovered-by: quick 260716-fmt (GTH-V15-35) | severity: MEDIUM
+
+**What:** `test_main_offline_regenerates_doc_from_captures` in
+`quality/gates/perf/test_bench_token_economy.py` (L212-244) asserts idempotency ONLY
+against a synthetic `tmp_path` fixture — it monkeypatches `bench.RESULTS` /
+`bench.CAPTURES` / `bench.BENCH_DIR` to a temp dir and checks that a second
+`--offline` run reproduces the same bytes as the first — and NEVER diffs the
+regenerated doc against the real committed `docs/benchmarks/token-economy.md`. That is
+the exact gap that let the 260716-f6o generator regression (the retired-narrative
+section re-added by the template) reach a P115 phase-close gate run undetected: the
+test's own idempotency check passed because it only compares the synthetic doc to
+itself, not to the committed source of truth.
+
+**Why out-of-scope for the discovering session:** 260716-fmt's charter is a docs/index.md
+install-IA fix (block relocation + bootstrap prose + L93 destale); adding a new
+byte-compare regression test to a different quality gate (`perf/test_bench_token_economy.py`)
+is an unrelated test-authoring change outside that scope, surfaced only because the
+260716-f6o regression this gap enabled was fixed in the immediately preceding commit.
+
+**Sketched resolution:** Add a regression test that runs the offline regenerator against
+the REAL committed captures (not the synthetic `tmp_path` fixture) and byte-compares
+(sha256) the output against the committed `docs/benchmarks/token-economy.md` — so any
+future generator/doc divergence fails a test instead of silently dirtying the working
+tree at a gate run, the way the 260716-f6o regression did.
+
+**STATUS:** OPEN

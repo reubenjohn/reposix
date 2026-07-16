@@ -235,7 +235,7 @@ the reverse pointer is deferred to whenever those part files are themselves prog
 ## From the owner-directive lane (post-P115-close scheduling, 2026-07-16)
 
 ### GTH-V15-35 — `docs/index.md`: nest "Build from source (advanced)" under "30-second install"
-- **Source:** OWNER-DIRECTED (2026-07-16, received after commit `a1f2494`) · **Severity: LOW (docs IA)** · STATUS: **SCHEDULED — immediately after P115 phase-close, as a tracked `/gsd-quick`.**
+- **Source:** OWNER-DIRECTED (2026-07-16, received after commit `a1f2494`) · **Severity: LOW (docs IA)** · STATUS: **DONE — quick 260716-fmt (2026-07-16).**
 - **What:** `docs/index.md`'s `<details><summary><strong>Build from source (advanced)</strong></summary>` block (currently ~L120-136, sitting after "Connector capability matrix") reads as a disconnected install path — a cold reader following the "30-second install" section (L44-67: curl/PowerShell/Homebrew/cargo-binstall tabs) has no visual link to the advanced from-source alternative several screens later. Owner directive: move/nest the "Build from source (advanced)" material under the "30-second install" section so the two install paths (package-manager fast path + from-source advanced path) read as one cohesive section.
 - **Execution cautions (MUST hold, verbatim from the owner directive):**
   1. The `structure/install-leads-with-pkg-mgr-docs-index` freshness gate must stay GREEN — the install path must continue to lead with the package-manager options (curl/Homebrew/cargo-binstall/PowerShell), with "Build from source" remaining the subordinate/advanced/collapsed alternative, never promoted above or beside the primary path.
