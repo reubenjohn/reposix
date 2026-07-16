@@ -69,48 +69,46 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refresh at every rotation) — 2026-07-15, rotation #9→#10
+## Live state (manager #10 on station; mid-shift refresh 2026-07-15 ~17:40 PT)
 
-- **SUCCESSOR #10 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (§ Role — #9's
-  one-shots are all consumed; nothing is watching). (2) **Workhorse seat
-  IDLE-CLEAN** — #34 closed its rotation (T3 session-spend ledger DONE
-  `4351d48`; relief handover `ade5e50` pushed; CI run 29456631954 SUCCESS; no
-  background work left). LAUNCH #35: `pane-clear.sh w1:p5 --yes`, then charter =
-  read `.planning/SESSION-HANDOVER.md` (`ade5e50`, authoritative) → ground-truth
-  check → the owner-approved roadmap-diagram gsd-quick (todo file, 5 points,
-  zero spend) → encode the T5 methodology ruling below as a plan amendment +
-  ledger entry → STOP at the T4 capture gate per the deferral directive.
-  Standard rules (own-context ~100k/150k, liveness bounds, reader-digester
-  delegation, one cargo machine-wide). (3) Craft lesson from #9's early
-  rotation: loading the claude-api skill costs ~300k manager context — delegate
-  API-mechanics questions to a subagent; never load it at manager tier.
-- **T4→T6 unblock state (owner engaged 2026-07-15 evening):** #34 declared
-  OWNER-BLOCKED on ANTHROPIC_API_KEY + Atlassian MCP setup. Manager
-  investigation REFINED this: (a) the key was ONLY for the free `count_tokens`
-  endpoint (T5 sidecar minting — 115-PLAN.md:22-26,327-330); the ≤18 live
-  sessions themselves run as Claude Code on the existing subscription, no key.
-  Machine has NO anthropic cred (no ant CLI, no ANTHROPIC_* in env or .env —
-  verified). (b) **OWNER PROPOSED, manager confirmed feasible and ADOPTED
-  (decide-and-disclose, disclosed live to owner):** derive the token-economy
-  numbers from the captured Claude Code session JSONL usage records
-  (session-analyzer skill parses that format) instead of calling count_tokens —
-  removes the Anthropic-API-auth requirement ENTIRELY, first run included;
-  future reruns stay offline-on-CI from committed fixtures + counts (which was
-  already the plan's rerun design — sidecars are SHA-keyed and cached). Meaning
-  shift disclosed: JSONL usage = honest end-to-end session cost (headline);
-  count_tokens = isolated per-artifact cost (optional later enrichment — the
-  endpoint is free of charge, and subscription OAuth via `ant auth login` +
-  Bearer token can authenticate it if ever wanted; no pay-as-you-go key).
-  #35 must encode this as a T5 plan amendment + `[SELF]` ledger entry.
-  Remaining genuinely owner-gated: the Atlassian MCP connection for T4's MCP
-  arm (Rovo MCP: OAuth 2.1 or API token — the existing ATLASSIAN_API_KEY may
-  suffice; #34's noted "API-token-endpoint blocker" needs verification first).
-- **T4 capture deferral (manager directive):** the ≤18 capture sessions ride
-  the same weekly subscription limit (~77% used, resets 2am PT 2026-07-16); do
-  NOT start captures before the reset. Rulings A1 + T6-framing live in
-  CONSULT-DECISIONS.md. Watch items (pre-push 84–115s trend, latency.md
-  regen-clobber, second latency.md refresh before the T6 push) live in the
-  session handover.
+- **SHIFT SUMMARY (#10 so far):** Workhorses #35 and #36 launched+closed clean.
+  #35: roadmap-diagram quick SHIPPED (`1db48e4`/`16fb356`/`fa58ad6`), T5
+  JSONL-usage methodology ENCODED (`9be5439`: 115-PLAN.md amendment +
+  CONSULT-DECISIONS `[SELF]`), noticing filed (`4b38e62`). #36: Rovo MCP auth
+  check — #34's "API-token-endpoint blocker" **REFUTED** (`5374fe0`:
+  ATLASSIAN_API_KEY authenticates `mcp.atlassian.com/v1/mcp` via BOTH Basic and
+  Bearer; 401 no-auth control; probing stopped at initialize) → **T4→T6 has NO
+  remaining owner-gated item**; pre-push 109s spike root-caused+filed
+  (`fcddf90`); relief handover #36→#37 pushed (`1780641`); GTH-V15-25 filed
+  (`e1c71c4`, owner-approved token-bloat CI tripwire). CI GREEN on tip
+  `e1c71c4` (run 29461500358). Seat IDLE at the T4 capture gate.
+- **OVERNIGHT HOLD + #37 LAUNCH PLAN:** T4 captures gated until the weekly
+  reset **2026-07-16 02:00 PT** (~80% used). Hold the idle seat with ≤1h
+  heartbeat waits (`herdr agent wait w1:p5 --status working --timeout 3300000`
+  — fires early only on unexpected pane activity; NOT manager-poll, which
+  insta-fires TRUE-IDLE on a held idle seat). Each heartbeat: quick origin/CI
+  check, re-arm. At first wake past 02:00 PT: `pane-clear.sh w1:p5 --yes`, then
+  launch #37 = read `.planning/SESSION-HANDOVER.md` (`1780641`, authoritative)
+  → T4 captures (≤18 sessions, ledger ≤50 ceiling, throwaway `/tmp` clone for
+  the reposix arm) → **FOLD-IN (owner timing note 2026-07-15): during T4, also
+  extract the agent command list from the captured session JSONL into a
+  committed trajectory fixture — GTH-V15-25 step 1, <1h byproduct while the
+  data is fresh; the rest of that row stays a post-T4 lane** → T5 (JSONL-usage
+  path, token-economy.md regen) → T6 (second latency.md refresh; delete all
+  FOUR `[SELF]` entries: A1, T2-latency-canonical, T6-headline,
+  T5-JSONL-methodology) → after P115 closes: P116 ADR-010 packet routed to
+  MANAGER for ruling, no pre-ruling implementation. Watch items: latency.md
+  regen-clobber tension; doc-alignment 14-row re-drift budget in T6;
+  subscription stall risk → PUSH-NOTIFY owner if cap hit.
+- **Seat-rotation craft (learned #35→#36):** do NOT pane-clear a workhorse
+  whose wrap says "awaiting CI green" — its final turn hasn't ended; killing
+  its gh-run-watch shell injects a failure event and costs an investigation
+  detour. Wait for manager-poll TRUE-IDLE (idle + zero shells) first. A /clear
+  sent mid-turn QUEUES ("Press up to edit queued messages") and fires at turn
+  end — harmless but confusing. Workhorse charters now include "never end your
+  final turn with a background shell running" (#36 complied via bounded
+  in-turn polls). Also retained from #9: never load the claude-api skill at
+  manager tier (~300k context); delegate API-mechanics to a subagent.
 - **#32 outcome: P115 Wave 1 CLOSED** — T1 preflight 3/3 backends; T4 GA
   de-risked (Rovo + GitHub remote MCP both GA → CONDITIONAL GO); T2 caught a
   real finding: sim cold-init is environment-dependent (27ms legacy dev → 278ms
