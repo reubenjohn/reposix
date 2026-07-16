@@ -45,6 +45,27 @@ git rev-parse HEAD && git rev-parse origin/main && \
 
 **Verified live by #52 immediately before writing this handover:**
 
+> **⚠️ POST-PUSH CORRECTION (#52, 2026-07-16 — added AFTER `4bb0596` landed on top of this
+> handover's own commit, confirmed live. The bullets immediately below were written BEFORE
+> the owner's confirm-retire batch and are SUPERSEDED by this block — every "11 / gate
+> OPEN / re-check at every boundary" statement in §1/§2/§4 below is now STALE; do NOT act
+> on those, the gate is closed):**
+> - **P115 HUMAN GATE CLOSED.** The owner's `confirm-retire` batch landed post-handover-
+>   write: all 11 rows flipped `RETIRE_PROPOSED` → `RETIRE_CONFIRMED`. Live-verified:
+>   `grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` →
+>   **`0`** (was `11`); `RETIRE_CONFIRMED` count → **`68`**. #52 committed the batch as
+>   **`4bb0596`** (`chore(quality): land owner confirm-retire batch — 11 rows retired,
+>   P115 human gate closed`), owner-authorized + manager-verified.
+> - **#53's FIRST runbook action (before P116 execution):** advance
+>   `.planning/STATE.md`'s cursor past P115 and CLOSE the P115 GREEN-CHECKPOINT — the
+>   confirm-retire gate was the only thing holding it open (per §6 runbook + checkpoint
+>   semantics below). This is real GSD phase-close state work, deliberately left to #53
+>   by the manager.
+> - **CI note:** `4bb0596` + `4c069ba` CI certification remains DEFERRED on the ongoing
+>   GitHub Actions API 503 outage (still down as of this correction). Read status via
+>   the check-suites fallback documented in §1 CI DIAGNOSIS / §4; the tip's real-github +
+>   release-plz failures remain ENVIRONMENTAL, not a code red.
+
 - `git rev-parse HEAD` → **`16a71134e90ab7b1ce86408be4cade69e6b8b936`**
 - `git rev-parse origin/main` → **`16a71134e90ab7b1ce86408be4cade69e6b8b936`** — same
   sha. **This handover's own commit (with the PROGRESS.md refresh) will land ON TOP of

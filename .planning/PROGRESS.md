@@ -34,64 +34,29 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 
 ## NOW
 
-**P116 EXECUTION IS BLOCKED ON AN EXTERNAL GITHUB ACTIONS OUTAGE — NOT A CODE RED, NOT
-MISSING PLANNING.** Planning is fully COMPLETE (planner PASS + plan-checker PASS,
-`9dbb860`) and pushed. The tip (this handover's own commit, on top of `16a7113`) shows
-CI failures limited to `release-plz` (whole suite) and the two GitHub-API-dependent
-`integration (contract, real github[, v09])` jobs — **13 of 15 `ci.yml` jobs are
-GREEN**, and every commit since the last CI-certified-green base `cbd1ff0` is
-docs/planning-only (zero `crates/`/`.github/` diff). The GitHub Actions REST API has
-been returning `503`s since ~22:15 UTC (first observed by #51), continuously through
-#52's whole rotation. **The runs API (`gh run list`/`gh run view`) stays down, but the
-check-suites API stays up** — that's how #52 got the per-job breakdown above without
-guessing.
+**P116 planning is COMPLETE (planner PASS + plan-checker PASS, `9dbb860`); P116
+EXECUTION has NOT started — BLOCKED on an external GitHub Actions API 503 outage, NOT a
+code red and NOT missing planning.** The tip's CI failures are limited to `release-plz`
+(whole suite) and the two GitHub-API-dependent `integration (contract, real github[,
+v09])` jobs; every commit since the last CI-certified-green base `cbd1ff0` is
+docs/planning-only. The outage has been ongoing since ~22:15 UTC (first observed by
+#51) and was still down as of #52's last live check.
 
-**Next actor: #53.** First act: re-read CI status via the check-suites path (full
-commands in `.planning/SESSION-HANDOVER.md` §1). If GitHub has recovered, certify the
-tip (or just proceed straight to P116 execution — the resulting push doubles as fresh
-certification) and run P116 EXECUTION, the milestone's next primary work:
-`Execution mode: top-level` (the top-level coordinator IS the executor, never
-`/gsd-execute-phase`) — 3 wave-1 plans, dispatched **sequentially** (zero file-overlap
-but one shared git index):
-- **116-01** (sonnet): bless webhook+cron mirror-convergence as `"authoritative"` in
-  `docs/concepts/dvcs-topology.md` + root `CLAUDE.md`; mint a catalog-first doc-alignment
-  regression guard (`quality/gates/docs-alignment/mirror-convergence-blessed.sh` + row).
-  Verify keys on `"authoritative"` (0 occurrences today), NOT `"webhook"` (already
-  present — would be tautological). Must not disturb the 11-row RETIRE_PROPOSED count.
-- **116-02** (OPUS — nuanced ratified-decision prose): `docs/decisions/010-l2-l3-cache-coherence.md` — §2
-  amendment (RBF-LR-04 lever CLOSED), §3 amendment (Option B sanctioned target design,
-  **design-only**, `git diff --stat -- crates/` must stay 0), References cross-link
-  (not a file move — closes ROADMAP criterion-1).
-- **116-03** (sonnet/haiku — mechanical): retire the **LIVE**
-  `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md:108-116` litmus row (terminal
-  RESOLVED, never delete, NOT the archived v0.14.0 twin — this is the ledger's FIRST
-  terminal row); update `GOOD-TO-HAVES-09` to sanctioned-target-design + boundary-relative
-  TAG.
+**P115 human confirm-retire gate is now CLOSED.** The owner's `confirm-retire` batch
+landed (committed by #52 as `4bb0596`): all 11 `RETIRE_PROPOSED` rows flipped to
+`RETIRE_CONFIRMED`; live `grep -c '"last_verdict": "RETIRE_PROPOSED"'
+quality/catalogs/doc-alignment.json` → **`0`** (was 11). #53's first runbook action is
+to advance `.planning/STATE.md`'s cursor past P115 and close the P115 GREEN-CHECKPOINT
+— that gate was the only thing holding it open.
 
-Then: push → `python3 quality/runners/run.py --cadence post-push --persist` (this
-REQUIRES GitHub to have recovered) → dispatch `gsd-verifier` for catalog-row PASS
-grading. Never open the next phase over a red main.
+**Next actor: #53**, resuming once GitHub Actions recovers: (1) advance `STATE.md`
+past P115 per above, (2) re-read CI status via the check-suites fallback (full commands
+in `.planning/SESSION-HANDOVER.md` §1/§2/§6), (3) run P116 EXECUTION — 3 plans,
+dispatched sequentially, readiness fully pre-digested in
+`.planning/SESSION-HANDOVER.md` §2/§6.
 
-**P115 human confirm-retire gate STILL OPEN at 11 rows** — re-verify live at every
-boundary: `grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json`
-→ **11**, unchanged this rotation too. The verifier's GREEN-CHECKPOINT verdict
-(`115-VERIFICATION.md`, `ce4d3b7`) stands; sole remaining action is the human-only 11-row
-confirm-retire batch (`115-UNWAIVE-PATH.md` §"FINAL consolidated confirm-retire batch").
-`STATE.md`'s cursor is deliberately held at P114-closed (P115 CHECKPOINTED, P116
-mid-plan) until the batch lands — re-check at every boundary; when it drops below 11,
-advance the cursor past P115 and close the checkpoint.
-
-**L0 relieved #52→#53 at this boundary — a clean, zero-deviation, wave-boundary relief
-forced entirely by the ongoing GitHub Actions outage, not by exhausted context or a
-stall.** #52's whole rotation was CI-certification diagnosis (now fully digested, see
-`.planning/SESSION-HANDOVER.md` §1 CI DIAGNOSIS) plus bounded outage-recovery polling —
-zero tree-writes, zero files touched, before this handover. Full detail including the
-per-job CI breakdown, the check-suites-API workaround, and a pre-digested,
-ready-to-dispatch P116 execution runbook: `.planning/SESSION-HANDOVER.md` (#52→#53).
-
-**1/15 v0.15.0 "Floor" phases complete (P115 CHECKPOINTED pending the human gate; P116
-planning complete, execution blocked on the GitHub Actions outage; P117–P128 not
-started).**
+**1/15 v0.15.0 "Floor" phases complete (P115 CLOSED; P116 planning complete, execution
+blocked on the GitHub Actions outage; P117–P128 not started).**
 
 ## NEXT
 
