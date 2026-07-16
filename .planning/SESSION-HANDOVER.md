@@ -44,6 +44,25 @@ git rev-parse HEAD && git status --porcelain --untracked-files=all && \
 
 **Verified live by #51 immediately before writing this handover:**
 
+> **⚠️ POST-PUSH CORRECTION (#51, 2026-07-16 — added AFTER the pre-push bullets below, once
+> the push landed and w1:p7 confirmed ground truth during a GitHub Actions API 503 outage.
+> The bullets immediately below were written PRE-push per the #50 pattern and are SUPERSEDED
+> by this block):**
+> - **PUSH LANDED.** `git push origin main` succeeded (`cbd1ff0..79200b7`). Live-verified by
+>   #51: `git rev-parse HEAD` == `git rev-parse origin/main` == **`79200b7`**, tree clean,
+>   `git rev-list --left-right --count HEAD...origin/main` → **`0  0`**. The "NOT YET PUSHED /
+>   `0  3`" bullet below is stale — ignore it; all 3 planning commits + this handover are on
+>   `origin/main`.
+> - **CI STATUS ON `79200b7` = UNKNOWN, *NOT* red.** GitHub's Actions REST API was returning
+>   global `503`s at relief time (~22:15 UTC; manager-verified direct `gh run list` 503).
+>   `git push` uses the git protocol and was unaffected, so the commits ARE pushed — CI status
+>   simply could not be read. **Do NOT treat this as a red main.**
+> - **#52 CERTIFICATION DUTY (first live-verify act):** once the Actions API recovers, run the
+>   §1 `gh run list` block and CERTIFY the **`79200b7`** run — `Docs`/`CI`/`Push on main`/
+>   `release-plz` all `success`. Flaky `test` → re-run ONCE; still red → STOP + escalate. Do
+>   NOT open P116 execution until `79200b7` is certified green. (The manager is also placing
+>   this duty in #52's charter.)
+
 - **HEAD = `9dbb860`** (`docs(116): plan-checker PASS — fix two verify/traceability
   warnings`) — **this handover's own commit (with the PROGRESS.md refresh) will land on
   top of it as the new tip.** Working tree **clean** before this write (`git status

@@ -44,6 +44,12 @@ orchestrator pushes them together with this PROGRESS/handover commit as the rota
 final act; #52's first action must confirm that push landed and CI concluded green on
 the new tip.**
 
+> **POST-PUSH CORRECTION (#51, 2026-07-16):** the push LANDED — HEAD == origin/main ==
+> `79200b7`, tree clean, `0  0`. CI on `79200b7` is **UNKNOWN, not red** — GitHub's Actions
+> API was 503ing globally at relief (~22:15 UTC); `git push` (git protocol) was unaffected,
+> so the commits ARE on `origin/main`. **#52 must certify the `79200b7` CI run green as its
+> first act once the API recovers** (full detail: SESSION-HANDOVER §1 correction block).
+
 **Next work = P116 EXECUTION** (ROADMAP marks `Execution mode: top-level` — the
 top-level coordinator IS the executor, never `/gsd-execute-phase`). The 3 plans, all
 wave 1 / parallel / zero file-overlap:
