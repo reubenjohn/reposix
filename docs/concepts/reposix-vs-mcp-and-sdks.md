@@ -20,22 +20,29 @@ reposix **complements** REST and MCP — it does not stand in their place. The 8
 
 The latency cells for reposix are measured ([`docs/benchmarks/latency.md`](../benchmarks/latency.md)). The MCP and SDK cells are characterized from public-API behaviour and the reposix project's own [agentic-engineering reference](../research/agentic-engineering-reference.md); they are not measured by reposix's harness.
 
-!!! note "About the MCP comparison"
+!!! note "About the MCP comparison (live, 2026-07-16)"
 
-    The `4,883 tokens` baseline (and the headline `89.1%` / `9.2x`
-    reduction shown on the [home page](../index.md)) is measured against
-    a **synthesized** MCP fixture
-    (`benchmarks/fixtures/mcp_jira_catalog.json`) modelled on the public
-    Atlassian Forge surface and the schemas the `mcp-atlassian` server is
-    expected to emit — not against a live MCP server. Real-MCP numbers
-    will land once the upstream Atlassian MCP server is GA and stable
-    enough to bench against (tracked as a v0.12.0 follow-up).
+    The token/cost numbers on the [home page](../index.md) come from **6 live
+    agentic sessions** (median-of-3 per arm) against the same live GitHub
+    backend (`reubenjohn/reposix`) — read 3 issues, edit 1, push — captured to
+    committed session-usage records in `benchmarks/captures/*.json`. For the
+    identical task the git-native (`reposix`) arm is **~94.3% fewer output
+    tokens**, **~66.0% fewer cache-creation tokens**, **~55.6% smaller total
+    input-context**, and **~74.9% cheaper per session** than the GitHub-MCP arm.
+    See [`../benchmarks/token-economy.md`](../benchmarks/token-economy.md) for
+    the full four-axis table and methodology.
 
-    The `531 tokens` reposix number is measured against a real shell
-    session transcript (`benchmarks/fixtures/reposix_session.txt`),
-    captured against the in-process simulator. Both numbers come from
-    Anthropic's `count_tokens` endpoint with `anthropic==0.72.0` (pinned
-    in `requirements-bench.txt`).
+    Two honest caveats. **Write-back to GitHub is read-only in this cut** — the
+    reposix arm read + locally edited + attempted a push, which the documented
+    read-only GitHub adapter correctly rejected; the comparison measures agent
+    context size, not write persistence. **Fidelity:** during capture the GitHub
+    MCP `issue_read` HTML-escaped body content (`>=` → `&gt;=`) and dropped
+    literal angle-bracket text, so an MCP read-modify-write altered raw markdown
+    — the reposix arm round-tripped the bytes unchanged.
+
+    The earlier `4,883` / `531` token counts and the `89.1%` headline came from
+    a synthetic `count_tokens`-over-a-fixture methodology and are **retired**:
+    they measured a fixture's size, not a live agent run.
 
 ## When each one earns its keep
 

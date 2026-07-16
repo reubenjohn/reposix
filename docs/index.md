@@ -14,7 +14,7 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
 
 <div class="grid cards" markdown>
 
--   **`89.1%`** fewer tokens (interim) vs a synthesized MCP-tool-catalog baseline for the same 3-issue read+edit+push workflow ([token economy](benchmarks/token-economy.md))
+-   **`~94% fewer output tokens`** · **`~75% cheaper`** than GitHub-MCP for the same read-3-issues + edit-1 + push task, from 6 live agentic sessions ([token economy](benchmarks/token-economy.md))
 -   **`8 ms`** cached read · **`27 ms`** cold init — simulator, interim ([latency](benchmarks/latency.md))
 -   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
@@ -28,18 +28,18 @@ sequenceDiagram
     participant Agent
     participant reposix as reposix loop
     participant MCP as MCP loop
-    Note over Agent,reposix: ~3 REST calls, 531 tokens
+    Note over Agent,reposix: git-native loop · ~1.2k output tokens (live)
     Agent->>reposix: cat issues/0001.md
     Agent->>reposix: sed -i ... && git add
     Agent->>reposix: git push
-    Note over Agent,MCP: ~6 round-trips, 4,883 tokens
+    Note over Agent,MCP: MCP tool loop · ~21k output tokens (live)
     Agent->>MCP: list_tools()
     Agent->>MCP: call_tool(get_issue, {id:1})
     Agent->>MCP: call_tool(update_issue, ...)
     Agent->>MCP: call_tool(post_comment, ...)
 ```
 
-Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabulary the agent already has — and pushes one commit. The MCP loop discovers tools, then issues one call per field mutation. The token gap is measured: see [`benchmarks/token-economy.md`](benchmarks/token-economy.md).
+Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabulary the agent already has — and pushes one commit. The MCP loop discovers tools, then issues one call per field mutation. The gap is measured live: the git-native arm generates ~94% fewer output tokens for the identical GitHub task ([`benchmarks/token-economy.md`](benchmarks/token-economy.md)).
 
 ## 30-second install
 
@@ -143,7 +143,7 @@ After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git p
 -   ⚖️ **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
 -   🔗 **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
 -   📊 **[Latency envelope](benchmarks/latency.md)** — the v0.9.0 measured numbers.
--   🪙 **[Token economy](benchmarks/token-economy.md)** — the 89.1% reduction vs MCP, methodology and fixtures.
+-   🪙 **[Token economy](benchmarks/token-economy.md)** — the live ~94% output-token / ~75% cost reduction vs GitHub-MCP, methodology and captures.
 
 </div>
 
@@ -155,4 +155,4 @@ The detail of how each piece works lives in [How it works](how-it-works/filesyst
 
 ---
 
-*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The v0.7 token-economy benchmark measured an **89.1%** input-context-token reduction vs a synthesized MCP-tool-catalog baseline (modeled on the public Atlassian Forge surface — see [`benchmarks/token-economy.md`](benchmarks/token-economy.md) for the methodology and caveats).*
+*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The token-economy headline is now **live**: 6 real agentic sessions (median-of-3 per arm) against the same GitHub backend measured ~94.3% fewer output tokens and ~74.9% lower cost per session for the git-native arm; the earlier synthetic 89.1% figure is retired (see [`benchmarks/token-economy.md`](benchmarks/token-economy.md) for the four-axis table and caveats — including that GitHub write-back is read-only in this cut).*
