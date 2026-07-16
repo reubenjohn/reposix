@@ -38,7 +38,7 @@ synthetic raw-payload samples. This path is **optional per-artifact enrichment**
 demoted from the headline by P115 amendment #10; it is not required to reproduce
 any published figure. When wired, it runs offline from committed sidecars via
 `python3 quality/gates/perf/bench_token_economy.py` with an `ANTHROPIC_API_KEY`
-only on first population (SHA-256 content-hash keyed; committed for offline CI).
+only on first population (SHA-256 `content_hash`-keyed; committed for offline CI).
 
 > The stale `reposix_session.txt.tokens.json` sidecar (left over from when this
 > transcript backed the retired count_tokens headline) was **deleted** in P115 T5
