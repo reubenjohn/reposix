@@ -742,3 +742,60 @@ planning-doc-truth sweep is exactly that phase's remit. Do NOT attempt the recon
 that phase.
 
 **STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P119 executor (docs/planning-simplification, SC-1/SC-2 audit) | severity: MEDIUM
+
+**What:** ROADMAP.md's P119 **SC-1/SC-2** deletion criteria ("delete stale loose phase-dir artifacts
++ top-level catalog JSONs + handover transients") were written from the 5-day-stale **2026-07-12
+reality-check audit**. The P119 planning audit (2026-07-17) found almost every named target is now
+**LIVE or REFERENCED**: the `999.*` dirs are live backlog homes (ROADMAP §Backlog +
+REQUIREMENTS.md:286-287), `MANAGER-HANDOVER.md`/`SESSION-HANDOVER.md` are live rotation state, and
+BOTH top-level catalog JSONs still have live consumers/breadcrumbs (`v0.11.1-catalog.json` ← the
+KEEP-AS-CANONICAL `scripts/catalog.py` orphan-scripts quality row; `docs_reproducible_catalog.json`
+← 8 provenance breadcrumbs in release/docs-repro gate catalogs). So the ROADMAP's SC-1/SC-2 read as a
+clean stale-purge that would in fact REGRESS live state — they are now misleading.
+
+**Sketched resolution:** at milestone-close (OP-9 retrospective) or a ROADMAP refresh, reword P119
+SC-1/SC-2 to the audited reality (clean-core simplification + a few grep-confirmed transient
+deletions, NOT a big purge), or mark them SUPERSEDED with a pointer to the P119 close report. Do NOT
+delete the live targets.
+
+**STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P119 executor (deletion-candidate ref-eval) | severity: LOW
+
+**What:** `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` (a DISABLED tag script from
+the already-SHIPPED v0.13.0 milestone) lingers with **~9 references** across the tree (mostly
+historical narrative in ROADMAP/handover/audit prose). P119 did NOT delete it — it was outside the
+grep-confirmed-zero-ref set and its ~9 refs need a live-vs-narrative eval first.
+
+**Sketched resolution:** a small ref-eval lane — classify each of the ~9 refs as live-consumer vs
+historical-narrative; if all narrative → delete (git history is the archive); if any live → keep and
+note why. Natural fit for a future docs/planning-hygiene pass.
+
+**STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P119 executor (RAISE-2a/2b deletion gates) | severity: LOW
+
+**What:** Two top-level catalog-JSON deletions gated by P119 were **DEFERRED** because each hit a
+live reference the designed cascade does not cleanly cover:
+- **`v0.11.1-catalog.json` + `scripts/catalog.py` subsystem (RAISE-2a):** `catalog.py` has no
+  CI/justfile/hook INVOCATION (so "dead" by that measure) BUT is a LIVE **KEEP-AS-CANONICAL**
+  orphan-scripts quality row (`quality/catalogs/orphan-scripts.json` + verifier
+  `quality/reports/verifications/structure/orphan-scripts-catalog-py.json`) whose own
+  `claim_vs_assertion_audit` says deleting `catalog.py` flips the row to FAIL. The P119 PLAN's
+  "dead-subsystem-stale" premise missed this live row. Retiring the subsystem requires ALSO retiring
+  that catalog row + verifier — a gate-sensitive change needing its own owner decision.
+- **`docs_reproducible_catalog.json` (RAISE-2b):** 8 `source:` provenance breadcrumbs point INTO the
+  seed — `quality/catalogs/release-assets.json` (×6, `...:install/<row-id>` form) +
+  `quality/catalogs/docs-reproducible.json` (×2, line-number `...:303`/`:331` form) — with no clean
+  1:1 successor location. Repointing/dropping 8 breadcrumbs across two release/docs-repro GATE
+  catalogs for a 26 KB cleanup risks a catalog-integrity regression.
+
+**Sketched resolution:** a dedicated catalog-hygiene lane that (a) for RAISE-2a decides whether to
+retire the KEEP-AS-CANONICAL orphan-scripts row + `catalog.py` + `v0.11.1-catalog.json` +
+`CATALOG-v3.md` together, or keep the subsystem; (b) for RAISE-2b drops or repoints the 8 breadcrumbs
+in ONE commit and re-runs the full release + docs-repro cadence, then deletes the seed. Do NOT force
+either ahead of that lane.
+
+**STATUS:** OPEN
