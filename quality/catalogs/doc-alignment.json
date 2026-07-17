@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-17T06:03:21Z",
+    "last_walked": "2026-07-17T07:07:53Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -150,15 +150,15 @@
     },
     {
       "id": "docs/index/5-line-install",
-      "claim": "5-line install path exists",
+      "claim": "5 install methods advertised on docs/index.md:19 (curl, brew, cargo binstall, irm)",
       "source": {
         "file": "docs/index.md",
         "line_start": 19,
         "line_end": 19
       },
-      "source_hash": "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8",
+      "source_hash": "ddfcbca37011cf6b6d2884c4e69c1084e1032427291357c8d050d73313a34f88",
       "source_hashes": [
-        "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8"
+        "ddfcbca37011cf6b6d2884c4e69c1084e1032427291357c8d050d73313a34f88"
       ],
       "tests": [
         "quality/gates/docs-alignment/install-snippet-shape.sh"
@@ -166,11 +166,11 @@
       "test_body_hashes": [
         "72e94d47d4c9ca8a76a5cb33da8138fe44a3198573ac34ad80f9bb92972a6152"
       ],
-      "rationale": "Hash-shape bind per P74 D-03; verifier under quality/gates/docs-alignment/.",
+      "rationale": "W3 rebind (117-07): reworded '5-line install' -> '5 ways to install' (GTH-V15 cold-reader fix, ambiguous 'line' vs install-method count); install-snippet-shape.sh still shape-checks the same line 19 tokens, hash-shape bind per P74 D-03 unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T20:54:41Z",
-      "last_extracted": "2026-04-29T20:54:41Z",
+      "last_run": "2026-07-17T07:06:52Z",
+      "last_extracted": "2026-07-17T07:06:52Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1049,8 +1049,8 @@
       "claim": "BackendCapabilities struct exists in crates/reposix-core/src/backend.rs",
       "source": {
         "file": "docs/index.md",
-        "line_start": 144,
-        "line_end": 144
+        "line_start": 149,
+        "line_end": 149
       },
       "source_hash": "b07098fc3466c164678c30742a4dac019cdda8b99e2fac1dfa96ca9a78d9ca54",
       "source_hashes": [
@@ -1062,11 +1062,11 @@
       "test_body_hashes": [
         "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (117-04 Comments-footnote note-block conversion pushed this line 144->149); content byte-identical, citation re-anchored.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:33Z",
-      "last_extracted": "2026-07-16T18:32:33Z",
+      "last_run": "2026-07-17T07:06:57Z",
+      "last_extracted": "2026-07-17T07:06:57Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1498,8 +1498,8 @@
       "claim": "Blob limit default is 200; configured via REPOSIX_BLOB_LIMIT env var",
       "source": {
         "file": "docs/how-it-works/git-layer.md",
-        "line_start": 94,
-        "line_end": 94
+        "line_start": 102,
+        "line_end": 102
       },
       "source_hash": "77ed3a28ed9827e532b9a78d063407a345e9d8bf37f290ae6a7d69e7d690deee",
       "source_hashes": [
@@ -1511,11 +1511,11 @@
       "test_body_hashes": [
         "2124b101222f26d86fe36379766512cb407930601b1d2b639b158aa3316a4943"
       ],
-      "rationale": "BLOB_LIMIT constant hardcoded; env-configurable via parse_blob_limit",
+      "rationale": "W3 rebind (117-07): line-shift from d57626a (117-04 added Blob-limit-guardrail admonition above this paragraph, pushing content from 94->102); BLOB_LIMIT constant/env-var text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T07:07:20Z",
+      "last_extracted": "2026-07-17T07:07:20Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1523,12 +1523,12 @@
       "claim": "Blob limit exceeded error names git sparse-checkout as recovery move",
       "source": {
         "file": "docs/how-it-works/git-layer.md",
-        "line_start": 94,
-        "line_end": 102
+        "line_start": 102,
+        "line_end": 109
       },
-      "source_hash": "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9",
+      "source_hash": "5dd91c33f21f130c07e200c830767a69874622e03443833450bce35a5de9b979",
       "source_hashes": [
-        "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9"
+        "5dd91c33f21f130c07e200c830767a69874622e03443833450bce35a5de9b979"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -1536,11 +1536,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "Tests literal BLOB_LIMIT_EXCEEDED_FMT contains 'git sparse-checkout'",
+      "rationale": "W3 rebind (117-07): line-shift from d57626a (admonition insertion pushed 94-102->102-109); literal BLOB_LIMIT_EXCEEDED_FMT + sparse-checkout recovery text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T07:07:24Z",
+      "last_extracted": "2026-07-17T07:07:24Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1798,8 +1798,8 @@
       "claim": "Cache::list_sync_tags returns tags sorted ascending by timestamp",
       "source": {
         "file": "docs/how-it-works/time-travel.md",
-        "line_start": 54,
-        "line_end": 59
+        "line_start": 65,
+        "line_end": 70
       },
       "source_hash": "3f5c405134fa5ddd9fcf771709589feb1fbc5ffe9369e43fec3f73dbb39f086c",
       "source_hashes": [
@@ -1811,11 +1811,11 @@
       "test_body_hashes": [
         "a57026910265482e23a2f3ab7e1b233dd95e287932263113644e30390de30fa7"
       ],
-      "rationale": "Tests multiple syncs produce tags in ascending timestamp order",
+      "rationale": "W3 rebind (117-07): line-shift from new Plain-English-summary opener (Task 1d, +11 lines); reposix history CLI-surface example block text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:00Z",
-      "last_extracted": "2026-04-28T09:06:00Z",
+      "last_run": "2026-07-17T07:07:38Z",
+      "last_extracted": "2026-07-17T07:07:38Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1848,8 +1848,8 @@
       "claim": "Cache::sync_tag_at(ts) returns the latest sync tag whose timestamp is <= target",
       "source": {
         "file": "docs/how-it-works/time-travel.md",
-        "line_start": 61,
-        "line_end": 64
+        "line_start": 72,
+        "line_end": 75
       },
       "source_hash": "eb37d72f23275dddddfd7a96b05fcc80d1ba2b24e78b3aa58ee7645c4cb3cf28",
       "source_hashes": [
@@ -1861,11 +1861,11 @@
       "test_body_hashes": [
         "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c"
       ],
-      "rationale": "Tests sync_tag_at finds correct tag between two targets and returns None before all",
+      "rationale": "W3 rebind (117-07): line-shift from new Plain-English-summary opener (Task 1d, +11 lines); reposix at CLI example block text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:00Z",
-      "last_extracted": "2026-04-28T09:06:00Z",
+      "last_run": "2026-07-17T07:07:48Z",
+      "last_extracted": "2026-07-17T07:07:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3054,12 +3054,12 @@
       "claim": "Every Cache::sync writes one ref: refs/reposix/sync/<ISO8601-no-colons>",
       "source": {
         "file": "docs/how-it-works/time-travel.md",
-        "line_start": 11,
-        "line_end": 17
+        "line_start": 22,
+        "line_end": 28
       },
-      "source_hash": "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e",
+      "source_hash": "727a25a0534e863924168adf8618ce47208682a7536ae4dc64b2c0d4305c61f1",
       "source_hashes": [
-        "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e"
+        "727a25a0534e863924168adf8618ce47208682a7536ae4dc64b2c0d4305c61f1"
       ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref"
@@ -3067,11 +3067,11 @@
       "test_body_hashes": [
         "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126"
       ],
-      "rationale": "Tests seed sync creates one tag with name starting with refs/reposix/sync/",
+      "rationale": "W3 rebind (117-07): line-shift from new Plain-English-summary opener (this executor's Task 1d fix, +11 lines) on top of d57626a's Where-to-go-next block; ref-format text unchanged, only gained a chrono::DateTime<Utc> gloss inline (Task 1e).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:00Z",
-      "last_extracted": "2026-04-28T09:06:00Z",
+      "last_run": "2026-07-17T07:07:28Z",
+      "last_extracted": "2026-07-17T07:07:28Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3154,8 +3154,8 @@
       "claim": "Every tag write produces one audit row: op='sync_tag_written' with OID and ref name",
       "source": {
         "file": "docs/how-it-works/time-travel.md",
-        "line_start": 70,
-        "line_end": 78
+        "line_start": 81,
+        "line_end": 89
       },
       "source_hash": "9d62a9b6c98a17d78f207d41b65487f3761429d08c592289dea49457172289d9",
       "source_hashes": [
@@ -3167,11 +3167,11 @@
       "test_body_hashes": [
         "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c"
       ],
-      "rationale": "Tests one row exists with op='sync_tag_written' and reason starts with refs/reposix/sync/",
+      "rationale": "W3 rebind (117-07): line-shift from new Plain-English-summary opener (Task 1d, +11 lines); audit-row-pairing table text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:00Z",
-      "last_extracted": "2026-04-28T09:06:00Z",
+      "last_run": "2026-07-17T07:07:53Z",
+      "last_extracted": "2026-07-17T07:07:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3353,12 +3353,12 @@
       "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
       "source": {
         "file": "docs/index.md",
-        "line_start": 162,
-        "line_end": 162
+        "line_start": 167,
+        "line_end": 167
       },
-      "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
+      "source_hash": "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479",
       "source_hashes": [
-        "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8"
+        "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -3366,11 +3366,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (Comments-footnote conversion pushed 162->167); text unchanged for this clause.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:49Z",
-      "last_extracted": "2026-07-16T18:32:49Z",
+      "last_run": "2026-07-17T07:07:03Z",
+      "last_extracted": "2026-07-17T07:07:03Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6192,15 +6192,15 @@
     },
     {
       "id": "docs/index/push-conflict-detection",
-      "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch first error",
+      "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch-first error; recovery verified GREEN on git 2.25.1 via import path, verification on modern git >=2.34 via stateless-connect still open (DRAIN-07)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 162,
-        "line_end": 162
+        "line_start": 167,
+        "line_end": 167
       },
-      "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
+      "source_hash": "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479",
       "source_hashes": [
-        "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8"
+        "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
@@ -6208,11 +6208,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (162->167) PLUS softened 'reliably' overclaim + added DRAIN-07 caveat (verified against .planning/REQUIREMENTS.md ~L222-225 current wording) so the doc no longer contradicts the open HIGH backlog item; teaching-string test citation unaffected (asserts substring presence, not the softened prose).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:51Z",
-      "last_extracted": "2026-07-16T18:32:51Z",
+      "last_run": "2026-07-17T07:07:06Z",
+      "last_extracted": "2026-07-17T07:07:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8733,8 +8733,8 @@
       "claim": "Sync tags are hidden from helper protocol-v2 advertisement (refs/reposix/sync/ namespace)",
       "source": {
         "file": "docs/how-it-works/time-travel.md",
-        "line_start": 19,
-        "line_end": 24
+        "line_start": 30,
+        "line_end": 35
       },
       "source_hash": "1379e14f23ac5b5f4e54788cf0991fa47dae83ff71e487ba039115f87a810d22",
       "source_hashes": [
@@ -8746,11 +8746,11 @@
       "test_body_hashes": [
         "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a"
       ],
-      "rationale": "Tests git upload-pack --advertise-refs does not output refs/reposix/sync/ tags",
+      "rationale": "W3 rebind (117-07): line-shift from new Plain-English-summary opener (Task 1d, +11 lines); hideRefs/advertise-refs text unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:06:00Z",
-      "last_extracted": "2026-04-28T09:06:00Z",
+      "last_run": "2026-07-17T07:07:35Z",
+      "last_extracted": "2026-07-17T07:07:35Z",
       "last_extracted_by": "bind-call"
     },
     {
