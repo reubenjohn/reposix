@@ -28,9 +28,8 @@ A git-native partial clone that exposes REST-backed systems of record (issue tra
 > Interim lane scaffold: `.planning/milestones/v0.15.0-phases/ROADMAP.md` (UX
 > error-message audit phase already drafted) + `.planning/milestones/v0.15.0-phases/
 > {GOOD-TO-HAVES,SURPRISES-INTAKE}.md` (pre-seeded intake rows to drain per OP-8). The
-> cross-milestone index `.planning/REQUIREMENTS.md` is due for its own refresh — as of
-> 2026-07-14 it still lists v0.14.0 as "Active milestone" and v0.13.0 with a stale
-> shipped-date/phase-range (see Noticing).
+> cross-milestone index `.planning/REQUIREMENTS.md` has since been refreshed and now reads
+> "Active milestone: v0.15.0 Floor".
 >
 > v0.12.0's requirements (RELEASE-*, QG-*, STRUCT-*, DOCS-REPRO-*, DOCS-BUILD-*, SUBJ-*,
 > ORG-*, MIGRATE-*) SHIPPED 2026-04-28 — full detail in `.planning/PROJECT-history.md`.

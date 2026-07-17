@@ -65,7 +65,7 @@
 ### Phase index (P114–P128)
 
 - [x] **Phase 114: t4 Confluence oid-drift fix-first + reconcile audit** - Confluence checkouts stop aborting on oid-drift; the `sync --reconcile` recovery claim is proven or corrected. (completed 2026-07-15)
-- [x] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
+- [x] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline. (completed 2026-07-16)
 - [x] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling. (completed 2026-07-16)
 - [x] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent. (completed 2026-07-17)
 - [x] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected. (completed 2026-07-17)
@@ -104,7 +104,7 @@
   2. Total benchmark-session spend is tracked and stays **≤50** sessions on the existing subscription; any need to exceed 50 is escalated to the owner before further spend.
   3. Re-measured figures + methodology are recorded in a form Phase 118 (DOCS-07) and DOCS-05 can consume directly.
   4. The waived `perf/token-economy-bench` + `perf/headline-numbers-cross-check` catalog rows have a documented path to un-waive using the new figures.
-**Plans**: TBD
+**Plans**: 1 plan (115-PLAN.md) — CLOSED GREEN 2026-07-16
 **Execution mode**: top-level (fan-out live benchmark sessions → gather results → interpret against the 8 waived rows; not a write-code-test-commit shape)
 
 ### Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design
@@ -290,9 +290,9 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 114. t4 oid-drift fix-first + reconcile audit | 2/2 | Complete   | 2026-07-15 |
-| 115. Live MCP benchmark re-measurement | 0/TBD | Not started | - |
-| 116. ADR-010 decision packet + slug→id design | 0/3 | Planned | - |
-| 117. Doc-truth launch-blocker purge | 0/7 | Planned | - |
+| 115. Live MCP benchmark re-measurement | 1/1 | Complete | 2026-07-16 |
+| 116. ADR-010 decision packet + slug→id design | 3/3 | Complete | 2026-07-16 |
+| 117. Doc-truth launch-blocker purge | 7/7 | Complete | 2026-07-17 |
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
 | 119. Docs/planning simplification | 0/TBD | Not started | - |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
