@@ -86,31 +86,45 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed mid-shift #11, 2026-07-16 ~21:20 UTC, after seat rotations #44→#49)
+## Live state (refreshed at rotation #11→#12, 2026-07-17 ~02:05 UTC)
 
-- **IF YOU ARE A FRESH SUCCESSOR:** arm your poll IMMEDIATELY (prior one-shots are
-  consumed) — standard entry:
-  `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 3300 ""
-  /home/reuben/workspace/reposix`; triage every wake with `wake-triage.sh`.
-  Seat is **Opus 4.8 (1M ctx)** since #46 (was Fable 5 through #45; flip noted to
-  owner, no objection); on 1M seats the ~100k-ABSOLUTE relief line arrives at
-  ~10% gauge → legs are short (one wave each, ~15–60 min) — this is
-  doctrine-correct, do not "fix" it; keep successor charters terse (handover
-  carries the content; addenda only for deltas).
+- **SUCCESSOR #12 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (prior one-shots
+  consumed): `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5
+  1200 "29542608659" /home/reuben/workspace/reposix` — 1200s cadence while a C1
+  wave is quiet-but-alive (HEARTBEAT wakes are NORMAL under router mode; inspect
+  the subagent line for token movement before suspecting a stall). (2) **#54 is
+  RUNNING under the NEW router mode** (owner directive 2026-07-17, encoded in
+  ORCHESTRATION.md at `10e2d20` + MANAGER-HANDOVER § standing instructions):
+  dormant at a wave boundary while a `phase-coordinator` C1 (+leaves) executes
+  P117 wave 1 at depth 2 (last seen: attach.rs error-UX fixes, ~155k C1 tokens,
+  progressing). (3) A manager nudge is QUEUED with #54: its own gauge hit ~200k
+  absolute (past 150k hard) — it must integrate the C1 report, push, REPLACE
+  handover, and RELIEVE at this wave's landing, no second wave. At its relief:
+  seat #55 with the TERSE router charter (3 lines: seat number + handover
+  pointer + deltas only — long charters are retired). (4) Owner threads: PR #74
+  v0.14.1 cut OWNER-GATED (recommended CUT, still awaiting word); P116 owner
+  veto window open (rulings executed; ADR-010 RBF-LR-04 CLOSED `1ea51b3`).
+  (5) Seat is **Opus 4.8 (1M ctx)** since #46 (flip surfaced to owner; Opus-as-
+  router sanctioned; Fable restore = owner's call, offered, not taken up yet).
 
-- **SHIFT #11 SUMMARY (17:10–21:20 UTC):** **P115 CHECKPOINTED GREEN at the
-  human gate** (`ce4d3b7` GREEN-CHECKPOINT 7/7; probe re-minted `5411761` after
-  a benign race with my PR #76 merge). Relay legs #45–#49 all clean, each
-  shipped+pushed at green boundaries: #45 = token-economy GENERATOR fix
-  (`19f9ae2`, fix-it-twice on owner ruling `5a5dd29`; provenance was manager-
-  established: perf-gate regen, accidental) + GTH-V15-35 install-IA quick
-  (`97fad0d`, 11 rows rebound); #46 = P116 phase context locked (`31ac414`);
-  #47 = filed manager finding (below); #48 = hero-number bindings MINTED on all
-  3 surfaces (`c35f993` index, `7553c36` README → row `README/hero-token-
-  economy-94-75`, `aa75e96` concepts) + intake RESOLVED (`e185e6e`); #49 = P116
-  research+validation skeleton (`05085fe`). **#50 next: P116 planning tail**
-  (handover `f5f7e8e`). PR #75 self-closed by dependabot; **PR #76 squash-
-  MERGED** (`8439085`, green).
+- **SHIFT #11 SUMMARY (2026-07-16 17:10 → 07-17 02:05 UTC):** **P114+P115+P116
+  all CLOSED** (milestone 14%): P115 checkpointed GREEN (`ce4d3b7`), human gate
+  closed by the OWNER's 11-command batch (landed `4bb0596`, count 0, STATE
+  advanced `d667eee`); P116 executed under my rulings and CLOSED GREEN 12/12
+  (`5dc334c`; RBF-LR-04 CLOSED). Relay legs #45–#53 all clean: token-economy
+  GENERATOR fix (`19f9ae2`, fix-it-twice on `5a5dd29`), GTH-V15-35 install-IA
+  (`97fad0d`), hero-number bindings minted on all 3 surfaces after my gap
+  finding (`c35f993`/`7553c36`/`aa75e96`; note new-vs-legacy row-id prefix
+  inconsistency → GTH-V15-39), P116 plan+checker+execution (`011096b`/
+  `9dbb860`/`7412833`../`5ee5e25`), .git/config corruption HIGH repaired+filed
+  by #53 (manager spot-verified config sane). PR #75 self-closed by dependabot;
+  **PR #76 squash-MERGED** (`8439085`, green). Survived a ~90min GitHub
+  Actions 503 outage (runs env-failed, diagnosed NOT code-red, re-certified
+  green after recovery — never code-fix an env-fail). Owner interactions:
+  answered docs-badge/roadmap/animation/relay questions with verified facts;
+  handed over the confirm-retire batch; received + encoded the
+  DELEGATION-DEPTH directive (see standing instructions) — legs #46–#52 had
+  drifted to 25–45min depth-0/1; router mode began at #54.
 - **MANAGER FINDING (verified, then fixed by #48): retiring hero rows had NO
   successors on 3 surfaces.** Subagent-mapped + grep-verified: docs/index.md:17
   hero bullet, README.md:27, concepts:29-31 carried the new 94.3%/74.9% figures
