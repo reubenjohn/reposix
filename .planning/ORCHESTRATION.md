@@ -59,13 +59,22 @@ implementation; **haiku** — mechanical/leaf work (digest-returning reads, sing
 
 ## 2. Coordinators route, they do not work
 
+> **L0 is a ROUTER, not a worker (owner directive 2026-07-17).** The top-level seat's own
+> window is reserved for routing, gate checks, and verification — it dispatches a
+> `phase-coordinator` C1 per phase/wave (explicit model tier: opus complex / sonnet default /
+> haiku mechanical) under which gsd leaves run, so MOST substantive work executes TWO levels
+> below the seat. Target **~1h+ of substantive work per workhorse handover** — this corrects a
+> measured drift to depth-0/1 work with ~25–45 min legs (seats #46–#52). Rationale (owner
+> verbatim intent): reduce low-level detail at BOTH the workhorse and manager tiers so
+> meta-level judgment capacity is preserved.
+
 A coordinator's own tool calls are limited to: Agent dispatches, one-line git/gh
 ground-truth checks (`log --oneline`, `status`, `run list`), and reading SHORT
 reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
 "your subagents are coordinators, not workers"):
 
-1. **ROUTE, DON'T WORK.** Never yourself read source/long plans (dispatch a
-   `reader-digester` → ≤300-word digest), run test suites/litmus/builds (dispatch a runner),
+1. **ROUTE, DON'T WORK.** Never yourself read source or any **>100-line** file/plan/report
+   (dispatch a `reader-digester` → ≤300-word digest), run test suites/litmus/builds (dispatch a runner),
    write/edit repo files incl. planning docs + handovers (dispatch an executor), or review
    diffs (dispatch a reviewer). `subagent_type` mapping: `coordinator-dispatch` §2
    (executor/runner→`gsd-executor`, reviewer→`gsd-code-reviewer`).
@@ -115,7 +124,7 @@ protocol.
 coordinators MORE often than the old ~50%-of-1M line did, a multi-phase milestone must NOT
 run as one C1 phase-coordinator reporting every rotation straight to L0. Instead L0
 dispatches a **coordinator-of-coordinators (C2)**: a milestone-scoped `phase-coordinator`
-that dispatches **one C1 `phase-coordinator` per phase** (which dispatch executors/readers).
+that dispatches **one C1 `phase-coordinator` per phase**, each C1 dispatched with an explicit model tier matched to phase complexity (opus complex / sonnet default / haiku mechanical) (which dispatch executors/readers).
 (A single-phase milestone may skip C2 and run one C1 directly.) When a C1 relieves at ~100k,
 its successor is dispatched by its **parent C2**, not L0; L0 hears from the C2 only at
 milestone boundaries or an E1–E4 escalation. **No new agent type is needed:**
@@ -247,7 +256,9 @@ not every session); this section is the map, not the territory.
 
 **Five-tier recursion.** L0 top-level orchestrator (opus) scopes work into portions so the
 WHOLE drive reaches end state by ~10% of L0's own context — report-only diet, never reads
-source/builds/edits. L1 portion coordinator (opus) owns one large portion, charters L2s. L2
+source/builds/edits. The practical shape: substantive work lands **two levels below** the top
+seat (L0 routes → C1/C2 coordinate → leaves execute); L0's own window stays reserved for
+routing, gate checks, and verification. L1 portion coordinator (opus) owns one large portion, charters L2s. L2
 phase/drain-window coordinator (opus for security-judgment work, sonnet otherwise) owns a
 phase/window, charters L3 lanes. (A milestone-scoped L1 is the C2 coordinator-of-coordinators;
 a phase-scoped L2 is a C1 — §3 carries the C1-relief-absorbed-by-C2 rule.) L3 work lanes
