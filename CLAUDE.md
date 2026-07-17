@@ -242,6 +242,12 @@ pages. Automated rubric grading: `/reposix-quality-review` (`--rubric <id>` /
   manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`,
   no orphan docs) enforced by `quality/runners/verdict.py`. A blocked push names the
   violated invariant + fix.
+- **Fix-twice (P117 W3):** `docs-build/*` and `structure/banned-words` are DIFFERENT
+  catalogs. A docs edit must pass BOTH `bash quality/gates/docs-build/*.sh` AND
+  `bash quality/gates/structure/banned-words.sh` locally before a push — a docs-build-only
+  local sweep already let a Layer-1 plumbing-term leak (`stateless-connect` in
+  `docs/index.md`) reach a push attempt undetected. When in doubt, run
+  `python3 quality/runners/run.py --cadence pre-push` instead of hand-picking gates.
 
 ## Release pipeline
 
