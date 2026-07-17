@@ -711,3 +711,34 @@ and retry on a short backoff, closing the post-push indexing race window instead
 grading whatever run happens to sort first moments after push.
 
 **STATUS:** OPEN
+
+## 2026-07-17 10:15 | discovered-by: P118 close intake-filing (pre-existing drift surfaced, NOT a P118 defect) | severity: MEDIUM
+
+**What:** `.planning/ROADMAP.md`'s Progress table contradicts the phase index above it for three
+completed phases. The phase index (`ROADMAP.md:68-70`) marks **Phase 115 `- [x]`**, **Phase 116
+`- [x]`** (completed 2026-07-16), and **Phase 117 `- [x]`** (completed 2026-07-17) as DONE — yet the
+Progress table (`ROADMAP.md:293-295`) still shows `115. … 0/TBD | Not started`, `116. … 0/3 |
+Planned`, and `117. … 0/7 | Planned`. Additionally, Phase 117's detail-block plan sub-bullets
+(`ROADMAP.md:146-152`, 117-01…117-07) are ALL `- [ ]` (0 of 7 checked) despite the phase being
+complete. A cold reader or agent consulting the SAME document gets contradictory completion signals
+— the index says shipped, the Progress table + P117 detail-block checkboxes say not-started. This is
+pre-existing bookkeeping drift (the Progress table was never advanced when P115/P116/P117 closed),
+surfaced during P118's close; it is NOT a P118 defect.
+
+**Why out-of-scope for the discovering session:** this session's charter is intake-filing ONLY —
+file the drift, do NOT reconcile it. Reconciling the Progress-table rows + P117 detail-block
+sub-bullets requires reconstructing each closed phase's true plan-complete counts (115's `TBD`
+denominator, 116's 3, 117's 7) from that phase's SUMMARY/plan ledger — uncertain historical
+bookkeeping that a drive-by edit riding an unrelated intake commit must not guess at. It is a
+documentation-truth reconciliation, not a code fix, and belongs to a dedicated planning-doc pass.
+
+**Sketched resolution:** in the Progress table set 115/116/117 to their real completed counts +
+`Complete` + completion date (116 → `3/3 … Complete 2026-07-16`, 117 → `7/7 … Complete 2026-07-17`,
+115 → its true count/date per its SUMMARY), matching the `- [x]` phase-index state; and flip P117's
+detail-block plan sub-bullets (117-01…117-07) to `- [x]`. Verify each numerator/denominator against
+that phase's SUMMARY — do NOT guess (especially 115's `TBD` denominator). NATURAL FIT for **Phase
+119 "Docs/planning simplification" (the P112 RAISE)** — flag as a P119 candidate; a general
+planning-doc-truth sweep is exactly that phase's remit. Do NOT attempt the reconciliation ahead of
+that phase.
+
+**STATUS:** OPEN
