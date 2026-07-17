@@ -30,3 +30,14 @@
 [data-md-color-scheme="default"] .md-typeset code {
   background-color: rgba(63, 81, 181, 0.08);
 }
+
+/* Launch-animation embed (P117 117-05) — keep the poster+click-to-play
+ * <video> responsive inside the docs column instead of overflowing on
+ * narrow viewports. */
+.md-typeset .animation-embed video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto;
+}

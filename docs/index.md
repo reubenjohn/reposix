@@ -20,6 +20,17 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues) and wikis (Confl
 
 </div>
 
+<div class="animation-embed" markdown>
+
+**See reposix end-to-end in under 90 seconds** — `init`, `cat`, edit, `push`, no MCP tool schema in sight.
+
+<video controls preload="none" poster="assets/animation/reposix-launch.thumbnail.webp">
+  <source src="https://github.com/reubenjohn/reposix/releases/download/docs-assets/Reposix%20Launch%20Animation.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="https://github.com/reubenjohn/reposix/releases/download/docs-assets/Reposix%20Launch%20Animation.mp4">download the launch animation (mp4)</a>.
+</video>
+
+</div>
+
 ## reposix loop vs MCP loop
 
 ```mermaid
