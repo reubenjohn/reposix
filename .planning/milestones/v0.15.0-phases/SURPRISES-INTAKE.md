@@ -799,3 +799,18 @@ in ONE commit and re-runs the full release + docs-repro cadence, then deletes th
 either ahead of that lane.
 
 **STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P119 close (phase-close push cadence) | severity: MEDIUM (velocity/health regression)
+
+**What:** The git `pre-push` hook took **103s vs the ~60s budget** (`quality/CLAUDE.md § Cadences`)
+on the P119 close push; the hook itself WARNed "check for a new whole-repo gate before assuming diff
+size is the cause." P119 added NO gate, so this is pre-existing drift, not a defect introduced by
+this phase. Corroborates the earlier `2026-07-15 06:35` entry (manager amendment 4: ~91.7s / ~101s,
+kcov shell-coverage the prime suspect) — a stable three-observation creep (101s -> 91.7s -> 103s).
+
+**Sketched resolution:** P120 candidate — profile the pre-push cadence, identify what pushed it past
+budget (kcov shell-coverage / full-workspace clippy / mkdocs are the suspects), and either optimize
+the slow gate or re-baseline the documented ~60s budget in `quality/CLAUDE.md § Cadences`.
+Consolidate with the `2026-07-15 06:35` entry so P120 treats this as ONE recurring regression.
+
+**STATUS:** OPEN
