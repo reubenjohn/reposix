@@ -124,7 +124,9 @@ protocol.
 coordinators MORE often than the old ~50%-of-1M line did, a multi-phase milestone must NOT
 run as one C1 phase-coordinator reporting every rotation straight to L0. Instead L0
 dispatches a **coordinator-of-coordinators (C2)**: a milestone-scoped `phase-coordinator`
-that dispatches **one C1 `phase-coordinator` per phase**, each C1 dispatched with an explicit model tier matched to phase complexity (opus complex / sonnet default / haiku mechanical) (which dispatch executors/readers).
+that dispatches **one C1 `phase-coordinator` per phase** (which dispatch executors/readers) —
+each C1 dispatched with a model tier matched to phase complexity: opus complex / sonnet
+default / haiku mechanical.
 (A single-phase milestone may skip C2 and run one C1 directly.) When a C1 relieves at ~100k,
 its successor is dispatched by its **parent C2**, not L0; L0 hears from the C2 only at
 milestone boundaries or an E1–E4 escalation. **No new agent type is needed:**
