@@ -70,6 +70,7 @@ from pathlib import Path
 # --- Explicit, documented scope constants (match the P120 retrofit set) -------
 # CLI surface: crates/reposix-cli/src/{...}.rs
 CLI_SCOPE = [
+    "crates/reposix-cli/src/errors.rs",
     "crates/reposix-cli/src/init.rs",
     "crates/reposix-cli/src/attach.rs",
     "crates/reposix-cli/src/list.rs",

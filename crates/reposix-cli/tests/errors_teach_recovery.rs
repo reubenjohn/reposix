@@ -187,3 +187,124 @@ fn attach_non_git_tree_teaches_init_alternative_and_recovery() {
         assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
     }
 }
+
+// ─── W2: list / refresh / spaces / sync per-error teaching assertions ────────
+//
+// All ARG-LEVEL paths that fail BEFORE any network/seed (unsupported backend,
+// no-reposix-remote, --offline-unimplemented), so they are hermetic — no sim,
+// no shared repo, explicit temp paths. Each asserts the EXACT 3-part substrings
+// its name promises (OD-3 §2).
+
+/// `reposix spaces --backend sim` hits the DEDUPED Confluence-only error (was
+/// three near-identical `bail!`s at spaces.rs 26/29/32). The message MUST name
+/// the backend the user actually requested (`sim`), teach why spaces is
+/// Confluence-only, and point at `reposix list --backend sim` as the
+/// alternative + a copy-paste recovery.
+#[test]
+fn spaces_sim_backend_names_requested_backend_and_teaches_confluence() {
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["spaces", "--backend", "sim"])
+        .output()
+        .expect("run `reposix spaces`");
+    assert!(
+        !out.status.success(),
+        "`reposix spaces --backend sim` must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Alternative:",
+        "Recovery:",
+        // the ACTUAL requested backend name is echoed (dedupe requirement)
+        "you requested `sim`",
+        // the per-backend alternative points at `reposix list`
+        "reposix list --backend sim",
+        // still teaches the confluence path
+        "confluence",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// Same deduped path for JIRA — proves the requested-backend name is
+/// parameterised (`jira`), not a sim-only special case. Guards against a future
+/// regression that hard-codes one backend name in the shared error.
+#[test]
+fn spaces_jira_backend_names_requested_backend() {
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["spaces", "--backend", "jira"])
+        .output()
+        .expect("run `reposix spaces`");
+    assert!(
+        !out.status.success(),
+        "`reposix spaces --backend jira` must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "you requested `jira`",
+        "reposix list --backend jira",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// `reposix sync --reconcile <dir-with-no-reposix-remote>` teaches the FULL
+/// 3-part message (upgraded from the partial `anyhow!` at sync.rs 91-95): names
+/// the missing remote, teaches `reposix init` / `reposix attach`, and gives a
+/// copy-paste recovery. Runs against a fresh non-git temp dir so no remote is
+/// resolved — hermetic (git `config --get` on the temp path returns nothing).
+#[test]
+fn sync_no_reposix_remote_teaches_init_attach_and_recovery() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let empty = tmp.path().join("bare-dir");
+    std::fs::create_dir_all(&empty).expect("mkdir bare dir (no reposix remote)");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["sync", "--reconcile"])
+        .arg(&empty)
+        .output()
+        .expect("run `reposix sync`");
+    assert!(
+        !out.status.success(),
+        "`reposix sync --reconcile` with no reposix remote must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "no reposix remote",
+        "reposix attach",
+        "reposix init",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// `reposix refresh --offline` teaches that the offline path is unimplemented
+/// (upgraded from the bare `bail!` at refresh.rs 69-72), names the read-the-files
+/// alternative, and gives a copy-paste recovery. The `--offline` guard fires
+/// FIRST in `run_refresh`, before any cache open or network egress — hermetic.
+#[test]
+fn refresh_offline_teaches_unimplemented_and_read_files_alternative() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let wt = tmp.path().join("wt");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("refresh")
+        .arg(&wt)
+        .arg("--offline")
+        .output()
+        .expect("run `reposix refresh --offline`");
+    assert!(
+        !out.status.success(),
+        "`reposix refresh --offline` must fail-closed (unimplemented)"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in ["Fix:", "Recovery:", "not implemented", "offline"] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}

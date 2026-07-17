@@ -98,6 +98,10 @@ pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
 fn map_busy(e: rusqlite::Error, path: &Path) -> anyhow::Error {
     if let rusqlite::Error::SqliteFailure(ref ffi_err, _) = e {
         if ffi_err.extended_code == rusqlite::ffi::SQLITE_BUSY {
+            // This is the `reposix refresh` refresh_meta store (NOT the tokens/cost
+            // cache.db path). The fallback below and `update_metadata` surface raw
+            // SQLite failures (disk full / corrupt DB) — not user-actionable teaching.
+            // teach-exempt: ok — busy message already teaches (unmount / wait for the other refresh)
             return anyhow::anyhow!(
                 "another refresh is in progress; unmount or wait for the previous \
                  refresh to finish ({})",

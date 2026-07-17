@@ -5,49 +5,78 @@
 //! `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` +
 //! `REPOSIX_ALLOWED_ORIGINS` containing the tenant origin.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use reposix_confluence::{ConfSpaceSummary, ConfluenceBackend, ConfluenceCreds};
+use reposix_core::errmsg::teach;
 
 use crate::list::{read_confluence_env, ListBackend};
 
 /// Execute `reposix spaces`.
 ///
-/// Only `ListBackend::Confluence` is supported. Sim and GitHub return an
-/// error (exit code 1) with a clear message explaining that the backend
-/// has no space concept.
+/// Only `ListBackend::Confluence` is supported. Sim, GitHub, and JIRA return
+/// ONE deduped teaching error (was three near-identical `bail!`s) that names
+/// the backend the user actually requested, explains why there is nothing to
+/// list, and points at the right alternative command.
 ///
 /// # Errors
 /// - `ATLASSIAN_*` env vars missing → wrapped error from `read_confluence_env`.
 /// - Transport/HTTP failure → wrapped `ConfluenceBackend::list_spaces` error.
-/// - Backend is `Sim` or `Github` → `anyhow::bail!` with a clear message.
+/// - Backend is not `Confluence` → the deduped [`spaces_requires_confluence_error`].
 pub async fn run(backend: ListBackend) -> Result<()> {
-    match backend {
-        ListBackend::Sim => {
-            bail!("spaces is only supported for --backend confluence (sim has no space concept)")
-        }
-        ListBackend::Github => {
-            bail!("spaces is only supported for --backend confluence (github has no space concept; use `gh api` or GitHub's UI)")
-        }
-        ListBackend::Jira => {
-            bail!("spaces is only supported for --backend confluence (jira has no space concept; use `reposix list --backend jira` to list issues by project key)")
-        }
-        ListBackend::Confluence => {
-            let (email, token, tenant) = read_confluence_env()
-                .context("spaces --backend confluence requires ATLASSIAN_API_KEY, ATLASSIAN_EMAIL, and REPOSIX_CONFLUENCE_TENANT env vars")?;
-            let creds = ConfluenceCreds {
-                email,
-                api_token: token,
-            };
-            let b = ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
-            let spaces = b.list_spaces().await.with_context(|| {
-                format!(
-                    "confluence list_spaces (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
-                )
-            })?;
-            render_spaces_table(&spaces);
-            Ok(())
-        }
+    // Guard first, then run the (unindented) confluence path. Collapsing the
+    // three former per-backend `bail!`s into ONE error that echoes the ACTUAL
+    // requested backend removes a copy-paste smell and keeps the teaching in a
+    // single place (OD-3: dedupe near-identical error strings).
+    if backend != ListBackend::Confluence {
+        let requested = match backend {
+            ListBackend::Sim => "sim",
+            ListBackend::Github => "github",
+            ListBackend::Jira => "jira",
+            // Guarded by the `!=` above; unreachable in practice.
+            ListBackend::Confluence => unreachable!("confluence handled below the guard"),
+        };
+        return Err(spaces_requires_confluence_error(requested));
     }
+
+    let (email, token, tenant) = read_confluence_env().context(
+        "spaces --backend confluence requires ATLASSIAN_API_KEY, ATLASSIAN_EMAIL, and \
+         REPOSIX_CONFLUENCE_TENANT env vars",
+    )?;
+    let creds = ConfluenceCreds {
+        email,
+        api_token: token,
+    };
+    let b = ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
+    let spaces = b.list_spaces().await.with_context(|| {
+        format!(
+            "confluence list_spaces (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
+        )
+    })?;
+    render_spaces_table(&spaces);
+    Ok(())
+}
+
+/// The single, deduped teaching error for `reposix spaces` against a
+/// non-Confluence backend. Names the backend the caller actually requested
+/// (`requested`), teaches why spaces is Confluence-only, and points at the
+/// per-backend `reposix list` alternative + a copy-paste recovery.
+fn spaces_requires_confluence_error(requested: &str) -> anyhow::Error {
+    anyhow!(
+        "{}",
+        teach(
+            &format!(
+                "`reposix spaces` supports only the Confluence backend; you requested \
+                 `{requested}`."
+            ),
+            "spaces lists Confluence spaces (wiki space directories); the sim, GitHub, and \
+             JIRA backends have no space concept, so there is nothing to enumerate.",
+            &format!(
+                "to browse `{requested}` issues instead, list them by project: \
+                 `reposix list --backend {requested} --project <KEY>`."
+            ),
+            &["reposix spaces --backend confluence   # list your Confluence spaces",],
+        )
+    )
 }
 
 /// Render spaces as a fixed-width table: `KEY<12> NAME<30> URL`.

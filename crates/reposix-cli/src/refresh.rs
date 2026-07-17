@@ -13,6 +13,7 @@ use std::process::Command;
 use anyhow::{bail, Context as _, Result};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
+use reposix_core::errmsg::teach;
 use reposix_core::BackendConnector as _;
 use reposix_github::GithubReadOnlyBackend;
 use reposix_jira::{JiraBackend, JiraCreds};
@@ -67,8 +68,20 @@ impl RefreshConfig {
 pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
     if cfg.offline {
         bail!(
-            "--offline mode is not yet implemented for refresh; \
-             cat existing .md files from the working tree directly"
+            "{}",
+            teach(
+                "`reposix refresh --offline` is not implemented yet.",
+                "refresh always fetches a fresh snapshot from the backend today — there is no \
+                 offline read path. The working tree already holds the last-fetched `.md` \
+                 files, so read them directly instead of refreshing.",
+                "to inspect issues without any network egress, `cat` / `grep` the record files \
+                 already in the working tree.",
+                &[
+                    "ls issues/                     # already-fetched records (pages/ for confluence)",
+                    "grep -rl TODO issues/          # search the last snapshot offline",
+                    "reposix refresh <path>         # when you DO want a fresh backend snapshot",
+                ],
+            )
         );
     }
 
@@ -228,14 +241,14 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
             })
         }
         ListBackend::Confluence => {
+            // NB: these three `std::env::var("…")` literals are asserted by the
+            // `env_vars_are_consumed_by_binary` docs-alignment grep (cli.rs) — keep
+            // them here rather than delegating to `list::read_confluence_env`.
             let email = std::env::var("ATLASSIAN_EMAIL").unwrap_or_default();
             let token = std::env::var("ATLASSIAN_API_KEY").unwrap_or_default();
             let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").unwrap_or_default();
             if email.is_empty() || token.is_empty() || tenant.is_empty() {
-                bail!(
-                    "confluence backend requires ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, \
-                     and REPOSIX_CONFLUENCE_TENANT env vars"
-                );
+                return Err(missing_confluence_env_error());
             }
             let creds = ConfluenceCreds {
                 email,
@@ -255,10 +268,7 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
             let token = std::env::var("JIRA_API_TOKEN").unwrap_or_default();
             let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap_or_default();
             if email.is_empty() || token.is_empty() || instance.is_empty() {
-                bail!(
-                    "jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, \
-                     and REPOSIX_JIRA_INSTANCE env vars"
-                );
+                return Err(missing_jira_env_error());
             }
             let creds = JiraCreds {
                 email,
@@ -274,6 +284,57 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
             })
         }
     }
+}
+
+/// The teaching error for `reposix refresh --backend confluence` when one or
+/// more of the three Atlassian env vars is unset. Extracted from `fetch_issues`
+/// so the hot path stays under the line limit; the `std::env::var("…")` reads
+/// themselves remain inline in `fetch_issues` (the docs-alignment grep).
+fn missing_confluence_env_error() -> anyhow::Error {
+    anyhow::anyhow!(
+        "{}",
+        teach(
+            "confluence backend requires ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, and \
+             REPOSIX_CONFLUENCE_TENANT env vars, but at least one is unset.",
+            "set all three Atlassian Cloud vars — ATLASSIAN_EMAIL (your account email), \
+             ATLASSIAN_API_KEY (a token from \
+             id.atlassian.com/manage-profile/security/api-tokens), and \
+             REPOSIX_CONFLUENCE_TENANT (your `<tenant>.atlassian.net` subdomain).",
+            "no Atlassian account handy? the simulator needs no credentials — target \
+             `sim::demo` instead.",
+            &[
+                "export ATLASSIAN_EMAIL=you@example.com",
+                "export ATLASSIAN_API_KEY=<api-token>",
+                "export REPOSIX_CONFLUENCE_TENANT=<subdomain>",
+                "# then re-run: reposix refresh <path> --backend confluence --project <SPACE-KEY>",
+            ],
+        )
+    )
+}
+
+/// The teaching error for `reposix refresh --backend jira` when one or more of
+/// the three JIRA env vars is unset. Extracted for the same line-limit reason
+/// as [`missing_confluence_env_error`].
+fn missing_jira_env_error() -> anyhow::Error {
+    anyhow::anyhow!(
+        "{}",
+        teach(
+            "jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, and REPOSIX_JIRA_INSTANCE \
+             env vars, but at least one is unset.",
+            "set all three Atlassian Cloud vars — JIRA_EMAIL (your account email), \
+             JIRA_API_TOKEN (a token from \
+             id.atlassian.com/manage-profile/security/api-tokens), and REPOSIX_JIRA_INSTANCE \
+             (your `<tenant>.atlassian.net` subdomain, e.g. `mycompany`).",
+            "no Atlassian account handy? the simulator needs no credentials — target \
+             `sim::demo` instead.",
+            &[
+                "export JIRA_EMAIL=you@example.com",
+                "export JIRA_API_TOKEN=<api-token>",
+                "export REPOSIX_JIRA_INSTANCE=<subdomain>",
+                "# then re-run: reposix refresh <path> --backend jira --project <PROJECT-KEY>",
+            ],
+        )
+    )
 }
 
 /// Run git operations to stage the refresh output and create a commit.
@@ -305,6 +366,10 @@ pub fn git_refresh_commit(
         if status.success() {
             Ok(())
         } else {
+            // Internal git-subprocess wrapper: git inherits this process's stderr, so
+            // its own diagnostic already reached the user; the user-facing refresh entry
+            // errors (offline, missing creds, unreachable sim) teach at the call sites.
+            // teach-exempt: ok — surfaces git's own stderr; not a user-facing teaching site
             bail!("git {args:?} failed: {status}")
         }
     };
@@ -318,6 +383,8 @@ pub fn git_refresh_commit(
             .status()
             .context("spawn git init")?;
         if !status.success() {
+            // teach-exempt: ok — internal git-subprocess wrapper; git's own stderr
+            // already reached the user (inherited fds). See the `g` closure marker.
             bail!("git init failed: {status}");
         }
     }
@@ -349,6 +416,8 @@ pub fn git_refresh_commit(
         .status()
         .context("spawn git commit")?;
     if !status.success() {
+        // teach-exempt: ok — internal git-subprocess wrapper; git's own stderr
+        // already reached the user (inherited fds). See the `g` closure marker.
         bail!("git commit failed: {status}");
     }
 

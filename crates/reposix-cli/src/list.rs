@@ -21,6 +21,7 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
+use reposix_core::errmsg::teach;
 use reposix_core::{BackendConnector, Record};
 use reposix_github::GithubReadOnlyBackend;
 use reposix_jira::{JiraBackend, JiraCreds};
@@ -169,6 +170,10 @@ pub(crate) fn wrap_sim_fetch_error(
 /// error type) so the three-part bar is unit-testable directly. Shared by
 /// `reposix list` and `reposix refresh` so a reader who saw one recognizes the
 /// other; only `retry_cmd` differs between them.
+// teach-exempt: ok — bespoke 3-part sim-down teaching (names the cause, points at
+// `reposix sim`, echoes the copy-paste retry); regression-guarded by
+// `sim_unreachable_message_meets_teach_fix_bar`. Returns a String consumed via
+// `.context(...)`, not a bail!/anyhow! site — kept verbatim on purpose.
 pub(crate) fn sim_unreachable_message(origin: &str, retry_cmd: &str) -> String {
     format!(
         "the reposix simulator at `{origin}` is unreachable — the connection was refused.\n\
@@ -269,11 +274,25 @@ pub(crate) fn read_confluence_env_from(
     }
     if !missing.is_empty() {
         anyhow::bail!(
-            "confluence backend requires these env vars; currently unset: {}. \
-             Required: ATLASSIAN_EMAIL (your Atlassian account email), \
-             ATLASSIAN_API_KEY (token from id.atlassian.com/manage-profile/security/api-tokens), \
-             REPOSIX_CONFLUENCE_TENANT (your `<tenant>.atlassian.net` subdomain).",
-            missing.join(", ")
+            "{}",
+            teach(
+                &format!(
+                    "confluence backend requires these env vars; currently unset: {}.",
+                    missing.join(", ")
+                ),
+                "set all three Atlassian Cloud vars — ATLASSIAN_EMAIL (your account email), \
+                 ATLASSIAN_API_KEY (a token from \
+                 id.atlassian.com/manage-profile/security/api-tokens), and \
+                 REPOSIX_CONFLUENCE_TENANT (your `<tenant>.atlassian.net` subdomain).",
+                "no Atlassian account handy? the simulator needs no credentials — target \
+                 `sim::demo` instead.",
+                &[
+                    "export ATLASSIAN_EMAIL=you@example.com",
+                    "export ATLASSIAN_API_KEY=<api-token>",
+                    "export REPOSIX_CONFLUENCE_TENANT=<subdomain>",
+                    "# then re-run: reposix list --backend confluence --project <SPACE-KEY>",
+                ],
+            )
         );
     }
     Ok((email, token, tenant))
@@ -319,11 +338,26 @@ pub(crate) fn read_jira_env_from(
 
     if !missing.is_empty() {
         anyhow::bail!(
-            "jira backend requires these env vars; currently unset: {}. \
-             Required: JIRA_EMAIL (your Atlassian account email), \
-             JIRA_API_TOKEN (token from id.atlassian.com/manage-profile/security/api-tokens), \
-             REPOSIX_JIRA_INSTANCE (your `<tenant>.atlassian.net` subdomain, e.g. `mycompany`).",
-            missing.join(", ")
+            "{}",
+            teach(
+                &format!(
+                    "jira backend requires these env vars; currently unset: {}.",
+                    missing.join(", ")
+                ),
+                "set all three Atlassian Cloud vars — JIRA_EMAIL (your account email), \
+                 JIRA_API_TOKEN (a token from \
+                 id.atlassian.com/manage-profile/security/api-tokens), and \
+                 REPOSIX_JIRA_INSTANCE (your `<tenant>.atlassian.net` subdomain, e.g. \
+                 `mycompany`).",
+                "no Atlassian account handy? the simulator needs no credentials — target \
+                 `sim::demo` instead.",
+                &[
+                    "export JIRA_EMAIL=you@example.com",
+                    "export JIRA_API_TOKEN=<api-token>",
+                    "export REPOSIX_JIRA_INSTANCE=<subdomain>",
+                    "# then re-run: reposix list --backend jira --project <PROJECT-KEY>",
+                ],
+            )
         );
     }
     Ok((email, token, instance))

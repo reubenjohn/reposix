@@ -36,8 +36,10 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use reposix_cache::Cache;
+use reposix_core::errmsg::teach;
 use reposix_remote::backend_dispatch::{self, BackendKind};
 
+use crate::errors::cache_build_error;
 use crate::worktree_helpers::{resolve_reposix_remote_url, strip_bus_query};
 
 /// Entrypoint for `reposix sync [--reconcile] [path]`.
@@ -89,14 +91,45 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     // trees, and strips any bus `?mirror=` query to the SoT spec.
     let url = resolve_reposix_remote_url(&work).ok_or_else(|| {
         anyhow!(
-            "no reposix remote in {} — run `reposix init <backend>::<project> <path>` \
-             or `reposix attach <backend>::<project>` first",
-            work.display()
+            "{}",
+            teach(
+                &format!(
+                    "`reposix sync` found no reposix remote in {}.",
+                    work.display()
+                ),
+                "sync reconciles a tree that is already bound to a backend; this directory has \
+                 no reposix remote, so there is nothing to sync against. Bind it first with \
+                 `reposix init` (fresh tree) or `reposix attach` (existing checkout).",
+                "not sure which backend this tree belongs to? inspect `git remote -v` — a bound \
+                 tree has a `reposix::<backend>::<project>` remote URL.",
+                &[
+                    "reposix init sim::demo /tmp/demo          # create a fresh bound tree",
+                    "reposix attach <backend>::<project> .     # bind THIS existing checkout",
+                ],
+            )
         )
     })?;
     let sot = strip_bus_query(&url);
-    let mut parsed = backend_dispatch::parse_remote_url(sot)
-        .with_context(|| format!("parse reposix remote url={url}"))?;
+    let mut parsed = backend_dispatch::parse_remote_url(sot).map_err(|e| {
+        anyhow!(
+            "{}",
+            teach(
+                &format!(
+                    "the reposix remote URL in this tree could not be parsed: `{url}`.\n\
+                     (underlying: {e:#})"
+                ),
+                "the tree's `remote.*.url` (or its `?mirror=` bus form) is not a valid \
+                 `reposix::<backend>::<project>` URL — it may have been hand-edited or written \
+                 by an incompatible reposix version.",
+                "re-create the binding from scratch: `reposix init` for a fresh tree, or \
+                 `reposix attach` to rebind this existing checkout.",
+                &[
+                    "git remote -v                             # inspect the current remote URL",
+                    "reposix attach <backend>::<project> .     # rebind THIS checkout",
+                ],
+            )
+        )
+    })?;
 
     // Construct the backend connector through the git remote helper's
     // shared dispatch factory (D91-03) — the same path `attach` and the
@@ -112,12 +145,13 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
             parsed.origin = origin;
         }
     }
-    let backend = backend_dispatch::instantiate(&parsed)
-        .with_context(|| format!("instantiate backend for {sot}"))?;
     let backend_slug = parsed.kind.slug();
+    let backend = backend_dispatch::instantiate(&parsed)
+        .map_err(|e| cache_build_error(backend_slug, &parsed.project, e))?;
     // S-260707-gh404: pass the RAW project slug — `Cache::open` sanitizes it to
     // the flat cache dir internally; the backend must see `owner/repo` verbatim.
-    let cache = Cache::open(backend, backend_slug, &parsed.project).context("open cache")?;
+    let cache = Cache::open(backend, backend_slug, &parsed.project)
+        .map_err(|e| cache_build_error(backend_slug, &parsed.project, e))?;
     // ADR-010 / RBF-LR-01: call `build_from()` directly (NOT `cache.sync()`,
     // which takes the delta path whenever a `last_fetched_at` cursor is
     // present). `--reconcile` promises "a full list_records walk + cache
@@ -127,7 +161,7 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     let commit = cache
         .build_from()
         .await
-        .context("Cache::build_from for --reconcile")?;
+        .map_err(|e| cache_build_error(backend_slug, &parsed.project, e))?;
     println!(
         "reposix sync: cache rebuilt from a full list_records walk \
          (synthesis-commit OID = {commit}); meta.last_fetched_at advanced."
