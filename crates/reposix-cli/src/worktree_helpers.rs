@@ -392,7 +392,7 @@ mod tests {
     }
 
     /// P120 CLOSE WR-03 SECURITY REGRESSION. When a tree's `remote.*.url` is a
-    /// bus URL whose SoT half fails to parse, `cache_path_from_worktree` echoed
+    /// bus URL whose `SoT` half fails to parse, `cache_path_from_worktree` echoed
     /// the RAW `{url}` into its error `.with_context(…)` — including any
     /// `?mirror=<url>` `user:token@` credentials. This sets up such a tree
     /// (a path-traversal slug forces the parse failure; the `?mirror=` half
