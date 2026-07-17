@@ -326,7 +326,16 @@ Mechanism: `bus_handler::handle_bus_export` runs the mirror-egress check (`mirro
 
 If the walk fails entirely (cache initialization error, REST 401, missing credentials), the attach aborts before touching any local state — your working tree is unchanged.
 
-Re-running `reposix attach` against the same SoT is **idempotent** (it refreshes the cache against the current backend state). Re-running against a **different** SoT is **rejected** with `working tree already attached to <existing-sot>; multi-SoT not supported in v0.13.0`. To switch SoT, run `reposix detach` first (or remove the `extensions.partialClone` config + cache directory by hand).
+Re-running `reposix attach` against the same SoT is **idempotent** (it refreshes the cache against the current backend state). Re-running against a **different** SoT is **rejected** with `working tree already attached to <existing-sot>; multi-SoT not supported in v0.13.0`.
+
+**There is no `reposix detach` subcommand in this cut** — a real one is tracked as **GTH-V15-43**. To switch SoT, undo the attach binding by hand, then re-attach. `reposix doctor` prints the exact cache path if you are unsure which directory to remove:
+
+```bash
+git config --unset extensions.partialClone          # clear the promisor binding to the old SoT
+git remote remove <reposix-remote>                  # the remote `reposix attach` added — `git remote -v` lists it
+rm -rf "<XDG_CACHE_HOME>/reposix/<backend>-<project>.git"   # delete the old SoT's cache directory
+reposix attach <new-backend>::<new-project>         # re-attach to the SoT you want
+```
 
 Mechanism: see [DVCS topology — Pattern C: Vanilla clone, then `reposix attach`](../concepts/dvcs-topology.md#pattern-c-vanilla-clone-then-reposix-attach-round-tripper).
 
