@@ -1175,6 +1175,44 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/social-freshness",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-16T00:00:00Z",
+      "comment": "P117-06 fix-twice backstop. docs/social/* is `not_in_nav` (mkdocs.yml:56) so mkdocs-strict / link-resolution / doc-alignment / banned-words NEVER scan it — that gap is exactly why a stale current-tense FUSE line survived to launch in the SC5b bug this phase purged (PATTERNS.md NOTICED #3). This is the minimal grep-based backstop closing that gap: scan every docs/social/**/*.md for known-dead architecture terms (FUSE, /mnt/, mount) and BLOCK if any survive, with a `<!-- social-freshness: ok — reason -->` allowlist marker for deliberate PAST-tense history (mirrors docs/development/roadmap.md's own historical framing of the same v0.4.0 FUSE-mount milestone, and docs/.banned-words.toml's `<!-- banned-words: ok -->` escape-hatch convention).",
+      "sources": [
+        "docs/social/twitter.md",
+        "docs/social/linkedin.md",
+        "mkdocs.yml:56"
+      ],
+      "command": "bash quality/gates/structure/social-freshness.sh",
+      "expected": {
+        "asserts": [
+          "no docs/social/**/*.md contains a known-dead architecture term (FUSE, /mnt/, mount) — case-insensitive, word-boundary anchored to avoid false hits on amount/paramount (T-117-08)",
+          "on a match, exit 1 names the offending file:line plus a fix (reword, or the allowlist-marker escape hatch for deliberate history)",
+          "a line carrying the `social-freshness: ok` allowlist marker is skipped even if it contains a dead term"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/social-freshness.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/social-freshness.json",
+      "status": "PASS",
+      "last_verified": "2026-07-16T00:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: docs/social/**/*.md picked up a current-tense FUSE/mount/`/mnt/` reference — since docs/social/* is not_in_nav, no other docs gate would have caught it. Reword to the git-native partial-clone model, or if it's deliberate past-tense history (matching roadmap.md's framing) append the `<!-- social-freshness: ok — reason -->` marker to the line.",
+      "claim_vs_assertion_audit": "If a stale current-tense FUSE/mount claim reached docs/social/**/*.md (the exact SC5b bug class), `bash quality/gates/structure/social-freshness.sh` would grep-match `\\bFUSE\\b`, `/mnt/`, or `\\bmount\\b` on that line and exit 1, naming the file:line and a fix — the selftest (social-freshness.selftest.sh) proves this BLOCK path with a planted FUSE/`.mnt/`/mount line each independently, proves the word-boundary anchor holds against amount/paramount (T-117-08's named false-positive risk), and proves the allowlist-marker escape hatch un-blocks a marked line. If the gate's claim were false — e.g. a regex typo silently matching nothing — the selftest's block-path assertions (b)/(c)/(d) would observe exit 0 instead of 1 and fail.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push"
+      ]
     }
   ]
 }
