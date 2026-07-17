@@ -112,7 +112,20 @@ fn main() -> ExitCode {
 fn real_main() -> Result<bool> {
     let argv: Vec<String> = std::env::args().collect();
     if argv.len() < 3 {
-        anyhow::bail!("usage: git-remote-reposix <alias> <url>");
+        anyhow::bail!(
+            "{}",
+            reposix_core::errmsg::teach(
+                "git-remote-reposix was invoked with too few arguments (it needs <alias> and <url>).",
+                "git-remote-reposix is a git REMOTE HELPER — git runs it automatically for \
+                 `reposix::` remotes; you normally never invoke it by hand.",
+                "just use git against a reposix remote (`git fetch` / `git push`); to create one, \
+                 run `reposix init <backend>::<project> <path>`.",
+                &[
+                    "reposix init sim::demo /tmp/demo   # creates a reposix:: remote git can drive",
+                    "git -C /tmp/demo fetch origin",
+                ],
+            )
+        );
     }
     let url = &argv[2];
     // URL-scheme dispatch (Phase 36-followup, closes Phase 32 carry-forward):
@@ -126,12 +139,18 @@ fn real_main() -> Result<bool> {
     // `Route::Bus { sot, mirror_url }` (bus mode — `state.mirror_url`
     // is `Some(url)` and `bus_handler::handle_bus_export` runs on
     // the export verb instead of `handle_export`).
-    let route = bus_url::parse(url).context("parse remote url")?;
+    // No `.context(...)` wrapper here (P120 W4): `bus_url::parse` now returns a
+    // full 3-part teaching body (`malformed_bus_url_error`); a terse context
+    // prefix would bury the headline behind "parse remote url: …" in git stderr.
+    let route = bus_url::parse(url)?;
     let (parsed, mirror_url_opt): (backend_dispatch::ParsedRemote, Option<String>) = match route {
         bus_url::Route::Single(p) => (p, None),
         bus_url::Route::Bus { sot, mirror_url } => (sot, Some(mirror_url)),
     };
-    let backend = instantiate(&parsed).context("instantiate backend")?;
+    // No `.context(...)` wrapper (P120 W4): `instantiate` surfaces either a
+    // teaching `missing_env_error` (credentials unset) or a self-describing
+    // constructor error; both read cleanly without a burying prefix.
+    let backend = instantiate(&parsed)?;
     let backend_name = parsed.kind.slug().to_owned();
     // S-260707-gh404: keep the RAW project slug (`owner/repo` for GitHub)
     // as the single identity. It reaches the `BackendConnector` verbatim
@@ -360,13 +379,24 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     {
         Ok(v) => v,
         Err(e) => {
-            return fail_push(
-                proto,
-                state,
-                "backend-unreachable",
-                &format!("cannot list issues for import: {e:#}"),
-            )
-            .map_err(Into::into);
+            // Retrofit the DIAG detail to the 3-part teaching shape (P120 W4).
+            // The `error refs/heads/main backend-unreachable` PROTOCOL line
+            // (emitted by `fail_push`) stays verbatim — git parses it — while
+            // this teaching rides the accompanying stderr `error:` diag. The
+            // connector's own `{e:#}` is surfaced, not swallowed (leverage #3);
+            // it carries no userinfo (backend creds live in headers, not the
+            // origin URL).
+            let detail = reposix_core::errmsg::teach(
+                &format!("could not list records from the backend to import: {e:#}"),
+                "the SoT backend could not be reached or read — usually the simulator is not \
+                 running, or a real backend's credentials are unset.",
+                "for a no-network check, start the simulator and target a `sim::` remote.",
+                &[
+                    "reposix sim      # start the simulator, if this is a sim:: remote",
+                    "reposix doctor   # check backend reachability + credentials",
+                ],
+            );
+            return fail_push(proto, state, "backend-unreachable", &detail).map_err(Into::into);
         }
     };
     // Emit fast-import stream over stdout via the protocol writer, using
@@ -451,6 +481,8 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     let parsed = match parse_result {
         Ok(v) => v,
         Err(e) => {
+            // teach-exempt: ok — git's own malformed fast-import stream; internal protocol
+            // error, not a user-actionable teaching target (git generated the stream).
             return fail_push(
                 proto,
                 state,
@@ -541,6 +573,8 @@ pub(crate) fn execute_action(
                 version: 0,
             };
             let untainted = sanitize(Tainted::new(issue), meta);
+            // teach-exempt: ok — per-action REST wrap; terminal teaching is emitted at the
+            // write_loop reject diag (W5), this is an internal annotation on the backend call.
             let _new = rt
                 .block_on(backend.create_record(project, untainted))
                 .context("create issue")?;
@@ -567,6 +601,8 @@ pub(crate) fn execute_action(
                 version: prior_version,
             };
             let untainted = sanitize(Tainted::new(new), meta);
+            // teach-exempt: ok — per-action REST wrap; terminal teaching at the write_loop
+            // reject diag (W5). `id.0` is a numeric record id — no URL/credential to redact.
             rt.block_on(backend.update_record(project, id, untainted, Some(prior_version)))
                 .with_context(|| format!("patch issue {}", id.0))?;
             Ok(())
@@ -590,6 +626,8 @@ pub(crate) fn execute_action(
                     ));
                     Ok(())
                 }
+                // teach-exempt: ok — per-action REST wrap; terminal teaching at the write_loop
+                // reject diag (W5). `id.0` is a numeric record id — no URL/credential to redact.
                 other => other.with_context(|| format!("delete issue {}", id.0)),
             }
         }

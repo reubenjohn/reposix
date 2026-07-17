@@ -108,11 +108,18 @@ pub fn parse_remote_url(url: &str) -> Result<ParsedRemote> {
     // and `BackendKind` resolution on top — the splitter intentionally
     // does not enforce a project-slug character set so this dispatcher
     // can accept GitHub's `owner/repo` form.
-    let (pre, project) = split_reposix_url(url)
-        .map_err(|e| anyhow!("remote url `{url}` rejected by reposix-core splitter: {e}"))?;
+    let (pre, project) = split_reposix_url(url).map_err(|e| {
+        // teach-exempt: ok — machine-generated URL (reposix init/attach); base-form parse fault
+        anyhow!(
+            "remote url `{}` rejected by reposix-core splitter: {e}",
+            redact_userinfo(url)
+        )
+    })?;
     if project == "." || project == ".." {
+        // teach-exempt: ok — machine-generated URL (reposix init/attach); path-traversal guard
         return Err(anyhow!(
-            "remote url `{url}` has empty or path-traversal project segment"
+            "remote url `{}` has empty or path-traversal project segment",
+            redact_userinfo(url)
         ));
     }
 
@@ -164,17 +171,23 @@ fn classify_origin(origin: &str, marker: Option<&str>) -> Result<BackendKind> {
         return match marker {
             Some("confluence") => Ok(BackendKind::Confluence),
             Some("jira") => Ok(BackendKind::Jira),
+            // teach-exempt: ok — machine-generated atlassian URL; already names the expected /confluence//jira forms
             Some(other) => Err(anyhow!(
-                "atlassian origin `{origin}` requires `/confluence/` or `/jira/` path marker; got `/{other}/`"
+                "atlassian origin `{}` requires `/confluence/` or `/jira/` path marker; got `/{other}/`",
+                redact_userinfo(origin)
             )),
+            // teach-exempt: ok — machine-generated atlassian URL; already names the disambiguating URL forms
             None => Err(anyhow!(
-                "atlassian origin `{origin}` requires a `/confluence/projects/...` or `/jira/projects/...` URL form to disambiguate"
+                "atlassian origin `{}` requires a `/confluence/projects/...` or `/jira/projects/...` URL form to disambiguate",
+                redact_userinfo(origin)
             )),
         };
     }
 
+    // teach-exempt: ok — machine-generated URL; already enumerates the recognised backend origin forms
     Err(anyhow!(
-        "remote origin `{origin}` is not a recognised reposix backend; expected loopback (sim), https://api.github.com (github), or https://<tenant>.atlassian.net with a /confluence or /jira marker"
+        "remote origin `{}` is not a recognised reposix backend; expected loopback (sim), https://api.github.com (github), or https://<tenant>.atlassian.net with a /confluence or /jira marker",
+        redact_userinfo(origin)
     ))
 }
 
@@ -261,16 +274,20 @@ fn open_connector_audit(kind: BackendKind, project: &str) -> Result<Arc<Mutex<Co
     // `resolve_cache_path` sanitizes the slug internally (single site,
     // S-260707-gh404) — pass the RAW `project` and let it derive the flat
     // `<backend>-<sanitized>.git` dir; the audit DB is its `.audit.db` sibling.
-    let bare = resolve_cache_path(kind.slug(), project)
-        .map_err(|e| anyhow!("resolve cache path for audit DB: {e}"))?;
+    let bare = resolve_cache_path(kind.slug(), project).map_err(|e| {
+        // teach-exempt: ok — internal filesystem cache-path derivation; OP-3 audit hard error
+        anyhow!("resolve cache path for audit DB: {e}")
+    })?;
     // Sibling file: `<...>-<project>.git` -> `<...>-<project>.audit.db`.
     let audit_path = bare.with_extension("audit.db");
     if let Some(parent) = audit_path.parent() {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("create audit DB dir {}", parent.display()))?;
     }
-    let conn = reposix_core::audit::open_audit_db(&audit_path)
-        .map_err(|e| anyhow!("open audit DB at {}: {e}", audit_path.display()))?;
+    let conn = reposix_core::audit::open_audit_db(&audit_path).map_err(|e| {
+        // teach-exempt: ok — filesystem-level audit DB open; documented OP-3 hard error
+        anyhow!("open audit DB at {}: {e}", audit_path.display())
+    })?;
     Ok(Arc::new(Mutex::new(conn)))
 }
 
@@ -295,7 +312,13 @@ fn build_confluence(parsed: &ParsedRemote) -> Result<reposix_confluence::Conflue
     let audit = open_connector_audit(BackendKind::Confluence, &parsed.project)?;
     let backend =
         reposix_confluence::ConfluenceBackend::new_with_base_url(creds, origin.to_owned())
-            .map_err(|e| anyhow!("instantiate confluence backend at `{origin}`: {e}"))?
+            .map_err(|e| {
+                // teach-exempt: ok — internal connector constructor; origin machine-generated
+                anyhow!(
+                    "instantiate confluence backend at `{}`: {e}",
+                    redact_userinfo(origin)
+                )
+            })?
             .with_audit(audit);
     Ok(backend)
 }
@@ -314,14 +337,26 @@ fn build_jira(parsed: &ParsedRemote) -> Result<reposix_jira::JiraBackend> {
     let creds = reposix_jira::JiraCreds { email, api_token };
     let audit = open_connector_audit(BackendKind::Jira, &parsed.project)?;
     let backend = reposix_jira::JiraBackend::new_with_base_url(creds, origin.to_owned())
-        .map_err(|e| anyhow!("instantiate jira backend at `{origin}`: {e}"))?
+        .map_err(|e| {
+            // teach-exempt: ok — internal connector constructor; origin machine-generated
+            anyhow!(
+                "instantiate jira backend at `{}`: {e}",
+                redact_userinfo(origin)
+            )
+        })?
         .with_audit(audit);
     Ok(backend)
 }
 
 fn instantiate_sim(origin: &str) -> Result<Arc<dyn BackendConnector>> {
-    let backend = SimBackend::with_agent_suffix(origin.to_owned(), Some("remote"))
-        .map_err(|e| anyhow!("instantiate sim backend at `{origin}`: {e}"))?;
+    let backend =
+        SimBackend::with_agent_suffix(origin.to_owned(), Some("remote")).map_err(|e| {
+            // teach-exempt: ok — internal connector constructor; origin machine-generated (loopback)
+            anyhow!(
+                "instantiate sim backend at `{}`: {e}",
+                redact_userinfo(origin)
+            )
+        })?;
     Ok(Arc::new(backend))
 }
 
@@ -329,7 +364,13 @@ fn instantiate_github(origin: &str) -> Result<Arc<dyn BackendConnector>> {
     let token = required_env("GITHUB_TOKEN", &["GITHUB_TOKEN"])?;
     let backend =
         reposix_github::GithubReadOnlyBackend::new_with_base_url(Some(token), origin.to_owned())
-            .map_err(|e| anyhow!("instantiate github backend at `{origin}`: {e}"))?;
+            .map_err(|e| {
+                // teach-exempt: ok — internal connector constructor; origin machine-generated
+                anyhow!(
+                    "instantiate github backend at `{}`: {e}",
+                    redact_userinfo(origin)
+                )
+            })?;
     Ok(Arc::new(backend))
 }
 
@@ -356,15 +397,96 @@ fn collect_missing(required: &[&'static str]) -> Vec<&'static str> {
         .collect()
 }
 
-/// Render a uniform "missing creds" error message that lists each
-/// absent env var on its own line and points at the canonical
-/// testing-targets doc.
+/// A safe placeholder value for the `export <VAR>=<value>` recovery line of
+/// [`missing_env_error`]. NEVER a real secret — just a shape hint so the user
+/// knows what kind of value each variable expects.
+fn env_example(var: &str) -> &'static str {
+    match var {
+        "GITHUB_TOKEN" => "ghp_your_personal_access_token",
+        "ATLASSIAN_API_KEY" | "JIRA_API_TOKEN" => "your_api_token",
+        "ATLASSIAN_EMAIL" | "JIRA_EMAIL" => "you@example.com",
+        // The `<x>` in `https://<x>.atlassian.net`.
+        "REPOSIX_CONFLUENCE_TENANT" | "REPOSIX_JIRA_INSTANCE" => "mycompany",
+        _ => "<value>",
+    }
+}
+
+/// The shared "missing real-backend credentials" teaching error (P120 leverage
+/// #2, helper side). Retrofitted through [`reposix_core::errmsg::teach`] so the
+/// GitHub / Confluence / JIRA instantiate paths all emit the same
+/// Rust-compiler-grade 3-part message: name each unset variable, give a
+/// copy-paste `export <VAR>=<value>` recovery, and point at the credential-free
+/// `sim::` alternative.
+///
+/// The env-var matrix doc pointer is preserved (existing callers/tests rely on
+/// it). No URL is interpolated, so there is nothing to redact here.
 fn missing_env_error(kind: BackendKind, missing: &[&str]) -> anyhow::Error {
-    let lines: Vec<String> = missing.iter().map(|n| format!("  - {n}")).collect();
+    let mut recovery: Vec<String> = missing
+        .iter()
+        .map(|n| format!("export {n}={}", env_example(n)))
+        .collect();
+    // git re-invokes the helper on the next fetch/push, so the retry is just
+    // re-running the git command that triggered this.
+    recovery
+        .push("# then re-run your `git fetch` / `git push` (git re-invokes the helper)".to_owned());
+    recovery.push("# env-var matrix per backend: docs/reference/testing-targets.md".to_owned());
+    let recovery_refs: Vec<&str> = recovery.iter().map(String::as_str).collect();
+
+    let headline = format!(
+        "the `{}` backend needs credential environment variable(s) that are unset: {}.",
+        kind.slug(),
+        missing.join(", "),
+    );
     anyhow!(
-        "git-remote-reposix: cannot instantiate {kind:?} backend — required env var(s) unset:\n{}\n\nSee docs/reference/testing-targets.md for the env-var matrix per backend.",
-        lines.join("\n"),
+        "{}",
+        reposix_core::errmsg::teach(
+            &headline,
+            "export each listed variable (your API token / account email / tenant subdomain), \
+             then retry — the helper reads credentials from the environment git runs it in.",
+            "no real-backend credentials handy? re-init against the simulator, which needs none: \
+             `reposix init sim::demo <path>` — a `sim::` remote never reaches this code path.",
+            &recovery_refs,
+        )
     )
+}
+
+/// Strip embedded `user[:secret]@` userinfo from EVERY `scheme://…@host`
+/// authority in `raw`, returning a display-safe copy for stderr / diagnostics.
+///
+/// Unlike [`reposix_core::http::strip_url_userinfo`] (which parses a single
+/// well-formed `http(s)` URL and passes anything else through untouched), this
+/// scans an ARBITRARY string: a `reposix::`-prefixed remote URL, or a bus URL
+/// carrying BOTH a `SoT` origin AND a `?mirror=<url>`. The outer `reposix::`
+/// scheme defeats `Url::parse`, so the core stripper would leak a credential
+/// embedded anywhere but the leading component. Every remote byte is
+/// attacker-influenced (CLAUDE.md § Threat model) and stderr is an exfil leg,
+/// so any error echoing a user-supplied URL routes through here first.
+///
+/// A credentialed authority `scheme://user:secret@host/…` becomes
+/// `scheme://<redacted>@host/…`; a userinfo-free authority is left byte-exact.
+#[must_use]
+pub fn redact_userinfo(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some(pos) = rest.find("://") {
+        let (head, tail) = rest.split_at(pos + 3); // include the `://`
+        out.push_str(head);
+        // The authority runs from just past `://` to the first `/`, `?`, `#`,
+        // or end of string.
+        let auth_end = tail.find(['/', '?', '#']).unwrap_or(tail.len());
+        let (authority, remainder) = tail.split_at(auth_end);
+        // `rfind('@')` so a `@` inside the userinfo itself (rare but legal in
+        // percent-decoded forms) does not truncate the host.
+        if let Some(at) = authority.rfind('@') {
+            out.push_str("<redacted>@");
+            out.push_str(&authority[at + 1..]);
+        } else {
+            out.push_str(authority);
+        }
+        rest = remainder;
+    }
+    out.push_str(rest);
+    out
 }
 
 #[cfg(test)]
@@ -563,6 +685,19 @@ mod tests {
                 msg.contains("docs/reference/testing-targets.md"),
                 "msg should link to doc: {msg}"
             );
+            // P120 W4: retrofitted to the 3-part teaching shape.
+            assert!(
+                msg.contains("Fix:") && msg.contains("Recovery:"),
+                "3-part shape: {msg}"
+            );
+            assert!(
+                msg.contains("export GITHUB_TOKEN="),
+                "should give a copy-paste export recovery: {msg}"
+            );
+            assert!(
+                msg.contains("sim::"),
+                "should name the credential-free sim alternative: {msg}"
+            );
         });
     }
 
@@ -585,6 +720,20 @@ mod tests {
                 assert!(msg.contains("ATLASSIAN_API_KEY"), "msg: {msg}");
                 assert!(msg.contains("ATLASSIAN_EMAIL"), "msg: {msg}");
                 assert!(msg.contains("REPOSIX_CONFLUENCE_TENANT"), "msg: {msg}");
+                // P120 W4: 3-part teaching shape with per-var export recovery.
+                assert!(
+                    msg.contains("Fix:") && msg.contains("Recovery:"),
+                    "3-part shape: {msg}"
+                );
+                assert!(
+                    msg.contains("export ATLASSIAN_API_KEY=")
+                        && msg.contains("export REPOSIX_CONFLUENCE_TENANT="),
+                    "should give per-var export recovery lines: {msg}"
+                );
+                assert!(
+                    msg.contains("sim::"),
+                    "should name the sim alternative: {msg}"
+                );
             },
         );
     }
@@ -604,6 +753,20 @@ mod tests {
                 assert!(msg.contains("JIRA_EMAIL"), "msg: {msg}");
                 assert!(msg.contains("JIRA_API_TOKEN"), "msg: {msg}");
                 assert!(msg.contains("REPOSIX_JIRA_INSTANCE"), "msg: {msg}");
+                // P120 W4: 3-part teaching shape with per-var export recovery.
+                assert!(
+                    msg.contains("Fix:") && msg.contains("Recovery:"),
+                    "3-part shape: {msg}"
+                );
+                assert!(
+                    msg.contains("export JIRA_API_TOKEN=")
+                        && msg.contains("export REPOSIX_JIRA_INSTANCE="),
+                    "should give per-var export recovery lines: {msg}"
+                );
+                assert!(
+                    msg.contains("sim::"),
+                    "should name the sim alternative: {msg}"
+                );
             },
         );
     }
@@ -715,5 +878,54 @@ mod tests {
             },
         );
         assert_audit_events_table(cache.path(), "jira", "TEST");
+    }
+
+    // --- P120 W4: redact_userinfo (credential-leak defense on echoed URLs) -----
+
+    #[test]
+    fn redact_userinfo_strips_creds_in_reposix_prefixed_origin() {
+        // The outer `reposix::` scheme defeats Url::parse, so core's
+        // strip_url_userinfo would pass this through — this scanner must not.
+        let got =
+            redact_userinfo("reposix::https://x-access-token:ghp_SECRET@github.com/projects/o/r");
+        assert!(!got.contains("ghp_SECRET"), "secret leaked: {got}");
+        assert!(!got.contains("x-access-token"), "username leaked: {got}");
+        assert!(
+            got.contains("<redacted>@github.com"),
+            "host must survive: {got}"
+        );
+    }
+
+    #[test]
+    fn redact_userinfo_strips_creds_in_bus_mirror_component() {
+        // A bus URL can carry creds in the mirror URL, past the first `://`.
+        let got = redact_userinfo(
+            "reposix::http://127.0.0.1:7878/projects/demo?mirror=https://user:TOPSECRET@mirror.example.com/r.git",
+        );
+        assert!(!got.contains("TOPSECRET"), "mirror secret leaked: {got}");
+        assert!(
+            got.contains("<redacted>@mirror.example.com"),
+            "mirror host must survive: {got}"
+        );
+        // The credential-free SoT origin component is untouched.
+        assert!(
+            got.contains("127.0.0.1:7878/projects/demo"),
+            "SoT origin mangled: {got}"
+        );
+    }
+
+    #[test]
+    fn redact_userinfo_passes_through_credential_free_urls_byte_exact() {
+        for url in [
+            "reposix::http://127.0.0.1:7878/projects/demo",
+            "reposix::http://127.0.0.1:7878/projects/demo?mirror=file:///tmp/m.git",
+            "https://api.github.com/projects/o/r",
+        ] {
+            assert_eq!(
+                redact_userinfo(url),
+                url,
+                "must not mangle a userinfo-free URL"
+            );
+        }
     }
 }

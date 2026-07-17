@@ -40,7 +40,43 @@
 
 use anyhow::{anyhow, Result};
 
-use reposix_remote::backend_dispatch::{parse_remote_url, ParsedRemote};
+use reposix_remote::backend_dispatch::{parse_remote_url, redact_userinfo, ParsedRemote};
+
+/// The SHARED teaching error for every [`parse`] reject arm (P120 leverage #5).
+///
+/// Routes through [`reposix_core::errmsg::teach`] so all six malformed-bus-URL
+/// paths emit the same Rust-compiler-grade 3-part message: name the canonical
+/// `reposix::<sot-spec>?mirror=<mirror-url>` form, echo the offending URL with
+/// any embedded credentials REDACTED, and give a copy-paste `git remote
+/// set-url` recovery.
+///
+/// git invokes the helper, so this body must be legible in git's stderr.
+///
+/// - `reason` — the specific fault (e.g. "the `+`-delimited form is dropped").
+/// - `got` — the raw bus URL the user supplied. Userinfo is stripped before it
+///   reaches stderr: the URL lands in `.git/config` and helper diagnostics, so
+///   echoing `user:token@` would be an exfiltration leg (CLAUDE.md § Threat
+///   model). See [`redact_userinfo`].
+fn malformed_bus_url_error(reason: &str, got: &str) -> anyhow::Error {
+    let safe = redact_userinfo(got);
+    let headline = format!("malformed reposix bus URL `{safe}`: {reason}.");
+    anyhow!(
+        "{}",
+        reposix_core::errmsg::teach(
+            &headline,
+            "a bus URL is `reposix::<sot-spec>?mirror=<mirror-url>` — the SoT spec \
+             (a `sim::`/`github::`/… origin, resolved to `<scheme>://<host>/projects/<id>`) \
+             then an OPTIONAL `?mirror=<plain-git-url>` for the DVCS mirror. Only `mirror=` is \
+             supported; percent-encode any `?` inside the mirror URL.",
+            "for a single-backend remote with no mirror fan-out, drop the whole `?mirror=…` \
+             query: `reposix::<sot-spec>`.",
+            &[
+                "git remote set-url <name> 'reposix::http://127.0.0.1:7878/projects/demo?mirror=file:///tmp/mirror.git'",
+                "# never embed credentials in the mirror URL — use a git credential helper or ssh keys",
+            ],
+        )
+    )
+}
 
 /// Bus-vs-single-backend dispatch route. Returned by [`parse`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,17 +121,22 @@ pub(crate) fn parse(url: &str) -> Result<Route> {
         None => (stripped, None),
     };
     if base.contains('+') {
-        return Err(anyhow!(
-            "the `+`-delimited bus URL form is dropped (Q3.3) — \
-             use `reposix::<sot-spec>?mirror=<mirror-url>` instead"
+        return Err(malformed_bus_url_error(
+            "the `+`-delimited form is dropped (Q3.3)",
+            url,
         ));
     }
 
     // Delegate the base form (no query string) to the existing parser.
     // `backend_dispatch::parse_remote_url` accepts both `reposix::...`
-    // and bare forms — pass the prefix-stripped base.
-    let parsed =
-        parse_remote_url(base).map_err(|e| anyhow!("bus URL base form rejected: {e:#}"))?;
+    // and bare forms — pass the prefix-stripped base. The inner error is
+    // already userinfo-redacted by `parse_remote_url` (P120 W4).
+    let parsed = parse_remote_url(base).map_err(|e| {
+        malformed_bus_url_error(
+            &format!("the single-backend base form was rejected ({e:#})"),
+            url,
+        )
+    })?;
 
     let Some(query) = query else {
         return Ok(Route::Single(parsed));
@@ -103,9 +144,9 @@ pub(crate) fn parse(url: &str) -> Result<Route> {
 
     // Empty query string after `?` — explicit error (typo or misuse).
     if query.is_empty() {
-        return Err(anyhow!(
-            "bus URL query string is empty; expected \
-             `reposix::<sot-spec>?mirror=<mirror-url>`"
+        return Err(malformed_bus_url_error(
+            "the `?` query string is empty",
+            url,
         ));
     }
 
@@ -129,25 +170,25 @@ pub(crate) fn parse(url: &str) -> Result<Route> {
                 mirror_url = Some((*v).to_owned());
             }
             other => {
-                return Err(anyhow!(
-                    "unknown query parameter `{other}` in bus URL; \
-                     only `mirror=` is supported"
+                return Err(malformed_bus_url_error(
+                    &format!("unknown query parameter `{other}` (only `mirror=` is supported)"),
+                    url,
                 ));
             }
         }
     }
 
     let Some(mirror_url) = mirror_url else {
-        return Err(anyhow!(
-            "bus URL query string present but `mirror=` parameter missing; \
-             expected `reposix::<sot-spec>?mirror=<mirror-url>`"
+        return Err(malformed_bus_url_error(
+            "a query string is present but the `mirror=` parameter is missing",
+            url,
         ));
     };
 
     if mirror_url.is_empty() {
-        return Err(anyhow!(
-            "bus URL `mirror=` parameter is empty; \
-             expected `reposix::<sot-spec>?mirror=<mirror-url>`"
+        return Err(malformed_bus_url_error(
+            "the `mirror=` parameter is empty",
+            url,
         ));
     }
 
