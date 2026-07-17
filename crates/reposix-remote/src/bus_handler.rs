@@ -707,7 +707,17 @@ mod tests {
 
         // git's auth-failure prose: the token sits in the URL USERNAME position,
         // the exact shape the RAW stderr_tail carried into BOTH sinks pre-fix.
-        const SECRET: &str = "ghp_SECRETMIRRORTOKEN123";
+        //
+        // NOTE: deliberately NOT `ghp_`-prefixed. `redact_userinfo` strips URL
+        // userinfo STRUCTURALLY (the `scheme://user:secret@host` shape), format-
+        // agnostic to what the token itself looks like — so a non-prefixed fake
+        // token exercises the identical redaction path a real `ghp_`-shaped token
+        // would, while not colliding with `quality/gates/structure/cred-hygiene.sh`'s
+        // `ghp_[A-Za-z0-9]{20,}` P0 pre-push pattern (a real provider-prefixed
+        // secret in this position is exactly what that gate exists to catch, even
+        // in a "fake" fixture — see GOOD-TO-HAVES for the inline-allow-marker
+        // follow-up so redaction tests CAN use realistic fixtures later).
+        const SECRET: &str = "mirror-pushtoken-REDACTME-abc123def456";
         let poison_tail = format!(
             "remote: Invalid username or password / \
              fatal: Authentication failed for \
