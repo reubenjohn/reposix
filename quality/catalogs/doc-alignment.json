@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-17T07:25:02Z",
+    "last_walked": "2026-07-17T07:59:08Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -757,8 +757,8 @@
       "claim": "Architecture tested end-to-end against Confluence TokenWorld, GitHub reubenjohn/reposix, JIRA TEST project",
       "source": {
         "file": "docs/index.md",
-        "line_start": 112,
-        "line_end": 117
+        "line_start": 123,
+        "line_end": 128
       },
       "source_hash": "baa10e128962daf566229cb12f8a3c9d76e9d40053f82744974ab8bf69162796",
       "source_hashes": [
@@ -770,11 +770,11 @@
       "test_body_hashes": [
         "5da12c4e98ef21584dc1df18c33b2c4bea31f8db391e7cfda9e29ec66994c45c"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 112-117 -> new 123-128.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:27Z",
-      "last_extracted": "2026-07-16T18:32:27Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -947,8 +947,8 @@
       "claim": "Audit trail is git log (no SDK vendoring required)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 104,
-        "line_end": 104
+        "line_start": 115,
+        "line_end": 115
       },
       "source_hash": "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55",
       "source_hashes": [
@@ -960,11 +960,11 @@
       "test_body_hashes": [
         "edd5caaad84327b221215a2a8598fe60d7dd7dda9275c5f3b2a8ed26285de838"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 104-104 -> new 115-115.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:26Z",
-      "last_extracted": "2026-07-16T18:32:26Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1049,8 +1049,8 @@
       "claim": "BackendCapabilities struct exists in crates/reposix-core/src/backend.rs",
       "source": {
         "file": "docs/index.md",
-        "line_start": 149,
-        "line_end": 149
+        "line_start": 160,
+        "line_end": 160
       },
       "source_hash": "b07098fc3466c164678c30742a4dac019cdda8b99e2fac1dfa96ca9a78d9ca54",
       "source_hashes": [
@@ -1062,11 +1062,11 @@
       "test_body_hashes": [
         "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
       ],
-      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (117-04 Comments-footnote note-block conversion pushed this line 144->149); content byte-identical, citation re-anchored.",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 149-149 -> new 160-160 (prior rebind at 149 predated the embed commit).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T07:06:57Z",
-      "last_extracted": "2026-07-17T07:06:57Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1648,8 +1648,8 @@
       "claim": "Bootstrap takes <= 278 ms against the simulator (CI-canonical)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 83,
-        "line_end": 83
+        "line_start": 94,
+        "line_end": 94
       },
       "source_hash": "2155c27ecefd1ee62adeed6f707bd433e2bf8c9067447bfbdf7a3fc64e5e40aa",
       "source_hashes": [
@@ -1661,11 +1661,11 @@
       "test_body_hashes": [
         "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 83-83 -> new 94-94.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:45Z",
-      "last_extracted": "2026-07-16T18:32:45Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1673,8 +1673,8 @@
       "claim": "brew install reubenjohn/reposix/reposix works",
       "source": {
         "file": "docs/index.md",
-        "line_start": 59,
-        "line_end": 59
+        "line_start": 70,
+        "line_end": 70
       },
       "source_hash": "601193901edcec31bc26541065bd7dccfb726c8e46f3cc0a17483fa9a9a1b127",
       "source_hashes": [
@@ -1686,11 +1686,11 @@
       "test_body_hashes": [
         "6e81fc7186d8fff8bc16438a08707c88361c73957a23242a1cde09b30c1b8946"
       ],
-      "rationale": "docs/index.md:59 asserts 'brew install reubenjohn/reposix/reposix'; brew-formula-current.py asserts 'GET .../homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200' + window-aware coherence 'formula version == crates.io max_version', verifying the tap install path is current",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 59-59 -> new 70-70.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-14T15:25:54Z",
-      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1938,8 +1938,8 @@
       "claim": "cargo binstall reposix-cli reposix-remote works",
       "source": {
         "file": "docs/index.md",
-        "line_start": 64,
-        "line_end": 64
+        "line_start": 75,
+        "line_end": 75
       },
       "source_hash": "3ae56ded42ca9097a8914f737ec9944c520d3d0a269e5a316a564ed7a87c1aba",
       "source_hashes": [
@@ -1951,11 +1951,11 @@
       "test_body_hashes": [
         "ebf9a4a6cd1f9c9157dd682fbfeaf29e37d7cc175bbc5c1dc00ba9ec5622dba4"
       ],
-      "rationale": "Verifier explicitly resolves binstall to a prebuilt GitHub Release; PARTIAL acceptable per docstring; PASS_SIGNALS broadened post-PR#70 to accept both binstall <=1.x URL-echo and >=1.y 'has been downloaded from github.com' wording",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 64-64 -> new 75-75.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:42Z",
-      "last_extracted": "2026-07-07T15:49:42Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2563,8 +2563,8 @@
       "claim": "curl installer downloads from latest release",
       "source": {
         "file": "docs/index.md",
-        "line_start": 49,
-        "line_end": 49
+        "line_start": 60,
+        "line_end": 60
       },
       "source_hash": "43bc9304ebfc263e02f9ad57a10aff22aec086c8c16839aad08b9da085f9fd52",
       "source_hashes": [
@@ -2576,11 +2576,11 @@
       "test_body_hashes": [
         "81c38ab767508c2f03aa283e13035faba846352a0e4615e787f39f81936f80d5"
       ],
-      "rationale": "installer-asset-bytes.py (release dim, backs install/curl-installer-sh) Mode A HEADs the releases/latest/download/reposix-installer.sh URL and asserts HTTP 200 + size>=min-bytes + magic-prefix -- the real verifier that the curl installer downloads from the latest release",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 49-49 -> new 60-60.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:45:06Z",
-      "last_extracted": "2026-07-07T22:45:06Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3353,8 +3353,8 @@
       "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
       "source": {
         "file": "docs/index.md",
-        "line_start": 167,
-        "line_end": 167
+        "line_start": 178,
+        "line_end": 178
       },
       "source_hash": "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190",
       "source_hashes": [
@@ -3366,11 +3366,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "W3 rebind attempt 3 (P117): ab0324b reworded line 167 (banned-words fix: via stateless-connect -> via the modern-git read path git >=2.34) for the push-conflict clause, invalidating this row's line-level source_hash even though the blob-limit clause text is unchanged; line range stays 167-167.",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 167-167 -> new 178-178.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T07:25:02Z",
-      "last_extracted": "2026-07-17T07:25:02Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5331,8 +5331,8 @@
       "claim": "MCP tool loop generates ~21k output tokens (live) for the same 3-issue read+edit+push",
       "source": {
         "file": "docs/index.md",
-        "line_start": 35,
-        "line_end": 39
+        "line_start": 46,
+        "line_end": 50
       },
       "source_hash": "b7951af32ba726110c32eed643e2f3c3925b3a8c30a15996b1e4349dca6d74dd",
       "source_hashes": [
@@ -5346,11 +5346,11 @@
         "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "docs/index.md:35 mermaid note '~21k output tokens (live)' derived from token-economy.md:37 GitHub-MCP output-token median 21,171 (round/1000=21); run_cross_check TOKEN_LOOP_CLAIMS output_mcp axis (L216-220) asserts the substring present, test_hero_surfaces_match_canonical asserts failures==[].",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 35-39 -> new 46-50.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T06:03:17Z",
-      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6025,8 +6025,8 @@
       "claim": "PowerShell irm installer downloads from latest release",
       "source": {
         "file": "docs/index.md",
-        "line_start": 54,
-        "line_end": 54
+        "line_start": 65,
+        "line_end": 65
       },
       "source_hash": "08b7714e0cb70c586f261982d9f86be0705f64dcf98e389696a8105e3666be01",
       "source_hashes": [
@@ -6038,11 +6038,11 @@
       "test_body_hashes": [
         "81c38ab767508c2f03aa283e13035faba846352a0e4615e787f39f81936f80d5"
       ],
-      "rationale": "Verifier supports HEAD/min-bytes mode against any release URL -- exactly what an irm-source installer needs",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 54-54 -> new 65-65.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6195,8 +6195,8 @@
       "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch-first error; recovery verified GREEN on git 2.25.1 via import path, verification on the modern-git read path (git >=2.34) still open (DRAIN-07)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 167,
-        "line_end": 167
+        "line_start": 178,
+        "line_end": 178
       },
       "source_hash": "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190",
       "source_hashes": [
@@ -6208,11 +6208,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "W3 rebind attempt 3 (P117): ab0324b's banned-words fix reworded line 167, replacing via stateless-connect with via the modern-git read path (git >=2.34); re-synced claim text to match + refreshed source_hash. Teaching-string test citation unaffected (asserts substring presence, not this prose).",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 167-167 -> new 178-178.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T07:25:02Z",
-      "last_extracted": "2026-07-17T07:25:02Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7534,8 +7534,8 @@
       "claim": "reposix init sim::demo /tmp/reposix-demo creates partial-clone working tree",
       "source": {
         "file": "docs/index.md",
-        "line_start": 79,
-        "line_end": 79
+        "line_start": 90,
+        "line_end": 90
       },
       "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
       "source_hashes": [
@@ -7547,11 +7547,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 79-79 -> new 90-90.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:39Z",
-      "last_extracted": "2026-07-16T18:32:39Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7764,8 +7764,8 @@
       "claim": "reposix git-native loop uses ~1.2k output tokens (live) for the 3-issue read+edit+push task",
       "source": {
         "file": "docs/index.md",
-        "line_start": 31,
-        "line_end": 34
+        "line_start": 42,
+        "line_end": 45
       },
       "source_hash": "fba640b9268a5ff2598be70811afd2ea8581086e5e46ccfe140a4d0f1b50698f",
       "source_hashes": [
@@ -7779,11 +7779,11 @@
         "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "docs/index.md:31 mermaid note '~1.2k output tokens (live)' derived from token-economy.md:37 reposix output-token median 1,213 (_fmt1/1000='1.2'); run_cross_check TOKEN_LOOP_CLAIMS output_reposix axis (L211-215) asserts the substring present and test_run_cross_check_flags_stale_loop_figure pins the ~1.2k/1,213 pairing.",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 31-34 -> new 42-45.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T06:03:17Z",
-      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7816,8 +7816,8 @@
       "claim": "reposix sim starts on port :7878 by default",
       "source": {
         "file": "docs/index.md",
-        "line_start": 78,
-        "line_end": 78
+        "line_start": 89,
+        "line_end": 89
       },
       "source_hash": "d7ca12bf9854d98ac7540461ffc76878a0040c7958c80571ec4adbdd0b9cbe4b",
       "source_hashes": [
@@ -7829,11 +7829,11 @@
       "test_body_hashes": [
         "9711053b2b00fddd6cacc627e74a1153efa3e73302dd7a3c4353e61506fd9e8a"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 78-78 -> new 89-89.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:37Z",
-      "last_extracted": "2026-07-16T18:32:37Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8342,8 +8342,8 @@
       "claim": "sed -i edit to issues/0001.md followed by git commit -am and git push works",
       "source": {
         "file": "docs/index.md",
-        "line_start": 99,
-        "line_end": 101
+        "line_start": 110,
+        "line_end": 112
       },
       "source_hash": "4e2c8a0dec219f3c7adeea8fe63cf1d8eaeb21f76abe64ca66967279ece78cf6",
       "source_hashes": [
@@ -8355,11 +8355,11 @@
       "test_body_hashes": [
         "45ad33228fce32e4058b644e57d328a35aab09ef78e4ae891035b6dbcfa5a7cb"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 99-101 -> new 110-112.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:22Z",
-      "last_extracted": "2026-07-16T18:32:22Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8442,8 +8442,8 @@
       "claim": "Sim cold init is 278 ms (soft threshold 500 ms)",
       "source": {
         "file": "docs/index.md",
-        "line_start": 119,
-        "line_end": 119
+        "line_start": 130,
+        "line_end": 130
       },
       "source_hash": "ba7593af04e817dfa248f4e104c597cf7dd098ac5ba394b666e5b26289e6014c",
       "source_hashes": [
@@ -8459,11 +8459,11 @@
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce",
         "31795c441afe0b3acd8b74e314f7b5768e063f45f84cc0d4434263321648d38d"
       ],
-      "rationale": "line-shift rebind after GTH-V15-35 block relocation (content byte-identical; soft-threshold clause split out of two-claim L93)",
+      "rationale": "W4 rebind (P117): 0d4a0b7 embedded an 11-line <video> block after docs/index.md:22, shifting this row's citation by +11 (content byte-identical, verified via diff against pre-embed blob). old 119-119 -> new 130-130.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T18:32:31Z",
-      "last_extracted": "2026-07-16T18:32:31Z",
+      "last_run": "2026-07-17T07:59:08Z",
+      "last_extracted": "2026-07-17T07:59:08Z",
       "last_extracted_by": "bind-call"
     },
     {
