@@ -8856,6 +8856,21 @@
       "last_extracted_by": "bind-call"
     },
     {
+      "id": "benchmarks/README-md/session-provenance",
+      "claim": "reposix_session.txt is a real ANSI-stripped git-native reposix session captured against the live GitHub backend (P115 T4), regenerated offline via bench_token_economy.py --offline",
+      "source": {
+        "file": "benchmarks/README.md",
+        "line_start": 24,
+        "line_end": 24
+      },
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "rationale": "Catalog-first mint (P117-03 SC5a, W2): minted in the same commit that rewrote benchmarks/README.md's fabricated scripts/demo.sh / RESULTS.md provenance into the true P115 live-session-capture methodology. source_hash / source_hashes / test_body_hashes deliberately omitted -- next_action BIND defers hash + test binding to the P117 W6 doc-alignment refresh (do NOT walk/bind before then). W6 caveat (GTH-V15-15): the candidate test bench_token_economy.py --offline only REGENERATES from captures; the binder must confirm the bound test actually FALSIFIES the provenance claim (e.g. asserts the fixture is /mnt/-free and demo-script-free) before flipping to BIND_GREEN, not merely that it computes a number.",
+      "next_action": "BIND",
+      "minted_at": "2026-07-16T23:05:16Z"
+    },
+    {
       "id": "docs/decisions/005-jira-issue-mapping/numeric-id-canonical",
       "claim": "The numeric JIRA issue ID is used as the canonical IssueId, not the key",
       "source": {
