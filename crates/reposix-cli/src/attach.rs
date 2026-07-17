@@ -39,9 +39,11 @@ use std::process::Command;
 use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
+use reposix_core::errmsg::teach;
 use reposix_core::BackendConnector;
 use reposix_remote::backend_dispatch::{self, BackendKind};
 
+use crate::errors::cache_build_error;
 use crate::init::translate_spec_to_url;
 
 /// Default `--ignore` glob list (POC-FINDINGS F01) — directories pruned by
@@ -117,7 +119,20 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     let spec = &args.spec;
     let work = args.path.clone().unwrap_or_else(|| PathBuf::from("."));
     if !work.join(".git").exists() {
-        bail!("not a git working tree: {} (.git/ missing)", work.display());
+        bail!(
+            "{}",
+            teach(
+                &format!("not a git working tree: {} (no `.git/` here).", work.display()),
+                "`reposix attach` adopts an EXISTING checkout — cd into (or pass) a directory that \
+                 is already a git repository.",
+                "starting from scratch with no checkout yet? use `reposix init <backend>::<project> \
+                 <path>` instead.",
+                &[
+                    "git init            # if this dir should become a repo",
+                    "git clone <url> .   # or clone your mirror first, then re-run reposix attach",
+                ],
+            )
+        );
     }
 
     // Step 1: derive cache identity + backend connector FROM the SoT spec
@@ -174,7 +189,7 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     let _tree_oid = cache
         .build_from()
         .await
-        .context("build cache from backend")?;
+        .map_err(|e| cache_build_error(backend_slug, &parsed.project, e))?;
 
     // F07: initialize `last_fetched_at` to NOW on attach so the first push
     // after attach doesn't trigger a full `list_records` walk.
@@ -195,12 +210,26 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         args.orphan_policy.into(),
         &ignore_list,
     )
-    .context("reconcile working tree against backend")?;
+    .map_err(|e| cache_build_error(backend_slug, &parsed.project, e))?;
 
     if !report.duplicate_id_files.is_empty() {
         let dup = &report.duplicate_id_files;
         bail!(
-            "duplicate id across local records: {dup:?}; reconciliation aborted (no rows committed)"
+            "{}",
+            teach(
+                &format!(
+                    "duplicate id across local records: {dup:?} — two files claim the same \
+                     frontmatter `id`. Reconciliation aborted (no rows committed)."
+                ),
+                "each record needs a UNIQUE `id:` in its frontmatter — edit or remove the \
+                 duplicate, then re-run `reposix attach`.",
+                "meant to keep both as NEW records instead of matching them? re-run with \
+                 `--orphan-policy fork-as-new`.",
+                &[
+                    "grep -rn '^id:' <the-duplicate-files>   # find the clashing ids",
+                    "reposix attach <backend>::<project>     # re-run once the ids are unique",
+                ],
+            )
         );
     }
 
@@ -381,17 +410,23 @@ pub async fn run(args: AttachArgs) -> Result<()> {
 /// re-init), and gives copy-paste commands using the caller's actual remote
 /// name — never a command that does not exist.
 pub(crate) fn multi_sot_conflict_error(existing_sot: &str, remote_name: &str) -> anyhow::Error {
+    let remove = format!("git remote remove {remote_name}");
     anyhow::anyhow!(
-        "this working tree is already attached to a different system of record: \
-         `{existing_sot}`.\n\
-         reposix does not support binding one tree to two systems of record at once.\n\
-         Fix: remove the current reposix remote, then re-attach (or re-init) to the \
-         system of record you want:\n  \
-         git remote remove {remote_name}\n  \
-         reposix attach <backend>::<project>\n\
-         If this tree was bootstrapped with `reposix init`, also clear the partial-clone \
-         binding first — `git config --unset extensions.partialClone` — then delete the \
-         cache directory before re-attaching."
+        "{}",
+        teach(
+            &format!(
+                "this working tree is already attached to a different system of record: `{existing_sot}`."
+            ),
+            "reposix binds one tree to exactly ONE system of record; re-pointing it needs an \
+             explicit unbind first — remove the current reposix remote, then re-attach.",
+            "want a second system of record? attach it in a SEPARATE checkout instead of \
+             re-pointing this one.",
+            &[
+                remove.as_str(),
+                "reposix attach <backend>::<project>",
+                "# if `reposix init`-bootstrapped, also: git config --unset extensions.partialClone (then delete the cache dir)",
+            ],
+        )
     )
 }
 
@@ -436,6 +471,7 @@ fn run_git_in(work: &Path, args: &[&str]) -> Result<()> {
         .output()
         .with_context(|| format!("invoke `git {}` in {}", args.join(" "), work.display()))?;
     if !out.status.success() {
+        // teach-exempt: ok — internal git-subprocess wrapper; surfaces git's own stderr verbatim; attach's user-facing entry errors (not-a-git-tree, multi-SoT, duplicate-id) teach at the call sites.
         bail!(
             "git {} failed: {}",
             args.join(" "),

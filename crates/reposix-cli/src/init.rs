@@ -18,6 +18,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{anyhow, bail, Context, Result};
+use reposix_core::errmsg::teach;
+
+use crate::errors::{missing_env_var_error, spec_parse_error};
 
 /// Default sim REST origin used when the user runs `reposix init sim::<slug>`.
 /// Matches the default bind in `crates/reposix-sim` (`127.0.0.1:7878`).
@@ -43,12 +46,15 @@ const DEFAULT_GITHUB_ORIGIN: &str = "https://api.github.com";
 /// is unknown, or a required env var (`REPOSIX_CONFLUENCE_TENANT` /
 /// `REPOSIX_JIRA_INSTANCE`) is unset for confluence/jira.
 pub fn translate_spec_to_url(spec: &str) -> Result<String> {
-    let (backend, project) = spec
-        .split_once("::")
-        .ok_or_else(|| anyhow!("invalid spec `{spec}`: expected `<backend>::<project>` form"))?;
+    let (backend, project) = spec.split_once("::").ok_or_else(|| {
+        spec_parse_error(
+            spec,
+            "expected `<backend>::<project>` form (missing `::` separator)",
+        )
+    })?;
 
     if project.is_empty() {
-        bail!("invalid spec `{spec}`: empty project");
+        return Err(spec_parse_error(spec, "empty project slug after `::`"));
     }
 
     match backend {
@@ -73,9 +79,7 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
                 .ok()
                 .filter(|s| !s.is_empty())
                 .ok_or_else(|| {
-                    anyhow!(
-                        "REPOSIX_CONFLUENCE_TENANT must be set for `confluence::<space>` (subdomain of your Atlassian Cloud tenant)"
-                    )
+                    missing_env_var_error("REPOSIX_CONFLUENCE_TENANT", "confluence", "mycompany")
                 })?;
             // Phase 36-followup: the `/confluence/` path marker
             // disambiguates the URL from JIRA at the helper's
@@ -90,9 +94,7 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
                 .ok()
                 .filter(|s| !s.is_empty())
                 .ok_or_else(|| {
-                    anyhow!(
-                        "REPOSIX_JIRA_INSTANCE must be set for `jira::<key>` (subdomain of your Atlassian Cloud tenant)"
-                    )
+                    missing_env_var_error("REPOSIX_JIRA_INSTANCE", "jira", "mycompany")
                 })?;
             // Phase 36-followup: the `/jira/` path marker
             // disambiguates the URL from Confluence at the helper's
@@ -101,9 +103,10 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
                 "reposix::https://{instance}.atlassian.net/jira/projects/{project}"
             ))
         }
-        other => bail!(
-            "unknown backend `{other}`: expected one of `sim`, `github`, `confluence`, `jira`"
-        ),
+        other => Err(spec_parse_error(
+            spec,
+            &format!("unknown backend `{other}` — expected one of sim, github, confluence, jira"),
+        )),
     }
 }
 
@@ -139,6 +142,7 @@ fn refuse_existing_repo_root(path: &Path) -> Result<()> {
         // `git init` here creates a NEW tree — allowed.
         return Ok(());
     }
+    // teach-exempt: ok — bespoke 3-part refusal (names the corruption shape, points at `reposix attach`, prints /tmp-clone recovery); regression-guarded by `init_refuses_existing_repo_root`. Do NOT reroute.
     bail!(
         "reposix init: refusing to initialize `{path}` — it is already a git repository root.\n\
          `reposix init` CREATES a fresh partial-clone working tree; re-initializing an existing \
@@ -165,6 +169,7 @@ fn run_git(args: &[&str]) -> Result<()> {
     })?;
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr);
+        // teach-exempt: ok — internal git-subprocess wrapper; surfaces git's own stderr verbatim; user-facing setup entry errors (spec parse, existing-repo-root, unreachable fetch) teach at the call sites.
         bail!(
             "`git {}` failed with status {}: {}",
             args.join(" "),
@@ -268,9 +273,18 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         }
     }
 
-    let path_str = path
-        .to_str()
-        .ok_or_else(|| anyhow!("path is not valid UTF-8: {}", path.display()))?;
+    let path_str = path.to_str().ok_or_else(|| {
+        anyhow!(
+            "{}",
+            teach(
+                &format!("the target path is not valid UTF-8: {}", path.display()),
+                "reposix shells out to git, which needs a UTF-8 path — rename the directory to \
+                 plain UTF-8 (ASCII is safest).",
+                "",
+                &["reposix init <backend>::<project> /tmp/reposix-demo"],
+            )
+        )
+    })?;
 
     // 1. git init <path>
     run_git(&["init", path_str])?;
@@ -362,6 +376,7 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         }
         Ok(o) => {
             let stderr = String::from_utf8_lossy(&o.stderr);
+            // teach-exempt: ok — bespoke 3-part sync-failed teaching (own `Fix:` block names `reposix sim` + the in-place `git fetch` recovery); regression-guarded by `init_errors_nonzero_when_initial_fetch_fails`.
             bail!(
                 "reposix init: could not sync `{path_str}` from backend `{url}`.\n\
                  The repo was configured but nothing was fetched, so it has no commits yet.\n\
@@ -373,9 +388,19 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
             );
         }
         Err(e) => {
+            let retry = format!("reposix init <backend>::<project> {path_str}");
             bail!(
-                "reposix init: could not invoke `git fetch` for `{path_str}`: {e}\n\
-                 Fix: ensure `git` (>= 2.34) is installed and on PATH, then re-run `reposix init`."
+                "{}",
+                teach(
+                    &format!("reposix init: could not invoke `git fetch` for `{path_str}`: {e}"),
+                    "`git` must be installed and on PATH (>= 2.34 for reliable partial-clone \
+                     fetches) — the fetch subprocess could not be spawned.",
+                    "",
+                    &[
+                        "git --version   # confirm git is installed and on PATH",
+                        retry.as_str(),
+                    ],
+                )
             );
         }
     }
@@ -479,6 +504,12 @@ fn record_worktree_in_cache(spec: &str, path: &Path) {
 /// `target_rfc3339`, and rewind the working tree's `refs/heads/main` +
 /// `refs/remotes/origin/main` to that commit. Errors clearly if no
 /// matching tag is found.
+// Sequential `--since` rewind: parse timestamp → resolve cache → list tags → pick
+// tag → fetch commit → update refs, each with a full 3-part teaching error (P120).
+// The teach() bodies push it just past the 100-line lint; splitting the linear
+// step sequence across helpers would obscure the ordering (same rationale as
+// `attach::run`'s allow).
+#[allow(clippy::too_many_lines)]
 fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> {
     use chrono::{DateTime, Utc};
 
@@ -493,18 +524,33 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
     // Map spec → (backend, project) for the cache resolver. We re-derive
     // here rather than calling translate_spec_to_url + parse_remote_url
     // because the cache path keying uses the friendly slug directly.
-    let (backend, project) = spec
-        .split_once("::")
-        .ok_or_else(|| anyhow!("invalid spec `{spec}`: expected `<backend>::<project>` form"))?;
+    let (backend, project) = spec.split_once("::").ok_or_else(|| {
+        spec_parse_error(
+            spec,
+            "expected `<backend>::<project>` form (missing `::` separator)",
+        )
+    })?;
     // S-260707-gh404: pass the RAW project slug — `resolve_cache_path` is the
     // single sanitization site (collapses GitHub's `owner/repo` → the flat
     // `github-owner-repo.git` cache dir).
     let cache_path = reposix_cache::resolve_cache_path(backend, project)
         .with_context(|| format!("resolve cache path for {backend}::{project}"))?;
     if !cache_path.exists() {
+        let recovery = format!(
+            "reposix init {spec} <path>   # populate the cache first, then re-run with --since"
+        );
         bail!(
-            "no cache at {} — run `reposix init` without --since first to populate it",
-            cache_path.display()
+            "{}",
+            teach(
+                &format!(
+                    "no cache at {} for `--since` to rewind into.",
+                    cache_path.display()
+                ),
+                "`--since` rewinds to a historical sync tag, but the cache has not been populated \
+                 yet — run a normal `reposix init` (no `--since`) first.",
+                "want the latest state instead of a historical snapshot? drop `--since` entirely.",
+                &[recovery.as_str()],
+            )
         );
     }
 
@@ -512,9 +558,19 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
         .with_context(|| format!("list sync tags from {}", cache_path.display()))?;
     let chosen = tags.into_iter().rev().find(|t| t.timestamp <= target);
     let tag = chosen.ok_or_else(|| {
+        let recovery = format!("reposix init {spec} <path>   # (no --since) for the latest state");
         anyhow!(
-            "no sync tag at-or-before `{target_rfc3339}` in {} — try a later timestamp or omit --since",
-            cache_path.display()
+            "{}",
+            teach(
+                &format!(
+                    "no sync tag at-or-before `{target_rfc3339}` in {}.",
+                    cache_path.display()
+                ),
+                "`--since` selects the newest sync tag at-or-before your timestamp; none exists \
+                 that early — pick a later timestamp.",
+                "want the latest state? omit `--since` and `reposix init` takes the most recent sync.",
+                &[recovery.as_str()],
+            )
         )
     })?;
 
@@ -525,9 +581,13 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
     // of `transfer.hideRefs` because we name the OID, not the hidden ref.
     let cache_str = cache_path
         .to_str()
+        // teach-exempt: ok — machine-derived cache path (from `resolve_cache_path`); a non-UTF8
+        // cache path is pathological on supported platforms.
         .ok_or_else(|| anyhow!("cache path is not valid UTF-8: {}", cache_path.display()))?;
     let path_str = path
         .to_str()
+        // teach-exempt: ok — the same user `<path>` was already UTF-8-validated at the top of
+        // `run_with_since` before the `--since` rewind runs; unreachable here.
         .ok_or_else(|| anyhow!("working-tree path is not valid UTF-8: {}", path.display()))?;
     let fetch_out = Command::new("git")
         .arg("-C")
@@ -538,11 +598,22 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             format!("invoke `git fetch --filter=blob:none {cache_str} {oid_hex}` from {path_str}")
         })?;
     if !fetch_out.status.success() {
+        let git_stderr = String::from_utf8_lossy(&fetch_out.stderr)
+            .trim()
+            .to_string();
         bail!(
-            "git fetch of historical commit {oid} from cache {cache} failed: {stderr}",
-            oid = oid_hex,
-            cache = cache_path.display(),
-            stderr = String::from_utf8_lossy(&fetch_out.stderr).trim()
+            "{}",
+            teach(
+                &format!(
+                    "could not bring historical commit {oid_hex} into the working tree from cache \
+                     {cache}.\ngit stderr:\n  {git_stderr}",
+                    cache = cache_path.display(),
+                ),
+                "the sync tag resolved but its commit could not be fetched from the local cache — \
+                 the cache may be incomplete or have been gc'd.",
+                "want the latest state instead? re-run `reposix init` without `--since`.",
+                &["reposix init <backend>::<project> <path>   # (no --since) repopulates, then retry --since"],
+            )
         );
     }
 
@@ -556,9 +627,19 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             .output()
             .with_context(|| format!("update-ref {refname} -> {oid_hex}"))?;
         if !out.status.success() {
+            let git_stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
             bail!(
-                "git update-ref {refname} {oid_hex} failed: {}",
-                String::from_utf8_lossy(&out.stderr).trim()
+                "{}",
+                teach(
+                    &format!(
+                        "could not move `{refname}` to the historical snapshot {oid_hex}.\n\
+                         git stderr:\n  {git_stderr}"
+                    ),
+                    "git update-ref failed while rewinding the working tree to the `--since` \
+                     snapshot — the ref may be locked by a concurrent git process.",
+                    "",
+                    &["reposix init <backend>::<project> <path>   # (no --since) for the latest state, then retry"],
+                )
             );
         }
     }
