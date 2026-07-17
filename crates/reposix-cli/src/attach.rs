@@ -514,6 +514,7 @@ mod tests {
     /// nonexistent subcommand, and must teach a recovery that works today
     /// (remove the reposix remote, then re-attach).
     #[test]
+    // test-name-honesty: ok — asserts the error string teaches the real recovery commands (`git remote remove` + `reposix attach`) and names no phantom un-bind subcommand; unit test of message content, not real-backend/e2e coverage
     fn multi_sot_error_teaches_real_recovery_no_phantom_subcommand() {
         let err = multi_sot_conflict_error("sim::demo", "reposix");
         let msg = format!("{err:#}");
