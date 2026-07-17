@@ -2697,6 +2697,86 @@
       "cadences": [
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/cli-errors-teach-recovery",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "sources": [
+        "quality/gates/agent-ux/cli-errors-teach-recovery.sh",
+        "crates/reposix-cli/tests/errors_teach_recovery.rs",
+        "quality/gates/agent-ux/teach_scan.py",
+        "crates/CLAUDE.md (Error-message convention section)"
+      ],
+      "command": "bash quality/gates/agent-ux/cli-errors-teach-recovery.sh",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-cli --test errors_teach_recovery passes (per-error exact-substring assertions)",
+          "a real `reposix init` at an existing repo root emits Fix:/Alternative:/Recovery: on stderr",
+          "a real `reposix list` against an unreachable sim emits the 3-part teaching message",
+          "teach_scan.py over the CLI scope finds no un-dispositioned bail!/anyhow! block (single- or multi-line)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/cli-errors-teach-recovery.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/cli-errors-teach-recovery.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "minted_at": "2026-07-17T07:10:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: one of three legs failed — (a) `cargo test -p reposix-cli --test errors_teach_recovery` regressed (a named per-error substring assertion broke — inspect that subcommand's error site), (b) the real `reposix init`/`list` path stopped emitting Fix:/Recovery: (a retrofit was reverted), or (c) `teach_scan.py --scope cli` found a NEW un-dispositioned bail!/anyhow! block — route it through reposix_core::errmsg::teach (shared builder lands W1) or add a `// teach-exempt: ok — <reason>` marker.",
+      "waiver": null,
+      "transport_claim": false,
+      "coverage_kind": "mechanical",
+      "claim_vs_assertion_audit": "P120 catalog-first mint (status NOT-VERIFIED — the gate has NOT run yet; W6 flips to PASS only after a green run plus the unbiased verifier confirms, never a pre-emptive PASS before the gate passes). The three assertion legs each independently falsify the 'every reposix CLI subcommand error is 3-part' claim: (a) the reposix-cli errors_teach_recovery suite drives the REAL `reposix` binary via assert_cmd and asserts exact Fix:/Alternative:/Recovery: substrings per error, so a teaching-less or reverted site fails a named test; (b) the gate re-drives a real `reposix init` error path end-to-end and greps stderr for Fix: plus an indented Recovery: line, so a message that stops teaching fails the gate even if a stale test passed; (c) teach_scan.py parses balanced-paren bail!/anyhow! BLOCKS (single- or multi-line) over the explicit CLI file scope and RAISEs any un-dispositioned block, so a NEW teaching-less error cannot silently rot in. transport_claim is FALSE and coverage_kind is mechanical for the same honest reason as agent-ux/dark-factory-sim: these legs exercise the LOCAL `reposix` binary and local sim error paths (existing-repo-root refusal, malformed spec, unreachable sim), NOT a real external backend (GitHub/Confluence/JIRA), so no transport/real-backend claim is made.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/helper-errors-teach-recovery",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "sources": [
+        "quality/gates/agent-ux/helper-errors-teach-recovery.sh",
+        "crates/reposix-remote/tests/errors_teach_recovery.rs",
+        "quality/gates/agent-ux/teach_scan.py",
+        "crates/CLAUDE.md (Error-message convention section)"
+      ],
+      "command": "bash quality/gates/agent-ux/helper-errors-teach-recovery.sh",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-remote --test errors_teach_recovery passes (per-error exact-substring assertions)",
+          "a real malformed bus URL through git-remote-reposix emits the canonical ?mirror= form and (post-retrofit) Fix:/Recovery: on stderr",
+          "a real missing-creds or malformed-URL helper path emits the 3-part teaching message",
+          "teach_scan.py over the helper scope finds no un-dispositioned bail!/anyhow! block (single- or multi-line)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/helper-errors-teach-recovery.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/helper-errors-teach-recovery.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "minted_at": "2026-07-17T07:10:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: one of three legs failed — (a) `cargo test -p reposix-remote --test errors_teach_recovery` regressed (a named per-error substring assertion broke — inspect that helper error site), (b) a real malformed-bus-URL / missing-creds path stopped emitting the canonical `?mirror=` form or (post-W4) Fix:/Recovery:, or (c) `teach_scan.py --scope helper` found a NEW un-dispositioned bail!/anyhow! block — route it through reposix_core::errmsg::teach / malformed_bus_url_error, or add a `// teach-exempt: ok — <reason>` marker (git-protocol status strings stay verbatim, teaching in the accompanying diag).",
+      "waiver": null,
+      "transport_claim": false,
+      "coverage_kind": "mechanical",
+      "claim_vs_assertion_audit": "P120 catalog-first mint (status NOT-VERIFIED — the gate has NOT run yet; W6 flips to PASS only after a green run plus the unbiased verifier confirms). The three legs each falsify the 'every reposix-remote helper error is dispositioned + 3-part where retrofit' claim: (a) the reposix-remote errors_teach_recovery suite drives the REAL `git-remote-reposix` binary and asserts exact substrings on the malformed-bus-URL / missing-creds / EOF paths; (b) the gate re-drives a real malformed bus URL end-to-end (the dropped `+`-form, which fires before any base-parse or network) and greps stderr for the canonical `?mirror=` form plus (post-W4-retrofit) Fix:/Recovery:; (c) teach_scan.py parses balanced-paren bail!/anyhow! BLOCKS over the explicit helper file scope and RAISEs any un-dispositioned block. transport_claim is FALSE and coverage_kind is mechanical for the same honest reason as agent-ux/dark-factory-sim: the helper legs parse a local URL / hit the local sim error surface, NOT a real external backend, so no transport claim is made; the git-protocol-status-string sites (fetch first / backend-unreachable) stay verbatim and carry teach-exempt markers with the teaching in the accompanying diag.",
+      "cadences": [
+        "on-demand"
+      ]
     }
   ]
 }
