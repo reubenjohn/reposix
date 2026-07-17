@@ -310,7 +310,8 @@
       "expected": {
         "asserts": [
           "every fenced code block in user-facing docs has a catalog row in quality/catalogs/docs-reproducible.json or is matched by an allow-list entry",
-          "no catalogued snippet drifted from its source (sha256 match)"
+          "no catalogued snippet drifted from its source (sha256 match)",
+          "the allow-list-mode escalation advisory fires on the UNCOVERED block count exceeding PIVOT_THRESHOLD (50), not the raw block count -- an allow-list or catalog entry can retire the advisory (GTH-V15-49 Option B, 2026-07-16)"
         ]
       },
       "verifier": {
@@ -326,7 +327,7 @@
       "last_verified": "2026-04-27T22:09:38Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: a doc edit added a fenced code block without a catalog row OR a catalogued row's source content drifted; fix by either pasting the --write-template output or rolling back the doc edit. If the new block is illustrative, add the derived_id to quality/catalogs/docs-reproducible-allowlist.json with a reason.",
+      "owner_hint": "if RED: a doc edit added a fenced code block without a catalog row OR a catalogued row's source content drifted; fix by either pasting the --write-template output or rolling back the doc edit. If the new block is illustrative, add the derived_id to quality/catalogs/docs-reproducible-allowlist.json with a reason. If RED is the '>50 uncovered blocks' escalation advisory: it counts UNCOVERED blocks only (GTH-V15-49 Option B, 2026-07-16) -- cataloguing or allow-listing the individual uncovered blocks (required anyway to clear the itemized failures) also clears this advisory; do NOT bump PIVOT_THRESHOLD.",
       "waiver": null,
       "cadences": [
         "pre-push",

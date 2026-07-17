@@ -3,8 +3,8 @@
 
 DOCS-REPRO-01. Stdlib only. <=250 lines (see quality/gates/docs-repro/README.md).
 Modes: --check (default; writes snippet-coverage.json) | --list | --write-template
-<derived-id>. Pivot rule: blocks > PIVOT_THRESHOLD flags allow-list mode
-per quality/PROTOCOL.md.
+<derived-id>. Pivot rule: UNCOVERED blocks > PIVOT_THRESHOLD flag an allow-list-mode
+advisory (GTH-V15-49); catalogued/allow-listed blocks never count. quality/PROTOCOL.md.
 """
 
 from __future__ import annotations
@@ -168,13 +168,14 @@ def cmd_check() -> int:
     passed: list[str] = [f"{len(blocks)} fenced code blocks scanned across {len(discover_docs())} files"]
     failed: list[str] = []
 
-    if len(blocks) > PIVOT_THRESHOLD:
+    uncovered = [b for b in blocks if not block_covered(b, rows, allowlist)]
+
+    if len(uncovered) > PIVOT_THRESHOLD:
         failed.append(
-            f"{len(blocks)} blocks exceed threshold ({PIVOT_THRESHOLD}); switch to allow-list mode "
-            "per quality/gates/docs-repro/README.md pivot rules"
+            f"{len(uncovered)} uncovered/uncatalogued blocks exceed threshold ({PIVOT_THRESHOLD}); "
+            "switch to allow-list mode per quality/gates/docs-repro/README.md pivot rules"
         )
 
-    uncovered = [b for b in blocks if not block_covered(b, rows, allowlist)]
     if uncovered:
         for b in uncovered[:10]:
             failed.append(

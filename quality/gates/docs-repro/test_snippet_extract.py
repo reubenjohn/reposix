@@ -6,6 +6,7 @@ test patterns from P58 SIMPLIFY-05.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -13,6 +14,29 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 SCRIPT = REPO_ROOT / "quality" / "gates" / "docs-repro" / "snippet-extract.py"
+
+
+def _load_module():
+    """Import snippet-extract.py by file path (hyphenated filename can't be
+    `import`ed normally). Used by the pivot-semantics tests below so we can
+    monkeypatch all_blocks/load_catalog/load_allowlist and call cmd_check()
+    directly instead of shelling out."""
+    spec = importlib.util.spec_from_file_location("snippet_extract_under_test", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _fake_block(i: int) -> dict:
+    return {
+        "file": "docs/fake.md",
+        "start_line": i,
+        "end_line": i,
+        "lang": "bash",
+        "content": f"echo {i}",
+        "sha256": f"sha{i}",
+        "derived_id": f"snippet/docs/fake.md:{i}-{i}",
+    }
 
 
 def run(args: list[str]) -> tuple[int, str, str]:
@@ -104,3 +128,53 @@ def test_line_count_under_cap():
     cap = 250
     lines = SCRIPT.read_text().count("\n")
     assert lines <= cap, f"snippet-extract.py is {lines} lines; cap is {cap}"
+
+
+def test_pivot_counts_uncovered_not_raw_blocks(tmp_path, monkeypatch):
+    """Pins GTH-V15-49 Option B: the pivot advisory fires on UNCOVERED block count,
+    not raw block count. 60 raw blocks with only 2 uncovered must NOT trip the pivot
+    (2 <= PIVOT_THRESHOLD=50) -- this assertion FAILS against the old
+    `len(blocks) > PIVOT_THRESHOLD` logic (60 > 50 would fire) and PASSES against the
+    new `len(uncovered) > PIVOT_THRESHOLD` logic.
+    """
+    mod = _load_module()
+    monkeypatch.setattr(mod, "ARTIFACT_PATH", tmp_path / "snippet-coverage.json")
+
+    total_blocks = 60
+    uncovered_count = 2
+    fake_blocks = [_fake_block(i) for i in range(total_blocks)]
+    covered_rows = [{"sources": [f"docs/fake.md:{i}-{i}"]} for i in range(uncovered_count, total_blocks)]
+
+    monkeypatch.setattr(mod, "all_blocks", lambda: fake_blocks)
+    monkeypatch.setattr(mod, "load_catalog", lambda: {"rows": covered_rows})
+    monkeypatch.setattr(mod, "load_allowlist", lambda: set())
+
+    mod.cmd_check()
+    artifact = json.loads(mod.ARTIFACT_PATH.read_text())
+    assert artifact["block_count"] == total_blocks
+    assert artifact["uncovered_count"] == uncovered_count
+    pivot_msgs = [f for f in artifact["asserts_failed"] if "exceed threshold" in f]
+    assert not pivot_msgs, (
+        f"pivot advisory fired on {total_blocks} raw blocks even though only "
+        f"{uncovered_count} are uncovered (threshold {mod.PIVOT_THRESHOLD}): {pivot_msgs}"
+    )
+
+
+def test_pivot_fires_when_uncovered_exceeds_threshold(tmp_path, monkeypatch):
+    """Companion to test_pivot_counts_uncovered_not_raw_blocks: when the UNCOVERED
+    count itself exceeds PIVOT_THRESHOLD, the advisory must still fire."""
+    mod = _load_module()
+    monkeypatch.setattr(mod, "ARTIFACT_PATH", tmp_path / "snippet-coverage.json")
+
+    total_blocks = mod.PIVOT_THRESHOLD + 5
+    fake_blocks = [_fake_block(i) for i in range(total_blocks)]
+
+    monkeypatch.setattr(mod, "all_blocks", lambda: fake_blocks)
+    monkeypatch.setattr(mod, "load_catalog", lambda: {"rows": []})
+    monkeypatch.setattr(mod, "load_allowlist", lambda: set())
+
+    mod.cmd_check()
+    artifact = json.loads(mod.ARTIFACT_PATH.read_text())
+    assert artifact["uncovered_count"] == total_blocks
+    pivot_msgs = [f for f in artifact["asserts_failed"] if "exceed threshold" in f]
+    assert pivot_msgs, "pivot advisory should fire when uncovered count exceeds threshold"

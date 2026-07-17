@@ -22,7 +22,7 @@ Verifiers backing `quality/catalogs/docs-reproducible.json` (8 rows at Wave A cl
 ## Pivot rules
 
 - **Container time budget >15min/release for the post-release matrix:** drop multi-persona; ubuntu-only first; mac/windows defer to v0.12.1.
-- **>50 fenced code blocks in user-facing docs:** switch `snippet-extract.py` to allow-list mode (explicit catalog inclusion of tracked blocks; uncatalogued blocks not flagged); document cutover in `quality/SURPRISES.md` and `quality/PROTOCOL.md`.
+- **>50 UNCOVERED fenced code blocks in user-facing docs** (blocks with neither a catalog row nor an allow-list entry -- catalogued/allow-listed blocks never count toward this threshold, GTH-V15-49 Option B, 2026-07-16): `snippet-extract.py --check` fires an allow-list-mode escalation advisory. Recovery: catalogue or allow-list the individual uncovered blocks (required anyway to clear the itemized per-block failures) -- do NOT bump `PIVOT_THRESHOLD`. If uncovered volume becomes chronic (allow-list crossing its own 30-entry "consider wholesale" note in `quality/catalogs/docs-reproducible-allowlist.json`), that is the actual trigger for a full allow-list-mode redesign; document that cutover in `quality/SURPRISES.md` and `quality/PROTOCOL.md` when it happens.
 - **Per-snippet rehearsal exceeds 60s on a cold container:** keep that row at `cadence: post-release` only; do NOT block pre-push.
 
 ## Cross-references
