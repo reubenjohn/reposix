@@ -248,6 +248,11 @@ pages. Automated rubric grading: `/reposix-quality-review` (`--rubric <id>` /
   local sweep already let a Layer-1 plumbing-term leak (`stateless-connect` in
   `docs/index.md`) reach a push attempt undetected. When in doubt, run
   `python3 quality/runners/run.py --cadence pre-push` instead of hand-picking gates.
+- **Fix-twice (P117 W3, cont'd):** rewording a doc line that carries a `docs-alignment`
+  binding (`quality/catalogs/doc-alignment.json`) requires rebinding every row cited
+  against that line in the SAME commit — a later, separate reword re-drifts the binding
+  (`STALE_DOCS_DRIFT`) even though the line's prior rebind was correct, which cost a
+  2-push cascade in P117 W3.
 
 ## Release pipeline
 

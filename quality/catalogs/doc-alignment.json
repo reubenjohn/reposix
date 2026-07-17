@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-17T07:07:53Z",
+    "last_walked": "2026-07-17T07:25:02Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -3356,9 +3356,9 @@
         "line_start": 167,
         "line_end": 167
       },
-      "source_hash": "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479",
+      "source_hash": "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190",
       "source_hashes": [
-        "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479"
+        "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -3366,11 +3366,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (Comments-footnote conversion pushed 162->167); text unchanged for this clause.",
+      "rationale": "W3 rebind attempt 3 (P117): ab0324b reworded line 167 (banned-words fix: via stateless-connect -> via the modern-git read path git >=2.34) for the push-conflict clause, invalidating this row's line-level source_hash even though the blob-limit clause text is unchanged; line range stays 167-167.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T07:07:03Z",
-      "last_extracted": "2026-07-17T07:07:03Z",
+      "last_run": "2026-07-17T07:25:02Z",
+      "last_extracted": "2026-07-17T07:25:02Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6192,15 +6192,15 @@
     },
     {
       "id": "docs/index/push-conflict-detection",
-      "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch-first error; recovery verified GREEN on git 2.25.1 via import path, verification on modern git >=2.34 via stateless-connect still open (DRAIN-07)",
+      "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch-first error; recovery verified GREEN on git 2.25.1 via import path, verification on the modern-git read path (git >=2.34) still open (DRAIN-07)",
       "source": {
         "file": "docs/index.md",
         "line_start": 167,
         "line_end": 167
       },
-      "source_hash": "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479",
+      "source_hash": "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190",
       "source_hashes": [
-        "7d2b357693f30a4ef7fbbced1775c9df3e9173c79af429ec808d718549436479"
+        "9d76ee646f372d0e2a2d351859e77146477b89ec19fb73a3c63acf0b4f290190"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
@@ -6208,11 +6208,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "W3 rebind (117-07): line-shift +5 from d57626a (162->167) PLUS softened 'reliably' overclaim + added DRAIN-07 caveat (verified against .planning/REQUIREMENTS.md ~L222-225 current wording) so the doc no longer contradicts the open HIGH backlog item; teaching-string test citation unaffected (asserts substring presence, not the softened prose).",
+      "rationale": "W3 rebind attempt 3 (P117): ab0324b's banned-words fix reworded line 167, replacing via stateless-connect with via the modern-git read path (git >=2.34); re-synced claim text to match + refreshed source_hash. Teaching-string test citation unaffected (asserts substring presence, not this prose).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T07:07:06Z",
-      "last_extracted": "2026-07-17T07:07:06Z",
+      "last_run": "2026-07-17T07:25:02Z",
+      "last_extracted": "2026-07-17T07:25:02Z",
       "last_extracted_by": "bind-call"
     },
     {
