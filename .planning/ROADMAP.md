@@ -142,7 +142,14 @@
   3. `reposix list` and `reposix refresh` connection-refused errors teach the fix, suggest the sim alternative, and give copy-paste recovery, matching `init.rs:365-370`.
   4. `reposix detach` either exists as a real subcommand or `attach.rs`'s multi-SoT-conflict error no longer references a nonexistent one.
   5. `docs/benchmarks/token-economy.md` no longer claims a fabricated demo-script provenance for `reposix_session.txt`, and `docs/social/twitter.md` no longer describes the deleted FUSE architecture.
-**Plans**: TBD
+**Plans**: 7 plans (6 waves; executors serialize — one tree-writer; the sole cargo wave runs alone)
+- [ ] 117-01-PLAN.md — Error-UX (cargo): SC3 list/refresh teach-fix bail! + SC4 Option-B attach.rs reword
+- [ ] 117-02-PLAN.md — Doc-truth: SC1 index.md hero (Confluence-wiki + reposix init) + SC2 filesystem-layer.md + propagation
+- [ ] 117-03-PLAN.md — Doc-truth: SC5 benchmarks/README.md provenance rewrite + twitter.md de-FUSE + new catalog row
+- [ ] 117-04-PLAN.md — Furnished-product IA/polish (GTH-V15-36): index.md progressive-disclosure + how-it-works quartet
+- [ ] 117-05-PLAN.md — Animation embed baseline (GTH-V15-37): mp4 click-to-play + docs/assets/animation convention
+- [ ] 117-06-PLAN.md — Fix-twice: docs/social/** freshness gate (catalog-first) + dead-code + CLAUDE.md sweep
+- [ ] 117-07-PLAN.md — COORDINATOR-RUN close: doc-alignment refresh + mp4 release upload + cold-reader review + push
 
 > **Owner mandate (2026-07-16) — REQUIRED planning input.** The docs site should read as
 > a FURNISHED PRODUCT, not merely doc-truth-correct — owner verbatim: *"Its good, but we
@@ -284,7 +291,7 @@
 | 114. t4 oid-drift fix-first + reconcile audit | 2/2 | Complete   | 2026-07-15 |
 | 115. Live MCP benchmark re-measurement | 0/TBD | Not started | - |
 | 116. ADR-010 decision packet + slug→id design | 0/3 | Planned | - |
-| 117. Doc-truth launch-blocker purge | 0/TBD | Not started | - |
+| 117. Doc-truth launch-blocker purge | 0/7 | Planned | - |
 | 118. Post-bench honesty corrections | 0/TBD | Not started | - |
 | 119. Docs/planning simplification | 0/TBD | Not started | - |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |

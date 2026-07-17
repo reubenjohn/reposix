@@ -1,387 +1,614 @@
-# Phase 117: Doc-truth launch-blocker purge — Research
+# Phase 117: Doc-truth launch-blocker purge - Research
 
 **Researched:** 2026-07-16
-**Domain:** Documentation truth-repair + Rust-CLI error-message UX + static-asset (animation) embedding
-**Confidence:** HIGH (every claim below is grounded in a read file:line; no cargo builds run — grep/read only, per one-cargo-machine-wide rule)
+**Domain:** Documentation truth-correction (mkdocs site + CLI error UX) + owner-approved animation embed
+**Confidence:** HIGH (every claim below is grounded in a live `grep`/`cat -n`/`cargo run` against this exact checkout, not training knowledge)
 
 ## Summary
 
-Phase 117 is a **doc-truth purge**: six concrete false-or-stale claims (SC1–SC5) across the published docs and CLI error strings, plus two owner mandates — a furnished-product cold-reader/IA polish pass (GTH-V15-36) and productionizing the 7-scene launch animation into `docs/index.md` (GTH-V15-37). This is **not** a library-selection phase; the "stack" is the existing mkdocs-material site, the `reposix-cli` crate's error-message convention, and the doc-alignment catalog. The work is surgical edits verified against reality, each of which drifts one or more **doc-alignment catalog rows** that a top-level `/reposix-quality-refresh <doc>` must re-bind (executor-level agents cannot run that command — a hard planning constraint).
+All 6 doc-truth defects named in the phase brief are confirmed still-present, but **most
+cited line numbers in the phase brief, ROADMAP.md, and REQUIREMENTS.md are stale by
+several lines to several dozen lines** relative to the current checkout -- this research
+re-locates every defect by direct `grep`/`cat -n` and reports the CURRENT line, not the
+ticket's line. One defect (SC5 / DOCS-05) is **partially already fixed**: the fixture
+content and `docs/benchmarks/token-economy.md`'s provenance claim are both already
+accurate (fixed during P115); the actual remaining lie lives in a file
+(`benchmarks/README.md`) that no ticket text names. Following REQUIREMENTS.md's literal
+DOCS-05 instruction ("relabel as hand-authored, not captured") would **introduce a new
+lie** on top of an already-fixed claim -- see SC5 below, this is the single most
+important correction in this research.
 
-Two findings **correct the phase brief's assumptions** and must reach the planner: (1) **SC2's false "`cat` triggers a network call" claim is concentrated in `filesystem-layer.md` alone** — it is NOT propagated into `git-layer.md`, `time-travel.md`, or `trust-model.md` (grep empty); `docs/index.md` states the mechanism correctly ("file content fetched lazily", index.md:160). The false claim IS, however, encoded in a doc-alignment row (`filesystem-layer/blob-lazy-first-cat`) which must be rewritten, not just re-bound. (2) **SC5's fabricated provenance lives in `benchmarks/README.md:34`, NOT `docs/benchmarks/token-economy.md`** — the token-economy doc is already accurate; `benchmarks/README.md` claims `reposix_session.txt` is "the literal output of `scripts/demo.sh`", a script that **does not exist** and never produced it (the file is a live capture).
+SC2's propagation set is also broader than the phase brief's "at minimum" list: the four
+named files (`index.md`, `git-layer.md`, `time-travel.md`, `trust-model.md`) do **not**
+actually repeat the false claim (verified negative -- no edit needed there for SC2), but
+three files the brief does NOT name (`docs/reference/glossary.md`,
+`docs/reference/cli.md`, `docs/reference/git-remote.md`) **do** repeat it, plus
+`docs/reference/confluence.md` has a softer, more defensible version of the same
+ambiguity.
 
-**Primary recommendation:** Treat P117 as five independent doc/CLI fix lanes + one furnished-product lane + one animation lane. For SC4, take **Option B (rewrite the attach.rs error to reference only commands that exist today)** and FILE the real `reposix detach` subcommand (Option A) as a GOOD-TO-HAVE — B fixes the blocking defect (a false command reference) surgically without committing new semver-locked CLI surface. Budget a top-level doc-alignment refresh pass for every touched doc.
+**Primary recommendation:** ground every fix against the current-checkout line numbers in
+this document (not the ticket's), fix SC5's real location (`benchmarks/README.md`, not
+`token-economy.md`), and treat SC4 as a build-vs-reword decision the planner must make
+explicitly (recommendation: reword now, defer the real subcommand -- see decision table).
 
-## User Constraints
-
-No `CONTEXT.md` exists for this phase (`.planning/phases/117-*/` did not exist before this research; no `/gsd-discuss-phase` was run). The constraints below are derived from the dispatch brief and `CLAUDE.md`, not from a locked decisions file. **The planner should treat the animation interactive-embed scope (SC/GTH-V15-37 items 1–3) as the main open decision** — see Open Questions.
-
-### Locked Decisions
-- None (no CONTEXT.md). Dispatch brief scopes SC1–SC5 + GTH-V15-36 + GTH-V15-37 into P117.
-
-### Claude's Discretion
-- SC4 design fork (implement `detach` vs rewrite error) — this research recommends B.
-- Animation embed depth (mp4-only fallback vs full interactive JSX productionization).
-
-### Deferred Ideas (OUT OF SCOPE)
-- None declared. Candidate deferrals surfaced by this research (SC4 Option A `reposix detach`; self-hosting `cdn.simpleicons.org`) are recommended as GOOD-TO-HAVES, not P117 scope.
-
+<phase_requirements>
 ## Phase Requirements
 
-| ID | Description | Research Support |
+| ID | Description (from REQUIREMENTS.md) | Research Support |
 |----|-------------|------------------|
-| SC1 | `docs/index.md` mislabels Confluence as an issue tracker; shows `git clone` as the bootstrap verb | Confirmed at **index.md:13** (single line carries both defects). README.md:5 already softened. §SC1 |
-| SC2 | False claim that `cat` secretly triggers a network call | Confirmed concentrated in **filesystem-layer.md:7–13, 19, 30–40, 42, 63**; NOT propagated to siblings (grep empty). Doc-alignment row `filesystem-layer/blob-lazy-first-cat` (L42) encodes it. §SC2 |
-| SC3 | `list`/`refresh` connection-refused errors don't teach-the-fix like the exemplar | Confirmed deficient at **list.rs:77–80** and **refresh.rs:206–209**; exemplar shape at **init.rs:365–373** + **init.rs:130–153**. §SC3 |
-| SC4 | `attach.rs` error references nonexistent `reposix detach` | Confirmed at **attach.rs:142–145**; no `Detach` clap variant (main.rs enum) and no impl anywhere. §SC4 Decision |
-| SC5 | Fabricated `reposix_session.txt` provenance; stale FUSE architecture in social copy | Provenance fabrication at **benchmarks/README.md:34** (`scripts/demo.sh` absent). FUSE at **twitter.md:16**; retired 89.1% at **twitter.md:18** + **linkedin.md:21**. §SC5 |
-| GTH-V15-36 | Furnished-product cold-reader/IA polish across index.md, README.md, landing surfaces | Cold-reader rubric `subjective/cold-reader-hero-clarity` (WAIVED to 2026-09-15). IA weaknesses catalogued. §Furnished-product polish |
-| GTH-V15-37 | Productionize + embed the 7-scene launch animation into index.md (5-item checklist) | mp4 confirmed (7.1 MB); DC-runtime architecture reverse-engineered; blockers named. §Animation embed feasibility |
-
-## Architectural Responsibility Map
-
-| Capability | Primary Tier | Secondary Tier | Rationale |
-|------------|-------------|----------------|-----------|
-| Doc prose truth (SC1, SC2, SC5b) | Docs site (`docs/**`, mkdocs-material) | doc-alignment catalog | Claims are rendered to the published site; catalog binds each claim to code/test evidence |
-| Repo-internal provenance truth (SC5a) | Repo docs (`benchmarks/README.md`) | perf bench generator | `benchmarks/` is not in the mkdocs nav; it is contributor/provenance surface, not site content |
-| CLI error UX (SC3, SC4) | `reposix-cli` crate (Rust binary boundary) | docs/reference/cli.md | Errors are emitted by the binary at runtime; the three-part bar is a code convention (`crates/CLAUDE.md`) |
-| Cold-reader clarity (GTH-V15-36) | Docs site + README (landing) | subjective rubric verifier | Hero clarity graded on README.md:1–50 + index.md:1–50 by a dispatched subagent |
-| Animation embed (GTH-V15-37) | Static assets (`docs/assets/animation/`) served by mkdocs | GitHub release assets (mp4) | mkdocs copies `docs/assets/**` verbatim; the 7.1 MB mp4 is a release asset, never committed |
-
-## SC1 — Confluence mislabel + `git clone` bootstrap verb
-
-**What exists now (index.md:13, single line):**
-> "reposix exposes REST-based issue trackers (Jira, GitHub Issues, **Confluence**) as a real git working tree. An autonomous LLM agent can **`git clone`**, `cat`, `grep`, edit, and `git push` tickets ..."
-
-Two defects on one line: (a) Confluence is a **wiki**, not an issue tracker — grouping it under "issue trackers" is false; (b) `git clone` is shown as the agent's bootstrap verb, but the actual bootstrap is `reposix init` (index.md's own later examples use `reposix init sim::demo` at :79, :93). `git clone` at **index.md:75** is legitimate (build-from-source of the repo, not a record-tree bootstrap) — do NOT touch it.
-
-**Cross-surface check:** `README.md:5` already reads "REST-based issue trackers (**and similar SaaS systems**)" and lists verbs `cat, grep, sed, and git` (no `git clone` bootstrap) — README is already clean; **index.md is the sole SC1 offender**. `docs/why.md`, `docs/social/*`, and `_build_demo_gif.py` say "issue tracker" generically but are either out-of-nav or accurate framing (a generic category label, not a per-backend miscategorization).
-
-**What's needed:** Rewrite index.md:13 to (a) describe backends honestly — e.g. "REST-backed systems of record — issue trackers (Jira, GitHub Issues) and wikis (Confluence)" (matches CLAUDE.md's own elevator pitch phrasing), and (b) name `reposix init` (or "one `reposix init`, then pure git") as the bootstrap verb instead of `git clone`.
-
-**Approach:** Single-line prose edit. Keep the "80/20 alongside REST" framing intact.
-**Risks:** Drifts two doc-alignment rows bound to L13 (see drift surface). Low blast radius.
-**Effort:** ~15 min prose + refresh.
-
-## SC2 — false "`cat` triggers a network call"
-
-**What exists now — the false mechanism claim (filesystem-layer.md):**
-- **:7–13** Plain-English summary: "when you `cat` an issue file ... the *first* read might **secretly trigger a network call** to the issue tracker behind the scenes."
-- **:19** Section heading: "## How a `cat` becomes a REST call (or doesn't)".
-- **:30–40** Mermaid: node `A["agent: cat issues/PROJ-42.md"]` → edge `O -.->|"miss → lazy fetch"| H` → helper → REST. The diagram attributes the blob fetch to the `cat`.
-- **:42** "**The first `cat` of a given issue triggers one REST call.**"
-- **:63** Failure mode: "Network down on first read ... the `cat` fails."
-
-**Why it is false (architecture):** In a git partial clone (`--filter=blob:none`), the working tree's blob contents are materialized by **`git checkout`** (the index.md flow is `reposix init` then `git checkout -B main refs/reposix/origin/main`, index.md:80/94). Checkout is the moment git asks the promisor helper (`git-remote-reposix`) to lazy-fetch the missing blobs. After checkout, the file is a real, materialized file on disk; a subsequent **POSIX `cat` invokes no git machinery and triggers no network** — it reads bytes already on disk. `cat` on a not-yet-materialized path returns nothing/ENOENT; it does not itself drive a fetch. So the network trigger is **`git checkout` / `git fetch`**, not `cat`. filesystem-layer.md:42's own next sentence is correct ("The tree ... is fetched once at `init` ... only blob *contents* are lazy") — the error is attributing the content fetch to the `cat` verb rather than to checkout.
-
-**Propagation is NARROW (brief correction):** The dispatch brief anticipated propagation into `docs/index.md`, `git-layer.md`, `time-travel.md`, `trust-model.md`. Verified grep (`cat` within 60 chars of network/REST/fetch/materialize across those files) returns **empty** — the false claim does not appear in them. `git-layer.md:8` says "your edits become REST writes ... **behind the scenes**" — that is the **write/push** path and is accurate. `index.md:160` says "file content fetched lazily" — accurate. **The fix surface for SC2 is `filesystem-layer.md` alone** (five locations above) **plus one doc-alignment row.**
-
-**Doc-alignment row encodes the falsehood:** row `filesystem-layer/blob-lazy-first-cat` (bound to filesystem-layer.md:42) claims verbatim *"The first cat of an issue file triggers one REST call; subsequent cats are local."* Fixing the doc requires **rewriting this row's claim text**, not merely re-binding a hash. Correct claim: e.g. "`git checkout`/`git fetch` materializes missing blobs via the promisor helper; a subsequent `cat` is a pure local read."
-
-**What's needed:** Reframe the section/summary/diagram/failure-mode around **checkout (or explicit `git fetch`) as the network moment**, `cat` as always-local. Update the mermaid entry node from `cat issues/…` to `git checkout` (or `git fetch --filter=blob:none`). Rewrite the catalog row claim.
-**Risks:** The mermaid edit must survive `mermaid-renders.sh` (no HTML entities inside the block — see §Common Pitfalls). Getting the corrected mechanism subtly wrong re-introduces a doc-truth bug. HIGH-value correctness lane.
-**Effort:** ~45–60 min (prose + diagram + row rewrite + refresh).
-
-## SC3 — `list`/`refresh` connection-refused errors don't teach
-
-**Exemplar (the bar to match), init.rs:365–373** — the `reposix init` fetch-failure `bail!`:
-> "reposix init: could not sync `{path}` ... Fix: confirm the backend is running and reachable — **for the simulator, start it in another terminal with `reposix sim`** — then re-run `reposix init`, or sync in place with `git -C {path} fetch --filter=blob:none origin`."
-
-And the canonical three-part-bar pattern `refuse_existing_repo_root` (init.rs:130–153): refuses fail-closed, names the cause, suggests the alternative (`reposix attach`), prints a copy-paste recovery line. `crates/CLAUDE.md` § Error-message convention names this the pattern to copy.
-
-**What exists now — deficient (Sim arm):**
-- **list.rs:77–80:** `SimBackend::new(origin)...; b.list_records(&project).await.with_context(|| format!("sim list_records project={project}"))?` — when the sim is down, the surfaced error is a raw reqwest connection-refused wrapped only with `"sim list_records project=demo"`. No fix taught, no `reposix sim` suggestion, no copy-paste recovery.
-- **refresh.rs:206–209:** identical pattern — `.with_context(|| format!("sim list_records project={}", cfg.project))`.
-
-The GitHub/Confluence/JIRA arms in both files add an allowlist hint (`REPOSIX_ALLOWED_ORIGINS must include …`) which is better but still not the full three-part bar, and does not name the "start the sim" recovery for the default backend.
-
-**What's needed:** Wrap the Sim-arm (and ideally all-arm) connection-refused failure in a teaching error mirroring init.rs:365–373: (1) teach — "the backend at `{origin}` refused the connection"; (2) alternative — "the default backend is the simulator; start it with `reposix sim`"; (3) copy-paste — `reposix sim &` then re-run. Detect connection-refused specifically (vs. other errors) so the message is accurate. Consider a shared helper so `list`, `refresh`, and future subcommands share one teaching wrapper (Don't-Hand-Roll: don't duplicate the string four ways).
-**Risks:** Over-broad matching (labeling an auth error as "start the sim") would mislead — key on the error kind, not all failures. Sim arm is the highest-value target (default backend).
-**Effort:** ~1–1.5 h (both files + a shared helper + unit tests asserting the message names `reposix sim`).
-
-## SC4 Decision — attach.rs references nonexistent `reposix detach`
-
-**Exact defect (attach.rs:142–145), the multi-SoT-conflict `bail!`:**
-> `"working tree already attached to {existing_sot}; multi-SoT not supported in v0.13.0 (Q1.2). Run \`reposix detach\` first or pick the existing SoT."`
-
-**Verification that `detach` does not exist:** the clap `Command` enum (main.rs) enumerates `Init, Attach, List, Refresh, Spaces, Sync, Doctor, History` (+ log/at/gc/tokens/cost/version per docs/reference/cli.md) — **no `Detach` variant**. Repo-wide grep for `detach`/`Detach` finds only this error string and an unrelated "detached HEAD" comment (init.rs:316). The decision-009 stability catalog row lists the locked surface as `init|attach|sim|list|refresh|spaces|sync|log|history|tokens|cost|gc|doctor|version` — `detach` is absent there too. So the error tells a stuck agent to run a command that will fail with "unrecognized subcommand" — a teaching-free dead end, violating the north-star error bar.
-
-### What `detach` would DO (if implemented)
-Attach (attach.rs) binds a working tree to a SoT by setting: `remote.<name>.url` (the reposix/bus URL), `extensions.partialClone = <new remote>`, and `remote.pushDefault = <new remote>`, leaving `origin` (the vanilla mirror) untouched. The inverse `detach` would: unset `extensions.partialClone`, remove the reposix remote (`git remote remove <name>`), and clear `remote.pushDefault` if it points at that remote — restoring a plain-git mirror checkout. Working tree + `origin` stay intact. It is a genuine, well-defined inverse operation.
-
-### Option A — implement `reposix detach` (real subcommand)
-- **Scope:** new clap variant in main.rs; new `detach.rs` module (unbind logic, idempotent, teaching errors); docs/reference/cli.md entry; help text; unit + integration tests; a new doc-alignment row for the subcommand.
-- **Blast radius:** drifts the **locked** `docs/decisions/009-stability-commitment/cli-subcommand-surface` row (main.rs:39–319) AND `docs/reference/cli.md/subcommands_exist` (both enumerate the subcommand list, which changes). Additive-under-semver is *permitted* by decision 009 but is a **permanent** surface commitment.
-- **Effort:** ~3–5 h. **Upside:** makes the attach error literally true; symmetric attach/detach UX reads as a furnished product ("impressive to a skeptical dev").
-
-### Option B — rewrite the attach.rs error (RECOMMENDED)
-- **Scope:** replace attach.rs:142–145 with a three-part-bar error that references only commands that exist **today**. Example shape:
-  > "working tree already attached to `{existing_sot}`; multi-SoT is not supported (Q1.2). To rebind to a different SoT, first remove the existing reposix remote: `git -C {path} remote remove {remote_name} && git -C {path} config --unset extensions.partialClone`, then re-run `reposix attach {new_sot}`. Or keep the current SoT and drop the new spec."
-- **Blast radius:** attach.rs only (~10 lines) + one unit test asserting the message names real recovery commands. **Does not** drift the locked CLI-surface row; no cli.md change.
-- **Effort:** ~30–45 min.
-
-### Recommendation
-**Option B for P117; FILE Option A as a GOOD-TO-HAVE.** SC4 is a *doc-truth launch-blocker* — the blocking defect is the reference to a nonexistent command, which B fixes correctly and surgically while satisfying the error bar with commands that work now. Option A is a real feature carrying a permanent semver-locked surface commitment; shipping it inside a "purge launch-blockers" phase over-commits scope and drifts a locked catalog row. If the owner wants symmetric attach/detach as a furnished-product signal, A is the more impressive answer — so both are presented honestly; the fork is genuinely the owner's to gate. **One-liner:** *Rewrite the attach error to teach a real `git remote remove` + re-attach recovery (Option B); file the real `reposix detach` subcommand as a future GOOD-TO-HAVE.*
-
-## SC5 — fabricated provenance + stale FUSE social copy
-
-### SC5a — fabricated `reposix_session.txt` provenance (brief correction: it's in `benchmarks/README.md`, not `docs/benchmarks/token-economy.md`)
-**The fabrication (benchmarks/README.md:34):**
-> "**The reposix session is the literal output of `scripts/demo.sh`** — the bytes the agent's shell would actually place in context. ANSI escapes are stripped."
-
-**Verified false:** (1) `scripts/demo.sh` **does not exist** (`ls scripts/*demo*` → no matches). (2) `reposix_session.txt`'s own header reads "Captured live from a headless `claude -p` reposix-arm session (ZERO MCP tools loaded)" against `github::reubenjohn/reposix` — a live capture, not script output. (3) `benchmarks/fixtures/README.md:16` **directly contradicts** benchmarks/README.md: "Real git-native reposix session ... captured P115 T4. **No `/mnt/` paths, no `scripts/demo.sh`.**" (4) A test even guards it: `quality/gates/perf/test_bench_token_economy.py:238` asserts `"scripts/demo.sh" not in content`. **`docs/benchmarks/token-economy.md` is already accurate** (line 78–79 correctly calls it "an ANSI-stripped transcript of the reposix arm's git-native shell session against the live GitHub backend").
-
-**Secondary stale reference:** `quality/gates/perf/bench_token_economy_io.py:353` embeds "workflow through `scripts/demo.sh`" in generator text — repair alongside (it feeds generated docs).
-
-**What's needed:** Rewrite benchmarks/README.md:34 to state the true provenance (live P115-T4 headless capture against `reubenjohn/reposix`), matching benchmarks/fixtures/README.md. Fix the io.py:353 reference. **No doc-alignment row is bound to benchmarks/README.md** (see drift surface) — which is *why this drifted undetected*; consider filing a new row pinning `reposix_session.txt` provenance.
-
-### SC5b — stale FUSE architecture + retired 89.1% in social copy
-- **twitter.md:16:** "Result: **reposix** — a **FUSE filesystem** + git-remote-helper for issue trackers." FUSE was **deleted** in the v0.9.0 pivot (`crates/reposix-fuse/` removed; filesystem-layer.md:46 documents this). Stale.
-- **twitter.md:18:** "**89.1% fewer tokens** for the same task" — the **retired** synthetic figure; token-economy.md now publishes the live **~94.3%** output-token / **~74.9%** cost medians and explicitly retires 89.1%/85.5%.
-- **linkedin.md:21:** "git-native partial clone + git-remote-helper" (architecture **correct**) but "📉 **89.1% fewer tokens**" (retired number). Fix the number only.
-
-**What's needed:** twitter.md — replace "FUSE filesystem" with "git-native partial clone + git-remote-helper" and update 89.1% → the live 94.3% framing (or a hedged "~94% fewer output tokens, measured live"). linkedin.md — update the number to the live figure.
-**Note (blast-radius):** `social/*` is `not_in_nav` (mkdocs.yml:47–49) — these pages are **not published on the docs site**; they are repo-resident launch copy. Truth still matters (owner will post them), but this is lower site-facing blast radius than SC1/SC2. Two doc-alignment rows are bound (twitter/linkedin), see drift surface.
-**Effort:** ~20 min total.
-
-## Furnished-product polish (GTH-V15-36)
-
-**Cold-reader gate that must pass before phase close:** rubric `subjective/cold-reader-hero-clarity` (`quality/catalogs/subjective-rubrics.json`). It dispatches the **`/doc-clarity-review`** subagent (skill at `$HOME/.claude/skills/doc-clarity-review`) against **README.md:1–50** and **docs/index.md:1–50**, requiring a numeric score **≥ 7/10 (CLEAR)**, artifact at `quality/reports/verifications/subjective/cold-reader-hero-clarity.json`. **Status: WAIVED until 2026-09-15** — but the waiver is a *runner-dispatch* limitation (the runner subprocess lacks Task-tool access and would overwrite the ratified artifact with a stub), **not** a statement that the copy is exempt from review. A **top-level** `/doc-clarity-review` dispatch still works and should gate phase close; the ratified artifact (currently score 8 CLEAR) must not be clobbered by an executor-level re-sweep.
-
-**mkdocs-material affordances already enabled** (mkdocs.yml:73–101) — use these, don't hand-roll HTML: `admonition` + `pymdownx.details` (collapsible), `pymdownx.tabbed` (the install tabs at index.md:46–65 already use `===`), `attr_list` + `md_in_html` (grid cards `<div class="grid cards" markdown>`), `pymdownx.superfences` mermaid, `content.code.copy`. Progressive-disclosure primitives are all present.
-
-**IA / cold-reader weaknesses observed (index.md):**
-1. **Hero line conflates two claims and carries the SC1 falsehood** (index.md:13) — the first substantive sentence both mislabels Confluence and shows the wrong bootstrap verb. The single most-read line on the site is currently false. (Fixing SC1 *is* the top furnished-product win.)
-2. **Two competing "what it is" blocks** — the grid cards (index.md:15–21) and "What it looks like underneath" (index.md:160–164) both explain the three-piece architecture at different depths; the 30-second path is not cleanly first.
-3. **Build-from-source is `<details>`-collapsed (good, index.md:69–85) but the "After — one commit" block (index.md:87–102) repeats the same `reposix sim`/`init`/`checkout` bootstrap** shown in the collapsed block — duplicated bootstrap noise above the fold.
-4. **Honest-scope footer (index.md:166–168) is a dense single paragraph** mixing pivot history, alpha caveat, and the token headline — a candidate for an admonition (`!!! note "Honest scope"`).
-5. **Numbers are repeated inconsistently** — "~94%" (index.md:17,168), "6 ms/278 ms" (multiple), "~1.2k / ~21k output tokens" (index.md:31,35) — a cold reader re-derives the same figure several times. Consolidate to one hero card + one methodology link.
-
-**What's needed:** After the SC fixes, run a cold-reader IA pass on index.md (30-second path first: one-line honest pitch → one install tab-block → one "edit + push" example → links out; collapse advanced/build-from-source/architecture deep-dive), then dispatch `/doc-clarity-review` top-level and confirm ≥7 on both hero surfaces. README hero (README.md:1–8) is already close — light touch.
-**Risks:** IA churn drifts many index.md doc-alignment rows (29 bound) — budget the refresh. Keep headline numbers byte-consistent with the catalog claims.
-
-## Animation embed feasibility (GTH-V15-37)
-
-**Source dir confirmed** — `/home/reuben/workspace/reposix-animation-pitch/` (verified `ls`):
-
-| File | Size | Role |
-|------|------|------|
-| `Reposix Launch Animation.mp4` | **7,145,308 B (~6.8 MiB)** | Rendered video — the item-4 fallback. **Never commit** (repo hygiene + size). |
-| `Reposix Launch Animation.dc.html` | 1,407 B | Entry HTML — a bespoke **"DC" artifact runtime** (`<x-dc>` / `<x-import>` custom elements) loaded by support.js |
-| `support.js` | 64,222 B | **The DC runtime**, "GENERATED from `dc-runtime/src/*.ts` — do not edit. Rebuild with `cd dc-runtime && bun run build`." |
-| `reposix-scenes.jsx` | 42,875 B | Scene definitions (JSX; uses `React`, `window.Easing`, `interpolate`, `clamp` globals) |
-| `animations-v2.jsx` | 60,925 B | SceneStage engine (autoplay, localStorage, OM_SCENES/OM_PLAYBACK) |
-| `tweaks-panel.jsx` | 24,809 B | The in-page **motion editor** panel |
-| `.thumbnail` | 3,158 B | Poster candidate |
-| `uploads/*.png` | — | Scene image assets |
-
-**Source format:** NOT a single self-contained html. It is a DC-runtime bundle: `support.js` (the runtime) + three `.jsx` sources loaded at runtime via `<x-import component-from-global-scope="ReposixVideo" from="./animations-v2.jsx ./tweaks-panel.jsx ./reposix-scenes.jsx">` (dc.html:29). **support.js lazy-loads `https://unpkg.com/react`, `https://unpkg.com/react-dom`, and Babel-standalone from unpkg, then transpiles the JSX in-browser** (`compile` + `new Function` in support.js) — this is the ~2.8 s runtime-compile the checklist targets.
-
-**5-item checklist feasibility:**
-
-| # | Item | Feasible? | Finding / blocker |
-|---|------|-----------|-------------------|
-| 1 | Pre-compile JSX → plain JS (drop unpkg + runtime Babel) | Yes, with a build step | Removes **three** CDN deps (react, react-dom, babel-standalone) + the in-browser transpile. **Blocker:** the DC compile toolchain (`dc-runtime/src/*.ts`, built with `bun`) is **NOT in the pitch dir** — only the generated `support.js` is. Two paths: (a) obtain the dc-runtime source, or (b) **replace the DC runtime with a standard esbuild+React bundle** (esbuild JSX loader, vendor React/ReactDOM locally). Path (b) is the pragmatic offline route and the main effort/risk of this lane. |
-| 2 | Self-host Google Fonts (Space Grotesk, JetBrains Mono) | Yes | dc.html:12–14 loads them from `fonts.googleapis.com`. Download WOFF2 + serve from `docs/assets/animation/fonts/` with `@font-face`. Straightforward. |
-| 3 | Embed-mode config (no editor, no localStorage, click-to-play) | Yes | All toggles exist: `window.TWEAK_DEFAULTS.motionEditor` (dc.html:22–26; tweaks-panel.jsx is the editor), `window.OM_PLAYBACK` (animations-v2.jsx:34,529 — currently `{"mode":"times","count":1}` = autoplay once → change to click-to-play), and `localStorage` usage at animations-v2.jsx:545,569 (gate behind an embed flag). No code archaeology needed — flip the config. |
-| 4 | Video fallback (7.1 MB mp4 as GitHub release asset, never commit) | Yes — **recommended baseline** | mp4 confirmed present. Host via `gh release upload` as a release asset; embed a click-to-play `<video controls preload="none" poster="…thumbnail">` (or a poster image linking to the release asset). Lowest-risk, gate-friendly path. |
-| 5 | Docs gates (assets under `docs/assets/animation/`, pass mkdocs-strict + mermaid + playwright) | Yes, with care | `docs/assets/` **does not exist yet** — create it (mkdocs copies `docs/assets/**` verbatim). `mkdocs build --strict` (mkdocs-strict.sh) fails on broken nav/links, not on raw asset files; embed via `<iframe src="../assets/animation/index.html">` to isolate the React runtime from Material's JS. `minify_html: false` already (mkdocs.yml:67) so embedded HTML won't be mangled. Playwright coverage: ensure **click-to-play** (item 3) so capture screenshots don't race a mid-animation frame. |
-
-**NOTICED extra external dep (not in the checklist):** `reposix-scenes.jsx:533,545` fetch brand icons from **`https://cdn.simpleicons.org/`** at runtime. A hermetic offline embed must self-host these too, or the animation makes live CDN calls on every docs page-view (also a minor tainted-egress/consistency smell for a project whose thesis is hermetic reproducibility). Add to the item-1/item-2 self-hosting work or file as a GOOD-TO-HAVE.
-
-**Recommendation:** Ship **item 4 (mp4, click-to-play, release-asset) as the P117 baseline** — it is robust, gate-passing, and satisfies "the animation is embedded." Treat the **interactive JSX productionization (items 1–3 + simpleicons)** as a **stretch/optional lane** gated on the item-1 blocker (dc-runtime source absent → needs an esbuild rebuild). The planner should decide embed depth explicitly (see Open Questions).
-
-## Doc-alignment drift surface
-
-Every doc line bound by a `quality/catalogs/doc-alignment.json` row is **hash-drift-detected**: editing that line drifts the row, and the pre-push `gates/docs-alignment/walk.sh` flags it (BLOCKs if `alignment_ratio` < 0.5 or `coverage_ratio` < 0.1; current 0.837 / 0.173 — headroom exists but drifted rows still need re-binding). **Re-binding is done by the top-level `/reposix-quality-refresh <doc>` (or `/reposix-quality-backfill`) — these slash commands are top-level ONLY and are unreachable inside `gsd-executor`** (`quality/CLAUDE.md`). **Plan a dedicated top-level doc-alignment refresh pass as the final P117 wave.**
-
-**Rows that WILL go stale from P117 edits (must refresh/rewrite):**
-
-| Row id | Bound to | Why it drifts | Action |
-|--------|----------|---------------|--------|
-| `filesystem-layer/blob-lazy-first-cat` | filesystem-layer.md:42 | SC2 — **claim text itself is the falsehood** | **REWRITE claim** + re-bind |
-| `docs/index/rest-supported-backends` | index.md:13 | SC1 — "Jira, GitHub Issues, Confluence as REST-based backends" (Confluence=wiki) | Rewrite claim + re-bind |
-| `docs/index/real-git-working-tree` | index.md:13 | SC1 — `git clone` verb removed from L13 | Re-bind (hash drift) |
-| `docs/social/twitter/token-reduction-92pct` | twitter.md:18 | SC5b — 89.1% + FUSE line rewritten; claim asserts "number now matches measured" (itself false) | Rewrite claim + re-bind |
-| `docs/social/linkedin/token-reduction-92pct` | linkedin.md:21 | SC5b — 89.1% → live figure | Rewrite claim + re-bind |
-| `docs/decisions/009-stability-commitment/cli-subcommand-surface` | main.rs:39–319 | **SC4 Option A ONLY** — adding `Detach` changes the locked subcommand list | Rewrite claim + re-bind (avoided by Option B) |
-| `docs/reference/cli.md/subcommands_exist` | cli.md:5–29 | **SC4 Option A ONLY** — new subcommand documented | Rewrite + re-bind (avoided by Option B) |
-| index.md rows near IA churn (up to ~29 bound) | index.md various | GTH-V15-36 IA rewrite shifts line anchors | Bulk re-bind (`/reposix-quality-refresh docs/index.md`) |
-
-**No coverage (drift undetected — file new rows):**
-- **`benchmarks/README.md` has ZERO bound rows** → the SC5a provenance fabrication drifted undetected. `benchmarks/fixtures/README.md` also unbound. Recommend filing a doc-alignment row pinning `reposix_session.txt` provenance to reality (guards recurrence; the meta-rule "fix it twice").
-
-**Pre-existing stale rows in the blast zone (NOT caused by P117, but the planner/refresh should sweep them while here):**
-- `docs/index/token-reduction-89-percent` (index.md:17) + `docs/why/token-economy-89-1-percent` (index.md:17) — claim "89.1%" but index.md:17 now says "~94%". Already stale; a co-located `docs/index/hero-token-economy-94-75` row holds the *current* value. The 89.1 rows are orphaned.
-- `docs/benchmarks/token-economy.md` rows `reduction-89-percent`, `mcp-mediated-baseline-4883-tokens`, `reposix-baseline-531-tokens`, `confluence-reduction-76-percent`, `github-reduction-85-percent` — all reference the **retired** synthetic methodology; superseded by the live `output-reduction-94-percent` (L37) + `cost-reduction-75-percent` (L40) rows. token-economy.md itself is accurate; the **catalog rows are stale**. (P117 need not touch token-economy.md for SC5, so these are a filed sweep item unless the planner folds them in.)
-
-## Standard Stack (existing — do not introduce new libraries)
-
-| Component | Version/Location | Purpose | Why standard here |
-|-----------|-----------------|---------|-------------------|
-| mkdocs-material | mkdocs.yml (Material theme) | Docs site | Already the site generator; admonitions/tabs/details cover all polish needs |
-| pymdownx (superfences/tabbed/details/emoji) | mkdocs.yml:73–101 | Progressive-disclosure markdown | All GTH-V15-36 primitives already enabled |
-| `anyhow` `bail!`/`.context()` | reposix-cli (binary boundary) | CLI errors | `crates/CLAUDE.md` mandates the three-part-bar wrapper; exemplar init.rs:130–153 |
-| doc-alignment catalog + `reposix-quality doc-alignment` | quality/catalogs + binary | Claim↔evidence binding | Every touched doc must re-bind via top-level refresh |
-| esbuild (NEW, animation lane only) | — | Precompile JSX offline | Only if interactive embed (item 1) is scoped; replaces the absent dc-runtime `bun` toolchain |
-
-## Don't Hand-Roll
-
-| Problem | Don't build | Use instead | Why |
-|---------|-------------|-------------|-----|
-| Collapsible/tabbed sections in docs | Raw `<details>`/JS | `pymdownx.details` + `pymdownx.tabbed` (already on) | Material styles + a11y + dark-mode for free |
-| Connection-refused teaching error, 4× | Copy the string into each backend arm | One shared helper wrapping the failure (SC3) | DRY; one place to keep the `reposix sim` recovery accurate |
-| Re-binding drifted doc-alignment rows | Hand-edit hashes in the JSON | Top-level `/reposix-quality-refresh <doc>` | The walker mutates coverage counters as a side effect; the wrapper grades against a /tmp copy |
-| JSX runtime transpile in the browser | Ship Babel-standalone from unpkg | Precompile with esbuild, vendor React | Removes 3 CDN deps + ~2.8 s compile; hermetic |
-| Video hosting | Commit the 7.1 MB mp4 | GitHub release asset via `gh release upload` | Repo hygiene; CLAUDE.md/task hard rule "never commit the mp4" |
-
-## Common Pitfalls
-
-### Pitfall 1: Editing a mermaid block introduces an HTML entity → site-wide error SVG
-**What goes wrong:** SC2's diagram edit — a `<`/`>`/`&` inside a `mermaid` fence renders as a JS-injected "Syntax error in text" SVG that, via `navigation.instant`, leaks to **every** page (two prior VM-crash incidents). **How to avoid:** run `bash quality/gates/docs-build/mermaid-renders.sh` + `mkdocs-strict.sh` (greps rendered HTML for "Syntax error in text", exit 1/2). Keep node labels entity-free.
-
-### Pitfall 2: SC3 error over-matches non-network failures
-**What goes wrong:** Labeling an auth/allowlist error "start the sim" misleads. **How to avoid:** key the teaching message on the connection-refused error kind specifically; leave the allowlist hint for the real-backend arms.
-
-### Pitfall 3: Forgetting the top-level refresh → pre-push doc-alignment BLOCK
-**What goes wrong:** Executor edits a bound doc line, cannot run `/reposix-quality-refresh` (top-level only), pre-push walk flags drift, phase stalls. **How to avoid:** schedule the refresh as an explicit top-level final wave; the planner must own it.
-
-### Pitfall 4: SC4 Option A silently drifts a *locked* catalog row
-**What goes wrong:** Adding `detach` changes the decision-009 locked subcommand list; the stability row + cli.md row go stale and a semver surface is committed under a docs phase. **How to avoid:** prefer Option B; if A, treat the locked-row rewrite + cli.md as first-class tasks.
-
-### Pitfall 5: Committing the mp4 or leaking a `cdn.simpleicons.org`/unpkg call into the shipped site
-**What goes wrong:** 7.1 MB in git history; or the "hermetic reproducibility" thesis undercut by live CDN calls on page-view. **How to avoid:** mp4 → release asset; self-host fonts + simpleicons if the interactive embed ships.
-
-## Runtime State Inventory
-
-This is a docs + CLI-string + static-asset phase — **no rename/migration of stored runtime state.** Explicit per-category check:
-- **Stored data:** None — no datastore keys/collections/user_ids change. (SC5 `reposix_session.txt` is a committed fixture, not live state; its *description* changes, not the bytes.)
-- **Live service config:** None — no n8n/Datadog/Cloudflare config touched.
-- **OS-registered state:** None — no Task Scheduler/pm2/systemd registrations.
-- **Secrets/env vars:** None renamed. SC3 references `REPOSIX_ALLOWED_ORIGINS`/backend creds by name only (no key change).
-- **Build artifacts:** SC4 Option A adds a clap subcommand (recompile needed to observe it); the mp4/animation assets are new static files, not stale artifacts. Otherwise none.
-
-## Validation Architecture
-
-`workflow.nyquist_validation` is `true` (config.json) → section included.
-
-### Test Framework
-| Property | Value |
-|----------|-------|
-| Rust framework | `cargo nextest` (workspace) + `#[cfg(test)] mod tests` in-crate; integration in `crates/reposix-cli/tests/` |
-| Python (bench/docs gates) | `pytest` — e.g. `quality/gates/perf/test_bench_token_economy.py` |
-| Docs gates | `bash quality/gates/docs-build/mkdocs-strict.sh`, `.../mermaid-renders.sh`, `.../link-resolution.py` |
-| Doc-alignment | `bash quality/gates/docs-alignment/walk.sh` (grades against /tmp copy) |
-| Quick run (CLI) | `cargo nextest run -p reposix-cli` (per-crate; one-cargo-machine-wide) |
-| Full suite | pre-push cadence: `python3 quality/runners/run.py --cadence pre-push` |
-
-### Phase Requirements → Test Map
-| Req | Behavior | Test type | Command | Exists? |
-|-----|----------|-----------|---------|---------|
-| SC1 | index.md:13 no longer calls Confluence an issue tracker / shows `git clone` bootstrap | docs-alignment | `bash quality/gates/docs-alignment/walk.sh` (after refresh) | ✅ (rows exist; claims rewritten) |
-| SC2 | filesystem-layer no longer attributes fetch to `cat`; mermaid renders | docs-build + alignment | `mermaid-renders.sh` + `mkdocs-strict.sh`; `walk.sh` | ✅ / ❌ Wave 0: rewrite `blob-lazy-first-cat` row claim |
-| SC3 | `list`/`refresh` connection-refused names `reposix sim` recovery | unit | `cargo nextest run -p reposix-cli` asserting message substring | ❌ Wave 0: add unit tests for the Sim-arm teaching error |
-| SC4 (B) | attach multi-SoT error references only real commands | unit | `cargo nextest run -p reposix-cli` asserting no `reposix detach` substring + names `git remote remove` | ❌ Wave 0: add attach error test |
-| SC5a | benchmarks/README provenance matches reality | pytest/grep | extend `test_bench_token_economy.py` to assert README says live-capture, not demo.sh | ⚠️ partial (line 238 guards token-economy.md, not benchmarks/README.md) |
-| SC5b | no "FUSE" in twitter.md; social numbers = live figure | grep/structure | freshness/grep gate | ❌ Wave 0: optional grep guard for banned "FUSE filesystem" in social copy |
-| GTH-V15-36 | hero clarity ≥7 CLEAR on README + index heroes | subagent-graded | top-level `/doc-clarity-review`; artifact `cold-reader-hero-clarity.json` | ✅ (rubric exists; dispatch top-level) |
-| GTH-V15-37 | animation embedded; site builds; playwright captures | docs-build + manual | `mkdocs-strict.sh` + playwright walk | ⚠️ Wave 0: create `docs/assets/animation/`; verify mp4/iframe under strict |
-
-### Sampling Rate
-- **Per task commit:** `cargo nextest run -p reposix-cli` (CLI lanes) OR `mkdocs-strict.sh` (docs lanes) — never both cargo lanes concurrently.
-- **Per wave merge:** `python3 quality/runners/run.py --cadence pre-push`.
-- **Phase gate:** full pre-push green + top-level doc-alignment refresh clean + `/doc-clarity-review` ≥7 before `/gsd-verify-work`.
-
-### Wave 0 Gaps
-- [ ] Unit tests for SC3 Sim-arm teaching error (`list`, `refresh`) — asserts message names `reposix sim`.
-- [ ] Unit test for SC4-B attach error — asserts it does NOT contain `reposix detach` and names a real recovery command.
-- [ ] Extend `test_bench_token_economy.py` (or a new grep guard) to assert `benchmarks/README.md` provenance = live-capture, not `scripts/demo.sh`.
-- [ ] Rewrite doc-alignment row `filesystem-layer/blob-lazy-first-cat` claim (catalog-first, before the doc edit).
-- [ ] Create `docs/assets/animation/` + a smoke check that `mkdocs build --strict` copies it and the page renders.
-- [ ] (Optional) freshness grep guard banning "FUSE filesystem" in `docs/social/*`.
-
-## Security Domain
-
-`security_enforcement` is not set in config (absent = enabled), but P117 introduces no new untrusted-input path.
-
-| ASVS category | Applies | Control |
-|---------------|---------|---------|
-| V5 Input Validation | Marginal | SC3/SC4 emit error *strings*; ensure backend `origin`/path values interpolated into messages are not attacker-controlled beyond what already flows (they are user-supplied CLI args, echoed, not executed). |
-| V6 Cryptography | No | None. |
-| Egress/taint (project-specific) | **Yes — animation lane** | The interactive embed must not add live CDN calls (`unpkg`, `cdn.simpleicons.org`, Google Fonts) to the shipped site — self-host per items 1–2. Consistent with the hermetic-reproducibility thesis and the tainted-by-default posture. mp4 → release asset (no remote byte routed into an outbound side-effect). |
-
-| Threat pattern | STRIDE | Mitigation |
-|----------------|--------|------------|
-| Misleading error string sends agent down a wrong recovery (e.g. run nonexistent `reposix detach`) | (UX-integrity) | SC4-B: reference only real commands; three-part bar |
-| Docs claim diverges from code (doc-truth rot) | Repudiation/Info | doc-alignment binding + top-level refresh; file a row for the uncovered `benchmarks/README.md` |
-
-## Environment Availability
-
-| Dependency | Required by | Available | Version | Fallback |
-|------------|------------|-----------|---------|----------|
-| `mkdocs` + material | docs-build gates | Assumed (site is live at gh-pages) | — | — |
-| `cargo`/`nextest` | SC3/SC4 tests | Yes (repo toolchain) | Rust 1.82+ | — |
-| `gh` CLI | mp4 release-asset upload (item 4) | To confirm | — | Manual upload via GitHub UI |
-| `esbuild`/`bun` | Interactive JSX precompile (item 1) | **Absent** (dc-runtime source not in pitch dir) | — | **mp4-only embed (item 4)** — recommended baseline |
-| playwright + mcp-mermaid | animation/mermaid render verification | Available (global MCP per user CLAUDE.md) | — | — |
-
-**Missing with no fallback:** none blocks the baseline (mp4) path.
-**Missing with fallback:** the dc-runtime/esbuild toolchain for the interactive embed — fallback is the mp4 baseline; the interactive lane is a stretch decision.
-
-## Assumptions Log
-
-| # | Claim | Section | Risk if wrong |
-|---|-------|---------|---------------|
-| A1 | `git checkout` (not `cat`) is the blob-materialization moment in the reposix partial-clone flow | SC2 | If reposix uses a sparse/on-read materialization that DOES fetch on git-mediated read, the reframing is subtly off. Mitigation: verified against index.md's own `init`→`checkout` flow + partial-clone semantics; recommend the executor confirm by observing an audit `materialize` row fires at checkout, not at `cat`, in a `/tmp` sim clone. |
-| A2 | No doc-alignment row is bound to `benchmarks/README.md` | Drift surface | If a row exists under a path I didn't match, the "undetected" framing is wrong. Mitigation: exact-file scan of all 400 rows returned none. |
-| A3 | Interactive embed item 1 requires re-tooling because `dc-runtime/src` is absent from the pitch dir | Animation | The dc-runtime source may live elsewhere on disk; if found, item 1 is cheaper. Recommend the executor search for it before choosing the esbuild path. |
-| A4 | `social/*` pages are not published (mkdocs `not_in_nav`) so SC5b is lower site-blast-radius | SC5b | Confirmed at mkdocs.yml:47–49; still repo-truth-relevant. |
-| A5 | The cold-reader rubric waiver is a runner limitation, not a copy exemption — a top-level `/doc-clarity-review` still gates | Furnished-product | Confirmed via the waiver `reason` text; if the runner has since been fixed, dispatch is even easier. |
+| DOCS-01 | Fix `docs/index.md:13` category+scope error (Confluence-as-issue-tracker + `git clone` bootstrap verb) | § SC1 below -- confirmed at current line 13, not the ticket's ~135-152 |
+| DOCS-02 | Rewrite `filesystem-layer.md` off its false "cat triggers network call" framing + propagated cross-links | § SC2 below -- real propagation set differs from the brief's guess; confirmed via code read of `stateless_connect.rs` |
+| DOCS-03 | Un-strand `reposix list`/`reposix refresh` connection-refused errors (teach-the-fix bar) | § SC3 below -- exact error text captured via live `cargo run` against a closed port |
+| DOCS-04 | Delete-or-implement the phantom `reposix detach` subcommand | § SC4 below -- decision table + recommendation |
+| DOCS-05 | Relabel the token-fixture provenance lie (`reposix_session.txt` / `scripts/demo.sh`) | § SC5a below -- ticket's own citation is stale; real defect is in `benchmarks/README.md`, already-fixed elsewhere |
+| DOCS-06 | Fix `docs/social/twitter.md:16`'s FUSE framing | § SC5b below |
+| GTH-V15-36 | Furnished-product cold-reader/IA polish mandate (P117-shaping input, not a standalone requirement ID) | § Furnished-Product Gaps below |
+| GTH-V15-37 | Embed owner's 80s launch animation on `docs/index.md`, 5-item productionization checklist | § Animation Embed Lane below |
+</phase_requirements>
+
+## Project Constraints (from CLAUDE.md)
+
+- **Enter through GSD** -- this research feeds `gsd-planner`; no direct edits happened during this research pass (research-only charter honored).
+- **One cargo invocation at a time** -- honored; only `cargo run -p reposix-cli -- list/refresh` against a closed port was run (single invocations, sequential), no `--workspace` build.
+- **Leaf isolation** -- the one live-error-capture test ran fully inside `/tmp/reposix-sc3-test` (created and `cd`'d into within the same Bash invocation), cleaned up after.
+- **Uncommitted = didn't happen / external mutations need owner-named-target approval** -- directly relevant to the Animation Embed Lane's GitHub Release upload (checklist item 4): that is a real mutation against `github.com/reubenjohn/reposix` and MUST be raised to the owner/coordinator before any plan executes it, not treated as a routine implementation step. Flagged in Open Questions.
+- **Push cadence / doc-alignment gates** -- every doc this phase edits must be checked against `quality/catalogs/doc-alignment.json` for BOUND rows whose line ranges the edit will touch; see § Doc-Alignment Drift Map. A touched BOUND row requires a top-level `/reposix-quality-refresh` pass before/at phase-close push.
+- **Ownership charter (noticing is a deliverable)** -- see § NOTICED below; several defects and one requirement-text error were found outside the 6 named blockers.
+
+## SC1 -- `docs/index.md` Confluence-as-issue-tracker + `git clone` bootstrap verb
+
+**Current-state evidence.** The phase brief's cited range (~line 135-152) is **stale** --
+that range is now the "Connector capability matrix" / "Where to go next" sections, which
+are already correct. The actual defect is at **`docs/index.md:13`**:
+
+```
+13: reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
+    **real git working tree**. An autonomous LLM agent can `git clone`, `cat`, `grep`,
+    edit, and `git push` tickets without learning a single Model Context Protocol (MCP)
+    tool schema or REST SDK surface.
+```
+
+Two defects in one sentence: (1) Confluence is grouped with "issue trackers" (Jira,
+GitHub Issues) -- it is a wiki, and the SAME page's own connector-capability matrix
+(`index.md:130-137`) and footnote (`index.md:137`) correctly treat Confluence
+differently (no Comments support, different capability shape); (2) `git clone` is named
+as the agent-facing bootstrap verb, but the correct verb -- used consistently everywhere
+else on the same page (`index.md:79`, `:93`, `:162`) -- is `reposix init`.
+
+**Also grep-confirmed:** the ONLY other `git clone` occurrence on the page is line 75,
+inside the "Build from source (advanced)" `<details>` fold, where it correctly means
+"clone the reposix TOOL's own source repo to build the binary" -- that one is NOT a
+defect, do not touch it.
+
+**Required end-state:** Confluence described as a wiki/SaaS system distinct from issue
+trackers (mirror README.md's already-correct phrasing, see below); bootstrap verb is
+`reposix init`, not `git clone`.
+
+**Correct replacement text sketch** (mirrors the site's own more-accurate copy at
+`README.md:5-8`: *"reposix exposes REST-based issue trackers (and similar SaaS
+systems)..."*):
+
+```
+reposix exposes REST-based issue trackers (Jira, GitHub Issues) and wikis
+(Confluence) as a **real git working tree**. An autonomous LLM agent can
+`reposix init`, `cat`, `grep`, edit, and `git push` tickets without learning a
+single Model Context Protocol (MCP) tool schema or REST SDK surface.
+```
+
+**Risk/gotchas:** `docs/index.md/real-git-working-tree` and
+`docs/index.md/rest-supported-backends` are BOTH doc-alignment BOUND rows anchored
+exactly at line 13 (see § Doc-Alignment Drift Map) -- this edit WILL trip both.
+
+## SC2 -- "cat secretly triggers a network call" + propagation
+
+**Ground truth (verified via code, not doc prose).** Read `crates/reposix-remote/src/stateless_connect.rs`
+(handles `command=fetch`) and `crates/reposix-cache/src/builder.rs`/`cache.rs`
+(`read_blob` = materialize-on-demand). Blob materialization is triggered by **`git
+fetch`/`git checkout`** (whichever git operation first needs the missing blob object --
+typically the `git checkout -B main refs/reposix/origin/main` step every quickstart in
+this repo runs immediately after `reposix init`), never by the bare shell `cat`. `cat` is
+a plain POSIX read of an already-materialized file; it has no git awareness and cannot
+trigger a fetch. Confirmed no FUSE/VFS layer remains that could make `cat` network-aware
+(deleted in v0.9.0 per `filesystem-layer.md:46`).
+
+**Current-state evidence -- the actual lie (`docs/how-it-works/filesystem-layer.md`):**
+
+```
+ 7: **Plain-English summary.** When you `cat` an issue file in a reposix
+ 8: working tree, you're reading a real file on disk — but the *first*
+ 9: read might secretly trigger a network call to the issue tracker
+10: behind the scenes. After that, the file is local and reads are free.
+```
+Also line 63: `- **Network down on first read.** ... the `cat` fails.` -- same framing
+error (implies `cat` does the fetching; the fetch already happened at checkout, so a
+`cat` after a successful checkout can never fail for network reasons).
+
+**Important: the page's OWN body already gets it right** at line 42: *"The first `cat` of
+a given issue triggers one REST call."* -- also imprecise per the ground truth above
+(should say "the checkout" not "the `cat`"), but this is the LOWER-risk of the two
+inaccuracies since it's at least consistent internally. The summary (`:7-13`) is the
+worse, more misleading version and is a doc-alignment BOUND row
+(`filesystem-layer/blob-lazy-first-cat`, anchored at line 42 -- editing line 42 WILL trip
+it; editing only 7-13 will not, but should still be fixed for internal consistency, per
+PATTERNS.md NOTICED #4).
+
+**Real propagation set (verified negative + positive):**
+
+| File | Verdict | Evidence |
+|---|---|---|
+| `docs/index.md` | **NOT affected** -- verified negative | Only has `cat issues/0001.md` in the sequence diagram / quickstart, no claim about triggering network |
+| `docs/how-it-works/git-layer.md` | **NOT affected** -- verified negative | `stateless-connect ... handles all read traffic (git clone, git fetch, lazy blob fetches)` -- correctly ties fetching to `git fetch`, not `cat` |
+| `docs/how-it-works/time-travel.md` | **NOT affected** -- verified negative | No lazy-fetch claim of any kind |
+| `docs/how-it-works/trust-model.md` | **NOT affected** -- verified negative | `materialize` op described as "Cache lazy-fetched a blob from the backend" -- no `cat` framing |
+| `docs/reference/glossary.md:20` | **AFFECTED (not in brief's list)** | "file *contents* arrive lazily on first `cat` or `grep`" -- same defect, explicit `cat` |
+| `docs/reference/cli.md:59` | **AFFECTED (not in brief's list)** | "blobs are fetched on demand on first read" -- ambiguous "read", inside `BOUND` row `docs/reference/cli.md/init_documented` (lines 42-65) |
+| `docs/reference/git-remote.md:23` | **AFFECTED (not in brief's list)** | "blobs are fetched lazily on first read" -- same ambiguity, inside `BOUND` row `git-remote/stateless-connect-read-path` (line 23 exactly) |
+| `docs/reference/confluence.md:135-137` | **Borderline -- lower priority** | "individual page bodies download on first read via ... `stateless-connect`" then immediately clarifies "before the first `git checkout`" -- ties it to checkout, more defensible than the others, but "on first read" phrasing is still loose |
+
+**Required end-state:** every instance reframed as "materializes at `git
+fetch`/`checkout` time" (or "at first `git sparse-checkout`/`checkout` of that path"),
+never "at `cat` time."
+
+**Correct replacement sketch for filesystem-layer.md summary:**
+```
+**Plain-English summary.** A reposix working tree is a real git checkout: `git
+checkout` (right after `reposix init`) is what pulls blob *contents* down from the
+issue tracker, lazily and on demand for exactly the files being checked out. Once
+checked out, `cat` is a plain local file read — no network, ever. This page
+explains how that lazy-checkout trick works...
+```
+
+## SC3 -- `reposix list` / `reposix refresh` connection-refused errors
+
+**Exemplar (read in full):** `crates/reposix-cli/src/init.rs:363-373` --
+`refuse_existing_repo_root`-adjacent `bail!` in the fetch-failure path. Three parts
+present: (1) teaches the fix ("confirm the backend is running and reachable"), (2)
+suggests the sim alternative ("for the simulator, start it in another terminal with
+`reposix sim`"), (3) copy-paste recovery (`git -C {path_str} fetch --filter=blob:none
+origin`).
+
+**Current state -- captured live** (ran `cargo run -p reposix-cli -- list --project demo
+--origin http://127.0.0.1:19999` against a guaranteed-closed port, inside a `/tmp`
+isolate):
+
+```
+Error: sim list_records project=demo
+
+Caused by:
+    0: error sending request for url (http://127.0.0.1:19999/projects/demo/issues)
+    1: client error (Connect)
+    2: tcp connect error
+    3: Connection refused (os error 111)
+```
+
+`reposix refresh --project demo --origin http://127.0.0.1:19999 <path>` produces the
+IDENTICAL error (both go through `SimBackend::list_records` -> raw `reqwest` error ->
+bare `.with_context(...)` wrap, no `bail!`, no teaching).
+
+**Source locations:**
+- `crates/reposix-cli/src/list.rs:76-81` -- `ListBackend::Sim` arm: `SimBackend::new(origin)... .list_records(&project).await.with_context(|| format!("sim list_records project={project}"))?`
+- `crates/reposix-cli/src/refresh.rs:205-210` (`fetch_issues`, `ListBackend::Sim` arm) -- identical pattern, same missing teaching.
+
+Neither meets the 3-part bar: no "the sim isn't running" diagnosis, no `reposix sim`
+suggestion, no copy-paste retry command. (The github/confluence/jira arms in both files
+DO inline a "REPOSIX_ALLOWED_ORIGINS must include ..." hint in their `.with_context`, so
+they're closer to the bar than the sim arm, but still lack an explicit copy-paste
+recovery line -- lower priority than the sim arm, which is the DEFAULT backend and the
+one every quickstart uses.)
+
+**Required end-state:** wrap the sim-backend connection failure in a `bail!` (or a
+`Context`-decorated error) that: names the likely cause (sim not running / wrong
+`--origin`), suggests `reposix sim &` (matching the exact phrasing used everywhere else
+in this repo, e.g. `README.md:61-63`), and gives the literal retry command
+(`reposix list --project {project} --origin {origin}`).
+
+## SC4 -- phantom `reposix detach` subcommand (DECISION FORK -- do not pick, present both)
+
+**Current-state evidence.** `crates/reposix-cli/src/attach.rs:144` (current line; the
+brief/REQUIREMENTS.md cite 135-138/144, both stale by a handful of lines):
+
+```
+142:        if existing_sot != new_sot {
+143:            bail!(
+144:                "working tree already attached to {existing_sot}; multi-SoT not supported in v0.13.0 (Q1.2). \
+145:                 Run `reposix detach` first or pick the existing SoT."
+146:            );
+```
+
+`grep -rn detach crates/ docs/` confirms: `reposix detach` is referenced in exactly TWO
+places -- `attach.rs:144` (this error) and `docs/guides/troubleshooting.md:329` (same
+claim, PLUS a manual fallback already spelled out: *"To switch SoT, run `reposix detach`
+first (or remove the `extensions.partialClone` config + cache directory by hand)."*) --
+and is **wired nowhere** in `crates/reposix-cli/src/main.rs`'s `enum Cmd` (12 real
+subcommands: Sim, Init, Attach, List, Refresh, Spaces, Sync, Doctor, History, plus
+Time-travel/gc/cost/tokens per `lib.rs`'s module list -- no Detach).
+
+**What Option A (implement) would need to do, concretely:** troubleshooting.md's own
+manual fallback text IS the spec: unset `extensions.partialClone` config + remove the
+reposix remote (`git remote remove <name>`) + optionally delete the cache directory.
+`crates/reposix-cli/src/worktree_helpers.rs::cache_path_from_worktree` already exists and
+is reused by `gc.rs`/`cost.rs` for exactly this cache-path derivation --
+`detach.rs` would be a thin new module reusing that helper plus the
+`git_config_get`/`git_config_set` pattern already used by `doctor.rs:342-348`'s
+`--fix` path. Wiring cost: one new `Cmd::Detach { path: Option<PathBuf> }` enum arm
+(`main.rs:40`+), one dispatch match arm (`main.rs:376`-area), one new ~60-100 line
+`detach.rs` module with a couple of unit tests (matching `list.rs`'s test-density
+precedent).
+
+### Decision table
+
+| | Option A: implement `reposix detach` | Option B: reword `attach.rs`'s error |
+|---|---|---|
+| **What it does** | New subcommand: unsets `extensions.partialClone`, removes the reposix remote, optionally deletes the cache dir | Error text stops promising a command that doesn't exist; points at the already-documented manual recovery instead |
+| **Effort** | Small-medium: ~1 new file (~80-120 lines incl. tests), 1 enum arm, 1 dispatch arm, reuses `cache_path_from_worktree` + `doctor.rs`'s config-mutation pattern -- no new external deps | Trivial: edit one `bail!` string (attach.rs:144-145), ~10 min |
+| **Blast radius** | New, isolated code path (multi-SoT re-attach flow only); does not touch existing attach/init/sync dataflow; needs its own unit tests + a manual/integration smoke test | Zero -- pure string edit, no behavior change |
+| **Risk** | Low-medium: a mutating command (unsets config, removes a remote) needs care around idempotency + a git-repo-shaped-argument guard (mirror `attach.rs:118-119`'s `.git/` existence check) | Near-zero: cannot break anything functional, only prose |
+| **Reversibility** | High (new command, easy to revert/remove) | Trivial (one string) |
+| **Leaves doc-truth clean?** | Yes -- `reposix detach` becomes real, matching troubleshooting.md's existing promise | Yes -- error + troubleshooting.md both point at the SAME already-correct manual recipe; no promise of a nonexistent command remains |
+| **Consistent with phase scope** | Adds real CLI surface to a phase titled "doc-truth ... purge" -- arguably scope-creep beyond doc/error-text fixes (though DOCS-04 explicitly allows either) | Stays inside the phase's doc/error-text-only footprint; matches SC1/SC2/SC3's "fix the words" pattern |
+
+**IMPORTANT correction to prior pattern-mapping:** `.planning/phases/117-doc-truth-launch-blocker-purge/PATTERNS.md`
+(pre-existing pattern map found in the phase dir) cites `CONSULT-DECISIONS.md:146` as an
+"SC4 depth ruling" governing this decision. **That citation is a different SC4** --
+`CONSULT-DECISIONS.md:129-146` is the 2026-07-16 `[MANAGER]` ruling on **P116 FIX-03
+(slug->id durable-create, Option A/B/D)**, an unrelated decision in a different phase.
+There is no existing ruling that constrains this phase's detach decision one way or the
+other -- it is open for this phase's planner/coordinator to decide.
+
+**Recommendation:** **Option B now** (reword only), because (1) this phase's other 5
+success criteria are pure doc/error-text fixes and Option A would be the only
+behavior-adding task in an otherwise text-only phase; (2) the manual recovery is already
+fully documented in `troubleshooting.md:329` and is genuinely simple (two git commands);
+(3) Option A is a clean, low-risk, well-scoped addition that fits naturally as its own
+small phase or a P120 (CLI error hardening) task if the owner wants the real subcommand
+later -- file as a GOOD-TO-HAVE with the Option-A scope sketch above rather than
+folding a new subcommand into a doc-truth phase. Flag this as an explicit RAISE/decision
+point for the coordinator rather than silently picking B.
+
+## SC5a -- `docs/benchmarks/token-economy.md` / `benchmarks/README.md` provenance lie
+
+**This is the most important correction in this research: REQUIREMENTS.md's own DOCS-05
+citation (`docs/benchmarks/token-economy.md:51-52`) is stale and, if followed literally,
+would introduce a NEW lie on top of an already-fixed one.**
+
+**What DOCS-05 currently says (verbatim):** *"`docs/benchmarks/token-economy.md:51-52` +
+`benchmarks/README` claim `reposix_session.txt` (531 tokens) is 'the literal output of
+`scripts/demo.sh`' -- that script does not exist, and the fixture depicts the deprecated
+FUSE architecture (`/mnt/reposix/...` paths, internally inconsistent IDs). Relabel
+honestly (hand-authored fixture, not a captured demo run) even before BENCH-01
+re-measures."*
+
+**Ground truth, verified three independent ways:**
+
+1. **`docs/benchmarks/token-economy.md` lines 48-56 (the cited range) contain NO such
+   claim today** -- that range is the "What this does NOT measure" honest-caveats
+   section. The ACTUAL `reposix_session.txt` provenance line is at line 78: *"an
+   ANSI-stripped transcript of the reposix arm's git-native shell session against the
+   live GitHub backend"* -- this is machine-generated (confirmed by reading
+   `quality/gates/perf/bench_token_economy_captures.py:244`, the exact source template
+   for that bullet, called from `bench_token_economy.py:main()` which is the ONLY
+   function that writes to `docs/benchmarks/token-economy.md`) and it is **TRUE**.
+2. **`benchmarks/fixtures/reposix_session.txt` (read in full, 200 lines) contains NO
+   `/mnt/` paths and NO internally-inconsistent IDs.** It is a genuine git-native
+   transcript: `reposix init github::reubenjohn/reposix /tmp/reposix-t4-r1` ->
+   `git checkout -B main refs/reposix/origin/main` -> `cat issues/56.md` / `57.md` /
+   `60.md` -> edit -> `git push` (correctly rejected, read-only GitHub adapter) ->
+   `git status`/`git log`. `grep -c '/mnt/' reposix_session.txt` = 0.
+3. **`benchmarks/fixtures/README.md`** (a SEPARATE, newer file, git history:
+   `2103d0c fix(115-05): restore literal content_hash term in fixtures README`, `fd098c7
+   docs(115-05): regen token-economy.md from live GitHub captures + honest provenance`)
+   already states explicitly: *"`reposix_session.txt` ... **Real** git-native reposix
+   session against the live GitHub backend ... captured P115 T4. No `/mnt/` paths, no
+   `scripts/demo.sh`."* -- this file was written specifically to correct the OLD,
+   pre-P115 fixture that DID have the defects DOCS-05 describes.
+
+**Conclusion: the fixture and `docs/benchmarks/token-economy.md` were both already fixed
+during P115 (2026-07-16, commits `4db6b64`/`fd098c7`/`2103d0c`). DOCS-05's premise about
+those two locations is now stale.**
+
+**The actual remaining lie is `benchmarks/README.md:34`** (confirmed: `scripts/demo.sh`
+does not exist anywhere in the repo, `find . -iname demo.sh` = no hits):
+
+```
+34: - **The reposix session is the literal output of `scripts/demo.sh`** — the bytes the agent's shell would actually place in context. ANSI escapes are stripped.
+```
+
+This file is a **larger fossil than just this one line** -- it describes the ENTIRE
+retired pre-P115 methodology: the old 98.7%/"150,000 -> ~2,000" figure (line 5, matches
+the also-retired claim in `docs/research/initial-report.md:78`, out of this phase's
+scope -- that's a research/pitch doc, not a claim-of-fact page), the synthetic
+`mcp_jira_catalog.json` "representative" MCP fixture (line 13, superseded by the real
+`mcp_github_catalog.json` capture), `ANTHROPIC_API_KEY`/`count_tokens`-based measurement
+(lines 21-25, 32, superseded by the live-session-usage methodology), and a reference to
+`RESULTS.md` (line 39) that **does not exist** -- `find . -iname RESULTS.md` = no hits.
+`benchmarks/README.md` is NOT in `mkdocs.yml`'s nav (confirmed) so it escapes
+`mkdocs-strict`/doc-alignment gates entirely -- 0 doc-alignment rows for this file.
+
+**Required end-state:** `benchmarks/README.md` rewritten to describe the CURRENT P115
+methodology (live session-usage capture, `benchmarks/captures/*.json`,
+`quality/gates/perf/bench_token_economy.py --offline`) matching
+`benchmarks/fixtures/README.md`'s already-correct provenance framing, OR (smaller scope,
+if the planner wants to stay minimal) at minimum strike the `scripts/demo.sh` line and
+the dead `RESULTS.md` pointer.
+
+**Noticed (dead code, filed here since it's directly adjacent):** `render_results_markdown`
+in `quality/gates/perf/bench_token_economy_io.py:291` is exported but has **zero
+callers** anywhere in the codebase (`main()` in `bench_token_economy.py:137-154` only
+calls `render_token_economy_markdown` from the sibling `bench_token_economy_captures.py`
+module). This is the vestigial function that would have written the nonexistent
+`RESULTS.md` -- dead code from the pre-P115 methodology, safe to delete or worth a
+GOOD-TO-HAVES row if out of this phase's scope.
+
+## SC5b -- `docs/social/twitter.md` deleted-FUSE architecture description
+
+**Current-state evidence** (full file read, 35 lines):
+
+```
+16: Result: **reposix** — a FUSE filesystem + git-remote-helper for issue trackers.
+18: In a simulated benchmark (representative 35-tool Jira-shaped MCP fixture vs reposix shell session): **89.1% fewer tokens** for the same task. Real-world numbers TBD — but the direction is clear.
+```
+
+Line 16 describes the pre-v0.9.0 architecture, deleted per `filesystem-layer.md:46`
+("The `crates/reposix-fuse/` crate was deleted... the `fuser` dependency, the `/dev/fuse`
+permission song-and-dance, and the WSL2 kernel-module quirks all went with it"). Line 18
+also carries the retired 89.1%/synthetic-fixture figure (same one being scrubbed from
+`index.md`/`token-economy.md`/`reposix-vs-mcp-and-sdks.md`/`latency.md` per commit
+`5a5dd29`, 2026-07-16, which did NOT touch `docs/social/`) -- DOCS-06's scope is narrowly
+the FUSE line, but line 18's stale figure sits immediately adjacent and a reviewer will
+likely want to fix both in one pass (both are `not_in_nav`, escape all doc gates, zero
+doc-alignment rows except one: `docs/social/twitter/token-reduction-92pct`, already
+flagged `STALE_TEST_DRIFT` at line 18 -- the catalog already knows this row is stale).
+
+**Required end-state:** line 16 rewritten to the current git-native partial-clone
+framing (mirror `docs/index.md:13`'s fixed version or `filesystem-layer.md:46`'s
+"superseded that virtual filesystem" framing). Suggest: *"Result: **reposix** — a
+git-native partial clone + git-remote-helper for issue trackers."* Line 18's figure is
+techncially DOCS-07/P118 territory (disputed-figure retraction), but low-cost to align
+here since it's the same file, same edit pass, same currently-unbound row.
+
+## Furnished-Product Gaps (GTH-V15-36 -- REQUIRED acceptance-bar input)
+
+Enumerated, actionable items -- owner mandate is explicit that clearing SC1-SC6 alone is
+NOT sufficient; this is a first-class cold-reader/IA pass, not a leftover:
+
+1. **Admonitions are used on only 5 of ~30 nav pages** (`contributing.md`,
+   `reposix-vs-mcp-and-sdks.md`, `agentic-engineering-reference.md`,
+   `integrate-with-your-agent.md`, `first-run.md`) despite `admonition` +
+   `pymdownx.details` both being enabled in `mkdocs.yml`. **`docs/index.md` itself uses
+   ZERO admonitions** -- the "Honest scope" alpha-caveat paragraph at the bottom
+   (`index.md:168`, plain italic prose) is a natural `!!! note "Honest scope"` candidate,
+   matching the sanctioned pattern at `reposix-vs-mcp-and-sdks.md:23` (`!!! note "About
+   the MCP comparison (live, 2026-07-16)"`).
+2. **Furnished-product features (grid cards, tabs, `<details>` folds, md-button CTAs) are
+   quarantined to `docs/index.md` alone.** Every how-it-works/concepts/guides page is
+   plain prose + at most one mermaid diagram. Propagating index.md's "Where to go next"
+   grid-card pattern (`index.md:150-158`) to the bottom of `filesystem-layer.md`,
+   `git-layer.md`, `trust-model.md`, `time-travel.md` (a natural "how-it-works quartet"
+   nav aid) is a concrete, scoped win.
+3. **`docs/social/*` escapes every docs gate** (`not_in_nav` in `mkdocs.yml`) -- exactly
+   why the SC5b/SC6 stale-FUSE line survived undetected. No action needed in-phase beyond
+   fixing the content, but worth flagging as a GTH for a lightweight freshness grep
+   (`FUSE`, `/mnt/`, `mount`) over `docs/social/**`.
+4. **Two of the six defects sit on the SAME page as already-correct copy**
+   (`filesystem-layer.md` lies in its summary but tells the truth in its body at line 42;
+   `index.md` mislabels Confluence in the hero at line 13 but correctly frames it in the
+   connector matrix at 130-137) -- these are internal-consistency fixes, not full
+   rewrites; a reviewer should read the whole page, not just patch the cited line, so the
+   fixed prose matches the page's own existing accurate claims.
+5. **Badge/link resolution:** `docs/index.md:7-9` and `README.md:10-17` carry 4-7 badges
+   each (CI, Quality weekly, Quality score, Docs, codecov, License, Rust, crates.io) --
+   not verified live in this research pass (would require network egress outside this
+   research's scope); flag as a pre-phase-close checklist item (`curl -I` each badge URL,
+   per global CLAUDE.md Operating Principle 1).
+6. **Sanctioned tool:** `/doc-clarity-review` exists as a global slash command (confirmed
+   present, referenced by root `CLAUDE.md` § "Cold-reader pass on user-facing surfaces")
+   and should run on `docs/index.md` + `README.md` + any page this phase substantially
+   rewrites, BEFORE phase close, per GTH-V15-36 item 4.
+
+## Animation Embed Lane (GTH-V15-37)
+
+**Source directory inspected** (read-only, nothing copied): `/home/reuben/workspace/reposix-animation-pitch/`
+
+| File | Real size | Role |
+|---|---|---|
+| `Reposix Launch Animation.mp4` | 7,145,308 bytes (6.81 MiB / ~7.1MB decimal, matches GOOD-TO-HAVES addendum) | Video fallback / social asset |
+| `.thumbnail` | 3,158 bytes, WebP image | Poster frame for the fallback `<video>` |
+| `animations-v2.jsx` | 1,483 lines | `Stage`/`SceneStage` playback engine (scrub bar, play/pause, autoplay, localStorage persistence) |
+| `reposix-scenes.jsx` | 740 lines | The 7 scene components (Hook/MCP/Flip/Init/Push/Proof/CTA) + top-level `ReposixVideo` mount |
+| `tweaks-panel.jsx` | 542 lines | Editor overlay, gated behind a `postMessage` handshake protocol |
+| `support.js` | 1,768 lines, `// GENERATED from dc-runtime/src/*.ts` | Runtime harness: loads React 18.3.1 + ReactDOM (UMD, unpkg CDN) + `@babel/standalone` (unpkg CDN), then Babel-transforms the `.jsx` files client-side |
+| `Reposix Launch Animation.dc.html` | Entry point | Declares scenes (`OM_SCENES`, 7 entries totalling 80s), `TWEAK_DEFAULTS` (`motionEditor: true` today), Google Fonts `<link>` tags |
+
+**Feasibility per checklist item:**
+
+1. **Pre-compile JSX -> plain JS (remove unpkg/Babel CDN compile).** NEEDS WORK, not
+   trivial. `support.js` is a bespoke "dc-runtime" preview harness (Claude-artifact-style
+   `<x-dc>`/`<x-import>` custom elements), not something to embed as-is on a production
+   docs site. Requires standing up a real build step (the repo has no JS bundler today --
+   no `package.json`, no esbuild/vite in this repo; `node v22.22.2`/`npm 10.9.7` ARE
+   available on the research machine, `npx esbuild` would work ad hoc) to compile
+   `animations-v2.jsx` + `reposix-scenes.jsx` + `tweaks-panel.jsx` into a self-contained
+   bundle with React inlined or CDN-pinned. **Open question:** does "pre-compile JSX"
+   also mean self-host React/ReactDOM, or is pinned-version CDN React acceptable? Flagged
+   below.
+2. **Self-host Google Fonts (Space Grotesk, JetBrains Mono).** TRIVIAL, mechanical.
+   Confirmed exactly 2 font families, loaded via `fonts.googleapis.com`/`fonts.gstatic.com`
+   `<link>` tags in the `.dc.html`; used pervasively (45 `fontFamily:` references in
+   `reposix-scenes.jsx`) but only 2 distinct family names (`DISP = 'Space Grotesk'`,
+   `MONO = 'JetBrains Mono'`) with 3-4 weights each (400/500/600/700). Download the
+   `.woff2` files, add `@font-face`, host under `docs/assets/animation/fonts/`.
+3. **Embed-mode config (disable editor, disable localStorage, click-to-play).**
+   **Editor: ALREADY effectively disabled for free.** Read `tweaks-panel.jsx:198-238`:
+   `TweaksPanel`'s `open` state defaults `false` and `if (!open) return null` -- it only
+   opens on a `postMessage({type:'__activate_edit_mode'})` from a PARENT frame, which a
+   normal docs-page embed will never send. Setting `TWEAK_DEFAULTS.motionEditor=false`
+   per the owner's literal checklist is still worth doing (belt-and-braces, and it's an
+   explicit owner instruction) but has no visible runtime effect today since
+   `motionEditor` only feeds a checkbox INSIDE the already-hidden panel
+   (`reposix-scenes.jsx:731`), not a visibility gate. **localStorage: NEEDS a small code
+   patch.** `animations-v2.jsx:544-545,569` reads/writes
+   `localStorage[persistKey + ':t']` unconditionally (`persistKey` defaults to
+   `'animstage'`, a generic non-namespaced key); GOOD-TO-HAVES confirms the exact bug
+   symptom this causes: *"returning visitors currently get a frozen end frame."* No
+   existing prop disables this -- needs a small (~5-10 line) patch adding a `persist`
+   boolean prop guarding both call sites before pre-compiling. **Autoplay: TRIVIAL, prop
+   already exists.** `Stage`/`SceneStage` accept an `autoplay` prop (default `true`);
+   pass `autoplay={false}` at the mount site (`reposix-scenes.jsx:726`). A play/pause
+   button (`IconButton onClick={onPlayPause}`, `animations-v2.jsx:902`) is ALREADY part
+   of the existing playback-bar UI -- no new click-to-play affordance needs to be built,
+   just flip the default so it starts paused.
+4. **Video fallback hosted as a GitHub release asset, never committed.** File exists,
+   size confirmed (7.1MB). **This is an external mutation against the real
+   `github.com/reubenjohn/reposix` repo** (creating/editing a GitHub Release, uploading
+   an asset) -- per this project's CLAUDE.md Non-negotiables ("External mutations need
+   owner-named-target approval"), this needs explicit owner sign-off before any plan
+   executes it, not a routine implementation step. Also worth flagging: `release-plz.toml`
+   deliberately keeps `git_release_enable = false` for the VERSIONED crate-release tags
+   (per root CLAUDE.md's "Release pipeline" section, to avoid 404-ing installer URLs) --
+   the animation asset should almost certainly go on a SEPARATE, dedicated release tag
+   (e.g. `docs-assets` or `media-v1`), not mixed into an existing `v0.15.x` crate release,
+   to avoid interacting with that automation. Flagged as an Open Question.
+5. **Docs gates: assets under `docs/assets/animation/`, mkdocs-strict + playwright
+   coverage.** `docs/assets/` **does not currently exist** as a directory (confirmed via
+   `find`) -- this is a net-new convention, no existing precedent to copy verbatim.
+   Closest wiring analog: `mkdocs.yml`'s `extra_javascript`/`extra_css` block (used for
+   the self-hosted `docs/javascripts/mermaid-render.js`) for declaring the precompiled
+   bundle + fonts; closest embed-mechanics analog: `docs/index.md`'s existing
+   `md_in_html`+`attr_list`-based `<div class="grid cards" markdown>` block (`index.md:15`)
+   for embedding the mounted component inside markdown. `mkdocs-strict.sh` will catch
+   broken relative asset paths/nav entries; a NEW playwright-coverage artifact
+   (`.planning/verifications/playwright/...`) following the `mermaid-renders.sh`
+   source-artifact pattern would need a matching NEW `docs-build` catalog row, minted in
+   the SAME commit as the implementation (catalog-first rule).
+
+**Also noticed:** `Reposix Launch Animation.mp4:Zone.Identifier` and multiple
+`uploads/*.png:Zone.Identifier` files exist in the source dir (Windows download
+metadata) -- GOOD-TO-HAVES checklist item 5 already anticipates this ("strip Windows
+`Zone.Identifier` files from uploads/"); confirmed present, must be stripped before
+anything is copied into the repo. Also a dead "export video" button
+(`reposix-scenes.jsx:982`, `postMessage({type: 'omelette:request-video-export'})`) that
+talks to a parent frame that won't exist in a docs embed -- harmless no-op when clicked
+outside the authoring tool, but a rough edge; consider hiding it in embed mode if the
+planner wants full polish, not load-bearing.
+
+**No hard blocker found.** All 5 checklist items are buildable with tools already on the
+research machine (`node`/`npm`); item 1 (bundle precompile) and item 4's localStorage
+sub-piece are the only "needs care" items -- everything else is mechanical.
+
+## Doc-Alignment Drift Map
+
+Every doc this phase is expected to touch, checked against
+`quality/catalogs/doc-alignment.json` (400 rows total). **BOUND** rows whose line range
+overlaps a planned edit will trip `STALE_DOCS_DRIFT` at pre-push and require a
+**top-level-only** `/reposix-quality-refresh <doc>` pass (per `quality/CLAUDE.md` §
+Docs-alignment dimension) before the phase can close green.
+
+| Doc | Rows | Touches a BOUND row at the edit line? |
+|---|---|---|
+| `docs/index.md` (SC1, line 13) | 29 rows total | **YES** -- `docs/index/real-git-working-tree` (line 13) AND `docs/index/rest-supported-backends` (line 13), both `BOUND`/`BIND_GREEN` |
+| `docs/how-it-works/filesystem-layer.md` (SC2) | 5 rows | **YES if editing line 42** (`filesystem-layer/blob-lazy-first-cat`, `BOUND`); **NO if only editing the summary at lines 7-13** (no row overlaps) |
+| `docs/reference/glossary.md:20` (SC2 propagation) | 24 rows, **ALL `RETIRE_CONFIRMED`** | NO -- glossary.md's alignment rows are already retired from active binding (no BOUND rows at all); low checkpoint risk |
+| `docs/reference/cli.md:59` (SC2 propagation) | 8 rows | **YES** -- `docs/reference/cli.md/init_documented` spans lines 42-65, `BOUND` |
+| `docs/reference/git-remote.md:23` (SC2 propagation) | 8 rows | **YES** -- `git-remote/stateless-connect-read-path` is anchored exactly at line 23, `BOUND` |
+| `docs/reference/confluence.md:135-138` (SC2, lower priority) | 3 rows (110-128, 152-154, 6-8) | NO -- none overlap line 135-138 |
+| `crates/reposix-cli/src/attach.rs` (SC4) | 0 rows | N/A -- doc-alignment tracks doc-file claims, not Rust source; editing the error string does not itself trigger `STALE_DOCS_DRIFT` |
+| `docs/guides/troubleshooting.md:329` (SC4) | 7 rows (all in lines 9-75, 227) | NO -- line 329 is outside every existing row's range |
+| `crates/reposix-cli/src/list.rs` / `refresh.rs` (SC3) | 0 rows each | N/A -- same reasoning as attach.rs |
+| `docs/benchmarks/token-economy.md` (SC5a, if touched at all) | 9 rows, lines 8-40 only | NO -- line 78 (the provenance bullet, which needs NO edit per this research) is outside every row's range |
+| `benchmarks/README.md` (SC5a, real fix location) | **0 rows** | N/A -- not in mkdocs nav, entirely untracked by doc-alignment |
+| `docs/social/twitter.md:16,18` (SC5b/SC6) | 1 row: `docs/social/twitter/token-reduction-92pct` at line 18, **already `STALE_TEST_DRIFT`** | Partially -- the row is already flagged stale independent of this edit; this edit adds more reason for a refresh but doesn't newly break a GREEN row |
+
+**Planner budget implication:** at minimum ONE `/reposix-quality-refresh` checkpoint is
+needed for the wave touching `docs/index.md` (2 rows) + `filesystem-layer.md` (if line 42
+is touched, 1 row) + `docs/reference/cli.md` (1 row) + `docs/reference/git-remote.md` (1
+row) -- these can plausibly be refreshed together in one pass if those edits land in the
+same wave. `glossary.md`, `confluence.md`, `troubleshooting.md`, `attach.rs`,
+`list.rs`/`refresh.rs`, `token-economy.md`, `benchmarks/README.md` carry no such
+requirement for their specific edited lines.
 
 ## NOTICED
 
-Owner-mandate deliverable — items found near the research surface, with severity + fix sketch (research FILES, does not fix):
+1. **[HIGH-VALUE] REQUIREMENTS.md's DOCS-05 citation is itself stale** and, if followed
+   literally, would relabel an ALREADY-ACCURATE claim as a lie -- see § SC5a. This is the
+   single highest-value finding in this research; the planner must NOT blindly copy
+   DOCS-05's prescribed fix ("relabel honestly as hand-authored") onto
+   `token-economy.md`, only onto `benchmarks/README.md`.
+2. **`.planning/phases/117-doc-truth-launch-blocker-purge/PATTERNS.md` already exists**
+   (a prior pattern-mapping pass, dated 2026-07-16, found in the phase directory before
+   this research began) and is a genuinely useful cross-reference -- but contains one
+   factual error: its SC4 citation of `CONSULT-DECISIONS.md:146` as a governing ruling is
+   actually an unrelated P116 FIX-03 decision (see § SC4 above). Use PATTERNS.md for its
+   exemplar/analog citations, not for that one ruling claim.
+3. **Stale line numbers are the norm, not the exception**, across the phase brief,
+   ROADMAP.md, and REQUIREMENTS.md (SC1: ~135-152 vs actual 13; SC4: 135-138 vs actual
+   144; SC5a: 51-52 vs actual N/A/78). Every ticket-cited line number in this phase's
+   source documents should be treated as approximate; this RESEARCH.md's line numbers are
+   the ones verified against the current checkout.
+4. **`main.rs`'s module-doc comment (`crates/reposix-cli/src/main.rs:4-12`) is itself
+   stale** -- it lists only 6 subcommands ("sim, init, list, refresh, spaces, version")
+   but `enum Cmd` has 9+ variants (Attach, Sync, Doctor, History + Time-travel alias, plus
+   gc/cost/tokens as separate modules per `lib.rs`). Minor, outside the 6 named
+   blockers, but a first-time reader of the source (not just the docs site) hits the same
+   "doc doesn't match reality" pattern this whole phase is purging. Consider a 1-line fix
+   if a wave touches this file anyway for SC3/SC4.
+5. **Dead code adjacent to SC5a:** `render_results_markdown`
+   (`quality/gates/perf/bench_token_economy_io.py:291`) has zero callers -- see § SC5a.
+6. **`docs/research/initial-report.md:78`** still carries the retired "150K -> 2K, 98.7%"
+   figure -- explicitly OUT of this phase's scope (it's a historical pitch/research doc,
+   not a claim-of-fact page, and P118/DOCS-07 already owns the disputed-figure-retraction
+   work for `.planning/PROJECT.md`), but flagged here so the planner doesn't accidentally
+   assume it's already clean when scoping DOCS-07/P118 boundaries.
 
-1. **[HIGH] `benchmarks/README.md:34` fabricates provenance AND has zero doc-alignment coverage.** The "literal output of `scripts/demo.sh`" claim is false (script absent; file is a live capture) and directly contradicts `benchmarks/fixtures/README.md:16`. *Fix:* rewrite to true provenance (SC5a) + **file a doc-alignment row** pinning `reposix_session.txt` provenance so this cannot recur (the "fix it twice" meta-rule — the gap is *why* it drifted).
-2. **[HIGH] The single most-read line on the docs site (index.md:13) is currently false** (SC1). A skeptical first-time dev's first sentence mislabels a backend and shows the wrong bootstrap verb. This is the top furnished-product regression, not a footnote.
-3. **[MEDIUM] The false SC2 claim is baked into a doc-alignment *row* (`filesystem-layer/blob-lazy-first-cat`), so the "claim has a test" machinery is currently *certifying a falsehood*.** *Fix:* rewrite the row claim (catalog-first) as part of SC2 — otherwise the refresh re-binds the lie.
-4. **[MEDIUM] Pre-existing stale token-economy rows** (`docs/index/token-reduction-89-percent`, `docs/why/token-economy-89-1-percent`, and five `token-economy/*` synthetic-era rows) still assert the retired 89.1%/85.5%/4883/531 figures superseded by the live 94.3%/74.9% medians. *Fix:* sweep during the P117 refresh or file a GOOD-TO-HAVE.
-5. **[MEDIUM] Animation makes live `cdn.simpleicons.org` calls** (reposix-scenes.jsx:533,545) — an external runtime dependency the 5-item checklist omits, and a hermetic-reproducibility smell for this project. *Fix:* self-host brand icons alongside fonts, or file as GOOD-TO-HAVE.
-6. **[LOW] The leaf-isolation PreToolUse hook false-positives on grep patterns** containing the literal setup-verb strings (a `grep -n "reposix at""tach"` was BLOCKED as if it were a real setup command). Documented coverage boundary, but a research/read-only grep is a safe operation. *Fix:* file a GOOD-TO-HAVE to let the guard distinguish `grep`/`rg` argv from an actual setup invocation.
-7. **[LOW] Secondary stale `scripts/demo.sh` reference** in generator text at `quality/gates/perf/bench_token_economy_io.py:353` ("workflow through `scripts/demo.sh`") — repair with SC5a so regenerated docs don't reintroduce it.
-8. **[LOW] `git-layer.md:8` and multiple docs still say "issue tracker"** as the generic category label. Not false per se, but for a tool that also serves Confluence wikis, "systems of record" (CLAUDE.md's own phrasing) reads more accurately. Optional furnished-product tightening.
+## OPEN QUESTIONS / RAISE candidates
 
-## Open Questions
-
-1. **Animation embed depth (owner decision).**
-   - Known: mp4 fallback (item 4) is low-risk and gate-friendly; interactive embed (items 1–3) is feasible but blocked on the absent dc-runtime toolchain (needs an esbuild rebuild + self-hosting fonts/icons).
-   - Recommendation: ship mp4 baseline in P117; scope the interactive embed as an explicit stretch lane or a follow-up GOOD-TO-HAVE.
-2. **SC4 fork (owner gate).** Option B recommended; Option A (`reposix detach`) is a real feature the owner may want for symmetric UX. Recommendation: B now, file A.
-3. **Should the pre-existing stale token-economy catalog rows be swept in P117** (planner folds into the refresh wave) or filed separately? They're in the blast zone but not strictly SC1–SC5.
+1. **SC4 build-vs-reword is a genuine decision, not a research finding** -- see decision
+   table. Recommendation given (Option B / reword now), but this should be confirmed with
+   the coordinator/owner before the plan locks it in, since DOCS-04's text explicitly
+   allows either path.
+2. **Animation Lane checklist item 4 (GitHub Release upload) is an external mutation**
+   requiring owner-named-target approval per this project's CLAUDE.md Non-negotiables --
+   this cannot be executed autonomously inside a GSD phase without that approval. Needs
+   explicit RAISE before any plan schedules the actual `gh release create`/`gh release
+   upload` step. Suggested target: a dedicated non-crate release tag (e.g. `docs-assets`
+   or `media-v1`), NOT an existing `v0.15.x` crate-release tag (see `release-plz.toml`'s
+   `git_release_enable = false` rationale).
+3. **Animation Lane checklist item 1 scope ambiguity:** does "pre-compile JSX -> plain JS"
+   also require self-hosting React/ReactDOM (currently pinned-version `unpkg.com` CDN,
+   NOT the Babel-standalone step that's explicitly called out), or is CDN-hosted,
+   version-pinned React acceptable to keep? Affects whether item 1 is a pure build-step
+   change or also a hosting/CSP-posture change. Recommend keeping pinned CDN React (small,
+   stable, cacheable, matches the `mermaid-render.js` precedent of pinning a CDN version)
+   unless the owner wants zero external JS dependencies for the docs site.
+4. **Should `docs/how-it-works/git-layer.md`, `time-travel.md`, `trust-model.md` still
+   get a wave in this phase** even though SC2's verified-negative check found no actual
+   defect in them? The phase brief named them as "at minimum" propagation targets; this
+   research found them clean. Recommend the planner skip dedicated edit tasks for these
+   three files for SC2 specifically, but they remain natural candidates for the
+   furnished-product "propagate index.md's grid-card pattern" polish item (§
+   Furnished-Product Gaps #2) if that's in scope for this phase vs. deferred to P119.
 
 ## Sources
 
-### Primary (HIGH — read file:line this session)
-- `docs/index.md` (SC1: :13, :75; furnished-product IA) · `docs/how-it-works/filesystem-layer.md` (SC2: :7–13,19,30–40,42,63) · `docs/how-it-works/git-layer.md` :8 · `docs/benchmarks/token-economy.md` (accurate) · `docs/social/twitter.md` :16,18 · `docs/social/linkedin.md` :21
-- `crates/reposix-cli/src/init.rs` :130–153, :365–373 (exemplar) · `list.rs` :77–80 · `refresh.rs` :206–209 · `attach.rs` :142–145 · `main.rs` clap enum (no `Detach`)
-- `benchmarks/README.md` :34 · `benchmarks/fixtures/README.md` :16 · `benchmarks/fixtures/reposix_session.txt` (header) · `quality/gates/perf/test_bench_token_economy.py` :238 · `bench_token_economy_io.py` :353
-- `quality/catalogs/doc-alignment.json` (400 rows; exact-file scan) · `quality/catalogs/subjective-rubrics.json` (cold-reader rubric) · `mkdocs.yml` · `quality/gates/docs-build/mkdocs-strict.sh`
-- `/home/reuben/workspace/reposix-animation-pitch/` — `Reposix Launch Animation.dc.html`, `support.js` (unpkg React/ReactDOM/Babel; JSX compile), `reposix-scenes.jsx` (:533,545 simpleicons), `animations-v2.jsx` (localStorage/autoplay/OM_PLAYBACK), mp4 (7,145,308 B)
+### Primary (HIGH confidence -- verified via direct tool use against this checkout)
+- `docs/index.md`, `docs/how-it-works/filesystem-layer.md`, `docs/how-it-works/{git-layer,time-travel,trust-model}.md`, `docs/reference/{glossary,cli,git-remote,confluence}.md`, `docs/benchmarks/token-economy.md`, `docs/social/twitter.md`, `benchmarks/README.md`, `benchmarks/fixtures/README.md`, `README.md` -- read in full via `cat -n`.
+- `crates/reposix-cli/src/{init,attach,list,refresh,main}.rs`, `crates/reposix-cli/src/lib.rs`, `crates/reposix-remote/src/stateless_connect.rs`, `crates/reposix-cache/src/{builder,cache,lib}.rs`, `quality/gates/perf/bench_token_economy{,_io,_captures}.py` -- read/grepped directly.
+- Live capture: `cargo run -p reposix-cli -- list --project demo --origin http://127.0.0.1:19999` and the equivalent `refresh` invocation, both against a guaranteed-closed port inside a `/tmp` isolate -- exact error text captured verbatim.
+- `benchmarks/fixtures/reposix_session.txt` -- read in full (200 lines), zero `/mnt/` occurrences confirmed via grep.
+- `quality/catalogs/doc-alignment.json` (400 rows) -- queried programmatically for every candidate edited file.
+- `.planning/ROADMAP.md:135-152`, `.planning/REQUIREMENTS.md:73-105,308-313`, `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` (GTH-V15-36/37 full text), `.planning/CONSULT-DECISIONS.md:125-146` -- read for canonical, current ticket text (superseding the phase-brief's paraphrase where they disagree).
+- `/home/reuben/workspace/reposix-animation-pitch/*` -- read-only inspection of all 4 `.jsx`/`.js` files, the `.dc.html` entry point, and file sizes.
+- `crates/CLAUDE.md:92-95` (Error-message convention, 3-part bar) -- confirmed exact wording.
 
-### Secondary (MEDIUM)
-- `crates/CLAUDE.md` § Error-message convention · `quality/CLAUDE.md` § Docs-alignment dimension · project `CLAUDE.md` (elevator pitch phrasing, threat model)
-
-### Tertiary (LOW / to verify)
-- Partial-clone checkout-vs-cat materialization semantics (A1) — verify with an audit-row observation in a /tmp sim clone.
+### Secondary (MEDIUM confidence)
+- `.planning/phases/117-doc-truth-launch-blocker-purge/PATTERNS.md` -- pre-existing pattern map found in the phase directory, cross-checked against direct evidence; one citation error found and corrected (§ SC4 / NOTICED #2), rest corroborated.
 
 ## Metadata
 
 **Confidence breakdown:**
-- SC1/SC3/SC4/SC5: **HIGH** — exact offending file:line quoted and cross-checked.
-- SC2: **HIGH** on location + narrow-propagation correction; **MEDIUM** on the precise corrected mechanism wording (A1 — recommend a checkout-vs-cat audit-row confirmation).
-- Doc-alignment drift surface: **HIGH** — exact-file scan of all 400 rows.
-- Animation feasibility: **HIGH** on file inventory + CDN/JSX/localStorage/autoplay facts; **MEDIUM** on item-1 effort (dc-runtime toolchain absent → esbuild rebuild path).
-- Furnished-product: **MEDIUM** — IA weaknesses are reasoned from the rendered structure; the cold-reader score is the falsifying evidence at phase close.
+- SC1-SC3, SC5a, SC5b: HIGH -- every claim grounded in a live grep/read/cargo-run against this exact checkout.
+- SC4: HIGH on current-state facts; the recommendation itself is a judgment call, flagged as an Open Question for coordinator confirmation.
+- Animation Lane: HIGH on source-directory facts (file sizes, code structure); MEDIUM on the exact bundling/CI approach since no JS build tooling exists in this repo yet (net-new infrastructure, no precedent to verify against).
+- Furnished-product gaps: HIGH -- directly enumerated via grep across all nav pages.
 
 **Research date:** 2026-07-16
-**Valid until:** ~2026-08-15 (stable — internal docs/CLI; re-verify line numbers if other phases edit these files first)
+**Valid until:** Short shelf life (~7 days) -- this phase is itself about doc drift, and this research already found the phase's OWN source tickets (ROADMAP/REQUIREMENTS) drifted from the code within the same milestone. Re-verify line numbers immediately before planning if more than a few days pass.
