@@ -68,7 +68,7 @@
 - [x] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
 - [x] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling. (completed 2026-07-16)
 - [x] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent. (completed 2026-07-17)
-- [ ] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected.
+- [x] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected. (completed 2026-07-17)
 - [ ] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive.
 - [ ] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery.
 - [ ] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up.
@@ -166,7 +166,8 @@
   1. `.planning/PROJECT.md`'s Context section no longer cites the disputed "~150k→~2k (98.7%)" figure or the FUSE-era `/mnt/jira/PROJ-123.md` path; it cites the CI-verified 89.1% figure or BENCH-01's re-measured value with a git-native example path.
   2. The Arc D ADDENDUM's stale "cut two stalled tags" premise is corrected to state that v0.13.0/v0.13.1/v0.14.0 are all already tagged and released as GitHub releases.
   3. Neither correction re-opens Arc D scope or performs a literal tag cut — both are prose corrections only, per DOCS-09's explicit scope note.
-**Plans**: TBD
+**Plans**: 1 plan (Wave 1: 118-01) — CLOSED GREEN 2026-07-17 (verdict `quality/reports/verdicts/p118/VERDICT.md`, 3/3 SCs)
+- [x] 118-01-PLAN.md — DOCS-07: re-cite `.planning/PROJECT.md`'s token figure to P115's live-benchmark measurement (~94% fewer output tokens) + drop the FUSE-era `/mnt/jira/PROJ-123.md` path for a git-native `cat issues/<id>.md` example; DOCS-09: annotate the 2026-07-12 reality-check audit's stale "cut two stalled tags" premise as dated-SUPERSEDED (prose-only, no Arc D reopen, no literal tag cut)
 
 ### Phase 119: Docs/planning simplification (the "P112 RAISE")
 **Goal**: Stale/superseded legacy planning and doc content is deleted outright — git history is the archive, not kept-with-banners.
@@ -292,7 +293,7 @@
 | 115. Live MCP benchmark re-measurement | 0/TBD | Not started | - |
 | 116. ADR-010 decision packet + slug→id design | 0/3 | Planned | - |
 | 117. Doc-truth launch-blocker purge | 0/7 | Planned | - |
-| 118. Post-bench honesty corrections | 0/TBD | Not started | - |
+| 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
 | 119. Docs/planning simplification | 0/TBD | Not started | - |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
 | 121. RPX error-code namespace + explain | 0/TBD | Not started | - |

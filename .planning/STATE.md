@@ -3,19 +3,31 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-17T10:30:00.000Z"
-last_activity: 2026-07-17 -- P117 CLOSED GREEN (verdict GREEN, CI green on cdf5557); launch-animation publish (gh release docs-assets + mp4 upload + animation-renders verify) manager-deferred; owner approval PENDING (E1 ask remains open/surfaced to owner); next = P118
+last_updated: "2026-07-17T14:00:00.000Z"
+last_activity: 2026-07-17 -- P118 CLOSED GREEN (verdict GREEN at quality/reports/verdicts/p118/VERDICT.md, 3/3 SCs; CI green on main tip a2b0186, run 29575437132 success): DOCS-07 re-cited PROJECT.md token figure to P115 live-benchmark (~94% fewer output tokens, FUSE `/mnt/jira` path dropped) + DOCS-09 annotated the reality-check tag-cut premise SUPERSEDED (prose-only, no Arc D reopen, no literal tag cut); the P117 launch-animation publish (E1/GTH-V15-37) remains owner-PENDING; next = P119
 progress:
   total_phases: 15
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 3
   completed_plans: 2
-  percent: 27
+  percent: 33
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P118 (post-bench honesty corrections) — CLOSED GREEN 2026-07-17.**
+gsd-verifier verdict GREEN on all 3 SCs (`quality/reports/verdicts/p118/VERDICT.md`);
+CI green on main tip `a2b0186` (run `29575437132`, `success`). DOCS-07 (SC1) re-cited
+`.planning/PROJECT.md`'s "Why this exists" figure to P115's live token-economy
+measurement (~94% fewer output tokens) and dropped the FUSE-era `/mnt/jira/PROJ-123.md`
+path for a git-native `cat issues/<id>.md` example; DOCS-09 (SC2) annotated the Arc D
+reality-check audit's stale "cut two stalled tags" premise as dated-SUPERSEDED
+(v0.13.0/v0.13.1/v0.14.0 are all already tagged AND released, v0.14.0 = Latest). Both are
+prose-only — Arc D scope is NOT re-opened and no literal tag was cut (SC3). Shipped
+`e510d4f`·`59f932a`·`246a2d1`·`a2b0186`. **Next = P119** (docs/planning simplification, the
+"P112 RAISE"; `Execution mode: top-level`).
 
 Phase: **P117 (doc-truth launch-blocker purge) — CLOSED GREEN.** Launch-animation
 publish (`gh release create docs-assets` + mp4 upload + live `animation-renders`
@@ -46,8 +58,8 @@ asset is live, per the row's own `owner_hint`); Task 3 — cold-reader
 CI-green confirmation, unbiased gsd-verifier dispatch. See
 `.planning/phases/117-doc-truth-launch-blocker-purge/PROGRESS.md` `## NOW`/`## NEXT`
 for the live briefing.
-**4/15 v0.15.0 "Floor" phases complete** (P114, P115, P116, P117); 11 remain; next =
-P118.
+**5/15 v0.15.0 "Floor" phases complete** (P114, P115, P116, P117, P118); 10 remain; next =
+P119.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
@@ -102,9 +114,11 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: P117 close-pending-owner-E1 — owner approves the launch-animation `gh release
-upload` (Task 1), then the coordinator runs Tasks 2-4 to close the phase; only then does
-`/gsd-plan-phase 118` become the next step.
+Next step: `/gsd-plan-phase 119` (docs/planning simplification, the "P112 RAISE"; marked
+`Execution mode: top-level`). Carried owner-gate still OPEN (NOT a P118/P119 blocker): the
+P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
+GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
+`.planning/CONSULT-DECISIONS.md`.
 
 **Serial workstream history (OD-3 — A then C then B, per OD-4 resequencing):**
 
@@ -142,7 +156,7 @@ upload` (Task 1), then the coordinator runs Tasks 2-4 to close the phase; only t
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P116 CLOSED GREEN (verifier 12/12); 3/15 phases complete (P114, P115, P116). Next: `/gsd-plan-phase 117`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P118 CLOSED GREEN (verdict GREEN 3/3 SCs); 5/15 phases complete (P114, P115, P116, P117, P118). Next: `/gsd-plan-phase 119`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
