@@ -155,16 +155,19 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
-## 2026-07-17 [OWNER] launch-animation publish held (117-07 second half)
+## 2026-07-17 [MANAGER] launch-animation publish held (117-07 second half)
 
 - Context: P117 closed GREEN; only remaining item is publishing the launch-animation mp4
   as a GitHub release asset (`docs-assets`) + wiring `animation-renders` live verify.
   External/outward-facing mutation → E1.
-- Decision: HELD/DEFERRED by owner (chose "Keep held / defer" when router relayed the
-  E1). Nothing published. `animation-renders` NOT-VERIFIED is an owner-accepted
-  deferral, not a gate failure.
-- Rationale: owner call on timing of a public, cacheable publish; ratified scope
-  (GTH-V15-37) but execution deferred.
+- Decision: deferred by MANAGER under standing doctrine (outward publishing =
+  owner-only) to unblock the relay; OWNER DECISION STILL PENDING — the E1 ask remains
+  open and surfaced to the owner. Nothing published; `animation-renders` NOT-VERIFIED is
+  a pending gate, not an owner-accepted deferral.
+- Rationale: manager applied standing doctrine (outward publishing = owner-only) to
+  unblock the relay without waiting on the owner; ratified scope (GTH-V15-37) but
+  execution deferred pending the owner's actual ruling on timing of a public, cacheable
+  publish.
 - Reversibility: fully reversible — re-raise + publish when owner initiates (create
   release with `--latest=false` so it can't steal `releases/latest` from v0.14.0 and
   404 installer URLs).

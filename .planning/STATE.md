@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-17T09:00:00.000Z"
-last_activity: 2026-07-17 -- P117 CLOSED GREEN (verdict GREEN, CI green on cdf5557); launch-animation publish (gh release docs-assets + mp4 upload + animation-renders verify) OWNER-DEFERRED 2026-07-17 — re-raise only on owner initiative; next = P118
+last_updated: "2026-07-17T10:30:00.000Z"
+last_activity: 2026-07-17 -- P117 CLOSED GREEN (verdict GREEN, CI green on cdf5557); launch-animation publish (gh release docs-assets + mp4 upload + animation-renders verify) manager-deferred; owner approval PENDING (E1 ask remains open/surfaced to owner); next = P118
 progress:
   total_phases: 21
   completed_phases: 3
@@ -19,9 +19,10 @@ progress:
 
 Phase: **P117 (doc-truth launch-blocker purge) — CLOSED GREEN.** Launch-animation
 publish (`gh release create docs-assets` + mp4 upload + live `animation-renders`
-playwright verify — the second, owner-gated half of 117-07) is OWNER-DEFERRED
-2026-07-17 by explicit owner choice — NOT a failure; `animation-renders` staying
-NOT-VERIFIED is an owner-accepted deferral. Re-raise ONLY on owner initiative; see
+playwright verify — the second, owner-gated half of 117-07) is manager-deferred
+2026-07-17 under standing doctrine (outward publishing = owner-only) — NOT a failure;
+`animation-renders` staying NOT-VERIFIED is a pending gate, not an owner-accepted
+deferral. OWNER APPROVAL PENDING — the E1 ask remains open, surfaced to the owner; see
 `.planning/CONSULT-DECISIONS.md` 2026-07-17 entry.
 P116 (ADR-010 mirror-fanout decision packet + slug→id durable-create) CLOSED GREEN
 2026-07-16 — gsd-verifier verdict 12/12 must-haves PASS, 0 gaps, 0 blockers
