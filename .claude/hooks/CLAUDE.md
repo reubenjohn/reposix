@@ -62,3 +62,29 @@ know and needs right now.**
 - `cargo-mutex.sh` — emits `"cargo OK"` on any command whose text contains
   `cargo `/`rustc `/`cross `. Keep the block (concurrent-build guard); drop the allow-path
   `additionalContext`.
+
+## cargo-mutex.sh: pgrep -x vs -f (comm vs argv match)
+
+`cargo-mutex.sh` gates concurrent builds by checking whether a cargo/rustc build is
+already running machine-wide. It matches on the process **executable name** (`comm`, via
+`pgrep -x`), never the full argv. A prior version used `pgrep -f 'cargo (…)|rustc '` —
+`-f` matches the FULL command-line TEXT of any process, so a shell wait-loop, an editor,
+or a `pgrep`/`grep`/`rg` invocation whose argv merely *mentioned* `cargo build` or
+`rustc …/target/debug` false-matched. The hook then `exit 2`'d and blocked every
+subsequent cargo/rustc Bash call machine-wide until that unrelated process died — and the
+failure mode is self-amplifying: a session's own `pgrep -f rustc` diagnostic (run to
+investigate the block) becomes the next false match. This deadlocked a live session for
+~180k tokens (full incident: `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md`,
+"cargo-mutex.sh gated on argv text, not process identity").
+
+**Fix:** `pgrep -x 'cargo|cargo-nextest|rustc|cross|clippy-driver'` — exact whole-`comm`
+match. A shell/editor/grep's `comm` is `bash`/`zsh`/`nvim`/`pgrep`, never a build-tool
+name, regardless of what its argv contains — structurally cannot false-match. This does
+NOT weaken the OOM protection (Hard rule 1, `crates/CLAUDE.md` § Build memory budget — VM
+OOM-crashed 3x from parallel workspace builds): the comm alternation covers every
+build-phase process a genuine second concurrent build would show (`cargo` for
+check/build/test/run, `cargo` again for `cargo clippy` which execs `clippy-driver`,
+`cargo-nextest`, `rustc`, `cross`), and `comm` cannot be spoofed without spawning a real
+build process, so no decoy slips a second build past the gate. Regression coverage:
+`.claude/hooks/tests/cargo-mutex-no-false-match.sh` (spawns a decoy `bash` whose argv
+contains "cargo build" and asserts the hook does NOT block on it).
