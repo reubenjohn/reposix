@@ -10,7 +10,7 @@ files and their 5-wave dependency DAG._
 | Wave | Plans | Concern | Status |
 |---|---|---|---|
 | W1 | 117-01 | SC3 connection-refused errors + SC4 `attach.rs` reword | ✅ GREEN + banked |
-| W2 | 117-02 ∥ 117-03 | docs-truth (SC1/SC2 + propagation) | 🔄 in progress |
+| W2 | 117-02 ∥ 117-03 | docs-truth (SC1/SC2/SC5 + propagation) | 🔴 push BLOCKED by pre-push — wave RED |
 | W3 | 117-04 ∥ 117-06 | (per ROADMAP DAG) | ⬜ not started |
 | W4 | 117-05 | (per ROADMAP DAG) | ⬜ not started |
 | W5 | 117-07 | phase close | ⬜ not started |
@@ -26,18 +26,27 @@ files and their 5-wave dependency DAG._
 
 ## NOW
 
-**Wave 2 in progress (117-02 ∥ 117-03, docs-truth).** Two parallel docs-only lanes with
-zero file-overlap:
+**Wave 2 push BLOCKED by the pre-push hook — WAVE RED, nothing landed on origin/main.**
+The nine W2 commits (`f42455a`..`c76b2c2`) are banked LOCALLY only; `git push origin main`
+was rejected (exit 1, no `--no-verify`) with three FAILs. Two are genuine W2 content
+regressions that must be fixed before any re-push; the third is the design-deferred
+docs-alignment drift:
 
-- **117-02** (this lane) — SC1 (`docs/index.md:13` Confluence-as-issue-tracker +
-  `git clone` bootstrap verb) + SC2 (the `cat`-secretly-networks lie in
-  `filesystem-layer.md` and its real propagation set: glossary/cli/git-remote/confluence).
-  FOLD-IN carried from the #55→#56 handover: `docs/guides/troubleshooting.md:329` still
-  names the phantom `reposix detach` — the twin of the `attach.rs` reference W1 purged;
-  reworded to manual recovery in this lane.
-- **117-03** — the sibling docs-truth lane (parallel, non-overlapping files).
+1. **`structure/banned-words` (P1 FAIL)** — `docs/guides/troubleshooting.md:334` (blamed to
+   W2 commit `214f45e`) uses the banned plumbing word **"promisor"** in the recovery line
+   `git config --unset extensions.partialClone  # clear the promisor binding to the old SoT`.
+   Fix: reword to avoid "promisor" OR add `<!-- banned-words: ok -->` per `docs/.banned-words.toml`.
+2. **`docs-repro/snippet-coverage` (P1 FAIL)** — the W2 troubleshooting reword pushed the
+   fenced-code-block count to **51, over the threshold of 50** (`uncovered_count: 0`, no
+   drift). Fix: switch to allow-list mode per `quality/gates/docs-repro/README.md` pivot rules.
+3. **`docs-alignment/walk` (P0 FAIL)** — the BOUND doc-alignment row drift from the SC1/SC2
+   edits. **Deferred by design to the W6 coordinator refresh** (RAISE, do NOT run `walk`/
+   `bind`/`/reposix-quality-refresh` from inside a C1 — checkpoint protocol below).
 
-**Done:** W1 + 117-01 GREEN.
+**Next re-push is gated on:** (a) fix #1 + #2 in `troubleshooting.md` (117-02 lane), and
+(b) L0 clearing the #3 STALE_DOCS_DRIFT via `/reposix-quality-refresh` at top level.
+
+**Done:** W1 (117-01) GREEN + banked. W2 is committed-locally but NOT shipped.
 
 **Deferred by design (do NOT chase in W2):** the BOUND doc-alignment row drifts these SC1/SC2
 edits trip (index ×2, cli, git-remote, filesystem-layer `blob-lazy-first-cat` REWRITE) are
