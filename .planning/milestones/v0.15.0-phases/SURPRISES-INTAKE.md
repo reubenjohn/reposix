@@ -814,3 +814,23 @@ the slow gate or re-baseline the documented ~60s budget in `quality/CLAUDE.md §
 Consolidate with the `2026-07-15 06:35` entry so P120 treats this as ONE recurring regression.
 
 **STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P119 phase-close tree-writer (executor-dispatch race NOTICED) | severity: LOW (no damage — orchestration-process candidate)
+
+**What:** During the P119 phase-close, **TWO `gsd-executor` instances were dispatched for the same
+STATE-advance + ROADMAP-finalize work** and raced the same files (`.planning/STATE.md`,
+`.planning/ROADMAP.md`). Root cause: a premature "sub-executor completed" relay led the coordinator
+to dispatch a follow-up writer while the original writer was **still running**. It was race-SAFE this
+time ONLY because each executor grep-confirmed the target text before editing, detected the
+already-applied edits, and no-op'd/reverted — so there was no duplicate commit and no double-increment
+of any counter. That safety was a property of the executors' verify-before-edit discipline, NOT of the
+dispatch, which had no dedup guard.
+
+**Sketched resolution (dedup guard):** Before dispatching a writer that targets the same files as a
+still-live or recently-dispatched writer, re-confirm the prior writer has **TERMINATED** via
+ground-truth — agent status + `git log` showing its commit landed — not merely that it was
+*relayed-as-done*. Never dispatch a second writer for work a running writer may still complete. This is
+an **orchestration-process / doctrine candidate** for P120 (or a `.planning/ORCHESTRATION.md` update):
+codify "one live tree-writer per file-set; confirm termination by artifact before re-dispatch."
+
+**STATUS:** OPEN

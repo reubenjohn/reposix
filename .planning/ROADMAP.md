@@ -294,7 +294,7 @@
 | 116. ADR-010 decision packet + slug→id design | 3/3 | Complete | 2026-07-16 |
 | 117. Doc-truth launch-blocker purge | 6/7 | Complete (E1 animation GTH-V15-37 owner-approval PENDING) | 2026-07-17 |
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
-| 119. Docs/planning simplification | 3/5 SC | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
+| 119. Docs/planning simplification | 4/4 | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
 | 121. RPX error-code namespace + explain | 0/TBD | Not started | - |
 | 122. reposix-remote + init hardening | 0/TBD | Not started | - |
