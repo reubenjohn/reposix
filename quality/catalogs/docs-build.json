@@ -186,6 +186,45 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T22:00:00Z"
+    },
+    {
+      "id": "docs-build/animation-renders",
+      "dimension": "docs-build",
+      "kind": "mechanical",
+      "sources": [
+        "docs/index.md:<video>",
+        ".planning/verifications/playwright/index/animation.json",
+        "quality/catalogs/docs-build.json:docs-build/mermaid-renders (row-shape analog)",
+        ".planning/phases/117-doc-truth-launch-blocker-purge/117-05-PLAN.md"
+      ],
+      "command": "bash quality/gates/docs-build/animation-renders.sh",
+      "expected": {
+        "asserts": [
+          "docs/index.md's <video> element has a corresponding playwright artifact at .planning/verifications/playwright/index/animation.json",
+          "the artifact records the poster (docs/assets/animation/reposix-launch.thumbnail.webp) resolved successfully in the rendered page",
+          "the artifact records the <video> element present with controls, preload=none, no autoplay",
+          "the artifact's console_errors is empty (no browser-side load/render failures against the live GitHub release-asset URL)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/animation-renders.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": ".planning/verifications/playwright/index/animation.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if NOT-VERIFIED: the coordinator (117-07, W5) generates the playwright artifact against the live GitHub release-asset URL (docs-assets tag, 'Reposix Launch Animation.mp4') AFTER the mp4 upload lands, then authors quality/gates/docs-build/animation-renders.sh (mirroring mermaid-renders.sh's source->artifact assertion shape) to grade it -- both the artifact and the verifier script are intentionally absent until W5; NOT-VERIFIED here is expected, not a regression. blast_radius is deliberately P2 (not P1 like mermaid-renders) so this deferred row does NOT block the W4 pre-push -- run.py's compute_exit_code only fails P0/P1 rows (P2 NOT-VERIFIED -> exit 0, verified locally 2026-07-17).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "This row does not yet claim the animation renders -- it exists catalog-first (quality/CLAUDE.md) to define the GREEN contract before 117-07 uploads the release asset + generates the coverage artifact. If the embed were silently left unverified with no tracking row at all, that gap would be invisible; NOT-VERIFIED with an explicit owner_hint keeps the pending work visible in every pre-push/pre-pr run without blocking either (P2 blast_radius).",
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ],
+      "minted_at": "2026-07-17T07:42:59Z"
     }
   ]
 }
