@@ -139,10 +139,7 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         let existing_sot = existing.split('?').next().unwrap_or(existing);
         let new_sot = translated.split('?').next().unwrap_or(&translated);
         if existing_sot != new_sot {
-            bail!(
-                "working tree already attached to {existing_sot}; multi-SoT not supported in v0.13.0 (Q1.2). \
-                 Run `reposix detach` first or pick the existing SoT."
-            );
+            return Err(multi_sot_conflict_error(existing_sot, &args.remote_name));
         }
         // Same SoT → idempotent re-attach; fall through and refresh.
     }
@@ -374,6 +371,30 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     Ok(())
 }
 
+/// Build the multi-SoT-conflict error (a tree already bound to a different
+/// system of record). Extracted as a pure fn so the recovery wording is
+/// unit-testable without standing up a git working tree, and so the message
+/// stays free of the phantom subcommand it used to promise.
+///
+/// Meets the Rust-compiler-grade bar (DOCS-04): names the conflict, points at a
+/// recovery that WORKS TODAY (remove the reposix remote, then re-attach or
+/// re-init), and gives copy-paste commands using the caller's actual remote
+/// name — never a command that does not exist.
+pub(crate) fn multi_sot_conflict_error(existing_sot: &str, remote_name: &str) -> anyhow::Error {
+    anyhow::anyhow!(
+        "this working tree is already attached to a different system of record: \
+         `{existing_sot}`.\n\
+         reposix does not support binding one tree to two systems of record at once.\n\
+         Fix: remove the current reposix remote, then re-attach (or re-init) to the \
+         system of record you want:\n  \
+         git remote remove {remote_name}\n  \
+         reposix attach <backend>::<project>\n\
+         If this tree was bootstrapped with `reposix init`, also clear the partial-clone \
+         binding first — `git config --unset extensions.partialClone` — then delete the \
+         cache directory before re-attaching."
+    )
+}
+
 /// True when `git-remote-reposix` is discoverable on `PATH`.
 ///
 /// git invokes this helper (by the `remote-<scheme>` naming convention) to
@@ -483,4 +504,53 @@ fn seed_tracking_ref(work: &Path, mirror_name: &str) -> Result<()> {
     let short: String = base.chars().take(12).collect();
     println!("  {TRACKING_REF} seeded at {short} (mirror `{mirror_name}` merge-base)");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::multi_sot_conflict_error;
+
+    /// SC4 / DOCS-04: the multi-SoT-conflict error must not promise a
+    /// nonexistent subcommand, and must teach a recovery that works today
+    /// (remove the reposix remote, then re-attach).
+    #[test]
+    fn multi_sot_error_teaches_real_recovery_no_phantom_subcommand() {
+        let err = multi_sot_conflict_error("sim::demo", "reposix");
+        let msg = format!("{err:#}");
+        // No phantom subcommand — not even the substring. Built from parts so
+        // this assertion does not itself re-introduce the banned token into the
+        // source (the source-grep gate greps the whole file).
+        let phantom = ["de", "tach"].concat();
+        assert!(
+            !msg.contains(&phantom),
+            "error must not reference a nonexistent un-bind subcommand: {msg}"
+        );
+        // Names the conflicting SoT.
+        assert!(
+            msg.contains("sim::demo"),
+            "error must name the existing SoT: {msg}"
+        );
+        // Copy-paste recovery that works today, using the actual remote name.
+        assert!(
+            msg.contains("git remote remove reposix"),
+            "error must give the copy-paste remote-removal recovery: {msg}"
+        );
+        // Suggests the alternative: re-attach (or re-init).
+        assert!(
+            msg.contains("reposix attach"),
+            "error must point at the re-attach recovery: {msg}"
+        );
+    }
+
+    /// The recovery command must interpolate the caller's `--remote-name`, not a
+    /// hardcoded `reposix`, so it is verbatim copy-paste-ready.
+    #[test]
+    fn multi_sot_error_uses_the_actual_remote_name() {
+        let err = multi_sot_conflict_error("github::octocat/Hello-World", "sot");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("git remote remove sot"),
+            "recovery must use the caller's remote name: {msg}"
+        );
+    }
 }

@@ -204,9 +204,17 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
     match cfg.backend {
         ListBackend::Sim => {
             let b = SimBackend::new(cfg.origin.clone()).context("build SimBackend")?;
+            // Same teach-the-fix wrap as `reposix list` (DOCS-03) — a reader who
+            // saw one recognizes the other; only the retry command differs.
+            let retry = format!(
+                "reposix refresh --project {} --origin {} {}",
+                cfg.project,
+                cfg.origin,
+                cfg.working_tree.display()
+            );
             b.list_records(&cfg.project)
                 .await
-                .with_context(|| format!("sim list_records project={}", cfg.project))
+                .map_err(|e| crate::list::wrap_sim_fetch_error(e, &cfg.origin, &retry))
         }
         ListBackend::Github => {
             let token = std::env::var("GITHUB_TOKEN").ok();
@@ -409,6 +417,41 @@ mod tests {
         assert!(
             keep.exists(),
             "non-record file `NOTES.md` must never be touched"
+        );
+    }
+
+    /// DOCS-03: `reposix refresh` against a closed port must teach the sim
+    /// recovery identically to `reposix list` — name the cause, suggest
+    /// `reposix sim`, and give the copy-paste retry (adapted to refresh args).
+    #[tokio::test]
+    async fn refresh_against_closed_port_teaches_sim_recovery() {
+        // Reserve then release a port so the connect is refused.
+        let port = {
+            use std::net::TcpListener;
+            TcpListener::bind("127.0.0.1:0")
+                .expect("bind 127.0.0.1:0")
+                .local_addr()
+                .expect("local_addr")
+                .port()
+        };
+        let origin = format!("http://127.0.0.1:{port}");
+        let dir = tempdir().unwrap();
+        let cfg = RefreshConfig {
+            working_tree: dir.path().to_path_buf(),
+            origin: origin.clone(),
+            project: "demo".to_owned(),
+            backend: ListBackend::Sim,
+            offline: false,
+        };
+        let err = fetch_issues(&cfg).await.expect_err("closed port must fail");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("reposix sim"),
+            "closed-port refresh error must teach the sim recovery: {msg}"
+        );
+        assert!(
+            msg.contains(&format!("reposix refresh --project demo --origin {origin}")),
+            "closed-port refresh error must give the copy-paste retry: {msg}"
         );
     }
 

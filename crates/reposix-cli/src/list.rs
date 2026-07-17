@@ -74,10 +74,11 @@ pub async fn run(
 ) -> Result<()> {
     let issues = match backend {
         ListBackend::Sim => {
-            let b = SimBackend::new(origin).context("build SimBackend")?;
+            let b = SimBackend::new(origin.clone()).context("build SimBackend")?;
+            let retry = format!("reposix list --project {project} --origin {origin}");
             b.list_records(&project)
                 .await
-                .with_context(|| format!("sim list_records project={project}"))?
+                .map_err(|e| wrap_sim_fetch_error(e, &origin, &retry))?
         }
         ListBackend::Github => {
             let token = std::env::var("GITHUB_TOKEN").ok();
@@ -137,6 +138,72 @@ pub async fn run(
         }
     }
     Ok(())
+}
+
+/// Turn a sim-backend fetch failure into a Rust-compiler-grade error.
+///
+/// The default backend is the in-process simulator, so "the sim isn't running
+/// / `--origin` is wrong" is the single most common quickstart papercut. When
+/// the failure is a refused connection we surface the three-part teaching
+/// message (name the cause, suggest `reposix sim`, give a copy-paste retry) —
+/// matching the `init.rs` fetch-failure bar. Any OTHER failure class (HTTP
+/// 4xx/5xx, decode error) is preserved verbatim under `Caused by:` rather than
+/// mislabeled "sim is down". Shared with `reposix refresh`. DOCS-03.
+pub(crate) fn wrap_sim_fetch_error(
+    err: reposix_core::Error,
+    origin: &str,
+    retry_cmd: &str,
+) -> anyhow::Error {
+    let unreachable = is_sim_unreachable(&err);
+    let e = anyhow::Error::new(err);
+    if unreachable {
+        e.context(sim_unreachable_message(origin, retry_cmd))
+    } else {
+        // Reached the sim but it errored (or the failure is some other class):
+        // keep the real cause honest, do not claim the sim is down.
+        e.context(format!("sim request to `{origin}` failed"))
+    }
+}
+
+/// The teach-the-fix message for a sim connection failure. Pure (no I/O, no
+/// error type) so the three-part bar is unit-testable directly. Shared by
+/// `reposix list` and `reposix refresh` so a reader who saw one recognizes the
+/// other; only `retry_cmd` differs between them.
+pub(crate) fn sim_unreachable_message(origin: &str, retry_cmd: &str) -> String {
+    format!(
+        "the reposix simulator at `{origin}` is unreachable — the connection was refused.\n\
+         Fix: the sim backend is not accepting connections at that address, so either it \
+         is not running or `--origin` points at the wrong host/port.\n\
+         For the default simulator, start it in another terminal with `reposix sim` \
+         (it listens on http://127.0.0.1:7878), then re-run:\n  \
+         {retry_cmd}"
+    )
+}
+
+/// Classify whether a backend error is a "cannot reach the sim" connection
+/// failure (vs. a reached-but-errored response we must not mislabel).
+fn is_sim_unreachable(err: &reposix_core::Error) -> bool {
+    let reposix_core::Error::Http(e) = err else {
+        return false;
+    };
+    if e.is_connect() || e.is_timeout() {
+        return true;
+    }
+    // Some reqwest/hyper versions surface a refused connection as a generic
+    // "error sending request" whose `is_connect()` is false; walk the source
+    // chain for the OS-level connection-refused signature as a backstop.
+    let mut source: Option<&dyn std::error::Error> = Some(e);
+    while let Some(s) = source {
+        let m = s.to_string();
+        if m.contains("Connection refused")
+            || m.contains("connection refused")
+            || m.contains("tcp connect error")
+        {
+            return true;
+        }
+        source = s.source();
+    }
+    false
 }
 
 fn render_table(issues: &[Record]) {
@@ -265,6 +332,84 @@ pub(crate) fn read_jira_env_from(
 #[cfg(test)]
 mod tests {
     use super::{read_confluence_env_from, read_jira_env_from, ListBackend};
+
+    #[test]
+    fn sim_unreachable_message_meets_teach_fix_bar() {
+        // DOCS-03: the sim connection-refused message must hit all three parts.
+        let retry = "reposix list --project demo --origin http://127.0.0.1:7878";
+        let msg = super::sim_unreachable_message("http://127.0.0.1:7878", retry);
+        // (2) suggest the sim alternative.
+        assert!(
+            msg.contains("reposix sim"),
+            "must suggest starting the simulator: {msg}"
+        );
+        // (1) name the likely cause (sim down / wrong --origin).
+        assert!(
+            msg.contains("unreachable") && msg.contains("--origin"),
+            "must name the cause (sim down / wrong --origin): {msg}"
+        );
+        // (3) copy-paste recovery — the exact retry command, verbatim.
+        assert!(msg.contains(retry), "must echo the copy-paste retry: {msg}");
+    }
+
+    #[test]
+    fn non_connect_sim_error_is_not_mislabeled_sim_down() {
+        // A reached-but-errored failure (not a connection refusal) must NOT be
+        // swallowed into the "start the sim" teaching message.
+        let err = reposix_core::Error::Other("backend returned HTTP 500".to_owned());
+        assert!(
+            !super::is_sim_unreachable(&err),
+            "Error::Other is not a connection failure"
+        );
+        let wrapped = super::wrap_sim_fetch_error(
+            err,
+            "http://127.0.0.1:7878",
+            "reposix list --project demo --origin http://127.0.0.1:7878",
+        );
+        let msg = format!("{wrapped:#}");
+        assert!(
+            !msg.contains("reposix sim"),
+            "non-connect error must not be mislabeled sim-is-down: {msg}"
+        );
+        assert!(
+            msg.contains("HTTP 500"),
+            "the real cause must still surface: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn list_against_closed_port_teaches_sim_recovery() {
+        // Reserve a port by binding :0 then dropping the listener → the port is
+        // (almost certainly) closed, so the connect is refused. Proves the
+        // connect classification fires end-to-end through `run`.
+        let port = {
+            use std::net::TcpListener;
+            TcpListener::bind("127.0.0.1:0")
+                .expect("bind 127.0.0.1:0")
+                .local_addr()
+                .expect("local_addr")
+                .port()
+        };
+        let origin = format!("http://127.0.0.1:{port}");
+        let err = super::run(
+            "demo".to_owned(),
+            origin.clone(),
+            ListBackend::Sim,
+            super::ListFormat::Json,
+            false,
+        )
+        .await
+        .expect_err("closed port must fail");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("reposix sim"),
+            "closed-port error must teach the sim recovery: {msg}"
+        );
+        assert!(
+            msg.contains(&format!("reposix list --project demo --origin {origin}")),
+            "closed-port error must give the copy-paste retry: {msg}"
+        );
+    }
 
     #[test]
     fn confluence_is_a_value_enum_variant() {
