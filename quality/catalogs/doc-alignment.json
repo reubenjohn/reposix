@@ -4,15 +4,15 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 399,
-    "claims_bound": 277,
+    "claims_total": 400,
+    "claims_bound": 278,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 68,
-    "alignment_ratio": 0.8368580060422961,
+    "alignment_ratio": 0.8373493975903614,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-16T20:12:56Z",
+    "last_walked": "2026-07-17T00:03:02Z",
     "coverage_ratio": 0.17258665138928675,
     "lines_covered": 1205,
     "total_eligible_lines": 6982,
@@ -9629,6 +9629,31 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T20:12:56Z",
       "last_extracted": "2026-07-16T20:12:56Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/mirror-convergence-authoritative-bound",
+      "claim": "root CLAUDE.md and docs/concepts/dvcs-topology.md bless webhook + 30-minute cron as the AUTHORITATIVE external-mirror convergence mechanism, distinguish it from the cache-internal refs/mirrors/<sot-host>-head observability ref, and name scripts/refresh-tokenworld-mirror.sh as manual op-recovery only",
+      "source": {
+        "file": "docs/concepts/dvcs-topology.md",
+        "line_start": 182,
+        "line_end": 190
+      },
+      "source_hash": "6506dde43f4ab65cb4d2bfc7e35feb6c0e7455ca5d06930b97e17698d8eeae61",
+      "source_hashes": [
+        "6506dde43f4ab65cb4d2bfc7e35feb6c0e7455ca5d06930b97e17698d8eeae61"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/mirror-convergence-blessed.sh"
+      ],
+      "test_body_hashes": [
+        "774b8584fb1d3db580cc8b0132a58ee7083dc3c830ab1153b3866440a6d1abab"
+      ],
+      "rationale": "ADR-01 Decision 1(i)/(ii) — 2026-07-16 ruling (.planning/CONSULT-DECISIONS.md, commit 8212373). The literal word 'authoritative' appeared 0 times in both live docs before this phase; a grep-webhook gate would be tautological (webhook already present 3x/11x). This row anchors the corrected blessing so it cannot silently regress.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-17T00:03:02Z",
+      "last_extracted": "2026-07-17T00:03:02Z",
       "last_extracted_by": "bind-call"
     }
   ]
