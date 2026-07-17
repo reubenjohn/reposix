@@ -79,7 +79,18 @@ So a forensic query that joins `audit_events_cache.op = 'sync_tag_written'` agai
 
 ## Cost
 
-Each tag is one git ref — 41 bytes on disk in loose form, less when packed. A repo synced hourly for a year accumulates ~360 KB of refs. A cleanup pass (`reposix gc`, planned for v0.12.0) will be able to prune old sync tags by TTL, but for normal use this is below the noise floor.
+Each tag is one git ref — 41 bytes on disk in loose form, less when packed. A repo synced hourly for a year accumulates ~360 KB of refs — below the noise floor for normal use.
+
+!!! note "`reposix gc` exists, but it never touches sync tags"
+
+    `reposix gc` (LRU / TTL / all-blob strategies, plus `--orphans` for
+    whole-cache cleanup) shipped and is real — but by design it evicts only
+    loose blob objects; tree/commit objects, refs, and sync tags are never
+    touched (`crates/reposix-cache/src/gc.rs`). TTL-based pruning of sync
+    tags *specifically* is not implemented by any command today — they
+    accumulate indefinitely, cheap enough that this has never been a
+    practical problem, but do not expect `reposix gc` to shrink the
+    `refs/reposix/sync/*` namespace.
 
 ## Why this is interesting
 
@@ -87,6 +98,15 @@ Most issue-tracker integrations expose the *current* state and leave history as 
 
 The pattern is generalisable beyond reposix — any partial-clone promisor remote could write per-sync refs and turn its observation history into a checkable artefact. To our knowledge, reposix is the first to ship it. Design intent and prior-art search are recorded in `.planning/research/v0.11.0/vision-and-innovations.md` §3b.
 
-## Next
+## Where to go next
 
-Sync tags are part of the [filesystem layer ←](filesystem-layer.md). The push round-trip lives in the [git layer →](git-layer.md).
+Sync tags are a thin layer on top of the filesystem layer's cache, and most of them get written by a push:
+
+<div class="grid cards" markdown>
+
+-   🗂️ **[The filesystem layer](filesystem-layer.md)** — where blobs get lazily materialized; sync tags live in the same cache's bare repo.
+-   🔀 **[The git layer](git-layer.md)** — every accepted `git push` writes a `delta_sync` tag, same as a scheduled fetch.
+-   🛡️ **[The trust model](trust-model.md)** — the `sync_tag_written` audit row and the append-only guarantees behind it.
+-   📖 **[Bare repo](../reference/glossary.md#bare-repo)** and **[audit log](../reference/glossary.md#audit-log)** — the two primitives sync tags sit on top of.
+
+</div>

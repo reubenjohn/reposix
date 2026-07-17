@@ -61,12 +61,28 @@ Wire-level details (cache schema, audit columns, helper invocation flags) live i
 
 ## Failure modes
 
-- **Network down at checkout.** If the backend is unreachable when git tries to materialize a blob — during the `git checkout`/`git fetch` that pulls contents down — the helper surfaces its stderr and *that checkout* fails. A `cat` **after** a successful checkout cannot fail for network reasons: the fetch already happened at checkout time, so reads of already-materialized blobs continue to work offline — the cache is a real local git store. (`v0.1` had no offline story at all; every read was live.)
+!!! note "Offline reads are a guarantee, not an accident"
+
+    `cat` **after** a successful checkout cannot fail for network reasons —
+    the fetch already happened at checkout time, so reads of
+    already-materialized blobs keep working with the network unplugged; the
+    cache is a real local git store. (`v0.1`'s virtual filesystem had no
+    offline story at all — every read was live.) The three failure modes
+    below are all about the checkout/fetch boundary, never about `cat`.
+
+- **Network down at checkout.** If the backend is unreachable when git tries to materialize a blob — during the `git checkout`/`git fetch` that pulls contents down — the helper surfaces its stderr and *that checkout* fails.
 - **Blob limit hit.** A bulk operation like `git grep` over a never-checked-out tree can ask for thousands of blobs in one shot. The helper refuses past `REPOSIX_BLOB_LIMIT` (default 200) and emits a stderr message that names `git sparse-checkout` as the recovery move. The detail of how this is wired lives in the [git layer](git-layer.md#blob-limit-guardrail).
 - **OID drift.** A backend write that bypasses reposix (someone using the REST API directly) changes an issue between your `git fetch` and your read. The cache will lazy-fetch the new content the next time the helper sees a `want` for that OID; the audit log shows a fresh `materialize` row. If you've already committed against the stale base and try to push, the push-time conflict detector rejects you with the standard git "fetch first" error — that flow is the subject of the [git layer](git-layer.md).
 
-## Next
+## Where to go next
 
-The blobs got into the working tree somehow; the edits get back to the backend somehow. Both halves of that round-trip are git protocol, and they live in [the git layer →](git-layer.md).
+The blobs got into the working tree at `git checkout`/`git fetch` time; the edits get back to the backend at `git push` time. Both halves of that round-trip, and every backend state reposix has ever observed, are one git-native primitive away:
 
-Every sync also writes a private tag (`refs/reposix/sync/<ts>`) in the cache's bare repo, so you can `git checkout` an earlier observation. See [time travel →](time-travel.md).
+<div class="grid cards" markdown>
+
+-   🔀 **[The git layer](git-layer.md)** — how a `git push` becomes REST writes, and how a stale-base push gets rejected with "fetch first".
+-   🕰️ **[Time travel](time-travel.md)** — every sync writes a `refs/reposix/sync/<ts>` tag in the cache's bare repo; `git diff` between two tags is the literal byte-level change.
+-   🛡️ **[The trust model](trust-model.md)** — the lethal-trifecta framing and the cuts (egress allowlist, sanitize boundary, audit log) that defang it.
+-   📖 **[Partial clone](../reference/glossary.md#partial-clone)** and **[bare repo](../reference/glossary.md#bare-repo)** — the two git primitives this page leans on.
+
+</div>

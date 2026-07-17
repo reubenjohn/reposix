@@ -92,15 +92,29 @@ The `audit_events_cache` ops vocabulary is fixed:
 
 Honesty about the threat model is a feature, not a footnote.
 
-- **Shell access bypasses every cut.** An attacker on the dev host can `curl` the backend directly with the same token. reposix is a substrate for safer agent loops — it is not a sandbox. The egress allowlist guards the helper and the cache; it does not guard the rest of the host.
+!!! warning "reposix is a substrate for safer agent loops — it is not a sandbox"
+
+    Shell access bypasses every cut. An attacker on the dev host can `curl`
+    the backend directly with the same token. The egress allowlist guards
+    the helper and the cache; it does not guard the rest of the host. Read
+    every bullet below with that framing: each cut narrows the blast radius
+    of an agent using `cat`/`git`, none of them constrain a human or process
+    with direct shell access.
+
 - **The simulator is itself attacker-influenced.** Seed data is authored by an agent (or by a fixture written by an agent), so simulator runs are *also* tainted. The lethal-trifecta mitigations apply against the simulator just as hard as against a real backend.
 - **Token leakage via crash logs.** A panicking helper that includes auth headers in its `RUST_BACKTRACE` output can leak credentials. The codebase scrubs known credential headers before logging, but a third-party crate panicking with a header in scope is out of reposix's hands.
 - **Confused-deputy across backends.** A user with credentials for two backends and one allowlist entry can be tricked by a tainted issue body into directing writes at the wrong backend. The allowlist constrains *origin*; it does not constrain *intent*. Multi-backend egress is high-friction by design — the agent must run a separate `reposix init` per backend.
 - **Cache compromise.** An attacker with write access to `cache.db` can replay or hide audit rows from older WAL segments. Append-only triggers prevent in-place tampering on the live segment but cannot defend against the file being swapped wholesale.
 
-## Further reading
+## Where to go next
 
-- [Filesystem layer ←](filesystem-layer.md) — where tainted bytes enter the system.
-- [Git layer ←](git-layer.md) — where the conflict and blob-limit cuts are wired.
-- `.planning/research/v0.1-fuse-era/threat-model-and-critique.md` — full historical threat model, kept in the planning tree (not user-facing nav).
-- [`docs/research/agentic-engineering-reference.md`](../research/agentic-engineering-reference.md) — the lethal-trifecta framing.
+<div class="grid cards" markdown>
+
+-   🗂️ **[The filesystem layer](filesystem-layer.md)** — where tainted bytes enter the system, at `git checkout`/`git fetch` time.
+-   🔀 **[The git layer](git-layer.md)** — where the conflict-reject and blob-limit cuts are wired into the push round-trip.
+-   🕰️ **[Time travel](time-travel.md)** — the `sync_tag_written` audit row, and how every observed state becomes a checkable git ref.
+-   📖 **[Lethal trifecta](../reference/glossary.md#lethal-trifecta)** and **[`Tainted<T>`](../reference/glossary.md#taintedt)** — the two vocabulary anchors this page leans on.
+
+</div>
+
+Full historical threat model (v0.1-era, pre-git-native pivot): [`threat-model-and-critique/`](https://github.com/reubenjohn/reposix/tree/main/.planning/research/v0.1-fuse-era/threat-model-and-critique) (planning tree, not user-facing nav). Framing: [`docs/research/agentic-engineering-reference.md`](../research/agentic-engineering-reference.md).

@@ -134,8 +134,13 @@ reading:
 | confluence  | yes  | yes    | yes    | no (see below)   | yes    | strong     |
 | jira        | yes  | yes    | yes    | no               | yes    | timestamp  |
 
-**Comments footnote:** `reposix-confluence` has a `list_comments`/`list_attachments` API surface in the crate, but nothing in the cache or materializer wires it into a working tree — no file, no `git diff`, no push path reaches it. Treat Confluence's Comments cell as "no" until a future milestone lands the wiring (tracked as a P95 candidate).
+!!! note "Comments footnote"
 
+    `reposix-confluence` has a `list_comments`/`list_attachments` API surface
+    in the crate, but nothing in the cache or materializer wires it into a
+    working tree — no file, no `git diff`, no push path reaches it. Treat
+    Confluence's Comments cell as "no" until a future milestone lands the
+    wiring (tracked as a P95 candidate).
 
 GitHub Issues is currently read-only — `create` / `update` / `delete` return
 `Error::NotSupported`, and its ETag concurrency is not yet plumbed (hence
@@ -151,7 +156,7 @@ GitHub Issues is currently read-only — `create` / `update` / `delete` return
 
 -   💡 **[Mental model in 60 seconds](concepts/mental-model-in-60-seconds.md)** — three keys to the design (clone = snapshot · frontmatter = schema · `git push` = sync verb).
 -   ⚖️ **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
--   🔗 **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
+-   🔗 **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), [time travel](how-it-works/time-travel.md), and [the trust model](how-it-works/trust-model.md).
 -   📊 **[Latency envelope](benchmarks/latency.md)** — the v0.9.0 measured numbers.
 -   🪙 **[Token economy](benchmarks/token-economy.md)** — the live ~94% output-token / ~75% cost reduction vs GitHub-MCP, methodology and captures.
 
@@ -165,4 +170,16 @@ The detail of how each piece works lives in [How it works](how-it-works/filesyst
 
 ---
 
-*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The token-economy headline is now **live**: 6 real agentic sessions (median-of-3 per arm) against the same GitHub backend measured ~94.3% fewer output tokens and ~74.9% lower cost per session for the git-native arm (see [`benchmarks/token-economy.md`](benchmarks/token-economy.md) for the four-axis table and caveats — including that GitHub write-back is read-only in this cut).*
+!!! note "Honest scope"
+
+    Built across autonomous coding-agent sessions; v0.9.0 architecture
+    pivoted from a virtual filesystem to git-native partial clone
+    (2026-04-24). Treat as alpha — but every demo on this site is
+    reproducible on a stock Ubuntu host in under five minutes. The
+    token-economy headline is now **live**: 6 real agentic sessions
+    (median-of-3 per arm) against the same GitHub backend measured ~94.3%
+    fewer output tokens and ~74.9% lower cost per session for the
+    git-native arm (see
+    [`benchmarks/token-economy.md`](benchmarks/token-economy.md) for the
+    four-axis table and caveats — including that GitHub write-back is
+    read-only in this cut).

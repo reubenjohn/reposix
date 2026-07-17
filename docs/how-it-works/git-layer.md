@@ -91,6 +91,14 @@ This is the dark-factory teaching mechanism. The agent learned the fix without r
 
 ## Blob limit guardrail
 
+!!! warning "The limit protects the backend's rate limit, not your working tree"
+
+    A misbehaving agent can rack up thousands of API calls trying to
+    materialize a working tree it doesn't actually need — `REPOSIX_BLOB_LIMIT`
+    exists to keep that bill (and the rate-limit headers) under control, not
+    to protect anything local. Hitting it is recoverable and cheap; it is
+    never a data-loss risk.
+
 The helper counts `want <oid>` lines on each `command=fetch` request. If the count exceeds `REPOSIX_BLOB_LIMIT` (default 200, env-configurable) it refuses the fetch and writes a `blob_limit_exceeded` row to the audit log. The stderr message names the remediation by hand:
 
 ```text
@@ -99,8 +107,6 @@ error: refusing to fetch 487 blobs (limit: 200).
 ```
 
 This is the same teaching mechanism as the conflict-rejection: an agent that runs `git grep TODO` against a 10 000-issue tree without first narrowing its scope hits the limit, reads the error, runs `git sparse-checkout set issues/PROJ-24*`, and retries. No prompt engineering, no system-prompt injection, no reposix-specific knowledge needed.
-
-The limit exists because the alternative is unbounded REST traffic. A misbehaving agent can rack up thousands of API calls trying to materialize a working tree it doesn't actually need. The guardrail keeps that bill — and the rate-limit headers — under control.
 
 ## Recovery shape
 
@@ -113,8 +119,15 @@ Both rejections lead to the same shape of recovery:
 
 Both are recoverable, both are auditable (one row each in `cache.db`), and both teach the agent the right move on the spot.
 
-## Next
+## Where to go next
 
-The conflict-rejection and blob limit are not just UX — they are mitigations. The threat model that frames them, plus the tainted-by-default policy and the audit log, is in [the trust model →](trust-model.md).
+The conflict-rejection and blob limit are not just UX — they are mitigations. The threat model that frames them lives one page over:
 
-See also: [filesystem layer ←](filesystem-layer.md) for how the bytes got into the working tree before the push started, and [time travel](time-travel.md) for how every sync becomes a git ref you can `checkout`.
+<div class="grid cards" markdown>
+
+-   🛡️ **[The trust model](trust-model.md)** — the lethal-trifecta framing, the tainted-by-default policy, and the audit log the conflict-reject + blob-limit rows feed.
+-   🗂️ **[The filesystem layer](filesystem-layer.md)** — how the bytes got into the working tree before the push round-trip started.
+-   🕰️ **[Time travel](time-travel.md)** — every accepted push also lands a sync tag you can `git checkout` later.
+-   📖 **[Refspec](../reference/glossary.md#refspec)**, **[fast-import](../reference/glossary.md#fast-import)**, and **[stateless-connect](../reference/glossary.md#stateless-connect)** — the protocol primitives this page walks through.
+
+</div>
