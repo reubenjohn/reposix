@@ -834,3 +834,33 @@ an **orchestration-process / doctrine candidate** for P120 (or a `.planning/ORCH
 codify "one live tree-writer per file-set; confirm termination by artifact before re-dispatch."
 
 **STATUS:** OPEN
+
+## 2026-07-17 | discovered-by: P120 CLOSE Wave A (machine-wide build-mutex hazard, EXECUTED evidence) | severity: HIGH
+
+**What:** `.claude/hooks/cargo-mutex.sh` gated concurrent builds with
+`pgrep -f 'cargo (check|build|test|clippy|nextest|run)|rustc '` — `-f` matches the FULL
+argv of ANY process. Any shell wait-loop, `pgrep`/`grep`/`rg`, or editor whose command
+line merely CONTAINED `cargo build` or `rustc …/target/debug` FALSE-MATCHED, so the hook
+exit-2'd and BLOCKED every subsequent cargo/rustc Bash **machine-wide** until that
+unrelated process died. This is not hypothetical: it ACTUALLY deadlocked another live
+session and burned ~180k tokens (executed evidence — no repro needed). The failure mode
+is self-amplifying: a session's own `pgrep -f rustc` diagnostic (run to investigate the
+block) is itself a false-match, so the block persists as long as anyone looks at it.
+
+**Root cause:** `pgrep -f` matches command-line text, not the process identity; build-tool
+tokens appear in the argv of many non-build processes.
+
+**Fix (eager, this phase):** switched to `pgrep -x 'cargo|cargo-nextest|rustc|cross|clippy-driver'`
+— exact whole-COMM match. A shell/editor/grep comm is `bash`/`zsh`/`nvim`/`pgrep`, which
+`-x` structurally cannot false-match, so no argv mention can trip the gate; a genuine
+second concurrent build always shows one of those build comms, so the OOM protection
+(the whole point of the mutex) is preserved. Belt-and-suspenders: excludes the hook's own
+`$$`/`$PPID`. Added a committed regression guard
+`.claude/hooks/tests/cargo-mutex-no-false-match.sh` (spawns a decoy `bash` whose argv
+carries the exact poison `rustc /home/x/target/debug/foo`, pipes a `cargo check` payload
+into the hook, asserts exit 0 + allow-decision JSON) — proven PASS locally. A positive
+"second build blocks" test is impractical to fake (comm can't be spoofed without a real
+cargo/rustc, which would trip the mutex itself); that path is covered by the OOM doctrine
++ the unchanged exit-2 contract, cited in a code comment.
+
+**STATUS:** RESOLVED (P120 CLOSE Wave A — see this commit; hook + regression test + this entry landed together)
