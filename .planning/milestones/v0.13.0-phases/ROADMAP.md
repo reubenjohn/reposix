@@ -25,7 +25,7 @@
 
 **Goal:** Ship the POC first (`research/v0.13.0-dvcs/poc/`) to surface design surprises, then implement `reposix attach <backend>::<project>` — builds a fresh cache from REST against an existing checkout, reconciles by `id` in frontmatter, populates the cache reconciliation table, and adds remote `reposix::<sot>?mirror=<existing-origin-url>`. Reconciliation cases (match / backend-deleted via `--orphan-policy` / no-id / duplicate-id / mirror-lag) per `architecture-sketch.md`. Re-attach to different SoT REJECTED (Q1.2); same-SoT IDEMPOTENT (Q1.3). Blobs `Tainted<Vec<u8>>` (OP-2).
 
-**Requirements:** POC-01, DVCS-ATTACH-01..04 · **Depends on:** P78 GREEN · **Plan:** [79-PLAN-OVERVIEW](79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md)
+**Requirements:** POC-01, DVCS-ATTACH-01..04 · **Depends on:** P78 GREEN · **Plan:** [79-PLAN-OVERVIEW](79-poc-reposix-attach-core/79-PLAN-OVERVIEW/index.md)
 
 **Plans status:**
 - **79-01** — POC-01 (throwaway POC at `research/v0.13.0-dvcs/poc/`). **SHIPPED 2026-05-01** (5 commits 660bae0..4e6de2b; SUMMARY at `.planning/phases/79-poc-reposix-attach-core/79-01-SUMMARY.md`; FINDINGS at `research/v0.13.0-dvcs/poc/POC-FINDINGS.md` — 5 INFO + 2 REVISE + 0 SPLIT routing tags).
@@ -36,31 +36,31 @@
 
 **Goal:** Wire mirror-lag observability into plain-git refs that vanilla `git fetch` brings along, so `git log refs/mirrors/<sot>-synced-at` reveals staleness to readers who never installed reposix. Two refs in the `refs/mirrors/...` namespace (Q2.1): `<sot>-head` records the SHA of the SoT's `main` at last sync; `<sot>-synced-at` is an annotated tag with a timestamp message. Helper APIs land in `crates/reposix-cache/`. The existing single-backend push (today's `handle_export`) is wired to update both refs on success — pre-bus integration point so observability is in place BEFORE bus phases. Webhook sync also writes both refs (P84). Bus push will update both refs (P83). Q2.3: bus updates both refs (consistency over optimization); webhook becomes a no-op refresh when bus already touched them.
 
-**Requirements:** DVCS-MIRROR-REFS-01..03 · **Depends on:** P79 GREEN · **Plan:** [80-PLAN-OVERVIEW](80-mirror-lag-refs/80-PLAN-OVERVIEW.md)
+**Requirements:** DVCS-MIRROR-REFS-01..03 · **Depends on:** P79 GREEN · **Plan:** [80-PLAN-OVERVIEW](80-mirror-lag-refs/80-PLAN-OVERVIEW/index.md)
 
 ### Phase 81: L1 perf migration — `list_changed_since`-based conflict detection
 
 **Goal:** Replace `handle_export`'s unconditional `list_records` walk with `list_changed_since`-based conflict detection so the bus remote (P82–P83) inherits the cheap path (Q3.1). Net REST cost on success path: one call (`list_changed_since`) + actual REST writes. L1 trusts cache as the prior; `reposix sync --reconcile` is the on-demand escape hatch. L2/L3 hardening defers to v0.14.0.
 
-**Requirements:** DVCS-PERF-L1-01..03 · **Depends on:** P80 GREEN · **Plan:** [81-PLAN-OVERVIEW](81-l1-perf-migration/81-PLAN-OVERVIEW.md)
+**Requirements:** DVCS-PERF-L1-01..03 · **Depends on:** P80 GREEN · **Plan:** [81-PLAN-OVERVIEW](81-l1-perf-migration/81-PLAN-OVERVIEW/index.md)
 
 ### Phase 82: Bus remote — URL parser, prechecks, fetch dispatch
 
 **Goal:** Stand up the bus remote's read/dispatch surface. URL parser recognizes `reposix::<sot>?mirror=<url>` (Q3.3); `+`-delimited form rejected. CHEAP PRECHECK A (mirror drift via `git ls-remote`) + CHEAP PRECHECK B (SoT drift via `list_changed_since`) run BEFORE stdin read. Bus does NOT advertise `stateless-connect` for fetch (Q3.4). Dispatch-only; WRITE fan-out (steps 4–9) lands in P83.
 
-**Requirements:** DVCS-BUS-URL-01, DVCS-BUS-PRECHECK-01..02, DVCS-BUS-FETCH-01 · **Depends on:** P81 GREEN · **Plan:** [82-PLAN-OVERVIEW](82-bus-remote-url-parser/82-PLAN-OVERVIEW.md)
+**Requirements:** DVCS-BUS-URL-01, DVCS-BUS-PRECHECK-01..02, DVCS-BUS-FETCH-01 · **Depends on:** P81 GREEN · **Plan:** [82-PLAN-OVERVIEW](82-bus-remote-url-parser/82-PLAN-OVERVIEW/index.md)
 
 ### Phase 83: Bus remote — write fan-out (SoT-first, mirror-best-effort, fault injection)
 
 **Goal:** Implement the riskiest part of the bus remote — the SoT-first-write algorithm with mirror-best-effort fallback and full fault-injection coverage. Algorithm: read fast-import stream from stdin and buffer; apply REST writes to SoT (confluence); on success, write audit rows to BOTH tables (cache + backend) and update `last_fetched_at`; then `git push` to GH mirror; on mirror failure, write mirror-lag audit row, update `refs/mirrors/<sot>-head` to new SoT SHA but NOT `<sot>-synced-at`, return ok to git (SoT contract satisfied — recoverable on next push). On mirror success, update `<sot>-synced-at` to now and ack. NO helper-side retry on transient mirror-write failures (Q3.6) — surface, audit, let user retry. Fault-injection tests cover kill-GH-push-between-confluence-write-and-ack / kill-confluence-write-mid-stream / simulate-confluence-409-after-precheck.
 
-**Requirements:** DVCS-BUS-WRITE-01..06 · **Depends on:** P82 GREEN · **Plan:** [83-PLAN-OVERVIEW](83-bus-write-fan-out/83-PLAN-OVERVIEW.md) (P83-01 + P83-02 SHIPPED)
+**Requirements:** DVCS-BUS-WRITE-01..06 · **Depends on:** P82 GREEN · **Plan:** [83-PLAN-OVERVIEW](83-bus-write-fan-out/83-PLAN-OVERVIEW/index.md) (P83-01 + P83-02 SHIPPED)
 
 ### Phase 84: Webhook-driven mirror sync — GH Action workflow + setup guide
 
 **Goal:** Ship the reference GitHub Action workflow that keeps the GH mirror current with confluence-side edits — the pull side of the DVCS topology. Workflow at `.github/workflows/reposix-mirror-sync.yml` triggers on `repository_dispatch` (event type `reposix-mirror-sync`) plus a cron safety net (default `*/30`, configurable via workflow `vars` per Q4.1). Workflow runs `reposix init confluence + git push <mirror>` and updates `refs/mirrors/...` refs. Uses `--force-with-lease` against last known mirror ref so a concurrent bus-push's race doesn't corrupt mirror state. First-run handling (no existing mirror refs, empty mirror) is graceful per Q4.3. Latency target: < 60s p95 from confluence edit to GH ref update. Backends without webhooks (Q4.2): cron path is the only sync mechanism.
 
-**Requirements:** DVCS-WEBHOOK-01..04 · **Depends on:** P80 + P83 GREEN · **Plan:** [84-PLAN-OVERVIEW](84-webhook-mirror-sync/84-PLAN-OVERVIEW.md)
+**Requirements:** DVCS-WEBHOOK-01..04 · **Depends on:** P80 + P83 GREEN · **Plan:** [84-PLAN-OVERVIEW](84-webhook-mirror-sync/84-PLAN-OVERVIEW/index.md)
 
 ### Phase 85: DVCS docs — topology, mirror setup, troubleshooting, cold-reader pass
 
