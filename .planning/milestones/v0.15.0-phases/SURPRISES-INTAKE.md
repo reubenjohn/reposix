@@ -113,7 +113,11 @@
 
 **Sketched resolution:** Milestone-close should either run `scripts/refresh-tokenworld-mirror.sh` as a documented pre-step of `pre-release-real-backend`, or the litmus should self-reconcile per the fix-sketch already in `GTH-V15-09` (fetch backend-current through the reposix bus remote before the marker push). This entry cross-refs `GTH-V15-09` and documents the concrete cadence-wiring gap plus the specific 2026-07-15 false-negative it caused, so the next reader does not re-diagnose from scratch.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — 2026-07-16 [MANAGER] ruling (`.planning/CONSULT-DECISIONS.md`,
+commit `8212373`): webhook + 30-min cron blessed as the AUTHORITATIVE external-mirror
+convergence mechanism; the `scripts/refresh-tokenworld-mirror.sh` litmus pre-step remains
+documented manual op-recovery, NOT a product fix; `GTH-V15-38` tracks the elective Option
+C (post-write snapshot fan-out) upgrade if the pre-step becomes a real recurring incident.
 
 ## 2026-07-14 20:43 | discovered-by: L0 rotation #22 (t4 real-backend re-run — preflight vs runner env-loading gap) | severity: HIGH
 

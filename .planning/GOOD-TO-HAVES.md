@@ -72,10 +72,12 @@ prior discussion at `.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md` GOOD-
 **Default disposition:** M default-defers to the next milestone with a named
 carry-forward target.
 
-**TAG:** v0.15.0
+**TAG:** boundary-relative — propose as a phase at the next milestone boundary (no
+hardcoded version; do not fold into an unrelated lane).
 
-**STATUS:** DEFERRED — owner scope call, 2026-07-12 (explicit deferral past v0.14.0
-milestone-close, not a silent slip).
+**STATUS:** SANCTIONED TARGET DESIGN (Option B) — 2026-07-16 [MANAGER] ruling
+(`.planning/CONSULT-DECISIONS.md`, commit `8212373`); design recorded in ADR-010 §3;
+dedicated design+build phase proposed at the next milestone boundary. NO v0.15 build.
 
 ## GOOD-TO-HAVES-10 — `cargo-nextest-not-installed` — cargo nextest absent on the VM; plan/CLAUDE verify commands fail as written
 
