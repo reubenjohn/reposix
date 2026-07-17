@@ -531,3 +531,42 @@ Rust-only (`<file>.rs::<fn>`) and non-Rust verifiers always bind to the bare fil
 intended two-form contract — only the `--help` string is stale.
 
 **STATUS:** OPEN
+
+## 2026-07-16 23:50 | discovered-by: L0 #53 (P116 phase-close relief writer) | severity: HIGH
+
+**What:** A CONCURRENT sibling worktree lane `gth-hook-curb-capture` (pid 2222573, live)
+contaminated the SHARED `.git/config` at ~2026-07-16 17:29 with `core.bare = true` +
+fixture identity (`user.email = t@t` / `user.name = t`). This blocked ALL work-tree git
+operations on `main` (`git status`/`add`/`commit` all fail on a repo that believes it is
+bare; the `.githooks/pre-commit` fixture-identity check would additionally reject any
+commit attempted under `t@t`) — including P116's own phase-close verifier dispatch and
+this rotation's handover commit. `origin/main` and all refs were intact throughout;
+nothing durable was lost. #53 repaired it via a direct edit (`core.bare` → `false`,
+removed the injected `[user]` block); the work-tree and the real committer identity were
+restored, verified live (`cat .git/config`, `git status`, `git log -1`) before resuming
+any write. This is a recurrence of the class first named in `S-260707-pr-08`.
+
+**Why out-of-scope for the discovering session:** the coverage boundary is documented,
+not novel — root `CLAUDE.md` § Non-negotiables "Leaf test setup" already states the
+`.claude/hooks/leaf-isolation-guard.sh` PreToolUse hook fires only on the Claude Code
+Bash *tool*: a sibling lane's leaf-test setup writing `.git/config` via a subprocess or
+script bypasses it entirely, and the `.githooks/pre-commit` backstop catches fixture
+*commits* on that path but not raw `git config`/`reposix init` config writes. Closing
+that coverage boundary is a hardening-tool change (a new enforcement surface, or a
+process/ownership fix for the sibling lane) — out of scope for a phase-close relief
+handover, which is scoped to certifying P116 and advancing cursor state, not authoring
+new guard tooling.
+
+**Sketched resolution (candidates):** (a) extend the leaf-isolation guard to the
+subprocess path — e.g. a git `config`-change hook, or a `.git/config` integrity check
+wired into `pre-commit`/`pre-push` that fails loud on `core.bare = true` or a fixture
+identity (`t@t`-shaped `[user]` block) appearing in the SHARED repo's config; (b) enforce
+that leaf-setup lanes run in fully-isolated `/tmp` clones with pinned `GIT_CONFIG_*` env
+vars so they structurally cannot write the shared `.git/config` at all; (c) notify the
+sibling-lane owner — the manager (w1:p7 owns `gth-hook-curb-capture`) — so that lane is
+fixed or paused before it corrupts the shared tree again. Route the owner-notification to
+the manager; this SURPRISES row + the #53→#54 `SESSION-HANDOVER.md` are the durable
+surfacing mechanism in the meantime. Cross-ref: root `CLAUDE.md` § Non-negotiables "Leaf
+test setup" coverage-boundary note; `.planning/ORCHESTRATION.md` § Leaf isolation.
+
+**STATUS:** OPEN

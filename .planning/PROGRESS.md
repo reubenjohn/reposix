@@ -31,27 +31,23 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **L0 #50 boundary — P116 planning tail advanced by one sub-step (pattern map), plus one filed noticing + one eager fix** — filed `GTH-V15-39` (catalog row-id-prefix inconsistency, manager-routed noticing carried from #49) and eager-fixed the adjacent `GTH-V15-37`/`GTH-V15-38` copy-paste bleed in the same commit, pushed, CI green (`6d21cae`); then dispatched `gsd-pattern-mapper` (sonnet, standalone — not via `/gsd-plan-phase`) → `116-PATTERNS.md` (22,259 bytes, 8 edit-target analogs), committed, pending push. Research + validation + patterns are now ALL on disk for P116 planning; only `gsd-planner`/`gsd-plan-checker`/coverage-gates remain. — `6d21cae`, `08e94a4`
 - 2026-07-16 — **L0 #51 boundary — P116 planning tail COMPLETE (planner PASS + checker PASS)** — dispatched `gsd-planner` (opus, standalone) → 3 wave-1 parallel plans (`116-01/02/03-PLAN.md`, ZERO file-overlap) + populated `116-VALIDATION.md` body + ROADMAP P116 annotation (`011096b`); filed `GTH-V15-40` (array-typed `.source` jq-crash gotcha, tag P126) after live-verifying it against the catalog, discharging #50's carried noticing (`74fb907`); dispatched `gsd-plan-checker` (sonnet, standalone) → **VERDICT PASS** (every load-bearing claim byte-checked vs disk; both req IDs land; LIVE-row-not-twin verified; FIX-03 design-only gated; zero file-overlap confirmed), eager-fixing two non-blocking WARNINGs in place: a vacuous `grep -A5` TAG-line check in `116-03-PLAN.md` T2 widened to `-A34`; `116-RESEARCH.md` Open Questions marked RESOLVED (`9dbb860`). Pushed at rotation end (`cbd1ff0..79200b7`); a GitHub Actions API 503 outage (~22:15 UTC) prevented CI certification at handover-write time — recorded as a UNKNOWN-not-red correction (`16a7113`). — `011096b`, `74fb907`, `9dbb860`, `79200b7`, `16a7113`
 - 2026-07-16 — **L0 #52 boundary — CI diagnosis of the GitHub Actions outage, zero tree-writes until relief** — the 503 outage #51 observed was STILL ONGOING throughout #52's entire rotation; #52 diagnosed the tip (`16a7113`) failure down to root cause using the check-suites API (resilient to the runs-API 503): 13/15 `ci.yml` jobs GREEN, only `integration (contract, real github[, v09])` + the whole `release-plz` suite failing — both GitHub-API-dependent, zero code diff since the last CI-certified-green base `cbd1ff0` (`crates/`/`.github/` diff-stat = 0 lines), and `cbd1ff0` itself confirmed 4/4 check-suites green. **Conclusion: environmental outage, NOT a code regression — P116 execution correctly NOT started** (gated on tip-CI-certified-green, which the outage blocks). No plan executed, no file touched besides this relief handover. — this commit
+- 2026-07-16 — **L0 #53 boundary — P116 CLOSED GREEN** — gsd-verifier verdict **12/12 must-haves PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`). ADR-010 decision packet durably recorded (RBF-LR-04 CLOSED, FIX-03 Option B sanctioned target design, zero `crates/` diff) + non-tautological mirror-convergence `"authoritative"` guard blessed live in `CLAUDE.md`/`dvcs-topology.md` + bound catalog row; litmus/GTH-09 flipped to terminal status. CI green (`29544462493`). — `a1cc2d4`/`7412833`/`1ea51b3`/`5ee5e25`/`6825d13`
 
 ## NOW
 
-**P116 EXECUTION is the active work — main is CERTIFIED GREEN and the outage has
-cleared.** The GitHub Actions API 503 outage that blocked #51/#52 recovered ~23:45 UTC;
-CI run `29542900359` on tip `bda0576` is GREEN — both real-github integration jobs (base
-+ v09) and every other real-backend job passed, confirming #52's diagnosis
-(environmental, not a code regression). #53 certified it live via `gh run view`.
+**P116 CLOSED GREEN — 3/15 v0.15.0 "Floor" phases complete** (P114, P115, P116).
+gsd-verifier graded **12/12 must-haves PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`);
+CI is green on tip `6825d13` (run `29544462493`). The GitHub Actions API 503 outage that
+blocked #51/#52 is fully cleared and main is certified green.
 
-**P115 is CLOSED GREEN.** Verifier GREEN-CHECKPOINT (`ce4d3b7`); the sole remaining gate
-— the human-only 11-row `confirm-retire` batch — CLOSED by the owner (`4bb0596`; live
-`grep -c '"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` → 0,
-`RETIRE_CONFIRMED` → 68). `.planning/STATE.md`'s cursor is advanced past P115 in this
-same commit. **2/15 v0.15.0 "Floor" phases complete** (P114, P115); P116 planning
-complete + execution starting; P117–P128 not started.
+**P117 is the next work** — `/gsd-plan-phase 117` (Doc-truth launch-blocker purge),
+folding in the owner "furnished product" quality-bar mandate (`GTH-V15-36` quality bar +
+`GTH-V15-37` 80s launch-animation embed) per the ROADMAP P117 annotation + `## NEXT` below.
 
-**Now executing: P116** — 3 wave-1 parallel plans (`116-01/02/03-PLAN.md`), dispatched
-SEQUENTIALLY (one git-index writer at a time; zero file-overlap; `Execution mode:
-top-level` — the top-level coordinator IS the executor, never `/gsd-execute-phase`).
-FIX-03 is DESIGN-ONLY (no `crates/` edit). Per-plan tiers + hard rules fully pre-digested
-in `.planning/SESSION-HANDOVER.md` §6 step 4.
+**Incident this rotation:** the shared `.git/config` was corrupted (`core.bare=true` +
+fixture identity) by a concurrent sibling worktree lane during P116 phase-close,
+blocking all work-tree git ops until repaired — filed as a HIGH `SURPRISES-INTAKE.md` row
+(leaf-isolation coverage-boundary gap). Next actor: **#54**.
 
 ## NEXT
 
@@ -64,21 +60,16 @@ in `.planning/SESSION-HANDOVER.md` §6 step 4.
    scope addition (productionization checklist filed). Full text: `GOOD-TO-HAVES.md`
    GTH-V15-36 (quality bar) / GTH-V15-37 (animation embed); annotated inline on
    `.planning/ROADMAP.md` Phase 117 + Phase 119.
-2. **P116 — planning COMPLETE, EXECUTION is now the primary work item, blocked only on
-   the GitHub Actions outage clearing (or accepting the first execution push as fresh
-   certification).** ADR-010 decision packet was RULED 2026-07-16 (manager,
-   decide-and-disclose, owner veto window open): Decision 1 (ADR-01 mirror fan-out) —
-   Option B with A folded in; Decision 2 (FIX-03 slug→id) — Option A this milestone
-   (design-only), Option B recorded as sanctioned target design, NO v0.15 build.
-   Verbatim rulings: the two 2026-07-16 `[MANAGER]` entries in `CONSULT-DECISIONS.md`;
-   packet at
+2. **P116 — CLOSED GREEN 2026-07-16** (gsd-verifier 12/12, 0 gaps; `116-VERIFICATION.md`).
+   ADR-010 decision packet delivered per the 2026-07-16 `[MANAGER]` rulings
+   (`.planning/CONSULT-DECISIONS.md`, commit `8212373`): Decision 1 (ADR-01 mirror
+   fan-out) — Option B with A folded in, live docs now bless webhook+cron as
+   AUTHORITATIVE; Decision 2 (FIX-03 slug→id) — Option A this milestone (design-only),
+   Option B recorded as sanctioned target design, NO v0.15 build (zero `crates/` diff
+   confirmed). Packet at
    `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`.
-   3 wave-1 parallel plans now on disk (`116-01/02/03-PLAN.md`), plan-checker VERDICT
-   PASS (`9dbb860`) — execute per ROADMAP `Execution mode: top-level`, checkpoint
-   housekeeping (`GTH-V15-35`) already complete, sequenced only behind nothing (the
-   P115 human gate does not block it).
 3. Then the remaining milestone phases:
-   - P117 — Doc-truth launch-blocker purge — not started
+   - P117 — Doc-truth launch-blocker purge — not started (next)
    - P118 — Post-bench honesty corrections — not started
    - P119 — Docs/planning simplification (the "P112 RAISE") — not started
    - P120 — CLI + helper error hardening to Rust-compiler-grade — not started

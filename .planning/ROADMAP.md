@@ -66,7 +66,7 @@
 
 - [x] **Phase 114: t4 Confluence oid-drift fix-first + reconcile audit** - Confluence checkouts stop aborting on oid-drift; the `sync --reconcile` recovery claim is proven or corrected. (completed 2026-07-15)
 - [ ] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
-- [ ] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling.
+- [x] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling. (completed 2026-07-16)
 - [ ] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent.
 - [ ] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected.
 - [ ] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive.
@@ -117,9 +117,9 @@
   3. An owner/manager ruling is recorded in `.planning/CONSULT-DECISIONS.md` (or equivalent) before any implementation of a chosen option proceeds.
   4. FIX-03's v0.15 implementation depth is explicitly scoped by that ruling, not pre-decided by the executor.
 **Plans**: 3 plans (all Wave 1, parallel — zero file overlap; Plan 01 T1 is the catalog-first first commit)
-- [ ] 116-01-PLAN.md — ADR-01 live-doc mirror-truth blessing (webhook+cron = authoritative; (a)/(b) mirror-sense split; refresh-script = op-recovery-only) in `dvcs-topology.md` + root `CLAUDE.md`, + a doc-alignment regression-guard row/verifier
-- [ ] 116-02-PLAN.md — ADR-010 §2 amendment (ADR-01: RBF-LR-04 lever CLOSED, Option D rejected) + §3 amendment (FIX-03: Option B SANCTIONED TARGET DESIGN, design-only, waiver stays qualified) + packet co-location cross-link (criterion 1)
-- [ ] 116-03-PLAN.md — retire the LIVE litmus-non-idempotency SURPRISES-INTAKE row (terminal RESOLVED) + update GOOD-TO-HAVES-09 (FIX-03 next-milestone build proposal)
+- [x] 116-01-PLAN.md — ADR-01 live-doc mirror-truth blessing (webhook+cron = authoritative; (a)/(b) mirror-sense split; refresh-script = op-recovery-only) in `dvcs-topology.md` + root `CLAUDE.md`, + a doc-alignment regression-guard row/verifier
+- [x] 116-02-PLAN.md — ADR-010 §2 amendment (ADR-01: RBF-LR-04 lever CLOSED, Option D rejected) + §3 amendment (FIX-03: Option B SANCTIONED TARGET DESIGN, design-only, waiver stays qualified) + packet co-location cross-link (criterion 1)
+- [x] 116-03-PLAN.md — retire the LIVE litmus-non-idempotency SURPRISES-INTAKE row (terminal RESOLVED) + update GOOD-TO-HAVES-09 (FIX-03 next-milestone build proposal)
 **Execution mode**: top-level (produce options + tradeoffs, gather owner/manager ruling; explicitly NOT an implement-and-ship phase)
 
 > **Planner note (2026-07-16, P116 planning).** The Goal + Success Criteria 1–4 + Execution-mode

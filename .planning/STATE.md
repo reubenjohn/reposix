@@ -3,34 +3,36 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-16T23:50:09.000Z"
-last_activity: 2026-07-16 -- Phase 115 CLOSED GREEN (human confirm-retire gate closed, 11 rows retired); P116 execution next
+last_updated: "2026-07-16T23:58:00.000Z"
+last_activity: 2026-07-16 -- Phase 116 CLOSED GREEN (verifier 12/12, ADR-010 decision packet + mirror-convergence blessing); P117 next
 progress:
   total_phases: 21
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 3
   completed_plans: 2
-  percent: 10
+  percent: 14
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: **P115 CLOSED GREEN** — BENCH-01 live MCP benchmark re-measurement (`Execution
-mode: top-level`). Verifier GREEN-CHECKPOINT (`115-VERIFICATION.md`, `ce4d3b7`); the sole
-remaining gate — the human-only `confirm-retire` batch (11 `RETIRE_PROPOSED` doc-alignment
-rows) — **CLOSED 2026-07-16** (owner-executed, landed `4bb0596`; live `grep -c
-'"last_verdict": "RETIRE_PROPOSED"' quality/catalogs/doc-alignment.json` → **0**,
-`RETIRE_CONFIRMED` → 68). **2/15 phases complete** (P114–P128); 13 remain.
-Next: **P116 EXECUTION** — ADR-010 decision packet (FIX-03 slug→id + ADR-01 mirror
-fan-out amendments; `Execution mode: top-level`). Planning COMPLETE — planner PASS +
-plan-checker VERDICT PASS (`9dbb860`); 3 wave-1 parallel plans on disk
-(`116-01/02/03-PLAN.md`), dispatched **sequentially** (one git-index writer at a time,
-zero file-overlap). FIX-03 is **DESIGN-ONLY** — no `crates/` edit.
-Status: Ready to execute over certified-green main (tip `bda0576` CI GREEN 2026-07-16 —
-the GitHub Actions API 503 outage that blocked #51/#52 has cleared; both real-github
-integration jobs GREEN this run).
+Phase: **P116 CLOSED GREEN** — ADR-010 mirror-fanout decision packet + slug→id
+durable-create (`Execution mode: top-level`). gsd-verifier verdict: **12/12 must-haves
+PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`); CI green on tip `6825d13` (run
+`29544462493`, `success`); full pre-push re-run 61 PASS / 0 FAIL / 1 WAIVED / 0
+NOT-VERIFIED. Three wave-1 plans landed: 116-01 (`a1cc2d4`+`7412833` — non-tautological
+mirror-convergence guard keyed on `"authoritative"` + webhook+cron blessed AUTHORITATIVE
+in `CLAUDE.md` + `dvcs-topology.md` + bound catalog row), 116-02 (`1ea51b3` — ADR-010
+append-only record: RBF-LR-04 CLOSED, FIX-03 Option B sanctioned target design
+[design-only, zero `crates/` diff], packet cross-link), 116-03 (`5ee5e25` — LIVE litmus
+SURPRISES row OPEN→RESOLVED, GOOD-TO-HAVES-09 → sanctioned target design); noticings
+filed at `6825d13` (`GTH-V15-41`/`GTH-V15-42`). doc-alignment invariants held throughout:
+`RETIRE_PROPOSED`=0, `RETIRE_CONFIRMED`=68, catalog id count 399→400.
+**3/15 v0.15.0 "Floor" phases complete** (P114, P115, P116); 12 remain.
+Next: **`/gsd-plan-phase 117`** — Doc-truth launch-blocker purge, folding in the owner
+"furnished product" quality-bar mandate (`GTH-V15-36`/`GTH-V15-37`) per the ROADMAP P117
+annotation + `PROGRESS.md` `## NEXT`.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
@@ -85,7 +87,7 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 114` (t4 Confluence oid-drift fix-first + reconcile audit).
+Next step: `/gsd-plan-phase 117` (Doc-truth launch-blocker purge, folding the furnished-product quality bar).
 
 **Serial workstream history (OD-3 — A then C then B, per OD-4 resequencing):**
 
@@ -110,7 +112,7 @@ Next step: `/gsd-plan-phase 114` (t4 Confluence oid-drift fix-first + reconcile 
 | 260706-idp | v0.13.0 intake OP-8 disposition + bound-to-live-state sweep — carry-forward banners; 2 terminal SURPRISES + 4 completed RESOLVING-P97 rows deleted; 5 HIGHs confirmed live; 1 new MEDIUM filed (troubleshooting.md >20k) | 2026-07-06 | (this commit) | [260706-idp-v0.13.0-intake-disposition](./quick/260706-idp-v0.13.0-intake-disposition/) |
 | 260712-bgv | Non-blocking timing-budget warning in pre-commit/pre-push hooks (SECONDS-based, stderr-only, never touches exit code) + CLAUDE.md/quality/CLAUDE.md cadence+scaling documentation | 2026-07-12 | b4e96d8 | [260712-bgv-add-non-blocking-timing-budget-warning-t](./quick/260712-bgv-add-non-blocking-timing-budget-warning-t/) |
 | 260712-oa9 | 75% file-size early-warning tier in structure/file-size-limits.sh — non-blocking print-only WARN summary for the 75–99% band (top-12 by pct DESC + overflow), always emitted independent of --warn-only, never touches exit code; ≥100% block/waiver semantics unchanged. + catalog asserts + quality/CLAUDE.md § File-size limits + committed selftest | 2026-07-12 | (this commit) | [260712-oa9-file-size-75pct-warn](./quick/260712-oa9-file-size-75pct-warn/) |
-| 260712-oke | Landed all 7 v0.14.0 DEFERRED surprises-intake entries + 1 hygiene row onto the v0.15.0 surface — new v0.15.0-phases/GOOD-TO-HAVES.md (GTH-V15-01..08, severity + fix-sketch each; shell-coverage cross-refs 999.5/999.6 not duplicated; release-plz code.json blocker noted cleared) + ROADMAP.md § Hardening candidates with 2 HIGH `Phase (candidate)` stubs (RBF-LR-03 modern-git verify, subprocess-bypass binary-side refusal) closing the roadmap-gap. UX Phase TBD stubs untouched; part-file back-pointers skipped (already >20k ceiling). | 2026-07-12 | (this commit) | [260712-oke-land-v0-14-deferred-onto-v0-15](./quick/260712-oke-land-v0-14-deferred-onto-v0-15/) |
+| 260712-oke | Landed all 7 v0.14.0 DEFERRED surprises-intake entries + 1 hygiene row onto the v0.15.0 surface — new v0.15.0-phases/GOOD-TO-HAVES.md (GTH-V15-01..08, severity + fix-sketch each; shell-coverage cross-refs 999.5/999.6 not duplicated; release-plz code.json blocker noted cleared) + ROADMAP.md § Hardening candidates with 2 HIGH `Phase (candidate)` stubs (RBF-LR-03 modern-git verify, subprocess-bypass binary-side refusal). UX Phase TBD stubs untouched; part-file back-pointers skipped (already >20k ceiling). | 2026-07-12 | (this commit) | [260712-oke-land-v0-14-deferred-onto-v0-15](./quick/260712-oke-land-v0-14-deferred-onto-v0-15/) |
 | 260712-phc | Author the two missing pre-release-real-backend verifier scripts (B4 t4-conflict-rebase-ancestry-real-backend P0 + B5 github-front-door-real-backend P1) that blocked the v0.14.0 tag — ported sim-arm topology to confluence::TokenWorld / init github::reubenjohn/reposix, env-gate-first→exit75 NOT-VERIFIED, hermetic self-test (4/4), kcov harness (coverage 15.72%≥floor13), B5 catalog RFC3339 fix-twice. Both rows now grade instead of 'verifier not found'. | 2026-07-13 | fe8febb | [260712-phc-author-two-missing-pre-release-real-back](./quick/260712-phc-author-two-missing-pre-release-real-back/) |
 | 260713-arc | Durably archive owner's 2026-07-12 reality-check audit (verbatim `cp`, 43492 bytes, byte-identical) to `.planning/milestones/audits/2026-07-12-reality-check.md` per "uncommitted = didn't happen" | 2026-07-13 | (this commit) | [260713-arc-archive-reality-check](./quick/260713-arc-archive-reality-check/) |
 | 260713-q0e | Fix RED main (HONEST-REWORK, Manager Ruling #5 Option A) — post-release `quality-post-release` (run 29298424648, v0.14.0) went RED on 4 P1 docs-repro example gates (01/02/04/05); root cause = harness gap, NOT product: containers exit 0 but the generic `container-rehearse.sh` emitted one generic `asserts_passed` line, which F-K4b (`_audit_field.py::asserts_congruent`) rejects. The first fix (`0f2b7c5`, emit `expected.asserts` verbatim on exit 0) failed adversarial verification as a SYMPTOM-FIX — example-05's asserts overclaimed. Reworked: `git reset --soft d68fa8a` un-stacked the held commits; KEPT the emission (verified fail-loud for 01/02/04) and REWORDED example-05 asserts #2/#3 to the truth (pre-emptive `git sparse-checkout` pattern + `BLOB_LIMIT_EXCEEDED_FMT` source-constant presence — NOT a runtime-error observation; #3 scoped to the `ls issues/*.md` ≥1-file check). NO F-K4b weakening, NO waivers. Filed ONE v0.15.0 SURPRISES-INTAKE (MEDIUM): F-K4b container-tautology redesign + example-05 real-runtime-error deeper fix. post-release re-run: 6 PASS / 0 FAIL / exit 0. No push (orchestrator-gated). | 2026-07-13 | 03e7a6f (fix), 3775075 (intake) | [260713-q0e-fix-red-main-container-rehearse-sh-emits](./quick/260713-q0e-fix-red-main-container-rehearse-sh-emits/) |
@@ -123,7 +125,7 @@ Next step: `/gsd-plan-phase 114` (t4 Confluence oid-drift fix-first + reconcile 
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor ROADMAP scoped 2026-07-15 (15 phases, P114–P128; gsd-roadmapper). 41/41 REQ-IDs mapped, 100% coverage. Next: `/gsd-plan-phase 114`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P116 CLOSED GREEN (verifier 12/12); 3/15 phases complete (P114, P115, P116). Next: `/gsd-plan-phase 117`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
