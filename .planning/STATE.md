@@ -6,11 +6,11 @@ status: executing
 last_updated: "2026-07-17T10:30:00.000Z"
 last_activity: 2026-07-17 -- P117 CLOSED GREEN (verdict GREEN, CI green on cdf5557); launch-animation publish (gh release docs-assets + mp4 upload + animation-renders verify) manager-deferred; owner approval PENDING (E1 ask remains open/surfaced to owner); next = P118
 progress:
-  total_phases: 21
-  completed_phases: 3
+  total_phases: 15
+  completed_phases: 4
   total_plans: 3
   completed_plans: 2
-  percent: 14
+  percent: 27
 ---
 
 # Project State

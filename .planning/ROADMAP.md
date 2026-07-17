@@ -65,9 +65,9 @@
 ### Phase index (P114–P128)
 
 - [x] **Phase 114: t4 Confluence oid-drift fix-first + reconcile audit** - Confluence checkouts stop aborting on oid-drift; the `sync --reconcile` recovery claim is proven or corrected. (completed 2026-07-15)
-- [ ] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
+- [x] **Phase 115: Live MCP benchmark re-measurement** - Fresh token-economy + latency figures replace the 8 waived hero-number rows before the 2026-08-15 deadline.
 - [x] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling. (completed 2026-07-16)
-- [ ] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent.
+- [x] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent. (completed 2026-07-17)
 - [ ] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected.
 - [ ] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive.
 - [ ] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery.
