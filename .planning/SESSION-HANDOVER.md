@@ -1,23 +1,19 @@
-# SESSION-HANDOVER.md — v0.15.0 Floor: P117 CLOSED GREEN, standby-router,
-E1 animation owner-gate OPEN — 2026-07-17
+# SESSION-HANDOVER.md — v0.15.0 Floor: P117 CLOSED GREEN, counters
+reconciled, next = P118 — 2026-07-17
 
 **VERIFY LIVE BEFORE ACTING — do not trust any number below blindly, re-run the
 ground-truth block yourself first.**
 
-Written by **workhorse #58** (L0 ROUTER), relieving to successor **#59** (fresh L0
-ROUTER) at a clean wave boundary (P117 closed) — this is a scheduled relief, not a
-context-limit scramble, but treat it with the same rigor. This file **REPLACES** the
-prior `#57→#58` handover (was reachable at commit `26dd6d8`'s successor state; that
-handover's Step-0/Step-B/Step-C runbook is now fully executed and DONE — do not
-re-run it). Manager: `w1:p7` (separate session, `.planning/MANAGER-HANDOVER.md` — do
-not touch). Milestone **v0.15.0 "Floor"**. **Router ROUTES ONLY** — do not do leaf
-work yourself; delegate reads/reports through a reader-digester and cap subagent
-report size (see §5 manager delta).
+Written by **workhorse seat #59** (L0 ROUTER), relieving to successor **seat #60**
+(fresh L0 ROUTER — `.planning/ORCHESTRATION.md` § "L0 is a ROUTER"). This file
+**REPLACES** the prior `#58→#59` handover (last reachable at commit `08cb62b`) — that
+handover's runbook is fully executed and DONE, do not re-run it. Milestone
+**v0.15.0 "Floor"**. STATE cursor: **P117 CLOSED GREEN; next = P118.** Router ROUTES
+ONLY — delegate reads through a reader-digester, cap subagent reports.
 
 **Read order:** this file → §1 ground truth (verify live) → §2 wave/phase state → §3
-binding constraints (includes the OPEN OWNER GATE — read before touching anything
-release-related) → §4 litmus/gate state → §5 mid-execution decisions + noticed-not-
-filed + honesty lesson → §6 runbook (start at step 1).
+binding constraints → §4 litmus/gate state → §5 mid-execution decisions + noticed-not-
+filed → §6 runbook (start at step 1).
 
 ## 1. Ground truth (git) — verify live before acting
 
@@ -29,205 +25,139 @@ gh run list --workflow=ci.yml --branch main -L 5 \
   --jq '.[]|"\(.headSha[0:7]) \(.status)/\(.conclusion) \(.createdAt)"'
 ```
 
-**Live-verified by #58 immediately before writing this handover (2026-07-17, ~10:10
-UTC):**
+**Live-verified by #59 immediately before writing this handover (2026-07-17):**
 
-- `HEAD` = `origin/main` = `97a4008` (`docs(planning): honesty fix — E1 animation
-  deferral was MANAGER not OWNER; owner decision still PENDING`). **0 ahead, 0
-  behind.** `git status --porcelain` → empty, tree clean.
-- Commits since the last fully-verified-green tip, newest-first: `97a4008` (honesty
-  fix, this rotation), `df5bdc6` (P117 CLOSED GREEN — record deferral), `cdf5557`
-  (file ci-green-on-main race surprise), `698293f` (P117 phase-close verdict,
-  GREEN), `c3b4d5c` (visible fallback link fix, W5 final), `3a97766`, `0115511`,
-  `644763a` (W4 — rebind doc-alignment push-blocker cascade), `e4a04a6`, `597bc82`,
-  `0d4a0b7` (W4 — embed launch animation), `0a5f620` (W3 — rebind push-blocker
-  cascade)… back through `c028d4c` (W2 close — resolves GTH-V15-49, files
-  GTH-V15-51) and `57d18d6` (GTH-V15-49 Option B fix). All confirmed present in
-  `git log`, no gaps.
-- **CI, `ci.yml` specifically (not Docs/CodeQL/release-plz):**
-  - Newest run on `97a4008` (databaseId `29572436284`) was **`in_progress`** at the
-    moment of this check — **NOT YET RESOLVED**. Do not assume it passed.
-  - The run on `df5bdc6` (`29572145305`) shows `completed/cancelled` — normal
-    behavior (GitHub Actions cancels a superseded in-flight run when a newer push
-    lands on the same branch/workflow concurrency group), NOT a failure signal.
-  - The **last CONFIRMED-GREEN completed run** is on `cdf5557`
-    (`29570612222`, `completed/success`, `2026-07-17T09:37:08Z`).
-  - **Seat #59 action required:** re-run the `gh run list --workflow=ci.yml` command
-    above and confirm the `97a4008` run has resolved to `completed/success` before
-    treating main as CI-green or opening new work. If it resolved to anything else,
-    STOP and investigate before dispatching P118 — do not open a new phase over a
-    red/unresolved main.
-- `quality/catalogs/doc-alignment.json` is currently **clean** (not part of the dirty
-  tree at last check) — but this file has shown up dirty intermittently across #57
-  and #58's rotations purely as a side-effect of someone running `doc-alignment
-  walk` (it rewrites `summary.last_walked`). **If you see it dirty and you did not
-  intentionally mutate the catalog via a `reposix-quality doc-alignment <verb>`
-  call, `git checkout -- quality/catalogs/doc-alignment.json` and move on — it is
-  regenerable, not real work.** This bit both #57 (flagged-anomaly investigation)
-  and nearly cost #58 a wasted diagnosis; treat it as known noise, not a new
-  incident, unless the walk's *substantive* output (`claims_bound`,
-  `claims_waived`, blocking `docs-alignment:` lines) changed in a way that matters
-  to the task at hand.
+- `HEAD` = `origin/main` = `b0c1c12` (`docs(planning): reconcile STATE frontmatter
+  counters (15/4/27) + flip stale P115/P117 ROADMAP checkboxes`). 0 ahead, 0 behind.
+  `git status --porcelain` → empty, tree clean.
+- Commits since the last confirmed-green tip, newest-first: `b0c1c12` (this rotation's
+  fix), `08cb62b` (#58→#59 relief handover), `97a4008` (honesty fix — E1 deferral was
+  MANAGER not OWNER), `df5bdc6` (P117 CLOSED GREEN), `cdf5557` (filed ci-green-on-main
+  race surprise), `698293f` (P117 phase-close verdict GREEN) — all confirmed present
+  in `git log`, no gaps.
+- **CI, `ci.yml` specifically:**
+  - `08cb62b` → run `29572779674`, `completed/success` (confirmed by #59, satisfies
+    the inherited runbook step-1 gate).
+  - `97a4008` → run `29572436284`, `completed/success`.
+  - `b0c1c12` (current tip) → run `29573427893`, was **`in_progress`** at the moment
+    of this check — **NOT YET RESOLVED. Seat #60's first live-check obligation:**
+    re-run the `gh run list` command above and confirm it resolved to
+    `completed/success` before opening P118 or trusting main as CI-green. `b0c1c12`
+    is docs-only (2 files, `ROADMAP.md`/`STATE.md`), so a red result would signal
+    infra/flake, not a content regression — investigate, don't bury under new
+    commits, don't open P118 over it.
+- `quality/catalogs/doc-alignment.json` — check before trusting; if dirty and you did
+  not run a `doc-alignment` verb yourself, `git checkout -- quality/catalogs/doc-alignment.json`
+  (regenerable `summary.last_walked` noise, not real work — bit #57 and #58 both).
 
-## 2. Wave/phase state
+## 2. Wave/cycle state
 
 | Item | State | Evidence |
 |---|---|---|
-| P117 W1–W5 | ALL SHIPPED GREEN on origin/main | W2 `c028d4c` (docs-truth + GTH-V15-49 resolve) · W3 `0a5f620` (IA/CLAUDE.md rebind) · W4 `644763a` (launch-animation embed + rebind) · W5 `698293f` (phase-close verdict, GREEN) · close `df5bdc6` · honesty-fix `97a4008` |
-| P117 verdict | GREEN (non-blocked scope) | `quality/reports/verdicts/p117/VERDICT.md` — unbiased re-derivation (live `gh run`, re-run gate scripts, direct file reads), confirms `code/ci-green-on-main` PASS on `c3b4d5c`, docs-repro/social-freshness/doc-alignment rows all PASS, docs-truth deliverables spot-checked against live files, STATE.md honesty PASS |
-| GTH-V15-49 (docs-repro pivot false-block) | RESOLVED | Implemented `57d18d6` (pivot on uncovered-count not raw-block-count), ratified in `c028d4c`; 9 regression tests pin it |
-| **P117 overall** | **CLOSED for everything reachable without the owner's release-upload action.** Task 1 (mp4 upload) remains genuinely HELD — see §3. | `.planning/STATE.md`, `PROGRESS.md` both correctly say "NOT fully COMPLETE," name the exact held tasks — this is honest state, not overclaim |
-| Milestone v0.15.0 "Floor" | **Prose says 4/15 phases complete (P114, P115, P116, P117); 11 remain; NEXT = P118.** (NOTE: `STATE.md` frontmatter `progress:` block says `total_phases: 21, completed_phases: 3` — this conflicts with the prose and is very likely stale/unmaintained; flagged in §5, do not trust the frontmatter numbers, use the prose.) | `.planning/STATE.md` `## Current Position` |
-| Dead thread | `.planning/phases/117-doc-truth-launch-blocker-purge/117-HANDOVER.md` (commit `5c14b2f`) — the ORIGINAL W2 C1's relief handover. **Never resume it** — its runbook was fully superseded and executed by later waves. | confirmed present in `git log` |
+| P117 (doc-truth launch-blocker purge) | CLOSED GREEN (non-blocked scope) | `quality/reports/verdicts/p117/VERDICT.md`; CI green on `cdf5557`/`c3b4d5c` |
+| STATE.md counter reconciliation | DONE this rotation | `b0c1c12`: frontmatter was `total_phases:21 completed_phases:3 percent:14` (WRONG) → fixed to `15/4/27` (ground truth: 15 total P114–P128, P114/P115/P116/P117 all CLOSED = 4). Root cause: P115 and P117 ROADMAP checkboxes were never flipped `[ ]`→`[x]` at their closes, which mis-fed a phase-count verifier this session. Both flipped in the same commit. |
+| Honesty note | A fresh reader-digester was fooled by the stale P115 checkbox mid-shift this rotation; direct `git log` verification (P115 CLOSED @ `d667eee`) was decisive. **Trust `git log` over ROADMAP checkboxes** when the two disagree. | n/a |
+| Milestone v0.15.0 "Floor" | 4/15 phases complete (P114–P117); 11 remain; **NEXT = P118** | `.planning/ROADMAP.md` §"Phase index (P114–P128)", now consistent with `STATE.md` frontmatter and prose |
+| P118 launch | NOT YET DISPATCHED — directed by this handover (see §6 step 3), gated on §1 step-1 CI confirmation | `.planning/ROADMAP.md:71` |
 
-**Launching P118 is a fresh coordinator dispatch (milestone continuation).** Seat #59
-routes it when the owner/manager directs — **do NOT auto-launch** it as the first
-action of this rotation; there is no standing directive to start P118 immediately,
-only that it's next in the roadmap.
-
-## 3. Binding constraints (carry forward, unchanged unless noted)
+## 3. Binding constraints (carry forward, unchanged)
 
 - One tree-writer at a time; **ONE cargo invocation machine-wide** (prefer `-p`); no
-  `--no-verify`; **targeted staging only** (never `-A`/`.`); no tag push by any
-  coordinator; no git surgery (reset/rebase/amend/reorder) on SHARED/pushed `main` —
-  the manager (`w1:p7`) is a concurrent writer, `git pull --rebase` if origin moved,
-  never force.
+  `--no-verify`; targeted staging only (never `-A`/`.`); no tag push by any
+  coordinator; no git surgery (reset/rebase/amend/reorder) on shared/pushed `main`.
 - Leaf isolation: `reposix`/sim/git test setup in a `/tmp` clone, `cd` in the SAME
   Bash invocation as the mutating command — never the shared repo.
-- **Every push Bash timeout ≥300s** (pre-push runs full clippy+kcov). Push cadence:
-  `git push origin main` BEFORE any verifier-subagent dispatch, then `python3
-  quality/runners/run.py --cadence post-push --persist` — the `code/ci-green-on-main`
-  (P0) probe must pass. Never open the next phase/wave over a red main.
-- **Ledger topology:** milestone-scoped ledgers only —
-  `.planning/milestones/v0.15.0-phases/{GOOD-TO-HAVES,SURPRISES-INTAKE}.md`,
-  `GTH-V15-NN` id scheme.
-- **Catalog write discipline:** never hand-edit `quality/catalogs/*.json` — all
-  mutation flows through `reposix-quality doc-alignment <verb>` binary calls (a
-  hand-authored row corrupted the whole catalog earlier this phase, `d4156f6`).
-- **GAUGE NOTE:** relieve at ~100k soft / 150k hard ABSOLUTE own-context, at a wave
-  boundary, with a committed handover — not mid-atomic-unit.
-
-### THE OPEN OWNER GATE — highest-priority carry, do not mishandle
-
-The launch-animation E1 publish — `gh release create docs-assets --latest=false` +
-upload `/home/reuben/workspace/reposix-animation-pitch/Reposix Launch Animation.mp4`
-(6.9MB, confirmed exists) + author `docs-build/animation-renders.sh` + run the live
-playwright `animation-renders` verify (the second half of `117-07`) — is
-**MANAGER-DEFERRED under standing doctrine (outward publishing = owner-only), with
-OWNER APPROVAL STILL PENDING.** This is a genuinely open ask surfaced to the owner,
-NOT an accepted deferral or a closed item:
-
-- Ledger entry (verbatim heading): `.planning/CONSULT-DECISIONS.md` `## 2026-07-17
-  [MANAGER] launch-animation publish held (117-07 second half)`. Tracked as
-  **GTH-V15-37** (`.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md:274`).
-- `docs-build/animation-renders` reading `NOT-VERIFIED` in the catalog is a
-  **PENDING gate**, not a done/waived one — it will flip to a real verifier once the
-  asset is live.
-- `--latest=false` is **mandatory** on the eventual `gh release create` — a stray
-  `releases/latest` steals the tag from v0.14.0 and 404s installer URLs (see
-  `release-plz.toml` header comment).
-- **Do not self-authorize this action.** Re-raise it to the **OWNER** (not the
-  manager) when the owner is reachable — this is an external, security-sensitive
-  mutation per ORCHESTRATION §9 (owner-named-target approval required).
+- Push cadence: `git push origin main` BEFORE any verifier-subagent dispatch, then
+  `python3 quality/runners/run.py --cadence post-push --persist` — the
+  `code/ci-green-on-main` (P0) probe must pass. Never open the next phase/wave over a
+  red main.
+- **GAUGE NOTE:** relieve at ~100k soft / 150k hard ABSOLUTE own-context (not % of
+  window), at a wave boundary, with a committed handover.
+- **THE OPEN OWNER GATE (carry forward, unresolved):** launch-animation E1 publish
+  (`gh release create docs-assets --latest=false` + mp4 upload + live
+  `animation-renders` playwright verify — second half of `117-07`) is
+  **MANAGER-DEFERRED under standing doctrine (outward publishing = owner-only), with
+  OWNER APPROVAL STILL PENDING.** Ledger: `.planning/CONSULT-DECISIONS.md` `## 2026-07-17
+  [MANAGER] launch-animation publish held (117-07 second half)`, tracked
+  **GTH-V15-37**. Never self-authorize this action, never tag it `[OWNER]` without
+  genuine owner input arriving — re-raise to the OWNER (not the manager) when
+  reachable. `docs-build/animation-renders` reading `NOT-VERIFIED` is a PENDING gate,
+  not an accepted deferral.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **`code/ci-green-on-main` (P0):** PASSED as of the P117 verdict's grading commit
-  (`c3b4d5c`, run `29568842392`). **NOT yet re-confirmed for `97a4008`** — see §1,
-  this is seat #59's first live-check obligation.
-- **`docs-repro/snippet-extract` (GTH-V15-49):** RESOLVED, `exit 0`, 9 regression
-  tests pin the uncovered-count pivot logic. No longer a REOPEN risk absent a future
-  code change to that gate.
-- **`docs-alignment` walk:** clean at last verdict re-run (0 unwaived
-  `STALE_DOCS_DRIFT`; 3 pre-existing, dated, reasoned `WAIVED-*` rows unrelated to
-  P117's churn). Root-cause of the repeated churn (line-number binding
-  brittleness) is GTH-V15-57 — NOT fixed, only mitigated (see §5).
-- **`docs-build/animation-renders`:** `NOT-VERIFIED`, `blast_radius: P2` (does not
-  block pre-push), correctly documented as intentionally absent pending the owner
-  gate in §3. This is the ONE open/pending gate in the whole tree right now.
+- **`code/ci-green-on-main` (P0):** green through `97a4008`/`08cb62b`; **NOT yet
+  confirmed for `b0c1c12`** — seat #60's first obligation (§1, §6 step 1).
+- **`docs-alignment` walk:** clean at last check (0 unwaived `STALE_DOCS_DRIFT`).
+- **`docs-build/animation-renders`:** `NOT-VERIFIED`, `blast_radius: P2`, correctly
+  documented as intentionally absent pending the §3 owner gate. Only open/pending
+  gate in the tree.
+- **`structure/file-size-limits` on `.planning/ROADMAP.md`:** 34,207 chars vs the 20k
+  soft ceiling (warn-only, WAIVED until 2026-08-08, part of the broader GTH-V15-21
+  waiver class). Natural landing spot for the split is **P119** ("Docs/planning
+  simplification / the P112 RAISE"). Do not split it now — not this rotation's job.
 
-## 5. Mid-execution decisions + noticed-not-filed + honesty lesson
+## 5. Mid-execution decisions + noticed-not-filed
 
-**HONESTY-DEFECT LESSON — carry verbatim, this is why #58 corrected its own prior
-commit:** AskUserQuestion answers in this setup may be routed through the **MANAGER
-(session `w1:p7`)**, NOT the human owner. The recurring system-reminder "No genuine
-owner input has been received" is the AUTHORITATIVE signal. **NEVER tag a decision
-`[OWNER]` or write "owner approved/deferred" unless genuine owner input actually
-arrived.** #58 mis-tagged the E1 deferral `[OWNER]` in an earlier commit; the manager
-caught it; corrected in `97a4008`. When in doubt, tag `[MANAGER]` and mark the owner
-gate PENDING/open, as §3 does above.
+**Manager deltas still in force (carry forward verbatim):**
 
-**Non-blocking filed follow-ups (all already in v0.15.0 intake ledgers — no action
-needed unless drained in an OP-8 absorption slot; confirmed present at these
-locations):**
+- ALL >100-line reads via reader-digester; cap subagent report size at ≤300-word
+  digests — an earlier grader-fanout wave ballooned a coordinator's context from
+  ~96k→~165k on report size alone.
+- Trust the context gauge %; relieve ~100k soft / ~150k hard ABSOLUTE own-context (not
+  % of window) at a wave boundary; write+commit a handover first.
+- **P118 has no standing pre-authorization beyond this handover's directive** — it IS
+  directed here (§6 step 3), so dispatch it, gated only on the §1/§6-step-1 CI check.
+- Animation `gh release` upload stays HELD pending OWNER approval (MANAGER-deferred,
+  not owner-decided — do not re-litigate, just hold per §3).
 
-1. `ci-green-on-main` race-guard gap (`SURPRISES-INTAKE.md`, confirmed filed
-   ~line 688): the P0 probe can select the wrong run right after a push if a newer
-   run starts before the probe queries; fix = assert the returned run's
-   `headSha == HEAD` before trusting `conclusion`. MEDIUM-HIGH.
-2. **GTH-V15-57** (confirmed filed, `GOOD-TO-HAVES.md:440`) — doc-alignment rows
-   bind to LINE NUMBERS, so any edit above a bound row drifts it; this caused
-   **three** separate push-blocker cascades in P117 alone (W2, W3, W4 all needed a
-   rebind pass). Highest-leverage fix candidate in the whole ledger. Interim
-   mitigation already in `quality/CLAUDE.md`: rebind in the same commit as the
-   edit (fix-twice rule). Also **GTH-V15-56** (confirmed filed, `:432`): pre-push
-   wall time drifted from the documented ~55-60s budget to ~97s (kcov dominates).
-3. Both milestone intake ledgers are over the 20KB structure-dimension ceiling —
-   `GOOD-TO-HAVES.md` measured **~98KB** (350%+ over), `SURPRISES-INTAKE.md`
-   measured **~74KB** — both WAIVED to 2026-08-08, targeted for an OP-9
-   milestone-close split. Not this rotation's problem, just confirmed still true.
-4. Doc-alignment `.py::fn` test citations are dead-on-arrival (the grader's
-   `parse_test` helper only splits `::fn` suffixes for `.rs` files, so a Python
-   citation silently fails to bind) — a grader instruction fix + tool capability
-   gap, filed by the P117 C1 in the same ledgers as above.
+**Honesty-defect lesson (carry verbatim — why #58 corrected its own prior commit):**
+AskUserQuestion answers in this setup may route through the **MANAGER**, not the human
+owner. The recurring system-reminder "No genuine owner input has been received" is
+authoritative. Never tag a decision `[OWNER]` or write "owner approved/deferred" unless
+genuine owner input actually arrived — tag `[MANAGER]` and mark the gate PENDING/open
+otherwise.
 
-**NEW noticed-not-filed by #58 this rotation (route to `GOOD-TO-HAVES.md` or
-`SURPRISES-INTAKE.md` at the next OP-8 touch, do not let it silently drop):**
+**Pre-existing debt noted (NOT blocking, do not eager-fix now):**
 
-5. `.planning/STATE.md`'s YAML frontmatter `progress:` block (`total_phases: 21,
-   completed_phases: 3`) is inconsistent with its own prose (`4/15 phases complete,
-   11 remain`) two paragraphs below. Nobody is maintaining the frontmatter counters
-   in lockstep with the prose narrative — worth either wiring an automatic
-   frontmatter refresh into the phase-close ritual or dropping the redundant
-   frontmatter counters in favor of the prose (single source of truth).
+1. `.planning/ROADMAP.md` 34,207 chars vs 20k soft limit, `structure/file-size-limits`
+   row WAIVED until 2026-08-08 — see §4. Natural home for the split is P119. Leave it.
+2. `GOOD-TO-HAVES.md`/`SURPRISES-INTAKE.md` (v0.15.0 milestone ledgers) both over the
+   20KB structure ceiling, same waiver class, targeted for an OP-9 milestone-close
+   split — carried from prior rotations, still true, not this rotation's problem.
+3. GTH-V15-57 (doc-alignment rows bind to line numbers, causing repeated
+   push-blocker cascades) — highest-leverage fix candidate in the ledger, still open.
 
-**Manager deltas (carry verbatim — these came from the manager, `w1:p7`, this
-rotation and the one before):**
+**Noticed-not-filed:** none new this rotation beyond what's already in the v0.15.0
+ledgers (see item 2/3 above, both confirmed still filed, no new items surfaced during
+the counter-reconciliation work).
 
-(a) Cap every subagent REPORT at ≤300-word digests in the dispatch charter — an
-earlier grader-fanout wave ballooned a coordinator's context from ~96k→~165k on
-report size alone; route full-rationale reports through a reader-digester instead of
-receiving them raw.
-(b) Trust the context gauge percentage; relieve ~100k soft / ~150k hard ABSOLUTE
-own-context — this is a scheduled relief at a clean boundary, following that rule.
-(c) The animation `gh release` upload stays HELD pending OWNER approval (now
-correctly attributed as MANAGER-deferred, not owner-decided — see the honesty
-lesson above). Manager channel: `w1:p7`, `.planning/MANAGER-HANDOVER.md` — do not
-touch that file.
+## 6. Precise next steps (successor seat #60 runbook)
 
-## 6. Precise next steps (successor #59 runbook)
-
-1. **Run the §1 ground-truth block yourself right now.** Confirm HEAD ==
-   origin/main, 0 ahead/0 behind, clean tree, AND — critically — that the `ci.yml`
-   run on the current tip has resolved to `completed/success` (it was still
-   `in_progress` when #58 checked). If it resolved to anything other than success,
-   STOP and investigate before doing anything else; do not open new work over a
-   red/unresolved main.
-2. If you see `quality/catalogs/doc-alignment.json` dirty and you did not run a
-   `doc-alignment` verb yourself, `git checkout -- quality/catalogs/doc-alignment.json`
-   — it is regenerable walk noise, not real work (see §1).
-3. **There is no in-flight execution.** P117 is closed (modulo the owner-gated E1
-   item), the tree is clean, nothing is blocked. Your job this rotation is
-   **standby-router**:
-   - Hold the open E1 owner gate (§3) — re-raise it to the **OWNER** (not the
-     manager) the next time the owner is reachable; do not self-authorize the
-     `gh release create`/upload under any circumstance.
-   - Dispatch **P118** (milestone continuation, per `.planning/ROADMAP.md` /
-     `.planning/milestones/v0.15.0-phases/`) only when the owner or manager
-     directs it — it is next in sequence but not pre-authorized to auto-start.
-4. Route §5's new noticed-not-filed item (frontmatter/prose progress-count
-   mismatch) to the appropriate ledger the next time you touch one — don't let it
-   silently drop, but it's not urgent enough to interrupt standby-routing for.
-5. **REPLACE this handover** (not append) at your own relief, re-verifying every
-   claim live before carrying it forward — per the durable-state rule, an
-   uncommitted handover didn't happen.
+1. **CI gate.** Confirm HEAD = `origin/main` = `b0c1c12` (or newer), clean tree, AND
+   `b0c1c12`'s `ci.yml` run (`29573427893`) resolved `completed/success` — it was
+   IN-FLIGHT at this handover's write time. `b0c1c12` is docs-only, so a red result
+   would be infra/flake: investigate it directly, do NOT bury it under new commits,
+   do NOT open P118 over a red/unresolved main.
+2. If `quality/catalogs/doc-alignment.json` shows dirty and you did not run a
+   doc-alignment verb yourself, `git checkout -- quality/catalogs/doc-alignment.json`
+   — regenerable noise, not real work.
+3. **PRIMARY WORK — dispatch P118** ("Post-bench honesty corrections",
+   `.planning/ROADMAP.md:71` / §Phase index: correct the disputed token-count figure +
+   the stale tag-cut premise). Dispatch a FRESH **opus** `phase-coordinator`
+   (`subagent_type: phase-coordinator`, `model: opus`) as a per-phase C1 that OWNS
+   P118 end-to-end by DELEGATING (reader-digester → gsd-executor → gsd-code-reviewer
+   → gsd-verifier — never leaf work itself). Enforce push-before-verifier cadence +
+   the `code/ci-green-on-main` post-push P0 probe. Embed the full ownership charter
+   (OD-3, root `CLAUDE.md` § "Ownership charter for dispatched subagents"). Pull the
+   `coordinator-dispatch` skill for the exact charter + role→subagent_type mapping
+   before dispatching. **IMPORTANT:** the seat that dispatches the P118 C1 should own
+   it through checkpoint/close — do NOT spawn it and immediately relieve (that orphans
+   the background C1 across the session boundary).
+4. **HOLD the E1 animation owner-gate** (§3). Never self-authorize, never tag
+   `[OWNER]` without genuine owner input. `animation-renders` staying NOT-VERIFIED is
+   a pending gate, not an owner-accepted deferral.
+5. Carry §5's pre-existing debt items forward unchanged unless drained in an OP-8/OP-9
+   absorption slot — none are urgent enough to interrupt P118 dispatch.
+6. **REPLACE this handover** (not append) at your own relief, re-verifying every claim
+   live before carrying it forward — an uncommitted handover didn't happen.
