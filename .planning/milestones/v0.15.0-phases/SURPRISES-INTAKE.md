@@ -636,3 +636,49 @@ required `last_verdict`, parallel-array lengths), so a future hand-edit temptati
 with a documented reason to route through the binary instead.
 
 **STATUS:** OPEN
+
+## 2026-07-16 23:59 | discovered-by: P117 W3 sub-lane 117-06 (docs/social freshness gate + dead-code + CLAUDE.md sweep) | severity: MEDIUM
+
+**What:** the leaf-isolation guard has a false-positive: a plain grep for a setup-verb
+string as literal search text can false-positive-BLOCK. Specifically, `.claude/hooks/
+leaf-isolation-guard.sh` guard B (`guard_leaf_setup_location`) and guard C
+(`guard_shared_config_write`) false-positive-BLOCK a Bash command that merely GREPS FOR a
+setup-verb string as literal search text (never invokes it), when that string sits inside
+a regex ALTERNATION whose `|` reads as a shell command-position separator to
+`at_command_position`'s scan. Live-reproduced (not hypothetical): a command as ordinary as
+`grep -E "foo|reposix init" file.sh` — legitimately scanning a file for either of two
+plain strings — trips guard B and BLOCKs with "leaf setup in shared tree", even though
+`reposix init` never executes; it is dead fixed text inside a quoted `-E` pattern. Root
+cause: `at_command_position()` (leaf-isolation-guard.sh:193-195) matches the verb regex
+against the RAW, un-tokenized `$cmd` string via `grep -Eq`, so it cannot distinguish a
+literal `|` used as a shell pipe (a real command-position separator) from a literal `|`
+that is itself PART OF a quoted argument (regex alternation, awk/sed scripts, etc.) — the
+guard has no shell-lexing/quote-awareness, only a flat string scan. Verified live: `grep
+-rn "reposix init" quality/ crates/` (a plain substring search, this very lane's own
+Task-2 dead-code-confirmation command) correctly ALLOWS (the string isn't adjacent to a
+real separator), but `grep -E "foo|reposix init" <file>` BLOCKs on the identical effective
+intent (search-for-text-only) merely because the alternation's `|` sits where the
+CMD_POS_PREFIX regex expects a pipe. The same class applies to guard C's `git config`
+verb inside an alternation.
+
+**Why out-of-scope for the discovering session:** fixing `at_command_position` to be
+quote-aware (skip matches inside single/double-quoted spans) is a nontrivial parsing
+change to a security-load-bearing hook shared by every concurrent agent — the exact kind
+of "new guard tooling" change OP-8 reserves for a dedicated hardening lane, not a
+docs/social-gate + dead-code lane already carrying its own ~1h budget. It is also LOW
+day-to-day impact today: it never actually blocked a real verify command in this lane
+(both `render_results_markdown`-confirmation greps and the new gate's own asserts avoid
+alternation over these specific verb strings), so it is a latent correctness gap, not a
+live blocker.
+
+**Sketched resolution:** teach `at_command_position` (or a small pre-pass) to strip
+matched-quote spans (`'...'` / `"..."`) from `$cmd` before applying `CMD_POS_PREFIX` +
+the verb regex — a plain `sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g"` pre-pass would suffice
+for the common case (no nested-quote escaping in practice for these verbs) and would turn
+the `grep -E "foo|reposix init"` repro into a non-match without weakening the guard's real
+catches (a genuine `reposix init` invocation is never itself inside quotes). Add a
+selftest case mirroring `social-freshness.selftest.sh`'s structure once the fix lands.
+Natural home: the same hardening lane that owns `.claude/hooks/leaf-isolation-guard.sh`
+(P102-adjacent) or a dedicated guard-precision follow-up.
+
+**STATUS:** OPEN

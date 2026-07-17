@@ -49,7 +49,6 @@ from bench_token_economy_io import (  # noqa: F401
     get_or_count,
     load_raw_text,
     render_per_backend_table,
-    render_results_markdown,
     require_api_key_or_cached,
     verify_fixture_cache_integrity,
 )
