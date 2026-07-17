@@ -32,22 +32,39 @@ _A live progress briefing. Refresh at every task/wave/capture boundary in the SA
 - 2026-07-16 — **L0 #51 boundary — P116 planning tail COMPLETE (planner PASS + checker PASS)** — dispatched `gsd-planner` (opus, standalone) → 3 wave-1 parallel plans (`116-01/02/03-PLAN.md`, ZERO file-overlap) + populated `116-VALIDATION.md` body + ROADMAP P116 annotation (`011096b`); filed `GTH-V15-40` (array-typed `.source` jq-crash gotcha, tag P126) after live-verifying it against the catalog, discharging #50's carried noticing (`74fb907`); dispatched `gsd-plan-checker` (sonnet, standalone) → **VERDICT PASS** (every load-bearing claim byte-checked vs disk; both req IDs land; LIVE-row-not-twin verified; FIX-03 design-only gated; zero file-overlap confirmed), eager-fixing two non-blocking WARNINGs in place: a vacuous `grep -A5` TAG-line check in `116-03-PLAN.md` T2 widened to `-A34`; `116-RESEARCH.md` Open Questions marked RESOLVED (`9dbb860`). Pushed at rotation end (`cbd1ff0..79200b7`); a GitHub Actions API 503 outage (~22:15 UTC) prevented CI certification at handover-write time — recorded as a UNKNOWN-not-red correction (`16a7113`). — `011096b`, `74fb907`, `9dbb860`, `79200b7`, `16a7113`
 - 2026-07-16 — **L0 #52 boundary — CI diagnosis of the GitHub Actions outage, zero tree-writes until relief** — the 503 outage #51 observed was STILL ONGOING throughout #52's entire rotation; #52 diagnosed the tip (`16a7113`) failure down to root cause using the check-suites API (resilient to the runs-API 503): 13/15 `ci.yml` jobs GREEN, only `integration (contract, real github[, v09])` + the whole `release-plz` suite failing — both GitHub-API-dependent, zero code diff since the last CI-certified-green base `cbd1ff0` (`crates/`/`.github/` diff-stat = 0 lines), and `cbd1ff0` itself confirmed 4/4 check-suites green. **Conclusion: environmental outage, NOT a code regression — P116 execution correctly NOT started** (gated on tip-CI-certified-green, which the outage blocks). No plan executed, no file touched besides this relief handover. — this commit
 - 2026-07-16 — **L0 #53 boundary — P116 CLOSED GREEN** — gsd-verifier verdict **12/12 must-haves PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`). ADR-010 decision packet durably recorded (RBF-LR-04 CLOSED, FIX-03 Option B sanctioned target design, zero `crates/` diff) + non-tautological mirror-convergence `"authoritative"` guard blessed live in `CLAUDE.md`/`dvcs-topology.md` + bound catalog row; litmus/GTH-09 flipped to terminal status. CI green (`29544462493`). — `a1cc2d4`/`7412833`/`1ea51b3`/`5ee5e25`/`6825d13`
+- 2026-07-16 — **L0 #54 boundary — P117 Wave 1 (117-01) SHIPPED, GREEN + banked** — router-mode opus `phase-coordinator` C1 dispatched, delivered SC3 (sim/GitHub/Confluence/JIRA connection-refused errors teach the recovery command, matching the `init.rs` exemplar) + SC4 (ratified as Option B: reworded `attach.rs`'s dangling `reposix detach` reference rather than building a real subcommand — Option A deferred as `GTH-V15-43`). Test-name-honesty marker on the multi-SoT recovery test independently verified genuine. CI green (`29550609095`). Also this rotation: encoded the owner delegation-depth directive into `ORCHESTRATION.md` (L0 as router, ~1h+ legs, `phase-coordinator` C1 model tiers). — `52092ad`/`4af2ece`/`56a222b`, `10e2d20`/`feb2c0a`
+- 2026-07-16 — **L0 #55 boundary — P117 W1 intake corrected + filed** — caught and reset an unpushed, botched intake-filing commit (wrong ledgers: stale root `GOOD-TO-HAVES.md` + a fragmenting new root `SURPRISES-INTAKE.md`) and re-filed the three W1-noticed candidates into the correct canonical milestone-scoped ledgers: `GTH-V15-44` (attach.rs/list.rs split candidate, both over the 20k soft ceiling), `GTH-V15-45` (non-sim backend error-teaching gap), + a MEDIUM SURPRISES row (`cargo nextest` not installed). No fresh P117 C1 dispatched this rotation — context spent on the correction instead. Pre-push gate fully green (61 PASS / 0 FAIL / 1 WAIVED). — `e8f0fa2`
 
 ## NOW
 
-**P116 CLOSED GREEN — 3/15 v0.15.0 "Floor" phases complete** (P114, P115, P116).
-gsd-verifier graded **12/12 must-haves PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`);
-CI is green on tip `6825d13` (run `29544462493`). The GitHub Actions API 503 outage that
-blocked #51/#52 is fully cleared and main is certified green.
+**P117 Wave 1 (117-01) is CLOSED, GREEN, and banked** (SC3 connection-refused teach-the-fix
++ SC4 `attach.rs` reword, ratified as Option B — no `reposix detach` subcommand; Option A
+deferred as `GTH-V15-43`). **3/15 v0.15.0 "Floor" phases complete** (P114, P115, P116) plus
+P117 W1 of its 7 plan files. The W1-noticed intake (split-candidate + non-sim
+error-teaching gap + nextest dev-image drift) is filed correctly in the canonical
+milestone-scoped ledgers as of `e8f0fa2` — do not re-file.
 
-**P117 is the next work** — `/gsd-plan-phase 117` (Doc-truth launch-blocker purge),
-folding in the owner "furnished product" quality-bar mandate (`GTH-V15-36` quality bar +
-`GTH-V15-37` 80s launch-animation embed) per the ROADMAP P117 annotation + `## NEXT` below.
+**P117 Waves 2–5 (117-02..117-07) are NOT STARTED.** No fresh C1 has been dispatched yet;
+the prior C1 (dispatched by #54) died at pane rotation. **Next actor #56's primary job:
+dispatch a fresh opus `phase-coordinator` C1** for W2–W5 per the dependency DAG (W2:
+117-02 ∥ 117-03; W3: 117-04 ∥ 117-06; W4: 117-05; W5: 117-07 close) — pre-drafted charter
+in `SESSION-HANDOVER.md` §6.
 
-**Incident this rotation:** the shared `.git/config` was corrupted (`core.bare=true` +
-fixture identity) by a concurrent sibling worktree lane during P116 phase-close,
-blocking all work-tree git ops until repaired — filed as a HIGH `SURPRISES-INTAKE.md` row
-(leaf-isolation coverage-boundary gap). Next actor: **#54**.
+**Two items MUST be folded into the C1's charter, do not let them slip:**
+1. **HIGH — `docs/guides/troubleshooting.md:329`** still names the phantom `reposix
+   detach` (twin of the `attach.rs` reference W1 already purged) — fold into the C1's W2
+   (117-02 lane); if missed, P117 ships the exact phantom-command lie the phase exists to
+   purge.
+2. **CHECKPOINT protocol** — the C1 must RAISE (not attempt) two things: any
+   `STALE_DOCS_DRIFT` pre-push BLOCK (L0 runs `/reposix-quality-refresh` at top level —
+   depth-2 fan-out is unreachable from inside the C1) and the `117-07` animation mp4
+   `gh release upload` (external mutation, owner-gated per `ORCHESTRATION.md` §9).
+
+**Incident this rotation:** a prior haiku executor filed the W1 intake into the wrong
+ledgers (stale root `GOOD-TO-HAVES.md` + a fragmenting new root `SURPRISES-INTAKE.md`);
+#55 reset the unpushed commit and re-filed correctly — see `SESSION-HANDOVER.md` §5 item 1
+for the ledger topology and the lesson (delegate ledger forensics to a subagent next time).
+Next actor: **#56**.
 
 ## NEXT
 
@@ -69,7 +86,7 @@ blocking all work-tree git ops until repaired — filed as a HIGH `SURPRISES-INT
    confirmed). Packet at
    `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md`.
 3. Then the remaining milestone phases:
-   - P117 — Doc-truth launch-blocker purge — not started (next)
+   - P117 — Doc-truth launch-blocker purge — W1 DONE, W2–W5 not started (next)
    - P118 — Post-bench honesty corrections — not started
    - P119 — Docs/planning simplification (the "P112 RAISE") — not started
    - P120 — CLI + helper error hardening to Rust-compiler-grade — not started
