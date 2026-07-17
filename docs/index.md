@@ -16,7 +16,7 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues) and wikis (Confl
 
 -   **`~94% fewer output tokens`** · **`~75% cheaper`** than GitHub-MCP for the same read-3-issues + edit-1 + push task, from 6 live agentic sessions ([token economy](benchmarks/token-economy.md))
 -   **`6 ms`** cached read · **`278 ms`** cold init — simulator, CI-canonical ([latency](benchmarks/latency.md))
--   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
+-   **`5 ways to install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
 </div>
 
@@ -140,7 +140,7 @@ reading:
     in the crate, but nothing in the cache or materializer wires it into a
     working tree — no file, no `git diff`, no push path reaches it. Treat
     Confluence's Comments cell as "no" until a future milestone lands the
-    wiring (tracked as a P95 candidate).
+    wiring.
 
 GitHub Issues is currently read-only — `create` / `update` / `delete` return
 `Error::NotSupported`, and its ETag concurrency is not yet plumbed (hence
@@ -164,7 +164,7 @@ GitHub Issues is currently read-only — `create` / `update` / `delete` return
 
 ## What it looks like underneath
 
-reposix has three pieces — a local bare git repository built from REST responses (with file content fetched lazily), a `git` remote that handles both reads and pushes by translating to API calls, and `reposix init` (a one-shot bootstrap). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase && git push` — reliably, whether the base moved via a peer git-side push, an external REST write, or an SoT deletion (v0.14.0 RBF-LR-03 fix); the **fetch size limit** caps `git fetch` and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
+reposix has three pieces — a local bare git repository built from REST responses (with file content fetched lazily), a `git` remote that handles both reads and pushes by translating to API calls, and `reposix init` (a one-shot bootstrap). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase && git push`, whether the base moved via a peer git-side push, an external REST write, or an SoT deletion (v0.14.0 RBF-LR-03 fix — proven GREEN on git 2.25.1 via the `import` path; verification on modern git ≥2.34 via `stateless-connect` is still open, see backlog item DRAIN-07); the **fetch size limit** caps `git fetch` and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
 
 The detail of how each piece works lives in [How it works](how-it-works/filesystem-layer.md). The reference material — frontmatter schema, simulator HTTP surface, testing targets — is in [Reference](reference/simulator.md).
 

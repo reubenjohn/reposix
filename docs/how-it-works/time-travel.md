@@ -4,6 +4,17 @@ title: Time travel — every sync is a checkout
 
 # Time travel
 
+**Plain-English summary.** Every sync reposix runs — the first `git
+fetch`, every scheduled poll, every accepted `git push` — writes a
+permanent git tag inside the cache's bare repo. That means the full
+history of what a backend record looked like at any past moment is a
+`git diff` between two ordinary git refs, not a database query you
+have to reconstruct by hand. This page shows where those tags live,
+how to check one out, and the CLI shortcuts (`reposix history`,
+`reposix at <ts>`) that find one for you.
+
+---
+
 The audit log says *what reposix did*; sync tags say *what reposix observed*. Together they are a fully replayable history of how the backend looked, sync by sync, all the way back to the first `git fetch`.
 
 ## What gets tagged
@@ -14,7 +25,7 @@ Every successful `Cache::sync` writes one ref of the form:
 refs/reposix/sync/<ISO8601-no-colons>
 ```
 
-For example, `refs/reposix/sync/2026-04-25T01-13-00Z` points at the synthesis commit produced by the sync that ran at 2026-04-25 01:13:00 UTC. Colons are illegal inside git ref names, so we substitute `-`; the format round-trips one-to-one with `chrono::DateTime<Utc>`.
+For example, `refs/reposix/sync/2026-04-25T01-13-00Z` points at the synthesis commit produced by the sync that ran at 2026-04-25 01:13:00 UTC. Colons are illegal inside git ref names, so we substitute `-`; the format round-trips one-to-one with `chrono::DateTime<Utc>` (the [`chrono`](https://docs.rs/chrono) crate's UTC-fixed timestamp type — Rust's de facto standard date/time representation).
 
 The tag lives inside the **cache's bare repo** at `~/.cache/reposix/<backend>-<project>.git`, not in your working tree. `git tag -l` in the working tree never shows it. The reasons:
 
