@@ -179,7 +179,15 @@ cache as a trust boundary; three layers, two shipped and one deferred:
   Also gates the mirror-head refresh: `refresh_for_mirror_head` runs on every push
   that changes the SoT (`files_touched > 0`); a push that changes nothing is a
   semantic no-op — skipped because there is nothing new to refresh, not a coherence
-  shortcut (RBF-LR-04).
+  shortcut (RBF-LR-04). **Two different "mirror" senses — do not conflate them:**
+  (a) this cache-internal observability ref, `refs/mirrors/<sot-host>-head` (what L1
+  governs, above); vs. (b) the external GH mirror repository's own `main` branch,
+  which L1 says nothing about. For (b), the webhook + 30-minute cron GH Action is the
+  **authoritative** convergence mechanism (2026-07-16 ruling, commit `8212373`; see
+  [DVCS mirror setup](../guides/dvcs-mirror-setup.md)) — not `sync --reconcile`
+  (rebuilds only (a), the local cache) and not `scripts/refresh-tokenworld-mirror.sh`
+  (manual op-recovery for one real-backend fixture pair only, never a convergence
+  mechanism for (b)).
 - **L3 — transactional cache writes (shipped, ADR-010 Option B).** `Cache::sync`'s
   delta path upserts `oid_map` for the *full* `list_records` set inside the same
   atomic transaction that writes the tree — not just the changed IDs the delta query

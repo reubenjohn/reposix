@@ -97,7 +97,10 @@ awareness beyond `init` / `attach`.
   through the documented recovery — `git fetch <bus-remote> && git rebase && git push`
   (the mirror fan-out refreshes the mirror head on that successful push), NOT `reposix
   sync --reconcile`, which rebuilds only the LOCAL cache and leaves the external mirror
-  head byte-identical. Detail: `docs/concepts/dvcs-topology.md`.
+  head byte-identical. The webhook + 30-minute cron GH Action is the **authoritative**
+  mechanism that converges the external mirror repo itself, independent of any bus
+  push — see `docs/guides/dvcs-mirror-setup.md` (2026-07-16 ruling, commit `8212373`).
+  Detail: `docs/concepts/dvcs-topology.md`.
 
 **Git: `2.34+` recommended** for reliable partial-clone reads / `stateless-connect`
 (`extensions.partialClone`); the simulator quickstart runs on older git — verified
