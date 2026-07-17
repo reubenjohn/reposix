@@ -138,40 +138,8 @@ A relieved coordinator must be **told in advance** it is being relieved, so it w
 deliberate, complete handover (persistence is solicited, not automatic). Dispatch
 `relief-handover-writer` with the ORCHESTRATION handover template:
 
-**Handover file template** (the `relief-handover-writer` agent writes+commits this):
-
-```
-# <N>-HANDOVER.md — <phase> <relief|pause> handover, <date>
-
-Who wrote this, why relieved/paused, successor's required reading order, and any
-"do not touch X / do not start Y" guardrails.
-
-## 1. Ground truth (git)
-HEAD sha, `git status` tree state, ahead/behind count, per-commit one-liners since
-the last known-clean sha, and numbered deviations the successor MUST know.
-
-## 2. Wave/cycle state
-Markdown table: Wave | Plan | State (DONE/IN-PROGRESS/NOT STARTED) | Commits.
-Plus any named-incident post-mortem to read before dispatching an executor.
-
-## 3. Binding constraints (unchanged)
-One tree-writer at a time; ONE cargo machine-wide; no `--no-verify`; push at green,
-then confirm CI green on main AFTER the push (the `code/ci-green-on-main` P0 post-push
-probe — never open the next phase over a red main); commit-trailer format; model tiering.
-
-## 4. Litmus / gate / REOPEN state
-Gate run history (run #, exit code, transcript path), open-waiver expiry clocks.
-
-## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
-De-facto decisions made live; loose ends not yet routed to intake.
-
-## 6. Precise next steps (successor runbook)
-Numbered, ordered, imperative: spot-check → re-run gate → dispatch next wave → close ritual
-(verdict path; CI green via the `code/ci-green-on-main` post-push probe — RAISE LIST, intake
-disposition, STATE.md cursor advance, final-report contents).
-```
-
-The writer confirms the commit SHA in its report.
+The `relief-handover-writer` agent writes+commits this handover. Full template:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Handover file template (§3 detail)".
 
 Top-level (whole-session) rotations use the same template but write
 `.planning/SESSION-HANDOVER.md`. Successor top-level sessions running without fable read
