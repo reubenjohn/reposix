@@ -163,7 +163,8 @@ reduction) is itself fable-tier delegation-worthy work. (OD-4 item 2; D-CONV-1..
 Tooling, guardrails, and hooks are deliverables, not distractions (the `quality/`
 framework was an unplanned tangent — and the project's best investment). Graduated response:
 - **<1h + no new dependency** → fix inline in the discovering lane.
-- **larger** → file to `SURPRISES-INTAKE.md` / `GOOD-TO-HAVES.md` with severity + sketch.
+- **larger** → file to the active milestone's
+  `.planning/milestones/<active>-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` with severity + sketch.
 - **balloons past intake-sized** → surface as an explicit scope decision to the owner.
   **Never silently absorb; never scope-creep to fit.** (OP-8; directive #12.)
 

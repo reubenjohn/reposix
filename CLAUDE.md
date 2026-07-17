@@ -166,7 +166,8 @@ The user's global Operating Principles are bible; these are reinforcements, not 
    an unbiased verifier subagent grades the catalog rows — RED loops back (see § Quality
    Gates + `quality/CLAUDE.md`).
 8. **Plans accommodate surprises (+2 phase practice).** Each milestone reserves its last
-   two phases as absorption slots (Slot 1 drains `SURPRISES-INTAKE.md`, Slot 2 drains
+   two phases as absorption slots (Slot 1 drains the active milestone's
+   `.planning/milestones/<active>-phases/SURPRISES-INTAKE.md`, Slot 2 drains the sibling
    `GOOD-TO-HAVES.md`). Eager-fix if < 1h + no new dependency, else file — never silently
    skip, never scope-creep. Long-form: `.planning/PRACTICES.md` § OP-8.
 9. **Milestone-close: distill before archiving.** Intakes + run findings distill into a
@@ -273,7 +274,8 @@ surface **owns it**, not just its acceptance criteria (Owner mandate OD-3, 2026-
    that don't teach recovery, dead code, stale comments, missing edge cases). An empty
    noticing section from code-touching work is itself a red flag.
 3. **Eager-fix or file, never silently skip** — `<1h` + no new dependency → fix in
-   place; else → `SURPRISES-INTAKE`/`GOOD-TO-HAVES` with severity + sketch (OP-8).
+   place; else → the active milestone's
+   `.planning/milestones/<active>-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` with severity + sketch (OP-8).
 4. **Verify against reality** — run the thing, render the page, hit the backend; a claim
    without an artifact is not done (OP-1).
 5. **North star — Rust-compiler-grade UX** — end-user experience is the standing north
