@@ -413,7 +413,14 @@ async fn main() -> Result<()> {
         } => {
             if !time_travel {
                 anyhow::bail!(
-                    "`reposix log` currently requires `--time-travel`; use `reposix history` for the same listing or wait for a future commit-graph view"
+                    "{}",
+                    reposix_core::errmsg::teach(
+                        "`reposix log` currently requires the `--time-travel` flag.",
+                        "pass `--time-travel` to list the `refs/reposix/sync/<ts>` sync history; \
+                         the bare `reposix log` form is reserved for a future commit-graph view.",
+                        "`reposix history` shows the same sync-tag listing without any flag.",
+                        &["reposix log --time-travel", "reposix history"],
+                    )
                 );
             }
             let p = match path {

@@ -308,3 +308,211 @@ fn refresh_offline_teaches_unimplemented_and_read_files_alternative() {
         assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
     }
 }
+
+// ─── W3: gc / history / tokens / cost per-error teaching assertions ──────────
+//
+// Two error shapes are exercised end-to-end via the real binary:
+//   (a) OUTSIDE a reposix tree — cache_path_from_worktree fails at the shared
+//       upstream (worktree_helpers.rs:186), so history/tokens/cost/gc all inherit
+//       the SAME "no reposix remote" teaching. One test proves the inheritance.
+//   (b) INSIDE a valid reposix tree but with NO synced cache — the shared
+//       `missing_cache_db_error` fires; tokens/cost/gc all emit the SAME
+//       populate-the-cache teaching (`git fetch` / `reposix refresh`). Three
+//       tests prove the helper is genuinely shared, not per-subcommand.
+// All paths fail BEFORE any network/seed, so every test is hermetic — a git
+// subprocess inside a TempDir + a fresh (empty) REPOSIX_CACHE_DIR (crates/CLAUDE.md
+// leaf-isolation: TempDir only, never the shared repo).
+
+/// Run `git <args>` inside `dir` (a TempDir), hermetic (`GIT_CONFIG_NOSYSTEM`).
+fn git_in(dir: &std::path::Path, args: &[&str]) {
+    let out = StdCommand::new("git")
+        .arg("-C")
+        .arg(dir)
+        .args(args)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .unwrap_or_else(|e| panic!("git {args:?}: {e}"));
+    assert!(
+        out.status.success(),
+        "git {args:?} failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+/// Build a git working tree bound to a reposix `sim::demo` remote (init-shape:
+/// `partialClone=origin`). `cache_path_from_worktree` resolves cleanly against
+/// it, so the subcommand proceeds PAST the no-remote check and hits the
+/// no-synced-cache path. Returns the working-tree dir (owned by `tmp`).
+fn reposix_tree(tmp: &tempfile::TempDir) -> std::path::PathBuf {
+    let wt = tmp.path().join("wt");
+    std::fs::create_dir_all(&wt).expect("mkdir wt");
+    git_in(&wt, &["init", "-q", "."]);
+    git_in(
+        &wt,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "reposix::http://127.0.0.1:7878/projects/demo",
+        ],
+    );
+    git_in(&wt, &["config", "extensions.partialClone", "origin"]);
+    wt
+}
+
+/// `reposix log` without `--time-travel` teaches the flag, names `reposix
+/// history` as the alternative for the same listing, and gives copy-paste
+/// recovery (main.rs:415 retrofit). Fails at the clap-arg gate before any
+/// filesystem access — fully hermetic.
+#[test]
+fn log_without_time_travel_teaches_history_alternative() {
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("log")
+        .output()
+        .expect("run `reposix log`");
+    assert!(
+        !out.status.success(),
+        "`reposix log` without --time-travel must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Alternative:",
+        "Recovery:",
+        "--time-travel",
+        "reposix history",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// `reposix history <dir-with-no-reposix-remote>` inherits the SHARED
+/// worktree_helpers teaching (worktree_helpers.rs:186 retrofit): names the
+/// missing remote and teaches BOTH `reposix init` and `reposix attach`. Proves
+/// the four worktree-context subcommands route their "not a reposix tree" error
+/// through one upstream. Runs against a bare TempDir — hermetic.
+#[test]
+fn history_outside_reposix_tree_teaches_init_and_attach() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let bare = tmp.path().join("bare");
+    std::fs::create_dir_all(&bare).expect("mkdir bare (no reposix remote)");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("history")
+        .arg(&bare)
+        .output()
+        .expect("run `reposix history`");
+    assert!(
+        !out.status.success(),
+        "`reposix history` outside a reposix tree must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "no reposix remote",
+        "reposix init",
+        "reposix attach",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// `reposix tokens` in a valid reposix tree whose cache was never synced hits
+/// the SHARED `missing_cache_db_error`: teaches populate-the-cache with BOTH a
+/// `git fetch` and a `reposix refresh` copy-paste recovery. The cache path
+/// resolves under a fresh (empty) REPOSIX_CACHE_DIR, so `sim-demo.git` is
+/// absent — hermetic, no network.
+#[test]
+fn tokens_no_synced_cache_teaches_git_fetch_and_refresh() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let wt = reposix_tree(&tmp);
+    let empty_cache = tmp.path().join("empty-cache");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("tokens")
+        .arg(&wt)
+        .env("REPOSIX_CACHE_DIR", &empty_cache)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .expect("run `reposix tokens`");
+    assert!(
+        !out.status.success(),
+        "`reposix tokens` with no synced cache must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "no synced reposix cache",
+        "git fetch",
+        "reposix refresh",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// Same no-synced-cache path for `reposix cost` — proves `missing_cache_db_error`
+/// is genuinely SHARED across subcommands (tokens + cost emit byte-identical
+/// populate-the-cache guidance), not copy-pasted per command.
+#[test]
+fn cost_no_synced_cache_teaches_git_fetch_and_refresh() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let wt = reposix_tree(&tmp);
+    let empty_cache = tmp.path().join("empty-cache");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("cost")
+        .arg(&wt)
+        .env("REPOSIX_CACHE_DIR", &empty_cache)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .expect("run `reposix cost`");
+    assert!(
+        !out.status.success(),
+        "`reposix cost` with no synced cache must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "no synced reposix cache",
+        "git fetch",
+        "reposix refresh",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// Same no-synced-cache path for `reposix gc` — proves gc's "nothing to gc"
+/// case also routes through the SHARED `missing_cache_db_error` (was a bespoke
+/// `bail!` at gc.rs:74) rather than its own hand-rolled string.
+#[test]
+fn gc_no_synced_cache_teaches_git_fetch_and_refresh() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let wt = reposix_tree(&tmp);
+    let empty_cache = tmp.path().join("empty-cache");
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .arg("gc")
+        .arg(&wt)
+        .env("REPOSIX_CACHE_DIR", &empty_cache)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .expect("run `reposix gc`");
+    assert!(
+        !out.status.success(),
+        "`reposix gc` with no synced cache must fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "Fix:",
+        "Recovery:",
+        "no synced reposix cache",
+        "git fetch",
+        "reposix refresh",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}

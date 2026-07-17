@@ -16,9 +16,12 @@
 //! - [`cache_build_error`] — the `.context("build cache from backend")` /
 //!   reconcile-wrapper epidemic: surfaces the connector's OWN message AND names
 //!   the likely root cause (backend down / creds unset) with a runnable recovery.
+//! - [`missing_cache_db_error`] — the "no synced cache / no `cache.db` yet"
+//!   failure shared by `tokens` / `cost` / `gc` / `history` (P120 leverage #4).
 //!
-//! Later waves add `missing_cache_db_error` (W3) and `malformed_bus_url_error`
-//! (W4, helper side) alongside these.
+//! A later wave adds `malformed_bus_url_error` (W4, helper side) alongside these.
+
+use std::path::Path;
 
 use anyhow::anyhow;
 use reposix_core::errmsg::teach;
@@ -100,6 +103,37 @@ pub fn cache_build_error(
             &[
                 "reposix sim   # start the simulator, if you meant sim::…",
                 doctor.as_str(),
+            ],
+        )
+    )
+}
+
+/// The "no synced cache / no `cache.db` yet" failure shared by `tokens` /
+/// `cost` / `gc` / `history` (P120 leverage #4). The working tree is a valid
+/// reposix tree, but its cache has never been synced — there is no
+/// `<cache>/cache.db` ledger (nor, for `gc`, any cache directory) to read.
+/// Routing all four subcommands through this ONE helper means they emit the
+/// SAME populate-the-cache guidance instead of four near-identical hand-rolled
+/// strings.
+///
+/// `cache_path` is the resolved-but-absent cache directory, echoed so the user
+/// sees exactly which cache is missing.
+#[must_use]
+pub fn missing_cache_db_error(cache_path: &Path) -> anyhow::Error {
+    let headline = format!(
+        "no synced reposix cache at {} yet — there is nothing to read.",
+        cache_path.display()
+    );
+    anyhow!(
+        "{}",
+        teach(
+            &headline,
+            "reposix builds this cache (and its token/audit ledger) from the backend on the first \
+             fetch; run one from inside the working tree, then re-run the command.",
+            "already synced in another checkout? re-run the command from that working tree instead.",
+            &[
+                "git fetch         # from the working tree — materializes the cache + audit ledger",
+                "reposix refresh   # or rebuild the whole tree + cache from the backend",
             ],
         )
     )

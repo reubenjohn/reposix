@@ -8,11 +8,12 @@
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use reposix_cache::{list_sync_tags_at, SyncTag};
 use rusqlite::Connection;
 
+use crate::errors::missing_cache_db_error;
 use crate::worktree_helpers::cache_path_from_worktree;
 
 /// Default count for `reposix history` pagination.
@@ -23,10 +24,8 @@ const DEFAULT_HISTORY_LIMIT: usize = 10;
 /// hasn't been created yet (fresh init pre-fetch).
 fn read_sync_tags(cache_path: &Path) -> Result<Vec<SyncTag>> {
     if !cache_path.exists() {
-        bail!(
-            "no cache at {} (run a `git fetch` to seed it first)",
-            cache_path.display()
-        );
+        // Shared populate-the-cache teaching (identical shape to gc/tokens/cost).
+        return Err(missing_cache_db_error(cache_path));
     }
     list_sync_tags_at(cache_path)
         .with_context(|| format!("list sync tags from {}", cache_path.display()))

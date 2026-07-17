@@ -23,10 +23,12 @@
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Duration, Utc};
+use reposix_core::errmsg::teach;
 use rusqlite::Connection;
 
+use crate::errors::missing_cache_db_error;
 use crate::tokens::parse_reason;
 use crate::worktree_helpers::cache_path_from_worktree;
 
@@ -64,7 +66,21 @@ pub fn parse_since(since: &str) -> Result<DateTime<Utc>> {
     // Fall through to RFC-3339.
     DateTime::parse_from_rfc3339(since)
         .map(|dt| dt.with_timezone(&Utc))
-        .map_err(|e| anyhow!("invalid --since value `{since}`: not a duration shortcut (e.g. `7d`, `1m`, `12h`) or RFC-3339 timestamp ({e})"))
+        .map_err(|e| {
+            anyhow!(
+                "{}",
+                teach(
+                    &format!("invalid --since value `{since}`: {e}."),
+                    "--since takes a duration shortcut (`7d`, `30d`, `1m`, `1y`, `12h`, `30min`) \
+                     or a full RFC-3339 timestamp.",
+                    "omit --since entirely to aggregate the whole ledger (all-time).",
+                    &[
+                        "reposix cost --since 7d",
+                        "reposix cost --since 2026-04-25T01:00:00Z",
+                    ],
+                )
+            )
+        })
 }
 
 fn parse_duration_shortcut(s: &str) -> Option<Duration> {
@@ -110,7 +126,8 @@ pub fn aggregate_at(
 ) -> Result<std::collections::BTreeMap<String, OpAggregate>> {
     let db = cache_path.join("cache.db");
     if !db.exists() {
-        bail!("no cache.db at {}", db.display());
+        // Shared populate-the-cache teaching (the cache dir exists but was never synced).
+        return Err(missing_cache_db_error(cache_path));
     }
     let conn =
         Connection::open(&db).with_context(|| format!("open cache.db at {}", db.display()))?;
@@ -257,10 +274,8 @@ pub fn run(
     };
     let cache_path = cache_path_from_worktree(&work)?;
     if !cache_path.exists() {
-        bail!(
-            "no cache at {} (run `git fetch` first)",
-            cache_path.display()
-        );
+        // Shared populate-the-cache teaching (identical shape to gc/history/tokens).
+        return Err(missing_cache_db_error(&cache_path));
     }
     let cutoff = since.as_deref().map(parse_since).transpose()?;
     let cpt = chars_per_token.unwrap_or(DEFAULT_CHARS_PER_TOKEN);
@@ -315,10 +330,21 @@ mod tests {
     }
 
     #[test]
-    fn parse_since_rejects_garbage() {
+    fn parse_since_rejects_garbage_with_three_part_teaching() {
+        // The retrofit (P120 W3) upgrades the terse `anyhow!` to a 3-part
+        // teaching: name the bad value, teach the accepted forms (Fix:), and
+        // give copy-paste examples (Recovery:). Assert the rendered anchors.
         let err = parse_since("nope").unwrap_err();
         let s = err.to_string();
-        assert!(s.contains("invalid --since"), "got: {s}");
+        for needle in [
+            "invalid --since",
+            "Fix:",
+            "Recovery:",
+            "RFC-3339",
+            "reposix cost --since 7d",
+        ] {
+            assert!(s.contains(needle), "missing {needle:?} in: {s}");
+        }
     }
 
     #[test]

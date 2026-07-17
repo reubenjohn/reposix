@@ -8,9 +8,10 @@
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use rusqlite::Connection;
 
+use crate::errors::missing_cache_db_error;
 use crate::worktree_helpers::cache_path_from_worktree;
 
 /// Aggregate stats over the token-cost rows.
@@ -60,10 +61,8 @@ pub fn run(path: Option<PathBuf>) -> Result<()> {
     };
     let cache_path = cache_path_from_worktree(&work)?;
     if !cache_path.exists() {
-        bail!(
-            "no cache at {} (run `git fetch` to populate token_cost audit rows)",
-            cache_path.display()
-        );
+        // Shared populate-the-cache teaching (identical shape to gc/history/cost).
+        return Err(missing_cache_db_error(&cache_path));
     }
     let summary = aggregate_at(&cache_path)?;
     print_summary(&cache_path, &summary);
@@ -78,7 +77,8 @@ pub fn run(path: Option<PathBuf>) -> Result<()> {
 pub fn aggregate_at(cache_path: &Path) -> Result<TokenSummary> {
     let db = cache_path.join("cache.db");
     if !db.exists() {
-        bail!("no cache.db at {}", db.display());
+        // Shared populate-the-cache teaching (the cache dir exists but was never synced).
+        return Err(missing_cache_db_error(cache_path));
     }
     let conn =
         Connection::open(&db).with_context(|| format!("open cache.db at {}", db.display()))?;

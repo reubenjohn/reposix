@@ -19,6 +19,7 @@ use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 use reposix_cache::path::resolve_cache_path;
+use reposix_core::errmsg::teach;
 use reposix_core::parse_remote_url;
 
 /// Read a single git config value via `git -C <path> config --get <key>`.
@@ -184,11 +185,25 @@ fn scan_remotes_for_reposix(work: &Path) -> Option<String> {
 /// - The cache path cannot be resolved (no `$XDG_CACHE_HOME`/`$HOME`).
 pub fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
     let url = resolve_reposix_remote_url(work).ok_or_else(|| {
+        // The shared upstream teaching: history/tokens/cost/gc/doctor/sync all
+        // resolve their cache through here, so retrofitting this ONE site gives
+        // every worktree-context subcommand the same 3-part "not a reposix tree"
+        // message (P120 leverage — fix at the source).
         anyhow!(
-            "no reposix remote in {} — run `reposix init <backend>::<project> <path>` \
-             to bootstrap a new tree, or `reposix attach <backend>::<project>` to adopt \
-             an existing checkout",
-            work.display()
+            "{}",
+            teach(
+                &format!(
+                    "no reposix remote in {} — this directory is not a reposix working tree.",
+                    work.display()
+                ),
+                "bootstrap a new partial-clone tree with `reposix init`, or bind an existing \
+                 checkout to a backend with `reposix attach`.",
+                "start with the credential-free simulator backend: `sim::demo`.",
+                &[
+                    "reposix init <backend>::<project> <path>   # bootstrap a new tree",
+                    "reposix attach <backend>::<project>        # adopt an existing checkout",
+                ],
+            )
         )
     })?;
     // Strip the bus `?mirror=` half; only the SoT spec resolves a cache.

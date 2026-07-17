@@ -8,11 +8,12 @@
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use reposix_cache::db::open_cache_db;
 use reposix_cache::{gc_at, GcReport, GcStrategy};
 use reposix_core::parse_remote_url;
 
+use crate::errors::missing_cache_db_error;
 use crate::worktree_helpers::{
     backend_slug_from_origin, cache_path_from_worktree, resolve_reposix_remote_url, strip_bus_query,
 };
@@ -71,10 +72,9 @@ pub fn run(
     };
     let cache_path = cache_path_from_worktree(&work)?;
     if !cache_path.exists() {
-        bail!(
-            "no cache at {} (nothing to gc; run a `git fetch` first)",
-            cache_path.display()
-        );
+        // Nothing to gc — the cache was never synced. Shared populate-the-cache
+        // teaching (identical shape to history/tokens/cost).
+        return Err(missing_cache_db_error(&cache_path));
     }
     let strategy = match strategy_arg {
         GcStrategyArg::Lru => GcStrategy::Lru {
@@ -100,6 +100,7 @@ pub fn run(
                 dry_run,
                 Some((conn, &backend, &project)),
             )
+            // teach-exempt: ok — internal eviction failure; surfaces gc_at's own filesystem error verbatim, not user-actionable teaching
             .map_err(|e| anyhow!("gc failed: {e}"))?
         }
         Err(e) => {
@@ -107,6 +108,7 @@ pub fn run(
                 "could not open cache DB at {} for audit ({e}); proceeding without audit",
                 cache_path.display()
             );
+            // teach-exempt: ok — internal eviction failure; surfaces gc_at's own filesystem error verbatim, not user-actionable teaching
             gc_at(&cache_path, strategy, dry_run, None).map_err(|e| anyhow!("gc failed: {e}"))?
         }
     };
@@ -284,9 +286,11 @@ pub fn run_orphans(dry_run: bool, include_sim: bool, include_untracked: bool) ->
 /// and the same XDG fallback rules; takes the parent of a probe path.
 fn resolve_cache_root() -> Result<PathBuf> {
     let probe = reposix_cache::resolve_cache_path("__probe", "__probe")
+        // teach-exempt: ok — internal: $XDG_CACHE_HOME/$HOME resolution failure, surfaces resolve_cache_path's own error
         .map_err(|e| anyhow!("resolve cache root: {e}"))?;
     let parent = probe
         .parent()
+        // teach-exempt: ok — internal invariant: a resolved cache probe path always has a parent (defensive)
         .ok_or_else(|| anyhow!("cache root probe has no parent: {}", probe.display()))?
         .to_path_buf();
     Ok(parent)
@@ -310,6 +314,7 @@ pub fn scan_orphans(cache_root: &Path) -> Result<Vec<OrphanCache>> {
     let entries = match std::fs::read_dir(cache_root) {
         Ok(e) => e,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(out),
+        // teach-exempt: ok — internal directory-walk IO error; surfaces the OS read_dir error verbatim, not user-actionable teaching
         Err(e) => return Err(anyhow!("read_dir({}): {e}", cache_root.display())),
     };
     for entry in entries.flatten() {
