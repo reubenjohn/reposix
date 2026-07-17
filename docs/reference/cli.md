@@ -56,7 +56,7 @@ reposix init jira::TEST /tmp/jira
 | `<path>` | filesystem path | Working-tree location (parents created as needed). |
 | `--since=<RFC3339>` | optional flag | Rewind the working tree to the closest cache sync tag at-or-before `<ts>` (time-travel init). Errors clearly when no such tag exists. |
 
-`init` runs `git init`, four `git config` lines wiring the partial-clone promisor remote, and a best-effort `git fetch --filter=blob:none origin`. The working tree is plain git afterwards. Tree metadata is fetched eagerly; blobs are fetched on demand on first read.
+`init` runs `git init`, four `git config` lines wiring the partial-clone promisor remote, and a best-effort `git fetch --filter=blob:none origin`. The working tree is plain git afterwards. Tree metadata is fetched eagerly; blob *contents* are materialized on demand at `git checkout`/`git fetch` time, for exactly the paths being checked out.
 
 After `init` succeeds, the absolute working-tree path is recorded in `cache.db::meta.worktrees` so [`reposix gc --orphans`](#reposix-gc) can later detect caches whose owning working tree has been deleted.
 

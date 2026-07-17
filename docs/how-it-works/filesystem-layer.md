@@ -4,13 +4,13 @@ title: Filesystem layer — the cache and the working tree
 
 # Filesystem layer
 
-**Plain-English summary.** When you `cat` an issue file in a reposix
-working tree, you're reading a real file on disk — but the *first*
-read might secretly trigger a network call to the issue tracker
-behind the scenes. After that, the file is local and reads are free.
-This page explains how that lazy-fetch trick works, why it's a real
-git checkout (so `git diff` and `git stash` Just Work), and where the
-bytes actually live on your machine.
+**Plain-English summary.** A reposix working tree is a real git checkout.
+The `git checkout` you run right after `reposix init` is what pulls blob
+*contents* down — lazily and on demand, for exactly the files being
+checked out. Once a file is checked out, `cat` is a plain local read: no
+network, ever. This page explains how that lazy-fetch trick works, why
+it's a real git checkout (so `git diff` and `git stash` Just Work), and
+where the bytes actually live on your machine.
 
 ---
 
@@ -39,7 +39,7 @@ flowchart TD
     O -->|bytes| G
 ```
 
-The first `cat` of a given issue triggers one REST call. Every `cat` after that is a local read — `6 ms` against the simulator, [measured](../benchmarks/latency.md). The tree (filenames, directory structure, blob OIDs) is fetched once at `init` and is essentially free thereafter; only blob *contents* are lazy.
+A bare POSIX `cat` never triggers a network call — it reads whatever bytes are already on disk. The REST call happens earlier, at `git checkout`/`git fetch` time: the `git checkout -B main refs/reposix/origin/main` you run right after `reposix init` is what materializes a blob's *contents*, lazily and on demand, for exactly the files being checked out. After that checkout, every `cat` is a local read — `6 ms` against the simulator, [measured](../benchmarks/latency.md). The tree (filenames, directory structure, blob OIDs) is fetched once at `init` and is essentially free thereafter; only blob *contents* are lazy, and they arrive at `git checkout`/`git fetch` time.
 
 ## Why partial clone, not a virtual filesystem
 
@@ -60,7 +60,7 @@ Wire-level details (cache schema, audit columns, helper invocation flags) live i
 
 ## Failure modes
 
-- **Network down on first read.** The blob is missing locally and the helper cannot reach the backend; git surfaces the helper's stderr to you and the `cat` fails. Subsequent reads of already-materialized blobs continue to work — the cache is a real local git store. (`v0.1` had no offline story at all; every read was live.)
+- **Network down at checkout.** If the backend is unreachable when git tries to materialize a blob — during the `git checkout`/`git fetch` that pulls contents down — the helper surfaces its stderr and *that checkout* fails. A `cat` **after** a successful checkout cannot fail for network reasons: the fetch already happened at checkout time, so reads of already-materialized blobs continue to work offline — the cache is a real local git store. (`v0.1` had no offline story at all; every read was live.)
 - **Blob limit hit.** A bulk operation like `git grep` over a never-checked-out tree can ask for thousands of blobs in one shot. The helper refuses past `REPOSIX_BLOB_LIMIT` (default 200) and emits a stderr message that names `git sparse-checkout` as the recovery move. The detail of how this is wired lives in the [git layer](git-layer.md#blob-limit-guardrail).
 - **OID drift.** A backend write that bypasses reposix (someone using the REST API directly) changes an issue between your `git fetch` and your read. The cache will lazy-fetch the new content the next time the helper sees a `want` for that OID; the audit log shows a fresh `materialize` row. If you've already committed against the stale base and try to push, the push-time conflict detector rejects you with the standard git "fetch first" error — that flow is the subject of the [git layer](git-layer.md).
 

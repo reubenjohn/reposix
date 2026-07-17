@@ -20,7 +20,7 @@ export
 refspec refs/heads/*:refs/reposix/*
 ```
 
-`stateless-connect` is the v0.9.0 read path — the helper tunnels a protocol-v2 fetch with `--filter=blob:none` to the cache's bare repo, so `git fetch` materializes only tree metadata (blobs are fetched lazily on first read). `export` is the push path: git emits a fast-export stream, the helper parses it, runs push-time conflict detection against the backend, and applies REST writes on success. The `refspec` maps the remote's `main` into a private namespace so the user's real work-tree branch is unaffected by fetches.
+`stateless-connect` is the v0.9.0 read path — the helper tunnels a protocol-v2 fetch with `--filter=blob:none` to the cache's bare repo, so `git fetch` materializes only tree metadata (blob *contents* are fetched lazily at `git checkout`/`git fetch` time, for exactly the paths being checked out). `export` is the push path: git emits a fast-export stream, the helper parses it, runs push-time conflict detection against the backend, and applies REST writes on success. The `refspec` maps the remote's `main` into a private namespace so the user's real work-tree branch is unaffected by fetches.
 
 ## Flow: `git push`
 

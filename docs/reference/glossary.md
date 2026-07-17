@@ -17,7 +17,7 @@ project-specific) so you can skim by category.
 
 ### partial clone
 
-A clone that fetches the tree but skips blob contents until you read them. reposix uses `--filter=blob:none` so `git fetch` returns directory structure and metadata in one round trip; file *contents* arrive lazily on first `cat` or `grep`.
+A clone that fetches the tree but skips blob contents until git needs them. reposix uses `--filter=blob:none` so `git fetch` returns directory structure and metadata in one round trip; file *contents* arrive lazily at `git checkout` time, when git materializes exactly the paths being checked out (a later `cat` or `grep` is then a plain local read).
 
 External: [git-clone --filter docs](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---filterltfilter-specgt)
 

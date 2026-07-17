@@ -135,7 +135,7 @@ the working-tree path — they show up as frontmatter diffs only.
 
 The blob behind each `pages/<id>.md` is fetched lazily: the tree (the
 filename list) is materialized eagerly by `git fetch --filter=blob:none
-origin`, and individual page bodies download on first read via
+origin`, and individual page bodies download at `git checkout` time via
 `git-remote-reposix`'s `stateless-connect` capability. Agents that
 operate on a subset use `git sparse-checkout set 'pages/2818*.md'`
 before the first `git checkout`, so the helper sees a single batched
