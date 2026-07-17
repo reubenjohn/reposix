@@ -21,10 +21,16 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "${REPO_ROOT}"
 
-# (a) continuous-regression integration suite (also builds the helper binary).
+# (a) full-crate test run (lib + bin-target #[cfg(test)] modules + ALL integration
+# targets, including errors_teach_recovery), also builds the helper binary.
 # `cargo test` (not nextest) matches the existing agent-ux gate precedent and
-# runs whether or not cargo-nextest is installed locally.
-cargo test -p reposix-remote --test errors_teach_recovery -- --nocapture 2>&1 | tail -30
+# runs whether or not cargo-nextest is installed locally. Widened from
+# `--test errors_teach_recovery` (integration-target only) because the W5/WR-01
+# credential-leak regression test
+# (wr01_mirror_partial_fail_scrubs_token_from_both_audit_row_and_diag) lives in a
+# BIN-TARGET `#[cfg(test)]` module inside bus_handler.rs, which `--test <name>`
+# never runs -- a security-relevant coverage gap this widen closes.
+cargo test -p reposix-remote 2>&1 | tail -30
 
 # (b) exercise a REAL helper error path: a malformed bus URL (dropped `+`-form,
 #     `base.contains('+')`) is rejected by bus_url::parse BEFORE any base-parse
