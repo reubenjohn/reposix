@@ -26,32 +26,21 @@ files and their 5-wave dependency DAG._
 
 ## NOW
 
-**Wave 2 push BLOCKED by the pre-push hook — WAVE RED, nothing landed on origin/main.**
-The nine W2 commits (`f42455a`..`c76b2c2`) are banked LOCALLY only; `git push origin main`
-was rejected (exit 1, no `--no-verify`) with three FAILs. Two are genuine W2 content
-regressions that must be fixed before any re-push; the third is the design-deferred
-docs-alignment drift:
+**W2 (docs-truth + launch-blocker purge) is COMPLETE and SHIPPED.** The docs-alignment
+refresh + the docs-repro pivot fix (GTH-V15-49 Option B: count uncovered snippets, not
+raw fenced-block totals) are both green. Pushed at `c028d4c`; CI run `29559891747`
+concluded success; the post-push `code/ci-green-on-main` P0 probe is PASS
+(`last_verified` refreshed in `quality/catalogs/code.json`).
 
-1. **`structure/banned-words` (P1 FAIL)** — `docs/guides/troubleshooting.md:334` (blamed to
-   W2 commit `214f45e`) uses the banned plumbing word **"promisor"** in the recovery line
-   `git config --unset extensions.partialClone  # clear the promisor binding to the old SoT`.
-   Fix: reword to avoid "promisor" OR add `<!-- banned-words: ok -->` per `docs/.banned-words.toml`.
-2. **`docs-repro/snippet-coverage` (P1 FAIL)** — the W2 troubleshooting reword pushed the
-   fenced-code-block count to **51, over the threshold of 50** (`uncovered_count: 0`, no
-   drift). Fix: switch to allow-list mode per `quality/gates/docs-repro/README.md` pivot rules.
-3. **`docs-alignment/walk` (P0 FAIL)** — the BOUND doc-alignment row drift from the SC1/SC2
-   edits. **Deferred by design to the W6 coordinator refresh** (RAISE, do NOT run `walk`/
-   `bind`/`/reposix-quality-refresh` from inside a C1 — checkpoint protocol below).
+**Opening W3 — 117-04 ∥ 117-06** (per the phase dependency DAG), serialized:
+1. **117-04** — docs IA/cold-reader polish.
+2. **117-06** — CLAUDE.md fix-twice sweep + docs/social freshness gate + dead-code removal.
 
-**Next re-push is gated on:** (a) fix #1 + #2 in `troubleshooting.md` (117-02 lane), and
-(b) L0 clearing the #3 STALE_DOCS_DRIFT via `/reposix-quality-refresh` at top level.
+**Then:** W4 = `117-05` (launch animation embed), W5 = `117-07` (coordinator close; the
+animation `gh release upload` is HELD pending owner approval — E1, external mutation,
+do not attempt).
 
-**Done:** W1 (117-01) GREEN + banked. W2 is committed-locally but NOT shipped.
-
-**Deferred by design (do NOT chase in W2):** the BOUND doc-alignment row drifts these SC1/SC2
-edits trip (index ×2, cli, git-remote, filesystem-layer `blob-lazy-first-cat` REWRITE) are
-consolidated into the **W6 coordinator refresh** — no `bind`/`walk`/`/reposix-quality-refresh`
-in this wave (`quality/CLAUDE.md`). Running `walk.sh` raw would mutate committed catalog counters.
+**Done:** W1 (117-01) GREEN + banked. W2 (117-02, 117-03) GREEN + shipped.
 
 ## NEXT
 
