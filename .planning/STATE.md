@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-16T23:58:00.000Z"
-last_activity: 2026-07-16 -- Phase 116 CLOSED GREEN (verifier 12/12, ADR-010 decision packet + mirror-convergence blessing); P117 next
+last_updated: "2026-07-17T08:15:36.000Z"
+last_activity: 2026-07-17 -- P117 (doc-truth launch-blocker purge) W1-W4 shipped GREEN (117-01..117-06); W5/117-07 phase-close IN PROGRESS, close-pending-owner-E1 (mp4 gh release upload HELD on owner-named-target approval)
 progress:
   total_phases: 21
   completed_phases: 3
@@ -17,22 +17,31 @@ progress:
 
 ## Current Position
 
-Phase: **P116 CLOSED GREEN** — ADR-010 mirror-fanout decision packet + slug→id
-durable-create (`Execution mode: top-level`). gsd-verifier verdict: **12/12 must-haves
-PASS, 0 gaps, 0 blockers** (`116-VERIFICATION.md`); CI green on tip `6825d13` (run
-`29544462493`, `success`); full pre-push re-run 61 PASS / 0 FAIL / 1 WAIVED / 0
-NOT-VERIFIED. Three wave-1 plans landed: 116-01 (`a1cc2d4`+`7412833` — non-tautological
-mirror-convergence guard keyed on `"authoritative"` + webhook+cron blessed AUTHORITATIVE
-in `CLAUDE.md` + `dvcs-topology.md` + bound catalog row), 116-02 (`1ea51b3` — ADR-010
-append-only record: RBF-LR-04 CLOSED, FIX-03 Option B sanctioned target design
-[design-only, zero `crates/` diff], packet cross-link), 116-03 (`5ee5e25` — LIVE litmus
-SURPRISES row OPEN→RESOLVED, GOOD-TO-HAVES-09 → sanctioned target design); noticings
-filed at `6825d13` (`GTH-V15-41`/`GTH-V15-42`). doc-alignment invariants held throughout:
-`RETIRE_PROPOSED`=0, `RETIRE_CONFIRMED`=68, catalog id count 399→400.
-**3/15 v0.15.0 "Floor" phases complete** (P114, P115, P116); 12 remain.
-Next: **`/gsd-plan-phase 117`** — Doc-truth launch-blocker purge, folding in the owner
-"furnished product" quality-bar mandate (`GTH-V15-36`/`GTH-V15-37`) per the ROADMAP P117
-annotation + `PROGRESS.md` `## NEXT`.
+Phase: **P117 (doc-truth launch-blocker purge) — IN PROGRESS, close-pending-owner-E1.**
+P116 (ADR-010 mirror-fanout decision packet + slug→id durable-create) CLOSED GREEN
+2026-07-16 — gsd-verifier verdict 12/12 must-haves PASS, 0 gaps, 0 blockers
+(`116-VERIFICATION.md`); CI green on tip `6825d13` (run `29544462493`, `success`).
+P117 is `Execution mode: top-level` (coordinator-run 117-07 close wave; per
+`.planning/CLAUDE.md` orchestration-shaped-phase pattern). **Waves 1-4 SHIPPED GREEN**:
+W1 (`117-01`, SC3/SC4) banked; W2 (`117-02`∥`117-03`, docs-truth) shipped `c028d4c`,
+CI `29559891747`; W3 (`117-04`∥`117-06`, IA propagation + CLAUDE.md sweep) shipped
+`0a5f620`, CI `29563263605`; W4 (`117-05`, launch-animation embed) shipped `644763a`,
+CI `29565137211` — all post-push `code/ci-green-on-main` P0 probes PASS.
+**W5 (`117-07`, coordinator phase close) is IN PROGRESS.** Its NON-BLOCKED
+close checklist (catalog audit-bump fold, stray-artifact disposition, PROGRESS/STATE
+refresh, non-cargo gate sweep) is done. **Remaining, ALL owner/coordinator-gated —
+phase 117 is NOT fully COMPLETE:** Task 1 — owner-approved `gh release upload` of the
+launch-animation mp4 (HELD-E1, external mutation, RAISED to top level, do not
+self-authorize); Task 2 — post-upload live playwright artifact generation +
+`docs-build/animation-renders.sh` authoring (both intentionally deferred until the
+asset is live, per the row's own `owner_hint`); Task 3 — cold-reader
+`/doc-clarity-review` + `/reposix-quality-review --rubric` + badge resolution
+(top-level slash commands); Task 4 — final pre-push, `git push origin main`, post-push
+CI-green confirmation, unbiased gsd-verifier dispatch. See
+`.planning/phases/117-doc-truth-launch-blocker-purge/PROGRESS.md` `## NOW`/`## NEXT`
+for the live briefing.
+**3/15 v0.15.0 "Floor" phases fully complete** (P114, P115, P116); P117 close-pending;
+11 remain after P117.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
@@ -87,7 +96,9 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 117` (Doc-truth launch-blocker purge, folding the furnished-product quality bar).
+Next step: P117 close-pending-owner-E1 — owner approves the launch-animation `gh release
+upload` (Task 1), then the coordinator runs Tasks 2-4 to close the phase; only then does
+`/gsd-plan-phase 118` become the next step.
 
 **Serial workstream history (OD-3 — A then C then B, per OD-4 resequencing):**
 

@@ -12,8 +12,8 @@ files and their 5-wave dependency DAG._
 | W1 | 117-01 | SC3 connection-refused errors + SC4 `attach.rs` reword | ✅ GREEN + banked |
 | W2 | 117-02 ∥ 117-03 | docs-truth (SC1/SC2/SC5 + propagation) | ✅ GREEN + shipped (`c028d4c`, CI `29559891747`) |
 | W3 | 117-04 ∥ 117-06 | (per ROADMAP DAG) | ✅ GREEN + shipped (`0a5f620`, CI `29563263605` success) |
-| W4 | 117-05 | launch animation embed | 🔄 in progress |
-| W5 | 117-07 | phase close (animation `gh release upload` HELD-E1) | ⬜ queued |
+| W4 | 117-05 | launch animation embed | ✅ GREEN + shipped (`644763a`, CI `29565137211` success) |
+| W5 | 117-07 | phase close (animation `gh release upload` HELD-E1) | 🔄 in progress — close-pending-owner-E1 |
 
 ## SHIPPED
 
@@ -26,40 +26,60 @@ files and their 5-wave dependency DAG._
 
 ## NOW
 
-**W3 (117-04 ∥ 117-06) is COMPLETE and SHIPPED GREEN** at `0a5f620` — CI run
-`29563263605` concluded success (post-push `code/ci-green-on-main` P0 probe PASS).
+**W4 (117-05, launch animation embed) is COMPLETE and SHIPPED GREEN** at `644763a` — CI
+run `29565137211` concluded success (post-push `code/ci-green-on-main` P0 probe PASS).
+Poster WebP committed under `docs/assets/animation/`, click-to-play `<video>` embedded on
+`docs/index.md` (poster + controls, no autoplay, no CDN Babel/React/unpkg), pinned to the
+`docs-assets` release tag / `Reposix Launch Animation.mp4` filename so W5's upload matches
+byte-for-byte. The 16-row `docs-alignment` line-shift cascade the embed caused was rebound
+in the same wave (`644763a`); a catalog-first `docs-build/animation-renders` row is minted
+`NOT-VERIFIED` (P2 — non-blocking on pre-push) pending W5's artifact generation against the
+live release URL. Two stretch GTHs filed (`GTH-V15-54` interactive JSX embed, `GTH-V15-55`
+hermetic-CDN `simpleicons` concern); a third (`GTH-V15-57`, doc-alignment line-number-bind
+fragility — three full rebind cycles this phase) filed in the W4 rebind commit itself.
 
-**Now in W4 — `117-05` (launch animation embed)**, sub-lane owner executing against the
-dedicated `117-05-PLAN.md`: poster WebP committed under the new `docs/assets/animation/`
-convention, click-to-play `<video>` embedded on `docs/index.md` (poster + controls, no
-autoplay, no CDN Babel/React/unpkg), pinned to the `docs-assets` release tag / `Reposix
-Launch Animation.mp4` filename so W5's upload matches byte-for-byte, and a catalog-first
-`docs-build/animation-renders` row minted `NOT-VERIFIED` (P2 — confirmed non-blocking on
-pre-push; `run.py`'s `compute_exit_code` only fails P0/P1 rows) pending the coordinator's
-117-07 artifact generation against the live release URL. Two stretch GTHs filed
-(`GTH-V15-54` interactive JSX embed, `GTH-V15-55` hermetic-CDN `simpleicons` concern).
+**Now in W5 — `117-07` (coordinator phase close) — IN PROGRESS, close-pending-owner-E1.**
+Sub-lane 117-07's NON-BLOCKED portion is done this pass: folded the leftover
+`code/ci-green-on-main` audit bump (chore commit); removed a stray, pre-mature
+`.planning/verifications/playwright/index/animation.json` — a `run.py` "verifier not
+found" stub written before `quality/gates/docs-build/animation-renders.sh` exists, not
+real playwright evidence (the row's own `owner_hint` says both the artifact and the
+verifier script are intentionally absent until W5 generates them against the live URL —
+so "absent" is the correct pre-upload state, not a gap); confirmed `git status` clean;
+re-ran the non-cargo gate sweep GREEN. Per the PLAN, the `animation-renders.sh` verifier
+script itself is bundled with Task 2 (live artifact generation), which cannot run until
+Task 1 (owner-approved `gh release upload`) lands — so the script stays unwritten, not a
+gap, matching the row's own documented deferral.
 
-**Then:** W5 = `117-07` (coordinator close; the animation `gh release upload` is HELD
-pending owner approval — E1, external mutation, do not attempt).
+**HELD-E1 (owner-gated, do not attempt):** Task 1 — `gh release create docs-assets` +
+`gh release upload docs-assets 'Reposix Launch Animation.mp4'` — needs owner-named-target
+approval per CLAUDE.md Non-negotiables; already RAISED to the top level. Task 2's live
+playwright artifact generation + `animation-renders.sh` authoring are gated on Task 1's
+asset existing. Until the owner approves, phase 117 is NOT fully closeable.
+
+**Still coordinator/top-level-only after E1 clears:** Task 3 (cold-reader `/doc-clarity-
+review` + `/reposix-quality-review --rubric` + badge-resolution sign-off — depth-2 fan-out
+unreachable from inside a subagent tree-writer) and Task 4 (final pre-push, `git push
+origin main`, post-push CI-green, unbiased verifier dispatch).
 
 **Done:** W1 (117-01) GREEN + banked. W2 (117-02, 117-03) GREEN + shipped. W3 (117-04,
-117-06) GREEN + shipped.
+117-06) GREEN + shipped. W4 (117-05) GREEN + shipped.
 
 ## NEXT
 
-**Pending waves (per the phase dependency DAG):**
+**Pending, all owner/coordinator-only (per the phase dependency DAG):**
 
-1. **W4 — 117-05** — in progress (this session). NOTE for the coordinator: the
-   `docs/index.md` edit shifted line numbers for every doc-alignment row bound to that
-   file — `bash quality/gates/docs-alignment/walk.sh` reports 16 `STALE_DOCS_DRIFT` rows
-   on `docs/index.md` (same class as the W3 push-blocker, commit `3ed2f21`). Does NOT
-   block local commits (pre-commit cadence doesn't run `docs-alignment/walk`), but WILL
-   block the W4 `pre-push` run — RAISE, do not hand-fix (catalog is mint-only); resolve
-   via `/reposix-quality-refresh docs/index.md` at top level before pushing, per the
-   checkpoint protocol below.
-2. **W5 — 117-07 (phase close)** — not started. Carries the GTH-V15-37 launch-animation
-   embed; the mp4 `gh release upload` is an owner-gated external mutation (RAISE, do not
-   attempt — `ORCHESTRATION.md` §9).
+1. **Owner approval + upload (Task 1, HELD-E1)** — owner names/confirms the `docs-assets`
+   tag, coordinator runs `gh release create` + `gh release upload` (external mutation,
+   not self-authorizable).
+2. **Coordinator Task 2** — once the asset is live: generate the playwright artifact at
+   `.planning/verifications/playwright/index/animation.json` against the live URL, author
+   `quality/gates/docs-build/animation-renders.sh` (mirrors `mermaid-renders.sh`'s
+   source→artifact assertion shape), confirm `docs-build/animation-renders` flips PASS.
+3. **Coordinator Task 3** — `/doc-clarity-review` + `/reposix-quality-review --rubric` +
+   badge-resolution sweep (top-level slash commands, unreachable from a C1/subagent).
+4. **Coordinator Task 4** — full pre-push, `git push origin main`, post-push CI-green
+   confirmation, unbiased gsd-verifier dispatch grading SC1-SC5 + GTH-V15-36/37.
 
 **Checkpoint protocol (all waves):** RAISE (do not attempt) any `STALE_DOCS_DRIFT` pre-push
 BLOCK — L0 runs `/reposix-quality-refresh` at top level; depth-2 fan-out is unreachable
