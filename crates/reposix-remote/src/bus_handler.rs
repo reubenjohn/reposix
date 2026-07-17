@@ -377,6 +377,10 @@ fn resolve_mirror_remote_name(mirror_url: &str) -> Result<Option<String>> {
         if exit == 1 {
             return Ok(None);
         }
+        // `git config --get-regexp` exited with >1 (not the "no match" exit-1 handled
+        // above) — git's own diagnostic for a local config read that failed
+        // pathologically (disk/permission), not a workflow the user drives.
+        // teach-exempt: ok — internal subprocess failure, not a user-actionable teaching target
         return Err(anyhow!(
             "`git config --get-regexp` exited {exit}: {}",
             String::from_utf8_lossy(&out.stderr)
@@ -439,9 +443,33 @@ fn precheck_mirror_drift(mirror_url: &str, mirror_remote_name: &str) -> Result<M
         .output()
         .context("spawn `git ls-remote`")?;
     if !out.status.success() {
+        // SECURITY (P120 W5 / T-120-02): the mirror URL may embed `user:token@`
+        // userinfo — redact it BEFORE it reaches stderr (an exfiltration leg;
+        // CLAUDE.md § Threat model). Sibling reject paths in this file already
+        // strip; this one used to echo raw. The recovery command references the
+        // mirror by its git REMOTE NAME (creds-free AND runnable — never the
+        // redacted URL, which is not a valid remote spec).
+        let safe_url = crate::backend_dispatch::redact_userinfo(mirror_url);
+        // Redact git's OWN stderr too: modern git (2.34+) strips userinfo from its
+        // "unable to access '<url>'" line, but an older git could echo it — make the
+        // no-leak guarantee independent of the git version, not reliant on it.
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        let safe_stderr = crate::backend_dispatch::redact_userinfo(stderr.trim());
+        let headline = format!("git ls-remote {safe_url} failed: {safe_stderr}");
+        let ls_cmd = format!("git ls-remote {mirror_remote_name}   # confirm the mirror answers");
         return Err(anyhow!(
-            "git ls-remote {mirror_url} failed: {}",
-            String::from_utf8_lossy(&out.stderr)
+            "{}",
+            reposix_core::errmsg::teach(
+                &headline,
+                "the mirror is unreachable or misconfigured — confirm the mirror \
+                 URL is correct and the host is reachable",
+                "push to the SoT alone by dropping `?mirror=<url>` from the remote \
+                 URL (the mirror fan-out is best-effort)",
+                &[
+                    ls_cmd.as_str(),
+                    "# mirror recovery playbook: docs/guides/dvcs-mirror-setup.md",
+                ],
+            )
         ));
     }
     let stdout = String::from_utf8_lossy(&out.stdout);
@@ -519,6 +547,11 @@ enum MirrorResult {
 /// caller branches on.
 fn push_mirror(mirror_remote_name: &str) -> Result<MirrorResult> {
     if mirror_remote_name.starts_with('-') {
+        // Defense-in-depth (T-83-01) flag-injection guard: `mirror_remote_name` is
+        // helper-resolved via STEP 0 and already bounded by git's own remote-name
+        // validation, so this arm is effectively unreachable in normal flow — it
+        // exists to fail-closed if that invariant is ever violated.
+        // teach-exempt: ok — unreachable defense-in-depth guard, not a user-facing teaching path
         return Err(anyhow!(
             "mirror_remote_name cannot start with `-`: {mirror_remote_name}"
         ));
@@ -561,4 +594,48 @@ fn bus_fail_push<R: std::io::Read, W: std::io::Write>(
     proto.flush()?;
     state.push_failed = true;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// P120 W5 SECURITY REGRESSION (T-120-02). PRECHECK A's `git ls-remote`
+    /// failure used to echo the RAW `mirror_url` — including any embedded
+    /// `user:token@` userinfo — to the error/stderr, while every sibling reject
+    /// path stripped it. This drives the REAL `git ls-remote` subprocess against a
+    /// credentialed URL pointed at an unreachable LOOPBACK port (127.0.0.1:1 →
+    /// connection refused instantly; hermetic, no real egress, no shared repo) and
+    /// asserts (a) the secret NEVER reaches the error, (b) a redacted host
+    /// survives so the operator still sees which mirror failed, and (c) the 3-part
+    /// teaching is emitted with a creds-free, runnable recovery.
+    #[test]
+    // test-name-honesty: ok — drives a real `git ls-remote` subprocess (connection-refused) and asserts no-leak + 3-part teaching
+    fn precheck_mirror_drift_redacts_credentials_and_teaches_on_ls_remote_failure() {
+        let url = "https://x-access-token:SECRETTOKEN123@127.0.0.1:1/mirror.git";
+        let err = precheck_mirror_drift(url, "mirror")
+            .expect_err("git ls-remote against an unreachable port must fail");
+        let msg = format!("{err:#}");
+        assert!(
+            !msg.contains("SECRETTOKEN123"),
+            "CREDENTIAL LEAKED to the error/stderr:\n{msg}"
+        );
+        assert!(
+            !msg.contains("x-access-token"),
+            "username leaked to the error/stderr:\n{msg}"
+        );
+        assert!(
+            msg.contains("<redacted>@127.0.0.1:1"),
+            "expected the redacted host to survive; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("Fix:") && msg.contains("Recovery:"),
+            "must teach the 3-part recovery; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("git ls-remote mirror"),
+            "recovery must reference the creds-free remote NAME (runnable), not the \
+             redacted URL; got:\n{msg}"
+        );
+    }
 }

@@ -12,6 +12,22 @@
 //! Leaf isolation: the helper parses argv[2] (the remote URL) BEFORE any git or
 //! network context, so no repo/seed is needed — the test is hermetic by
 //! construction (never touches the shared repo).
+//!
+//! W5 COVERAGE BOUNDARY (transport / fan-out). The W5 teaching sites live on
+//! paths the argv-only harness here cannot reach: `stateless_connect.rs`
+//! (upload-pack subprocess exit at :280/:479, unexpected-EOF mid-request at :331)
+//! only fire DURING a live protocol-v2 exchange, and `bus_handler.rs:442`
+//! (`git ls-remote` mirror-drift failure, the T-120-02 credential-leak fix) sits
+//! DOWNSTREAM of the egress-allowlist gate — driving it through the binary would
+//! hit `egress-denied` before ever shelling `git ls-remote`. Those arms are
+//! therefore covered by REALITY-FIRST in-crate unit tests that spawn the real git
+//! subprocess directly (no mock): see
+//! `stateless_connect::tests::{upload_pack_failure_error_teaches_on_top_of_raw_stderr,
+//! send_advertisement_on_non_repo_emits_three_part_teaching,
+//! eof_midrequest_error_teaches_fix_and_recovery_without_alternative}` and
+//! `bus_handler::tests::precheck_mirror_drift_redacts_credentials_and_teaches_on_ls_remote_failure`
+//! (the MANDATORY credential-leak regression). All run under `cargo test
+//! -p reposix-remote`.
 
 use assert_cmd::Command;
 

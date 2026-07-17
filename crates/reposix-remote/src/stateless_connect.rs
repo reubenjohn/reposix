@@ -68,6 +68,55 @@ fn is_unmaterialized_closure_error(stderr: &str) -> bool {
     stderr.contains("possible repository corruption") || stderr.contains("unable to read")
 }
 
+/// Build the Rust-compiler-grade teaching error for a `git upload-pack`
+/// subprocess that exited non-zero (P120 W5). `phase` labels which invocation
+/// failed (`--advertise-refs` vs `--stateless-rpc`). git's own stderr (the raw
+/// cause) is PRESERVED in the headline — never discarded — and a teaching layer
+/// on top names the likely root cause + a runnable `reposix doctor` recovery.
+/// No `Alternative:` line: there is no genuine alternative approach to a crashed
+/// server subprocess — the fix is to diagnose and repair (FLAG-1 suppression).
+fn upload_pack_failure_error(
+    phase: &str,
+    status: std::process::ExitStatus,
+    stderr: &str,
+) -> anyhow::Error {
+    let headline = format!(
+        "git upload-pack {phase} failed ({status}): {}",
+        stderr.trim()
+    );
+    anyhow::anyhow!(
+        "{}",
+        reposix_core::errmsg::teach(
+            &headline,
+            "the cache's bare repo could not serve upload-pack — usually an \
+             incompatible git (partial-clone reads need git 2.34+) or a \
+             missing/corrupt cache",
+            "", // no genuine alternative to a crashed server subprocess (FLAG-1)
+            &["reposix doctor   # verify git 2.34+ and cache health"],
+        )
+    )
+}
+
+/// Build the teaching error for an unexpected EOF read mid-request (P120 W5).
+/// A protocol desync — the git client closed the connection partway through a
+/// pkt-line request. Per the FLAG-1 motivating case this has NO genuine
+/// `Alternative:` (the user does not "do it differently"); it teaches the desync
+/// + the re-drive recovery only.
+fn eof_midrequest_error() -> anyhow::Error {
+    anyhow::anyhow!(
+        "{}",
+        reposix_core::errmsg::Teach::new(
+            "unexpected EOF mid-request — the git client closed the connection \
+             partway through a pkt-line request (protocol desync)"
+        )
+        .fix(
+            "re-run the git operation from a clean state; a killed/backgrounded \
+             git process or a broken pipe is the usual trigger"
+        )
+        .recovery(&["git fetch origin   # re-drive the fetch on a fresh connection"])
+    )
+}
+
 /// Process-wide cache for `REPOSIX_BLOB_LIMIT`. Read once at first
 /// access; subsequent calls are lock-free.
 ///
@@ -277,11 +326,11 @@ fn send_advertisement<R: Read, W: Write>(
 
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr);
-        anyhow::bail!(
-            "git upload-pack --advertise-refs exited {}: {}",
+        return Err(upload_pack_failure_error(
+            "--advertise-refs",
             out.status,
-            stderr.trim()
-        );
+            &stderr,
+        ));
     }
 
     proto
@@ -328,7 +377,7 @@ fn proxy_one_rpc<R: Read, W: Write>(
                     return Ok(ProxyOutcome::Eof);
                 }
                 // Mid-request EOF is a protocol error.
-                anyhow::bail!("unexpected EOF mid-request");
+                return Err(eof_midrequest_error());
             }
             Err(e) => return Err(e).context("read pkt-line frame from git stdin"),
         };
@@ -379,6 +428,10 @@ fn proxy_one_rpc<R: Read, W: Write>(
             eprintln!("{msg}");
         }
         cache.log_blob_limit_exceeded(stats.want_count, limit);
+        // The agent-facing 3-part teaching (BLOB_LIMIT_EXCEEDED_FMT — names the
+        // `git sparse-checkout set <pathspec>` recovery) was ALREADY printed to
+        // stderr above via `format_blob_limit_message`.
+        // teach-exempt: ok — internal control-flow propagation after the teach printed above
         anyhow::bail!(
             "blob limit exceeded: {} wants, limit {}",
             stats.want_count,
@@ -476,11 +529,11 @@ fn proxy_one_rpc<R: Read, W: Write>(
                 eprintln!("{UNFILTERED_FETCH_HINT}");
             }
         }
-        anyhow::bail!(
-            "git upload-pack --stateless-rpc exited {}: {}",
+        return Err(upload_pack_failure_error(
+            "--stateless-rpc",
             out.status,
-            stderr_str.trim()
-        );
+            &stderr_str,
+        ));
     }
 
     stats.response_bytes = u32::try_from(out.stdout.len()).unwrap_or(u32::MAX);
@@ -770,5 +823,76 @@ mod tests {
             }
             other => panic!("expected Data, got {other:?}"),
         }
+    }
+
+    // --- P120 W5: transport-error teaching (upload-pack subprocess exit + EOF) ---
+
+    /// The upload-pack-failure teaching PRESERVES git's own stderr (the raw
+    /// cause) AND layers a 3-part teaching on top (Fix: + Recovery:) that names
+    /// the likely root cause + the `reposix doctor` recovery. No hollow
+    /// `Alternative:` line (there is no genuine alternative to a crashed server).
+    #[test]
+    // test-name-honesty: ok — drives a real non-zero-exit subprocess for the ExitStatus, then asserts the teaching shape
+    fn upload_pack_failure_error_teaches_on_top_of_raw_stderr() {
+        // A real non-zero ExitStatus (sh is universally present); exit code 7.
+        let status = std::process::Command::new("sh")
+            .args(["-c", "exit 7"])
+            .status()
+            .expect("spawn sh");
+        let err =
+            upload_pack_failure_error("--advertise-refs", status, "fatal: not a git repository");
+        let msg = format!("{err:#}");
+        assert!(msg.contains("Fix:"), "teaches the fix; got:\n{msg}");
+        assert!(msg.contains("Recovery:"), "gives recovery; got:\n{msg}");
+        assert!(
+            msg.contains("fatal: not a git repository"),
+            "must preserve git's own stderr on top of the teaching; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("reposix doctor"),
+            "recovery names `reposix doctor`; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("git 2.34+"),
+            "fix names the partial-clone git-version root cause; got:\n{msg}"
+        );
+    }
+
+    /// End-to-end (real subprocess): `send_advertisement` against a path that is
+    /// not a git repo makes `git upload-pack --advertise-refs` exit non-zero, and
+    /// the error surfaces the 3-part teaching. Hermetic — a bogus LOCAL path, no
+    /// network, no shared repo.
+    #[test]
+    fn send_advertisement_on_non_repo_emits_three_part_teaching() {
+        let input: &[u8] = b"";
+        let mut output: Vec<u8> = Vec::new();
+        let mut proto = Protocol::new(input, &mut output);
+        let bogus = std::path::Path::new("/nonexistent/reposix-not-a-repo-x9q");
+        let err = send_advertisement(&mut proto, bogus)
+            .expect_err("upload-pack must fail on a non-repo path");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("Fix:") && msg.contains("Recovery:"),
+            "real upload-pack subprocess failure must emit the 3-part teaching; got:\n{msg}"
+        );
+    }
+
+    /// The unexpected-EOF-mid-request teaching is 2-part by design (FLAG-1): it
+    /// teaches the protocol-desync Fix + a Recovery, but emits NO hollow
+    /// `Alternative:` line (there is no genuine alternative to a desync).
+    #[test]
+    // test-name-honesty: ok — asserts the EOF teaching body shape, no live git fetch subprocess
+    fn eof_midrequest_error_teaches_fix_and_recovery_without_alternative() {
+        let msg = format!("{:#}", eof_midrequest_error());
+        assert!(msg.contains("Fix:"), "teaches the fix; got:\n{msg}");
+        assert!(msg.contains("Recovery:"), "gives recovery; got:\n{msg}");
+        assert!(
+            !msg.contains("Alternative:"),
+            "a protocol desync has no genuine alternative — no hollow line; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("protocol desync"),
+            "names the desync cause; got:\n{msg}"
+        );
     }
 }
