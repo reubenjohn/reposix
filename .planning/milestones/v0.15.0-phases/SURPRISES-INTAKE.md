@@ -682,3 +682,32 @@ Natural home: the same hardening lane that owns `.claude/hooks/leaf-isolation-gu
 (P102-adjacent) or a dedicated guard-precision follow-up.
 
 **STATUS:** OPEN
+
+## 2026-07-17 09:35 | discovered-by: P117 W5 phase-close push executor (final-commit tree-writer) | severity: MEDIUM-HIGH
+
+**What:** `code/ci-green-on-main` (the P0 guardrail asserting main's newest `ci.yml` run
+concluded success post-push) can grade the WRONG run — a post-push race against GitHub's
+Actions-list indexing. The probe queries the newest `ci.yml` run immediately after a push
+and takes index-0 of a `--limit=1` list; that index-0 run can still be the PREVIOUS
+commit's run, not HEAD's, if Actions has not yet indexed the just-triggered run. Live
+during P117's final close: the probe graded PASS roughly 2 seconds post-push, while a
+direct `gh run list` at the same moment showed the run for HEAD still `in_progress` — the
+PASS was correct only because both the prior run and the (still-running, later-observed)
+HEAD run were green; a red prior run or a failing HEAD run inside this same window would
+have produced a FALSE PASS (a phase closing over a red main) or a FALSE FAIL, and the
+guardrail would not have caught its own mis-grading either way.
+
+**Why out-of-scope for the discovering session:** this session's charter is the single
+final P117 planning-ledger append + push (no source/docs/catalog edits permitted);
+hardening `quality/gates/code/ci-green-on-main.sh`'s run-selection logic is a quality-gate
+script change to a P0 guardrail shared by every phase-close push — it needs its own
+review/test pass, not a drive-by edit riding the last commit of a closing phase.
+
+**Sketched resolution:** Make `ci-green-on-main.sh` assert the returned run's `headSha`
+equals `git rev-parse HEAD` before accepting it as the graded run — not merely trust
+index-0 of a `--limit=1` list. On a `headSha` mismatch, either poll by explicit run id
+(re-list / re-fetch until a run for HEAD's sha appears) or return NOT-VERIFIED (exit 75)
+and retry on a short backoff, closing the post-push indexing race window instead of
+grading whatever run happens to sort first moments after push.
+
+**STATUS:** OPEN
