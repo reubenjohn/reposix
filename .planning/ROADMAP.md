@@ -69,7 +69,7 @@
 - [x] **Phase 116: ADR-010 mirror-fanout decision packet + slug→id durable-create design** - Owner/manager gets a ruling-ready options+tradeoffs packet; nothing is implemented pre-ruling. (completed 2026-07-16)
 - [x] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent. (completed 2026-07-17)
 - [x] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected. (completed 2026-07-17)
-- [ ] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive.
+- [x] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive. (completed 2026-07-17 — intention-preserving pivot: SC-1/SC-2 literal deletions deferred after targets found live/filed to intake; SC-3/SC-4 landed)
 - [ ] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery.
 - [ ] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up.
 - [ ] **Phase 122: `reposix-remote` + `init` hardening** - Two HIGH-severity carry-forward robustness gaps close (modern-git rebase-recovery verification; binary-side self-safety refusal).
@@ -294,7 +294,7 @@
 | 116. ADR-010 decision packet + slug→id design | 3/3 | Complete | 2026-07-16 |
 | 117. Doc-truth launch-blocker purge | 6/7 | Complete (E1 animation GTH-V15-37 owner-approval PENDING) | 2026-07-17 |
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
-| 119. Docs/planning simplification | 0/TBD | Not started | - |
+| 119. Docs/planning simplification | 3/5 SC | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
 | 121. RPX error-code namespace + explain | 0/TBD | Not started | - |
 | 122. reposix-remote + init hardening | 0/TBD | Not started | - |

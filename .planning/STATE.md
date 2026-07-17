@@ -3,19 +3,34 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-17T14:00:00.000Z"
-last_activity: 2026-07-17 -- P118 CLOSED GREEN (verdict GREEN at quality/reports/verdicts/p118/VERDICT.md, 3/3 SCs; CI green on main tip a2b0186, run 29575437132 success): DOCS-07 re-cited PROJECT.md token figure to P115 live-benchmark (~94% fewer output tokens, FUSE `/mnt/jira` path dropped) + DOCS-09 annotated the reality-check tag-cut premise SUPERSEDED (prose-only, no Arc D reopen, no literal tag cut); the P117 launch-animation publish (E1/GTH-V15-37) remains owner-PENDING; next = P119
+last_updated: "2026-07-17T15:30:00.000Z"
+last_activity: 2026-07-17 -- P119 CLOSED GREEN (verdict GREEN at quality/reports/verdicts/p119/VERDICT.md, committed 835d65dd; CI green on main tip c5e1195b): intention-preserving DP-4 pivot — the 5-day-stale literal SC-1/SC-2 deletion plan was NOT executed blind; targets found still-live at execution time and DEFERRED with evidence to v0.15.0 SURPRISES-INTAKE (RAISE-2a catalog.py/v0.11.1-catalog.json live KEEP-AS-CANONICAL row; RAISE-2b docs_reproducible_catalog.json 8 live breadcrumbs); SC-3 (ORCHESTRATION §3 handover-template split <20000B) + SC-4 (six P79-P84 broken Plan links repointed) + clean edits (OP-8 reword, ROADMAP reconcile, PROJECT de-stale, P117 parenthetical honesty) LANDED; the P117 launch-animation publish (E1/GTH-V15-37) remains owner-approval PENDING; next = P120
 progress:
   total_phases: 15
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 3
   completed_plans: 2
-  percent: 33
+  percent: 40
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P119 (docs/planning simplification, the "P112 RAISE") — CLOSED GREEN 2026-07-17.**
+gsd-verifier verdict GREEN (`quality/reports/verdicts/p119/VERDICT.md`, committed `835d65dd`);
+CI green on main tip `c5e1195b`. Shipped an **intention-preserving DP-4 pivot**: the 5-day-stale
+literal SC-1/SC-2 deletion plan was NOT executed blind — the deletion targets were found still-live
+at execution time and DEFERRED with evidence to
+`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` (RAISE-2a `catalog.py` /
+`v0.11.1-catalog.json` = a live KEEP-AS-CANONICAL orphan-scripts quality row; RAISE-2b
+`docs_reproducible_catalog.json` = 8 live provenance breadcrumbs into release/docs-repro catalogs).
+SC-3 (ORCHESTRATION.md §3 handover-template split into a sibling REFERENCE doc, both halves
+< 20000B) + SC-4 (six broken P79–P84 `**Plan:**` links repointed to the real `index.md` targets) +
+the clean edits (OP-8 intake reword, ROADMAP progress-table reconcile, PROJECT self-flag de-stale,
+P117 parenthetical honesty reword) all LANDED; SC-5 held-by-design (bloat files intentionally left
+for the v0.17 meta-milestone). **6/15 v0.15.0 "Floor" phases complete** (P114–P119); next =
+P120 (CLI + helper error hardening to Rust-compiler-grade).
 
 Phase: **P118 (post-bench honesty corrections) — CLOSED GREEN 2026-07-17.**
 gsd-verifier verdict GREEN on all 3 SCs (`quality/reports/verdicts/p118/VERDICT.md`);
@@ -58,8 +73,8 @@ asset is live, per the row's own `owner_hint`); Task 3 — cold-reader
 CI-green confirmation, unbiased gsd-verifier dispatch. See
 `.planning/phases/117-doc-truth-launch-blocker-purge/PROGRESS.md` `## NOW`/`## NEXT`
 for the live briefing.
-**5/15 v0.15.0 "Floor" phases complete** (P114, P115, P116, P117, P118); 10 remain; next =
-P119.
+**6/15 v0.15.0 "Floor" phases complete** (P114, P115, P116, P117, P118, P119); 9 remain; next =
+P120.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped
@@ -114,8 +129,8 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 119` (docs/planning simplification, the "P112 RAISE"; marked
-`Execution mode: top-level`). Carried owner-gate still OPEN (NOT a P118/P119 blocker): the
+Next step: `/gsd-plan-phase 120` (CLI + helper error hardening to Rust-compiler-grade). Carried
+owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
 `.planning/CONSULT-DECISIONS.md`.
@@ -156,7 +171,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P118 CLOSED GREEN (verdict GREEN 3/3 SCs); 5/15 phases complete (P114, P115, P116, P117, P118). Next: `/gsd-plan-phase 119`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P119 CLOSED GREEN (verdict GREEN, intention-preserving DP-4 pivot); 6/15 phases complete (P114, P115, P116, P117, P118, P119). Next: `/gsd-plan-phase 120`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
