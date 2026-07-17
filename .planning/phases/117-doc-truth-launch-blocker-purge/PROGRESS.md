@@ -10,7 +10,7 @@ files and their 5-wave dependency DAG._
 | Wave | Plans | Concern | Status |
 |---|---|---|---|
 | W1 | 117-01 | SC3 connection-refused errors + SC4 `attach.rs` reword | ✅ GREEN + banked |
-| W2 | 117-02 ∥ 117-03 | docs-truth (SC1/SC2/SC5 + propagation) | 🔴 push BLOCKED by pre-push — wave RED |
+| W2 | 117-02 ∥ 117-03 | docs-truth (SC1/SC2/SC5 + propagation) | ✅ GREEN + shipped (`c028d4c`, CI `29559891747`) |
 | W3 | 117-04 ∥ 117-06 | (per ROADMAP DAG) | ⬜ not started |
 | W4 | 117-05 | (per ROADMAP DAG) | ⬜ not started |
 | W5 | 117-07 | phase close | ⬜ not started |

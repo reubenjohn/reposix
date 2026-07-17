@@ -324,15 +324,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/snippet-coverage.json",
       "status": "PASS",
-      "last_verified": "2026-04-27T22:09:38Z",
+      "last_verified": "2026-07-16T23:59:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a doc edit added a fenced code block without a catalog row OR a catalogued row's source content drifted; fix by either pasting the --write-template output or rolling back the doc edit. If the new block is illustrative, add the derived_id to quality/catalogs/docs-reproducible-allowlist.json with a reason. If RED is the '>50 uncovered blocks' escalation advisory: it counts UNCOVERED blocks only (GTH-V15-49 Option B, 2026-07-16) -- cataloguing or allow-listing the individual uncovered blocks (required anyway to clear the itemized failures) also clears this advisory; do NOT bump PIVOT_THRESHOLD.",
       "waiver": null,
+      "claim_vs_assertion_audit": "If the pivot regressed to counting RAW blocks again (the pre-GTH-V15-49 bug), a doc corpus with block_count=51 and uncovered_count=0 would incorrectly fire the '>50 uncovered blocks' escalation advisory even though every block is covered or allow-listed; snippet-extract.py --check's pivot logic asserts on len(uncovered), not len(blocks) (test_pivot_counts_uncovered_not_raw_blocks pins this), so a raw-count regression would flip a currently-passing corpus to a false RED, directly falsifying the 'pivots on uncovered, not raw block count' claim in expected.asserts.",
       "cadences": [
         "pre-push",
         "pre-pr"
-      ]
+      ],
+      "minted_at": "2026-07-16T23:59:00Z"
     }
   ]
 }
