@@ -218,6 +218,25 @@ changed-set), explicitly **not** load-bearing for the coherence guarantee.
    refresh — if it judges the perf cost negligible; the ADR leaves that lever to
    the fix-wave, since both are honest. Either way, no lying doc.)
 
+   > **CLOSED 2026-07-16 (P116 ADR-01 ruling) — the RBF-LR-04 lever is settled;
+   > `files_touched > 0` STAYS unconditionally.** The manager ruling
+   > (`.planning/CONSULT-DECISIONS.md` "P116 ADR-01 mirror fan-out", 2026-07-16, commit
+   > `8212373`) closes the "leaves that lever to the fix-wave" question above: **keep the
+   > `files_touched > 0` skip; Option D (unconditional refresh) is REJECTED.** A push that
+   > changes nothing in the SoT is a *semantic* no-op — skipped because there is nothing to
+   > refresh, not a coherence shortcut — so the asserted no-op perf-skip
+   > (`crates/reposix-remote/tests/perf_l1.rs:386-390`: zero `list_records` on a no-op
+   > push) stands. The corrected live-doc claim is now regression-guarded by
+   > `quality/gates/docs-alignment/mirror-convergence-blessed.sh` (Plan 116-01).
+   > **Authoritative external-mirror convergence** (new — §2 above was scoped only to the
+   > cache-internal observability ref `refs/mirrors/<sot>-head`, not the external repo a
+   > fresh `git clone` reads): webhook + 30-min cron (`docs/guides/dvcs-mirror-setup.md`)
+   > is BLESSED as the authoritative external-mirror convergence mechanism;
+   > `scripts/refresh-tokenworld-mirror.sh` remains manual op-recovery only. **Option C
+   > (post-write snapshot fan-out) is NOT sanctioned for v0.15** — filed as `GTH-V15-38`
+   > with its pull-forward trigger recorded there (see that row; not restated here, to keep
+   > one source of truth for the trigger).
+
 3. **`SotPartialFail` recovery semantics (RBF-LR-03).** `SotPartialFail`
    (`write_loop.rs:105`, emitted at `write_loop.rs:277`) means at least one
    `execute_action` failed after others succeeded — the SoT is **partially
@@ -277,6 +296,24 @@ changed-set), explicitly **not** load-bearing for the coherence guarantee.
    > above (the slug→id durable-home problem) is a separate limitation that the
    > rebase-recovery fix does **not** touch — it remains the v0.14.0
    > reconciliation-redesign pivot until that exploration converges.
+
+   > **SANCTIONED TARGET DESIGN 2026-07-16 (P116 FIX-03 ruling) — Option B chosen; the
+   > waiver STAYS, now qualified.** The manager ruling (`.planning/CONSULT-DECISIONS.md`
+   > "P116 FIX-03 slug→id durable-create", 2026-07-16, commit `8212373`) supersedes the
+   > "STILL OPEN … v0.14.0 reconciliation-redesign pivot" sentence above by naming a chosen
+   > direction: **Option B — a durable slug→id map alongside `oid_map` — is the SANCTIONED
+   > TARGET DESIGN.** Build-ready shape (from the decision packet): mint a stable local slug
+   > pre-push → model the create as "slug X → (pending) → backend id N" → persist it
+   > alongside `oid_map` (today's cache tables are `oid_map` + `meta`,
+   > `crates/reposix-cache/src/meta.rs`) → an interrupted create then leaves a
+   > pending-slug-no-confirmed-id state the retry reconciles against instead of re-creating.
+   > **The known limitation above remains WAIVED for v0.15.0 — NO build lands this milestone
+   > (SC4 depth: design-only).** The waiver is now qualified by a chosen target design rather
+   > than an open design question. Option D (pending-create intent-log) is the sanctioned
+   > REDUCED-SCOPE STOPGAP only if the duplicate hazard materializes in a real incident before
+   > B lands — decide then, not now. The next-milestone build proposal lives durably at
+   > `GOOD-TO-HAVES-09` (`.planning/GOOD-TO-HAVES.md`); a dedicated design+build phase for B
+   > is proposed at the next milestone boundary.
 
 4. **Test co-location.** SC2 pins `cargo test -p reposix-cache --test
    cache_coherence`, but `SotPartialFail` + PRECHECK B live in **reposix-remote**
@@ -422,6 +459,7 @@ too stays reversible.)
 
 ## References
 
+- `.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md` — the ruled options+tradeoffs packet (incl. the slug→id durable-create design) for the §2/§3 amendments above (ruling: `.planning/CONSULT-DECISIONS.md`, 2026-07-16, commit `8212373`).
 - `.planning/milestones/v0.13.0-phases/93-cache-coherence/93-DP2-REPRO-NOTES.md` — executed repro + root cause (repro commit `9c46e49`).
 - `crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids` — the RED regression this ADR's fix flips GREEN.
 - `crates/reposix-cache/src/builder.rs` — `sync()` Steps 3-5 (`:265-406`), `build_from` (`:56-191`), `read_blob` (`:450-511`).
