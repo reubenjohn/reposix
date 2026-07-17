@@ -231,6 +231,31 @@ path rather than factor it into `$VAR`.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-17 — `hook-noop-output-noise` — hooks emit static additionalContext on the no-op/positive path (session-wide token tax)
+
+**Discovered during:** session `bf1e8875` token forensics (2026-07-16 — "why did an L0 rotation use ~150k tokens")
+
+**Size:** S (silence two allow-path emitters + audit the rest; the guidance doc lands with this row)
+
+**Severity:** LOW-MED — no correctness bug; a per-session token drain that compounds across every session and every Bash call. Pure waste: it restates rules the model already holds in CLAUDE.md.
+
+**Source:** Claude Code hooks inject their stdout `hookSpecificOutput.additionalContext` into the model's context, which is then re-billed on every subsequent turn (prompt cache). Two PreToolUse/Bash guards emit static text on the ALLOW/no-op path, unthrottled:
+- `leaf-isolation-guard.sh` `emit_allow()` (lines ~113–116, reached via 130/133/327) fires `"leaf-isolation OK (...). Reminder: run reposix/sim/git test setup in a /tmp clone..."` on EVERY Bash call (~45 tok × ~34 calls ≈ 1.5k tok/session of pure restatement). The guard's value is the BLOCK path (stderr + `exit 2`), not the "OK".
+- `cargo-mutex.sh` (emit ~line 17) fires `"cargo OK ..."` whenever the command TEXT contains the substring `cargo `/`rustc `/`cross ` (line 8) — including non-builds (observed firing on a python heredoc that merely mentioned "cargo nextest"). Its value is BLOCKING a concurrent build, not the "OK".
+- Owner ruling (2026-07-16): **do not throttle — run SILENT on the positive path.**
+
+**Impact:** ~10k of session `bf1e8875`'s 104k context *growth* was hook injections; the bulk of the repeated portion is avoidable no-op restatement. Compounds every session.
+
+**Acceptance:**
+1. `leaf-isolation-guard.sh` and `cargo-mutex.sh` emit NO `additionalContext` on the allow/no-op path (silent allow / `exit 0`); block paths (stderr + `exit 2`, teaching recovery) unchanged.
+2. All other hooks audited: `additionalContext` only when actionable (a block, or genuinely-new state); no static no-op restatement on every matching call. Already-good exemplars: `stop-uncommitted.sh` (silent unless dirty/ahead), `context-ticker.js` (only ≥20k-token drift), `dispatch-doctrine.sh`/`post-dispatch-relay.sh` (throttled).
+3. `.claude/hooks/CLAUDE.md` hook-authoring noise-discipline guidance exists (LANDED in this PR) and is honored by the fix.
+- Secondary (optional): tighten `cargo-mutex.sh` line-8 match from a `contains()` substring to real-invocation detection so it doesn't fire on incidental mentions.
+
+**Default disposition:** S closes-or-defers; safe to defer (token-hygiene, non-blocking). Close early if the silence pass proves < 1h.
+
+**STATUS:** OPEN — guidance doc landed in this PR; hook silencing deferred.
+
 ## Entry format
 
 ```markdown
