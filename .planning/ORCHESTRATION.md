@@ -191,6 +191,13 @@ then the handover's reading list. Detail: `.planning/ORCHESTRATION-REFERENCE.md`
   provenance (`.planning/audits/QUALITY-LEDGER.md`), not fabricated content. Resume orphaned
   background agents from their on-disk transcripts (via SendMessage) rather than restarting.
   (Directives #10, #18.)
+- **Executor standing rule (P120 close, root-caused an orphan):** cargo is
+  **FOREGROUND-only** — never `run_in_background`/detached (it orphans the build, evades
+  the `cargo-mutex.sh` serialization, and risks the OOM this VM has already hit three
+  times); and **commit before ending any turn** — an executor that spawned a detached
+  `run_in_background` cargo and then ended its turn WITHOUT committing left both an
+  orphaned background build AND no commit, the literal double-violation this rule closes.
+  Same doctrine, one-liner cross-ref: root `CLAUDE.md` § "Build memory budget".
 
 ## 8. Orchestrator relay for mis-routed replies
 

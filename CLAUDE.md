@@ -227,6 +227,11 @@ builds. Enforced by `.claude/hooks/cargo-mutex.sh` (backstop; orchestration disc
 is the primary control). Prefer per-crate over `--workspace`. Rationale, soft rules,
 crash triage: `crates/CLAUDE.md`.
 
+**Executors: cargo is FOREGROUND-only, never `run_in_background`/detached** (orphans the
+build + evades `cargo-mutex.sh` + risks the OOM above) **and commit before ending any
+turn** (uncommitted = didn't happen). Standing rule + the orphan incident that codified
+it: `.planning/ORCHESTRATION.md` § 7 "Durable state over chat".
+
 ## Cold-reader pass on user-facing surfaces
 
 Before declaring any user-facing surface shipped (hero copy, install instructions,

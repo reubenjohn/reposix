@@ -125,3 +125,59 @@ scanner. Regression exemplars: `backend_dispatch.rs` (`redact_userinfo_*`), `bus
 (`wr01_*`, `precheck_mirror_drift_redacts_*`), `worktree_helpers.rs` (`wr03_*`), `tests/sync.rs`
 (`sync_parse_error_redacts_*`). Unifying the two into one canonical `reposix_core::http` redactor
 is a tracked GOOD-TO-HAVE (v0.15.0).
+
+### The shared `errmsg::teach` primitive
+
+`reposix_core::errmsg::{Teach, teach}` is the ONE builder every 3-part error routes
+through — pure string formatting (no `anyhow`, `forbid(unsafe_code)`-clean). Renders
+`<headline>\nFix: …\nAlternative: …\nRecovery:\n  <cmd>…`, with the `Fix:`/`Alternative:`/
+`Recovery:` limbs each independently omitted when empty (a hollow `Alternative:` line
+never appears for an error with no genuine alternative). Full API + the `.code()`
+P121 forward-compat slot: doc comments in `crates/reposix-core/src/errmsg.rs`.
+
+### `errors.rs` shape helpers + scan scope
+
+`reposix-cli/src/errors.rs` wraps `teach()` in the ~4 recurring failure shapes shared
+across subcommands (`spec_parse_error`, `missing_env_var_error`, `cache_build_error`,
+`missing_cache_db_error`) so `init`/`attach`/`sync`/`refresh`/`tokens`/`cost`/`gc`/
+`history` emit the SAME teaching for the SAME failure instead of ~8 hand-rolled
+near-duplicates. `quality/gates/agent-ux/teach_scan.py` enforces the bar over an
+EXPLICIT, enumerated file list (`CLI_SCOPE` / `HELPER_SCOPE` constants in the script) —
+adding a new subcommand file to the surface is a reviewable one-line change to that
+list, never a silent gap.
+
+### `doctor.rs` is exempt from the teach-scan by scope, not by marker
+
+`reposix doctor` is deliberately OUTSIDE `teach_scan.py`'s `CLI_SCOPE` list: it emits a
+structured `DoctorReport`/`DoctorFinding` (each finding already carries its own
+copy-pastable fix command) rather than raising a `bail!`/`anyhow!` error, so the 3-part
+teaching-error bar does not apply to it — there is nothing to scan. Don't add
+`doctor.rs` to `CLI_SCOPE` expecting the scanner to grade it; the report SHAPE (not the
+scanner) is doctor's teaching contract.
+
+### The `// teach-exempt: ok — <reason>` marker
+
+A `bail!`/`anyhow!` block that is intentionally NOT a user-facing teaching error (an
+internal filesystem/git-subprocess wrapper surfacing someone else's message verbatim, a
+machine-derived path already validated upstream, a per-action wrap whose terminal
+teaching happens at the caller) is dispositioned inline with a `// teach-exempt: ok —
+<reason>` comment rather than silently skipped — `teach_scan.py` requires the marker to
+sit on the block's own line or within 2 comment/blank lines above it, or the block RAISEs
+as un-dispositioned. Grep `teach-exempt: ok` across `crates/` for ~20 live examples
+(`gc.rs`, `init.rs`, `backend_dispatch.rs`, `main.rs`) showing the reasoning style to
+match — name WHY the site is exempt, not just that it is.
+
+### Bin-target vs integration-target test location (the `cargo test -p` seam)
+
+A `#[cfg(test)]` module inside a crate's **bin target** (`src/main.rs` or a module it
+pulls in, e.g. `reposix-remote/src/bus_handler.rs`) is invisible to `cargo test -p
+<crate> --test <name>` — that flag runs ONLY the named **integration-target** file under
+`tests/`. It IS covered by the bare `cargo test -p <crate>` (no `--test` flag), which
+runs the lib target, every bin target's own unit tests, AND every integration target.
+This bit a real gate: `quality/gates/agent-ux/helper-errors-teach-recovery.sh` originally
+scoped leg (a) to `--test errors_teach_recovery`, so the W5/WR-01 credential-leak
+regression test (`bus_handler.rs::tests::wr01_mirror_partial_fail_scrubs_token_from_both_audit_row_and_diag`,
+a bin-target unit test) silently sat outside the gate's coverage — fixed P120 close by
+widening to the bare `cargo test -p reposix-remote`. When a regression test's home is a
+bin-target `#[cfg(test)]` module rather than a `tests/*.rs` file, grade/gate it with the
+bare per-crate invocation, not a `--test <name>`-scoped one.
