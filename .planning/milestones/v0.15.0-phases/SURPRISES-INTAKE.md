@@ -226,6 +226,16 @@ was to duplicate what `docs/roadmap.md` now covers — one source of truth beats
 
 **STATUS:** OPEN
 
+## 2026-07-16 | discovered-by: P117 W1 (noticed during execution; filed by L0 #55 intake triage) | severity: MEDIUM
+
+**What:** `cargo nextest` is not installed in this environment, yet the P117 plans and `crates/CLAUDE.md` recommend `cargo nextest run` as the canonical full-workspace test runner. Every plan (and the cargo-mutex hook reminder) that copies the `cargo nextest` verify command verbatim fails with `error: no such command: nextest`, forcing the executor to silently substitute `cargo test`. Documentation-vs-environment mismatch erodes grounding trust — the next agent may assume the documented command works and copy it into a gate or CI step.
+
+**Why out-of-scope for the discovering session:** Surfaced incidentally during P117 W1 execution, not a planned dev-image/tooling pass; installing `cargo-nextest` in the dev image or re-wording every `cargo nextest` reference across `crates/CLAUDE.md` + the plan verify blocks is a distinct tooling/docs change (and the fix-twice doctrine requires updating the doc references in the same change), not an eager patch inside a docs-truth wave.
+
+**Sketched resolution:** Either (a) install `cargo-nextest` in the dev image so the documented command runs as written, or (b) soften `crates/CLAUDE.md` + the plan verify blocks to name `cargo test` as the guaranteed-available fallback with `cargo nextest` as preferred-if-present. Fix-twice: whichever path, reconcile the `crates/CLAUDE.md` recommendation and the cargo-mutex hook's "cargo nextest for full-workspace tests" reminder text with reality so the next agent does not hit the same `no such command` wall.
+
+**STATUS:** OPEN
+
 ## 2026-07-16 07:47 | discovered-by: P115-T5 close-out executor (SURPRISES-INTAKE filing pass) | severity: MEDIUM
 
 **What:** During T5's push, the pre-push gate summary printed "60 PASS, 1 FAIL" yet the hook exited 0. Traced the mechanism: `quality/runners/run.py::compute_exit_code` (L403-409) exits 0 "iff every P0+P1 row is PASS or WAIVED" — a FAIL row with `blast_radius: P2` (or lower) is counted in the printed summary but never flips the exit code. Separately, `run.py` L324-327/355-356 confirm a verifier timeout maps unconditionally to `row["status"] = "FAIL"` (there is no distinct TIMEOUT/WARN status) — so a timeout-class failure is visually indistinguishable from a real assertion failure in the summary line. Per the T5 executor's contemporaneous account, the specific FAILing row was an identification-class check hitting its ~5-minute timeout on the pre-pr-adjacent suite, pre-existing and unrelated to T5's changes (the `docs-repro benchmark-claim` rows T5 actually touched did NOT regress). Could not independently reproduce which exact row FAILed within this filing pass's ~10-minute budget — the exit-code MECHANISM above is verified fact (file:line, read directly from `run.py`); the specific-row attribution is hearsay from the T5 executor, recorded as such rather than re-stated as independently confirmed.

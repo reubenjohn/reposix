@@ -334,3 +334,17 @@ the reverse pointer is deferred to whenever those part files are themselves prog
 - **What:** P117-01 rewrote `crates/reposix-cli/src/attach.rs`'s multi-SoT-conflict error (Option B) to teach a manual recovery — `git remote remove <remote>` then re-attach/re-init — instead of the phantom `reposix detach` subcommand it used to promise. Option A would make that promise real: a first-class `reposix detach` subcommand that unbinds a working tree from its system of record.
 - **Fix-sketch:** unbind the SoT — one `Cmd::Detach { path: Option<PathBuf> }` enum arm (`main.rs:40`+) + one dispatch arm + a new ~80-120-line `detach.rs` reusing `worktree_helpers::cache_path_from_worktree` + `doctor.rs`'s `git_config_get/set` pattern: unset `extensions.partialClone`, remove the reposix remote, optionally delete the cache dir; mirror `attach.rs`'s `.git/`-exists guard + idempotency. Adds CLI surface, so it DRIFTS the decision-009 LOCKED CLI-surface row and requires owner/manager sign-off before scheduling.
 - **Effort:** small-medium (~3-5h) — one new module + enum/dispatch arm, no new external deps; gated on owner/manager sign-off (CLI-surface lock).
+
+## From P117-01 W1 intake triage (2026-07-16, L0 #55)
+
+### GTH-V15-44 — Split `attach.rs` / `list.rs` (both over the 20k soft ceiling)
+- **Source:** NOTICED during P117-01 W1; L0-directed filing after triaging the W1 intake · **Severity: LOW** · STATUS: OPEN — tag CLI-crate size; same split lane as GTH-V15-08 / GTH-V15-42.
+- **What:** `crates/reposix-cli/src/attach.rs` (26,021 bytes) and `crates/reposix-cli/src/list.rs` (21,015 bytes) both exceed the `structure/file-size-limits` 20,000-byte soft ceiling, currently masked by the GTH-V15-21 `--warn-only` waiver (expires 2026-08-08). When that waiver lapses the size warnings become push-blocking.
+- **Fix-sketch:** extract a shared `backend_errors` sibling module (`crates/reposix-cli/src/backend_errors.rs`) holding the connection-refused / auth error-teaching arms both files reference; mirrors the GTH-V15-08 / GTH-V15-42 split pattern. Dovetails with GTH-V15-45 (the non-sim error-teaching arms would naturally live in that shared module).
+- **Effort:** small — one-pass code extraction, no new external deps.
+
+### GTH-V15-45 — github / confluence / jira connection-refused arms lack copy-paste recovery (only the sim arm was upgraded in W1)
+- **Source:** NOTICED during P117-01 W1; L0-directed filing after triaging the W1 intake · **Severity: LOW** · STATUS: OPEN — tag CLI-UX / north-star error-teaching.
+- **What:** P117-01 W1 raised the SIM connection-refused arms of `reposix list` / `refresh` to the root `CLAUDE.md` § Ownership-charter item-5 north-star bar (teach the fix + suggest the alternative + give a copy-paste recovery command), matching the `crates/reposix-cli/src/init.rs` exemplar. The GitHub, Confluence, and JIRA arms on the same surfaces still emit bare errors with no recovery line.
+- **Fix-sketch:** bring the three real-backend arms up to the same `init.rs` exemplar bar — each teaches what failed, the likely cause (missing/expired creds vs unreachable host vs allowlist), and a one-line copy-paste check. Lands naturally alongside GTH-V15-44's shared `backend_errors` module.
+- **Effort:** small — ~3 error arms following the established exemplar pattern.
