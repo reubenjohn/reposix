@@ -59,6 +59,17 @@ runtime/bench-*.log
 # stdout/stderr captures are runtime noise.
 .planning/verifications/_logs/
 
+# docs-build/animation-renders (quality/catalogs/docs-build.json) is a
+# catalog-first row whose verifier script + artifact are intentionally absent
+# until the owner uploads the mp4 (see the row's owner_hint). Every
+# `quality/runners/run.py` invocation hits the "verifier not found" branch
+# (~L272-294) and rewrites this exact path with a
+# {"error": "verifier not found..."} stub — untracked cruft, not committed
+# evidence, unlike its sibling playwright/*.json artifacts (real graded
+# results) which ARE tracked. Exact path only — do not broaden to a glob;
+# other .planning/verifications/playwright/**/*.json artifacts stay tracked.
+.planning/verifications/playwright/index/animation.json
+
 # Quality Gates runtime artifacts (per-run; regenerate on every runner invocation).
 # .gitkeep placeholders under verifications/ + verdicts/ ARE tracked so the
 # directory tree exists in git; only the per-row JSON + per-run timestamped

@@ -29,6 +29,8 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues) and wikis (Confl
   Your browser doesn't support embedded video — <a href="https://github.com/reubenjohn/reposix/releases/download/docs-assets/Reposix%20Launch%20Animation.mp4">download the launch animation (mp4)</a>.
 </video>
 
+<p><em>Video not playing? <a href="https://github.com/reubenjohn/reposix/releases/download/docs-assets/Reposix%20Launch%20Animation.mp4">Download the launch animation (mp4)</a>.</em></p>
+
 </div>
 
 ## reposix loop vs MCP loop
