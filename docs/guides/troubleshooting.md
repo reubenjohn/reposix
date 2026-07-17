@@ -331,7 +331,7 @@ Re-running `reposix attach` against the same SoT is **idempotent** (it refreshes
 **There is no `reposix detach` subcommand in this cut** — a real one is tracked as **GTH-V15-43**. To switch SoT, undo the attach binding by hand, then re-attach. `reposix doctor` prints the exact cache path if you are unsure which directory to remove:
 
 ```bash
-git config --unset extensions.partialClone          # clear the promisor binding to the old SoT
+git config --unset extensions.partialClone          # clear the lazy-fetch binding to the old SoT
 git remote remove <reposix-remote>                  # the remote `reposix attach` added — `git remote -v` lists it
 rm -rf "<XDG_CACHE_HOME>/reposix/<backend>-<project>.git"   # delete the old SoT's cache directory
 reposix attach <new-backend>::<new-project>         # re-attach to the SoT you want
