@@ -13,6 +13,28 @@ existed BEFORE the implementation landed.
 `quality/runners/_audit_field.py::validate_row` (invoked from `run.py:121`) — add it
 up front rather than discovering the rejection on your first pre-push run.
 
+**`doc-alignment.json` (and every catalog under `quality/catalogs/`) rows are mint-only —
+never hand-edit.** Rows are minted via `reposix-quality doc-alignment <verb>` (`bind` /
+`mark-missing-test` / `propose-retire`) or the `/reposix-quality-refresh` fan-out, never
+typed directly into the JSON. Hand-editing an enum field (`next_action`, `last_verdict`)
+or a row's shape breaks `reposix-quality` at load time — and it breaks in serde/validation
+layers, NOT JSON-syntax validation, so a hand-edit that "looks fine" (valid JSON) can still
+be structurally wrong in ways `jq`/`python -m json.tool` will never catch: (1) an enum
+field carrying a token outside the real variant set (`NextAction` is exactly
+`WRITE_TEST`/`FIX_IMPL_THEN_BIND`/`UPDATE_DOC`/`RETIRE_FEATURE`/`BIND_GREEN` —
+`crates/reposix-quality/src/catalog.rs:373-386`; a hand-typed placeholder like `BIND` is
+not a member and fails `unknown variant`), (2) a required field silently omitted
+(`last_verdict: RowState` has no `serde(default)` — a hand-added row missing it fails
+`missing field`), (3) the `tests`/`test_body_hashes` and `source`/`source_hashes`
+parallel-array invariants (`Row::validate_parallel_arrays`) going out of sync. Because
+every `reposix-quality` invocation loads the whole catalog, ONE corrupted row blocks
+every doc-alignment command for every row, not just the corrupted one — filed as
+`SURPRISES-INTAKE.md` 2026-07-16 (P117 W2 push-blocker: a hand-typed `BIND` token plus a
+missing `last_verdict` plus a parallel-array mismatch, stacked in the same hand-mint row).
+The fix path for a corrupted row is re-mint via `/reposix-quality-refresh` (or the
+specific `reposix-quality doc-alignment <verb>`), not a hand-edit of the JSON — a hand-edit
+that happens to unblock one serde error commonly just exposes the next one underneath.
+
 ## Verifier-subagent dispatch
 
 Phase close MUST dispatch an unbiased subagent that grades catalog rows from committed

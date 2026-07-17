@@ -580,3 +580,59 @@ surfacing mechanism in the meantime. Cross-ref: root `CLAUDE.md` § Non-negotiab
 test setup" coverage-boundary note; `.planning/ORCHESTRATION.md` § Leaf isolation.
 
 **STATUS:** OPEN
+
+## 2026-07-16 23:59 | discovered-by: P117 W2 push-blocker Step A executor (catalog-corruption unblock) | severity: BLOCKER
+
+**What:** `quality/catalogs/doc-alignment.json` row
+`benchmarks/README-md/session-provenance` (minted `2026-07-16T23:05:16Z`, rationale
+credits "Catalog-first mint (P117-03 SC5a, W2)") reached the tree with **three stacked
+hand-edit corruptions**, none catchable by JSON-syntax validation alone because the file
+is syntactically valid JSON throughout — only `reposix-quality`'s serde/validation layer
+catches them, and it does so ONE AT A TIME (fix one, the next surfaces): (1) `next_action`
+carried the HAND-WRITTEN token `"BIND"`, not a real `NextAction` enum variant (valid set:
+`WRITE_TEST` / `FIX_IMPL_THEN_BIND` / `UPDATE_DOC` / `RETIRE_FEATURE` / `BIND_GREEN`) —
+serde failed with `unknown variant 'BIND'` and EVERY `reposix-quality` invocation loads
+this catalog, so the whole binary was unusable, blocking the P117 W2 push; (2) the row was
+missing the required `last_verdict: RowState` field entirely (`missing field
+'last_verdict'`) — confirmed via a full-catalog scan that this is the ONLY row (of 401) in
+this state, i.e. isolated to this one hand-mint, not a systemic gap; (3) the row's `tests`
+array had one entry (`quality/gates/perf/bench_token_economy.py`) while
+`test_body_hashes` was empty, violating the `Row::validate_parallel_arrays` invariant
+(`tests.len() != test_body_hashes.len()`) — the row's own rationale says
+`test_body_hashes` was "deliberately omitted" pending a W6 refresh, so a non-empty
+`tests` alongside an empty `test_body_hashes` was internally inconsistent with its own
+stated intent. **Root cause:** the row was hand-typed directly into the JSON file instead
+of minted through `reposix-quality doc-alignment <verb>` (`bind` / `mark-missing-test` /
+`propose-retire`) — the only sanctioned catalog-mutation paths per
+`quality/gates/docs-alignment/README.md` § Conventions ("Subagents NEVER write
+`quality/catalogs/doc-alignment.json` directly. All state mutation flows through
+`reposix-quality doc-alignment <subcmd>`"). Every verb that constructs a `Row` sets
+`last_verdict` + keeps `tests`/`test_body_hashes` parallel by construction (see
+`crates/reposix-quality/src/commands/doc_alignment.rs:703-726` `mark-missing-test`); a
+hand-typed row structurally cannot inherit those invariants for free.
+
+**Why out-of-scope for the discovering session:** this filing IS the discovering
+session's own fix-twice obligation (not deferred elsewhere) — the code-level fix (enum
+token → `WRITE_TEST`, add `last_verdict: MISSING_TEST`, empty the `tests` array) landed
+in the SAME commit as this intake row per the router's Step-A charter. Filed here per OP-8
+doctrine because the ROOT CAUSE (a catalog-mutation path that let a hand-typed row reach
+the committed tree at all) is a process/tooling gap, not a one-row content bug — closing
+it durably (a pre-commit/pre-push structural check that fails loud on any doc-alignment
+row NOT traceable to a `reposix-quality doc-alignment <verb>` invocation) is new guard
+tooling, out of scope for a bounded 3-blocker unblock step.
+
+**Sketched resolution:** Add a structure-dimension gate (parallel to the existing
+`structure/doc-alignment-catalog-present` / `-summary-block-valid` / `-floor-not-decreased`
+rows in `quality/catalogs/freshness-invariants.json`) that fails loud when a
+`doc-alignment.json` row change in a commit's diff was NOT produced by one of the
+sanctioned `reposix-quality doc-alignment` verbs — e.g. require every row-touching commit
+to also touch a verb-emitted marker (a `last_run`/`last_extracted_by` stamp already exists
+per-row; a git-hook check that a hand-diff introduces a row with an unrecognized
+`last_extracted_by` value, or omits it while adding new content, could catch this class
+pre-commit rather than post-hoc at `reposix-quality` invocation time). Secondary,
+cheaper mitigation: extend `quality/CLAUDE.md`'s mint-only reminder (this same commit) to
+explicitly name the THREE invariants a hand-edit is likely to break (enum token validity,
+required `last_verdict`, parallel-array lengths), so a future hand-edit temptation is met
+with a documented reason to route through the binary instead.
+
+**STATUS:** OPEN
