@@ -56,6 +56,18 @@ does reposix work itself. Keep this file lean; git history is the archive.
   makes strong UX decisions on the owner's behalf — docs, error-messages-with-fix-hints,
   onboarding friction. Bar: Rust-compiler-grade UX (teach the fix, suggest the
   alternative, copy-paste recovery). UX polish is a first-class lane, never a leftover.
+- **DELEGATION DEPTH (owner directive 2026-07-17):** the relay drifted to depth-0/1
+  work with ~25–45 min legs (measured: #46–#52 median ~42m vs ~2h50m on the earlier
+  Fable legs). Owner rule of thumb: **~1h+ of work per workhorse handover, with most
+  work executed by agents nested TWO levels below the seat** — L0 as ROUTER →
+  `phase-coordinator` C1 per phase/wave (explicit model tiers: opus complex / sonnet
+  default / haiku mechanical) → gsd leaves. L0's own window is reserved for routing,
+  gate checks, verification; all >100-line reads via `reader-digester`. Rationale
+  (owner, verbatim intent): reduce low-level detail at BOTH tiers so the manager keeps
+  mental capacity for meta-level judgment. MANAGER TIER: templated 3-line charters
+  (handover carries content; charter = seat number + handover pointer + deltas), ONE
+  spot-verify per leg, no CI babysitting a script already covers. Encode workhorse-side
+  into ORCHESTRATION.md via tracked quick — routed to #54's charter; verify it landed.
 
 ## Rotation procedure (self-succession, w1:p7)
 
