@@ -336,16 +336,17 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
             exit_code,
             stderr_tail,
         } => {
-            if let Some(cache) = state.cache.as_ref() {
-                let oid_hex = sot_sha.map(|o| o.to_hex().to_string()).unwrap_or_default();
-                cache.log_helper_push_partial_fail_mirror_lag(&oid_hex, exit_code, &stderr_tail);
-                cache.log_token_cost(chars_in, chars_out, "push");
-            }
-            crate::diag(&format!(
-                "warning: SoT push succeeded; mirror push failed \
-                 (will retry on next push or via webhook sync). \
-                 Reason: exit={exit_code}; tail={stderr_tail}"
-            ));
+            let oid_hex = sot_sha.map(|o| o.to_hex().to_string()).unwrap_or_default();
+            // WR-01 (P120): redact ONCE, then fan out to BOTH OP-3 sinks
+            // (audit row + operator diag). See `record_mirror_partial_fail`.
+            record_mirror_partial_fail(
+                state.cache.as_ref(),
+                &oid_hex,
+                exit_code,
+                &stderr_tail,
+                chars_in,
+                chars_out,
+            );
             proto.send_line("ok refs/heads/main")?;
             proto.send_blank()?;
             proto.flush()?;
@@ -577,6 +578,47 @@ fn push_mirror(mirror_remote_name: &str) -> Result<MirrorResult> {
     }
 }
 
+/// Redact ONCE, then fan a mirror partial-fail out to BOTH OP-3 sinks — the
+/// append-only `helper_push_partial_fail_mirror_lag` audit row AND the operator
+/// stderr diag. Returns the diag line it emitted (so tests can assert on it
+/// without capturing stderr).
+///
+/// WR-01 (P120 SECURITY): `stderr_tail` is RAW `git push` stderr. For a
+/// token-in-URL mirror, git emits its auth-failure prose
+/// `fatal: Authentication failed for 'https://<user>:<TOKEN>@host/…'` — the
+/// token sits in the URL's USERNAME position, which git does NOT redact there.
+/// (Modern git *does* strip userinfo from the connection-refused
+/// `unable to access '<url>'` line — verified on git 2.50 — but NOT from the
+/// auth line, and older gits strip neither.) Both sinks are exfiltration legs
+/// under the threat model (CLAUDE.md § Threat model), so the raw tail used to
+/// leak the token to EITHER an operator's terminal OR the persisted audit row.
+/// Scrub it ONCE here with the same-crate [`crate::backend_dispatch::redact_userinfo`]
+/// scanner (strips `scheme://user:secret@` userinfo anywhere in free-form text —
+/// the right tool for git's prose, unlike `strip_url_userinfo`, which only
+/// parses a single well-formed `http(s)` URL) and feed the REDACTED tail to
+/// BOTH sinks — never the raw one.
+fn record_mirror_partial_fail(
+    cache: Option<&reposix_cache::Cache>,
+    oid_hex: &str,
+    exit_code: i32,
+    stderr_tail: &str,
+    chars_in: u64,
+    chars_out: u64,
+) -> String {
+    let redacted_tail = crate::backend_dispatch::redact_userinfo(stderr_tail);
+    if let Some(cache) = cache {
+        cache.log_helper_push_partial_fail_mirror_lag(oid_hex, exit_code, &redacted_tail);
+        cache.log_token_cost(chars_in, chars_out, "push");
+    }
+    let diag = format!(
+        "warning: SoT push succeeded; mirror push failed \
+         (will retry on next push or via webhook sync). \
+         Reason: exit={exit_code}; tail={redacted_tail}"
+    );
+    crate::diag(&diag);
+    diag
+}
+
 /// Bus-handler-local `fail_push` wrapper. The parent crate's
 /// `fail_push` (`crates/reposix-remote/src/main.rs`) is `fn`-private;
 /// since `bus_handler` is a sibling module, we replicate the body
@@ -636,6 +678,101 @@ mod tests {
             msg.contains("git ls-remote mirror"),
             "recovery must reference the creds-free remote NAME (runnable), not the \
              redacted URL; got:\n{msg}"
+        );
+    }
+
+    /// P120 CLOSE WR-01 SECURITY REGRESSION. The `MirrorResult::Failed` arm of
+    /// `handle_bus_export` fed RAW `git push` stderr into TWO OP-3 sinks: the
+    /// append-only `helper_push_partial_fail_mirror_lag` AUDIT ROW and the
+    /// operator diag/stderr echo. git's auth-failure prose for a token-in-URL
+    /// mirror — `fatal: Authentication failed for 'https://<user>:<TOKEN>@host/…'`
+    /// — puts the token in the URL USERNAME position, which git does NOT redact,
+    /// so the token leaked to BOTH sinks. This drives the REAL sink helper
+    /// (`record_mirror_partial_fail`, the exact code the arm runs) against a
+    /// real `Cache` with such a tail and asserts the secret reaches NEITHER (a)
+    /// the PERSISTED audit row NOR (b) the diag string — while the redacted host
+    /// survives so the operator still sees which mirror failed. The audit-row
+    /// assertion is the load-bearing half: stderr alone would not have caught a
+    /// leak into the durable forensic table.
+    #[test]
+    // test-name-honesty: ok — drives the real MirrorResult::Failed sink helper with a
+    // token-bearing git-auth-prose tail and asserts no-leak to BOTH the persisted audit
+    // row AND the operator diag (the two OP-3 exfil legs WR-01 closes)
+    fn wr01_mirror_partial_fail_scrubs_token_from_both_audit_row_and_diag() {
+        use std::sync::Arc;
+
+        use reposix_cache::Cache;
+        use reposix_core::backend::sim::SimBackend;
+        use reposix_core::BackendConnector;
+
+        // git's auth-failure prose: the token sits in the URL USERNAME position,
+        // the exact shape the RAW stderr_tail carried into BOTH sinks pre-fix.
+        const SECRET: &str = "ghp_SECRETMIRRORTOKEN123";
+        let poison_tail = format!(
+            "remote: Invalid username or password / \
+             fatal: Authentication failed for \
+             'https://x-access-token:{SECRET}@github.com/o/r.git/'"
+        );
+
+        // Real cache in an isolated dir. nextest runs each test in its own
+        // process, so setting REPOSIX_CACHE_DIR here does not race siblings
+        // (same pattern as precheck.rs's shared-cursor regression test).
+        let cache_dir = tempfile::tempdir().expect("cache tempdir");
+        std::env::set_var("REPOSIX_CACHE_DIR", cache_dir.path());
+        let backend: Arc<dyn BackendConnector> =
+            Arc::new(SimBackend::new("http://127.0.0.1:0".to_owned()).expect("sim backend"));
+        let cache = Cache::open(backend, "sim", "demo").expect("open cache");
+
+        // Drive the REAL arm sink helper.
+        let diag =
+            record_mirror_partial_fail(Some(&cache), "deadbeefcafe", 128, &poison_tail, 10, 19);
+
+        // (b) operator-diag leg: token + username gone, redacted host survives.
+        assert!(
+            !diag.contains(SECRET),
+            "token LEAKED to the operator diag/stderr:\n{diag}"
+        );
+        assert!(
+            !diag.contains("x-access-token"),
+            "username LEAKED to the operator diag/stderr:\n{diag}"
+        );
+        assert!(
+            diag.contains("<redacted>@github.com"),
+            "diag must keep the redacted host so the operator sees which mirror failed:\n{diag}"
+        );
+
+        // (a) PERSISTED audit-row leg — the load-bearing half of WR-01. Read the
+        // row back from cache.db and assert the token never reached disk. Derive
+        // the path from the OWNED `cache_dir` (mirrors `resolve_cache_path`'s
+        // `<root>/reposix/<backend>-<project>.git` layout) rather than re-reading
+        // the global REPOSIX_CACHE_DIR env — under threaded `cargo test` a sibling
+        // test can overwrite that env between here and Cache::open. (nextest runs
+        // each test in its own process, so the write above is race-free there.)
+        let db_path = cache_dir
+            .path()
+            .join("reposix")
+            .join("sim-demo.git")
+            .join("cache.db");
+        let conn = rusqlite::Connection::open(&db_path).expect("open cache.db");
+        let reason: String = conn
+            .query_row(
+                "SELECT reason FROM audit_events_cache \
+                 WHERE op = 'helper_push_partial_fail_mirror_lag'",
+                [],
+                |r| r.get(0),
+            )
+            .expect("audit row must exist");
+        assert!(
+            !reason.contains(SECRET),
+            "token LEAKED to the PERSISTED audit row (audit_events_cache.reason):\n{reason}"
+        );
+        assert!(
+            !reason.contains("x-access-token"),
+            "username LEAKED to the PERSISTED audit row:\n{reason}"
+        );
+        assert!(
+            reason.contains("<redacted>@github.com"),
+            "audit row must keep the redacted host:\n{reason}"
         );
     }
 }

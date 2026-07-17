@@ -110,12 +110,21 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
         )
     })?;
     let sot = strip_bus_query(&url);
+    // WR-02 (P120 SECURITY): `url` is the tree's raw `remote.*.url` — a
+    // `reposix::`-prefixed bus URL that may embed `?mirror=<url>` (or, on this
+    // hand-edited/malformed parse-error path, arbitrary) `user:token@`
+    // credentials. Scrub with the `redact_userinfo` SCANNER, not
+    // `strip_url_userinfo`: the outer `reposix::` scheme defeats `Url::parse`,
+    // so `strip_url_userinfo` would pass the whole string through UNCHANGED and
+    // leak the token; the scanner strips `://user:secret@` userinfo anywhere in
+    // the string. A credential-free URL is returned byte-exact.
+    let safe_url = backend_dispatch::redact_userinfo(&url);
     let mut parsed = backend_dispatch::parse_remote_url(sot).map_err(|e| {
         anyhow!(
             "{}",
             teach(
                 &format!(
-                    "the reposix remote URL in this tree could not be parsed: `{url}`.\n\
+                    "the reposix remote URL in this tree could not be parsed: `{safe_url}`.\n\
                      (underlying: {e:#})"
                 ),
                 "the tree's `remote.*.url` (or its `?mirror=` bus form) is not a valid \

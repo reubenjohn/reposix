@@ -928,4 +928,72 @@ mod tests {
             );
         }
     }
+
+    /// WR-01 (P120): the scanner MUST scrub a token embedded in git's OWN
+    /// free-form auth-failure prose — `fatal: Authentication failed for
+    /// 'https://<user>:<TOKEN>@host/…'` — where the token sits in the URL
+    /// USERNAME position (git does not redact it there). This is the exact
+    /// `stderr_tail` shape that `record_mirror_partial_fail` routes into the
+    /// audit row + operator diag, so verifying the scanner handles the prose
+    /// (not just a bare origin/URL) is load-bearing. `strip_url_userinfo` would
+    /// MISS this (the prose is not a parseable single URL); the scanner catches
+    /// it because it strips `://user:secret@` userinfo ANYWHERE in the text.
+    #[test]
+    fn redact_userinfo_scrubs_token_in_git_authentication_failed_prose() {
+        let raw = "remote: Invalid username or password / \
+                   fatal: Authentication failed for \
+                   'https://x-access-token:ghp_LIVESECRET99@github.com/o/r.git/'";
+        let got = redact_userinfo(raw);
+        assert!(
+            !got.contains("ghp_LIVESECRET99"),
+            "token LEAKED from git auth-failure prose: {got}"
+        );
+        assert!(
+            !got.contains("x-access-token"),
+            "username LEAKED from git auth-failure prose: {got}"
+        );
+        assert!(
+            got.contains("<redacted>@github.com"),
+            "host must survive so the operator sees which mirror failed: {got}"
+        );
+        // Free-form prose around the URL is preserved byte-for-byte.
+        assert!(
+            got.starts_with("remote: Invalid username or password / fatal: Authentication failed"),
+            "prose around the URL must be preserved: {got}"
+        );
+    }
+
+    /// P120 W4 coverage gap (reviewer-noticed): `classify_origin`'s ATLASSIAN
+    /// arm redacts `origin` via `redact_userinfo`, but the W4 integration test
+    /// exercised only the generic "unrecognised backend" arm — the atlassian
+    /// arm had no dedicated credentialed test. A credentialed atlassian origin
+    /// that is missing its `/confluence/` or `/jira/` disambiguating marker
+    /// takes the atlassian `None`-marker error branch; assert the token is
+    /// scrubbed there and the teaching still names the expected URL forms.
+    #[test]
+    fn classify_origin_atlassian_arm_redacts_credentials_in_error() {
+        const SECRET: &str = "ATLTOKEN_SECRET42";
+        let url =
+            format!("reposix::https://x-access-token:{SECRET}@tenant.atlassian.net/projects/FOO");
+        let err = parse_remote_url(&url).expect_err(
+            "atlassian origin without a /confluence//jira marker must fail classification",
+        );
+        let msg = format!("{err:#}");
+        assert!(
+            !msg.contains(SECRET),
+            "atlassian token LEAKED to the error: {msg}"
+        );
+        assert!(
+            !msg.contains("x-access-token"),
+            "atlassian username LEAKED to the error: {msg}"
+        );
+        assert!(
+            msg.contains("<redacted>@tenant.atlassian.net"),
+            "host must survive so the operator sees which tenant failed: {msg}"
+        );
+        assert!(
+            msg.contains("confluence") && msg.contains("jira"),
+            "error must still teach the expected /confluence//jira URL forms: {msg}"
+        );
+    }
 }

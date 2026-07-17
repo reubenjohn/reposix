@@ -242,3 +242,51 @@ fn sync_bare_form_prints_hint() {
         "sync (bare) should print hint pointing at --reconcile: {s}"
     );
 }
+
+/// P120 CLOSE WR-02 SECURITY REGRESSION. `reposix sync` echoed the RAW
+/// `remote.*.url` into its "could not be parsed" teach message. A bus URL whose
+/// SoT half fails to parse (a `/projects/..` path-traversal slug) with a
+/// credentialed `?mirror=` half must NOT leak the token to the operator. The
+/// parse-error path fires BEFORE any backend/cache I/O, so no server is needed.
+/// (The url is `reposix::`-prefixed, so the fix uses the `redact_userinfo`
+/// scanner — `strip_url_userinfo` would pass the whole string through and leak.)
+#[test]
+fn sync_parse_error_redacts_mirror_credentials() {
+    const SECRET: &str = "SECRETSYNC77";
+    let work = tempdir().expect("work tempdir");
+    git_init(work.path());
+    let bus = format!(
+        "reposix::http://127.0.0.1:7878/projects/..?mirror=https://x-access-token:{SECRET}@mirror.example.com/m.git"
+    );
+    git_config_set(work.path(), "remote.origin.url", &bus);
+    git_config_set(work.path(), "extensions.partialClone", "origin");
+
+    let out = AssertCmd::cargo_bin("reposix")
+        .unwrap()
+        .args(["sync", "--reconcile"])
+        .arg(work.path())
+        .timeout(std::time::Duration::from_secs(15))
+        .output()
+        .unwrap();
+    assert!(
+        !out.status.success(),
+        "a malformed SoT slug must fail `reposix sync`: {out:?}"
+    );
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !combined.contains(SECRET),
+        "mirror token LEAKED to the sync parse-error:\n{combined}"
+    );
+    assert!(
+        !combined.contains("x-access-token"),
+        "mirror username LEAKED to the sync parse-error:\n{combined}"
+    );
+    assert!(
+        combined.contains("<redacted>@mirror.example.com"),
+        "sync error must keep the redacted mirror host so the operator can act:\n{combined}"
+    );
+}

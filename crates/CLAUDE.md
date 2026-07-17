@@ -100,3 +100,28 @@ recovery lines. A bare `bail!("usage: …")` or a terse `.context("parse remote 
 surfaces raw to the user does NOT meet the bar — wrap it in a teaching message. Dimension:
 **agent-ux / docs-alignment** (route audits to `quality/gates/agent-ux/`). Scheduled as a
 first-class v0.15.0 phase — see `.planning/milestones/v0.15.0-phases/ROADMAP.md`.
+
+### Credential redaction before ANY error/stderr echo (threat-model exfil leg)
+
+Every remote byte is attacker-influenced and stderr is an exfiltration leg (root CLAUDE.md
+§ Threat model), so **never interpolate a raw URL or raw `git` stderr into an error**.
+There are TWO redactors — pick by the SHAPE of the string, not by the site:
+
+- **A single, well-formed `http(s)` URL** (e.g. a bare `?mirror=<url>` value already parsed
+  out) → `reposix_core::http::strip_url_userinfo(url).0`. It `Url::parse`s ONE URL and strips
+  the authority userinfo; non-`http(s)` inputs pass through unchanged.
+- **A `reposix::`-prefixed remote URL, a bus URL with an embedded `?mirror=<url>`, git's
+  free-form stderr, or ANY string where a credential may sit past the leading authority** →
+  `reposix_remote::backend_dispatch::redact_userinfo(s)`. It SCANS and strips
+  `scheme://user:secret@` userinfo ANYWHERE in the text.
+
+**The trap (verified, P120):** `strip_url_userinfo` PASSES a `reposix::`-prefixed URL through
+UNCHANGED — the outer `reposix::` scheme defeats `Url::parse` — so echoing a bus URL through it
+LEAKS the `?mirror=` credential. Likewise it never touches a token in git's `Authentication
+failed for 'https://<TOKEN>@host/…'` prose (git puts the token in the USERNAME position and does
+NOT redact it; modern git strips the connection-refused `unable to access` line but not the auth
+line). When in doubt for anything not provably a lone `http(s)` URL, use the `redact_userinfo`
+scanner. Regression exemplars: `backend_dispatch.rs` (`redact_userinfo_*`), `bus_handler.rs`
+(`wr01_*`, `precheck_mirror_drift_redacts_*`), `worktree_helpers.rs` (`wr03_*`), `tests/sync.rs`
+(`sync_parse_error_redacts_*`). Unifying the two into one canonical `reposix_core::http` redactor
+is a tracked GOOD-TO-HAVE (v0.15.0).

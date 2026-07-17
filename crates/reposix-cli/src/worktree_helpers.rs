@@ -21,6 +21,7 @@ use anyhow::{anyhow, Context, Result};
 use reposix_cache::path::resolve_cache_path;
 use reposix_core::errmsg::teach;
 use reposix_core::parse_remote_url;
+use reposix_remote::backend_dispatch::redact_userinfo;
 
 /// Read a single git config value via `git -C <path> config --get <key>`.
 ///
@@ -208,7 +209,17 @@ pub fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
     })?;
     // Strip the bus `?mirror=` half; only the SoT spec resolves a cache.
     let sot = strip_bus_query(&url);
-    let spec = parse_remote_url(sot).with_context(|| format!("parse reposix remote url={url}"))?;
+    // WR-03 (P120 SECURITY): `url` is the tree's raw `remote.*.url` — a
+    // `reposix::`-prefixed bus URL that may embed `?mirror=<url>` `user:token@`
+    // credentials (the mirror half `sot` dropped above). Scrub with the
+    // `redact_userinfo` SCANNER, not `strip_url_userinfo`: the outer `reposix::`
+    // scheme defeats `Url::parse`, so `strip_url_userinfo` would pass the whole
+    // string through UNCHANGED and leak the token; the scanner strips
+    // `://user:secret@` userinfo anywhere in the string. Credential-free URLs
+    // are returned byte-exact.
+    let safe_url = redact_userinfo(&url);
+    let spec =
+        parse_remote_url(sot).with_context(|| format!("parse reposix remote url={safe_url}"))?;
     // Pass the full SoT URL so JIRA's `/jira/` marker is visible — origin
     // alone (just the host) loses the disambiguator.
     let backend = backend_slug_from_origin(sot);
@@ -378,5 +389,58 @@ mod tests {
         assert!(looks_like_reposix_url(
             "reposix::https://reuben-john.atlassian.net/jira/projects/TEST?mirror=git@github.com:o/r.git"
         ));
+    }
+
+    /// P120 CLOSE WR-03 SECURITY REGRESSION. When a tree's `remote.*.url` is a
+    /// bus URL whose SoT half fails to parse, `cache_path_from_worktree` echoed
+    /// the RAW `{url}` into its error `.with_context(…)` — including any
+    /// `?mirror=<url>` `user:token@` credentials. This sets up such a tree
+    /// (a path-traversal slug forces the parse failure; the `?mirror=` half
+    /// carries a live token) and asserts the token + username are ABSENT from
+    /// the error while the redacted mirror host survives.
+    ///
+    /// This ALSO pins the `strip_url_userinfo`-would-leak distinction: the url
+    /// is `reposix::`-prefixed, so `strip_url_userinfo` (a single-URL parser)
+    /// would pass it through unchanged and leak — only the `redact_userinfo`
+    /// scanner scrubs it. Swapping the fix back to `strip_url_userinfo` fails
+    /// this test.
+    #[test]
+    // test-name-honesty: ok — drives cache_path_from_worktree's real parse-error path against a
+    // credentialed bus remote and asserts the mirror token is absent from the error
+    fn wr03_cache_path_error_redacts_mirror_credentials_in_malformed_bus_url() {
+        const SECRET: &str = "SECRETWT99";
+        let tmp = init_repo();
+        // `/projects/..` is a path-traversal slug parse_remote_url REJECTS, so
+        // the SoT half fails to parse and the credential-echoing `.with_context`
+        // fires; the `?mirror=` half carries the live token.
+        let bus = format!(
+            "reposix::http://127.0.0.1:7878/projects/..?mirror=https://x-access-token:{SECRET}@mirror.example.com/m.git"
+        );
+        git(tmp.path(), &["remote", "add", "reposix", bus.as_str()]);
+        git(
+            tmp.path(),
+            &["config", "extensions.partialClone", "reposix"],
+        );
+        // Precondition: the tree resolves to our credentialed bus URL.
+        assert_eq!(
+            resolve_reposix_remote_url(tmp.path()).as_deref(),
+            Some(bus.as_str())
+        );
+
+        let err = cache_path_from_worktree(tmp.path())
+            .expect_err("malformed SoT slug must fail cache resolution");
+        let msg = format!("{err:#}");
+        assert!(
+            !msg.contains(SECRET),
+            "mirror token LEAKED to the cache-path error:\n{msg}"
+        );
+        assert!(
+            !msg.contains("x-access-token"),
+            "mirror username LEAKED to the cache-path error:\n{msg}"
+        );
+        assert!(
+            msg.contains("<redacted>@mirror.example.com"),
+            "error must keep the redacted mirror host so the operator can act:\n{msg}"
+        );
     }
 }
