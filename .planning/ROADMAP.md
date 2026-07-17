@@ -292,7 +292,7 @@
 | 114. t4 oid-drift fix-first + reconcile audit | 2/2 | Complete   | 2026-07-15 |
 | 115. Live MCP benchmark re-measurement | 1/1 | Complete | 2026-07-16 |
 | 116. ADR-010 decision packet + slug→id design | 3/3 | Complete | 2026-07-16 |
-| 117. Doc-truth launch-blocker purge | 7/7 | Complete | 2026-07-17 |
+| 117. Doc-truth launch-blocker purge | 6/7 | Complete (E1 animation GTH-V15-37 owner-deferred) | 2026-07-17 |
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
 | 119. Docs/planning simplification | 0/TBD | Not started | - |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
