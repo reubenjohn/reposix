@@ -4,20 +4,20 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 400,
-    "claims_bound": 278,
-    "claims_missing_test": 0,
-    "claims_retire_proposed": 0,
+    "claims_total": 401,
+    "claims_bound": 262,
+    "claims_missing_test": 1,
+    "claims_retire_proposed": 1,
     "claims_retired": 68,
-    "alignment_ratio": 0.8373493975903614,
+    "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-17T00:03:02Z",
-    "coverage_ratio": 0.17258665138928675,
-    "lines_covered": 1205,
-    "total_eligible_lines": 6982,
+    "last_walked": "2026-07-17T06:03:21Z",
+    "coverage_ratio": 0.1734128674904133,
+    "lines_covered": 1221,
+    "total_eligible_lines": 7041,
     "coverage_floor": 0.1,
-    "claims_waived": 19
+    "claims_waived": 2
   },
   "rows": [
     {
@@ -94,15 +94,15 @@
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "Reconciled hero 27 ms -> canonical 278 ms (docs/benchmarks/latency.md 'reposix init' cold sim, CI-canonical run 29452237641). The extended perf/headline-numbers-cross-check gate now PARSES that canonical init figure and asserts the docs/index.md:18 hero cold-init line matches it (exit 1 on drift, naming surface:line + fix); test_headline_numbers_cross_check.py::test_hero_surfaces_match_canonical is the offline integration check. P115 T6 6b.",
+      "rationale": "docs/index.md:18 '**278 ms** cold init — simulator, CI-canonical' matches canonical latency.md:40 'reposix init cold' sim=278 ms; run_cross_check LATENCY_CLAIMS init-axis (L181-186) asserts value==canonical and test_hero_surfaces_match_canonical asserts failures==[] (offline). P115 T6 hash refresh.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:57:08Z",
-      "last_extracted": "2026-07-16T12:57:20Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "mcp-fixture-synthesized-not-live",
@@ -240,14 +240,14 @@
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "Hash refresh: the docs/index.md:18 cold-init figure on the same hero line moved 27->278 ms (P115 T6 6b), shifting the cited line's bytes; the 6 ms cached-read claim + its headline-numbers-cross-check binding are unchanged.",
+      "rationale": "docs/index.md:18 '**6 ms** cached read' matches canonical latency.md:42 'Get one record' sim=6 ms; run_cross_check LATENCY_CLAIMS get-axis (L144-149) asserts value==canonical, test_hero_surfaces_match_canonical asserts failures==[]. Hash refresh (same hero line moved 27->278 ms cold-init bytes).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:58:19Z",
-      "last_extracted": "2026-07-16T12:58:19Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -728,13 +728,13 @@
         "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete"
       ],
       "test_body_hashes": [
-        "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3"
+        "7155d8a468de00a48ca734e6c74ddee690e3d8233f1f193fbb90e321cff485fd"
       ],
-      "rationale": "Tests 6 deletes rejected; 5 deletes pass cap",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "bulk_delete_cap.rs:121-128 asserts 6 deletes yield non-zero exit + stderr 'refusing to push'/'cap is 5' with DELETE expect(0); refreshes drifted test_body_hash",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1468,7 +1468,7 @@
         "324fdeec48fdb70aafa19a5d80f5c392e15ed3010e50ad59abe36ecc504db97b"
       ],
       "rationale": "bench-latency-cron.yml line 34 contains literal persist-credentials: false on the actions/checkout step; whole-file hash detects regression. (Line moved 32->34 by unrelated dependabot checkout/artifact version-ref bumps; claim unchanged, re-bound P95.)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-06T01:24:51Z",
       "last_extracted": "2026-07-06T01:24:51Z",
@@ -1748,8 +1748,8 @@
       "claim": "Cache is a real bare git repo with cache.db in SQLite WAL mode",
       "source": {
         "file": "docs/how-it-works/filesystem-layer.md",
-        "line_start": 56,
-        "line_end": 56
+        "line_start": 57,
+        "line_end": 57
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
       "source_hashes": [
@@ -1759,13 +1759,13 @@
         "crates/reposix-cache/src/cache.rs::open"
       ],
       "test_body_hashes": [
-        "02be171acb27b7663ea9d1e5f85bd94790c801c9d75456363f7f302c6e983e2b"
+        "035e300504440fb99d65cf0554bbf23a340ebb5c3e86a76c67ad43caf5c01f43"
       ],
-      "rationale": "Cache::open creates bare repo with WAL-mode cache.db",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "cache.rs:75 gix::init_bare builds the bare repo and cache.rs:143 open_cache_db opens cache.db, which sets journal_mode=WAL (db.rs:54); source drifted 56->57",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2759,7 +2759,7 @@
         "783326449e96e611bdc3212e25dca1d05a3082f909b34732d81483e5a17a800a"
       ],
       "rationale": "Glossary file IS the source of truth; whole-file hash detects accidental clearing or major restructure",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T20:01:27Z",
       "last_extracted": "2026-04-28T20:01:27Z",
@@ -3029,8 +3029,8 @@
       "claim": "Every blob materialization writes an audit row to cache.db",
       "source": {
         "file": "docs/how-it-works/filesystem-layer.md",
-        "line_start": 56,
-        "line_end": 56
+        "line_start": 57,
+        "line_end": 57
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
       "source_hashes": [
@@ -3042,11 +3042,11 @@
       "test_body_hashes": [
         "fc6ef96936b7eb61b16001a0f901eaee76e9960750c1bb07eb55d3d09714244a"
       ],
-      "rationale": "Audit module writes materialize rows on blob fetch",
+      "rationale": "audit.rs:44-46 still INSERTs op='materialize' into audit_events_cache on blob materialization; source drifted 56->57",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3259,21 +3259,21 @@
         "line_start": 23,
         "line_end": 23
       },
-      "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+      "source_hash": "68f1c97fb5d3adf53d8448b358bf801b8284de894d8f06a5f6daf2a23d69a66a",
       "source_hashes": [
-        "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1"
+        "68f1c97fb5d3adf53d8448b358bf801b8284de894d8f06a5f6daf2a23d69a66a"
       ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
       "test_body_hashes": [
-        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+        "507341b46329c96bee305976353ddfc912dbff80d299b34ffda89b315d816e81"
       ],
-      "rationale": "Tests parse fast-import, detect conflicts, reject on stale base",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "push_conflict.rs:189-200 drives an export stream and asserts stdout 'error refs/heads/main fetch first' with PATCH/POST/DELETE expect(0): export push path parses the stream + runs conflict detection; refreshes drifted hashes",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3296,24 +3296,26 @@
       "claim": "extensions.partialClone=origin tells git the remote is a promisor that delivers missing blobs",
       "source": {
         "file": "docs/how-it-works/filesystem-layer.md",
-        "line_start": 57,
-        "line_end": 57
+        "line_start": 58,
+        "line_end": 58
       },
       "source_hash": "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02",
       "source_hashes": [
         "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02"
       ],
       "tests": [
-        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+        "crates/reposix-cache/tests/partial_clone_serves.rs::filtered_clone_then_checkout_serves_materialized_blobs"
       ],
       "test_body_hashes": [
-        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4",
+        "e1e6990522b7be382b0bfa6c45e4a9ca0e4ecc5752b08a6140ba98c8da52bada"
       ],
-      "rationale": "Agent-flow tests verify git config is set and blob limit teaching works",
+      "rationale": "agent_flow.rs:119-136 asserts extensions.partialClone==origin AND remote.origin.promisor==true AND remote.origin.partialclonefilter==blob:none (the promisor config); partial_clone_serves.rs:170-184 proves the promisor delivers missing blobs via a real git clone --filter=blob:none + checkout serving issues/1.md 'body of issue 1'. dark_factory_sim_happy_path is #[ignore]d (spawns sim).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3568,7 +3570,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh github.sh sets GH_GET_MS=median3_step gh_get (median-of-3 GET), emit-markdown.sh emits GH_GET_CELL=fmt_ms $GH_GET_MS into the 'Get one record' github column; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -3593,7 +3595,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench sim.sh runs median3_step curl on /projects/demo/issues/1 -> SIM_GET_MS; emit-markdown.sh stamps the sim Get cell via fmt_ms SIM_GET_MS at table row 73",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:06Z",
       "last_extracted": "2026-07-15T22:09:06Z",
@@ -4229,7 +4231,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench sim.sh runs median3_step sim_cap (pipes 'capabilities' into git-remote-reposix, a local-only helper round trip) -> SIM_CAP_MS; emit-markdown.sh stamps the Helper capabilities cell via fmt_ms SIM_CAP_MS at table row 75",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:12Z",
       "last_extracted": "2026-07-15T22:09:12Z",
@@ -4367,15 +4369,15 @@
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "Reconciled hero 27 ms -> canonical 278 ms; the extended headline-numbers-cross-check gate parses docs/benchmarks/latency.md 'reposix init' cold sim and asserts the docs/index.md:18 hero cold-init figure matches (offline). P115 T6 6b.",
+      "rationale": "docs/index.md:18 hero '**278 ms** cold init' matches canonical latency.md:40 'reposix init cold' sim=278 ms; run_cross_check LATENCY_CLAIMS init-axis (L181-186) asserts equality and test_hero_surfaces_match_canonical asserts failures==[].",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:57:20Z",
-      "last_extracted": "2026-07-16T12:57:20Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "trust-model/http-redirects-not-followed",
@@ -5078,7 +5080,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh jira.sh sets JR_LIST_MS=median3_step jr_list and JR_N=jq .issues|length, emit-markdown.sh emits JR_LIST_CELL=fmt_ms_n $JR_LIST_MS $JR_N into the 'List records' jira column; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -5103,7 +5105,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh github.sh sets GH_LIST_MS=median3_step gh_list and GH_N=jq length, emit-markdown.sh emits GH_LIST_CELL=fmt_ms_n $GH_LIST_MS $GH_N into the 'List records' github column with N count; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -5128,7 +5130,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench sim.sh runs median3_step curl on /projects/demo/issues -> SIM_LIST_MS and jq length -> SIM_N; emit-markdown.sh stamps the sim List cell via fmt_ms_n SIM_LIST_MS SIM_N at table row 72",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:04Z",
       "last_extracted": "2026-07-15T22:09:04Z",
@@ -5341,15 +5343,15 @@
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "Live figure. The extended headline-numbers-cross-check gate parses the GitHub-MCP output-token median (21,171) from docs/benchmarks/token-economy.md and asserts the docs/index.md:35 mermaid note reads '~21k output tokens (live)' (offline). P115 T6 6b.",
+      "rationale": "docs/index.md:35 mermaid note '~21k output tokens (live)' derived from token-economy.md:37 GitHub-MCP output-token median 21,171 (round/1000=21); run_cross_check TOKEN_LOOP_CLAIMS output_mcp axis (L216-220) asserts the substring present, test_hero_surfaces_match_canonical asserts failures==[].",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:57:40Z",
-      "last_extracted": "2026-07-16T12:57:40Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "mcp-schema-discovery-100k-tokens",
@@ -5830,12 +5832,12 @@
       "claim": "Partial clone fetches the tree (filenames, OIDs) but skips blob contents until read",
       "source": {
         "file": "docs/how-it-works/filesystem-layer.md",
-        "line_start": 48,
-        "line_end": 48
+        "line_start": 49,
+        "line_end": 49
       },
-      "source_hash": "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1",
+      "source_hash": "cfeb818e13e75f4058b444341956dc5c0d2ba00df0788e87591b2623196f2727",
       "source_hashes": [
-        "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1"
+        "cfeb818e13e75f4058b444341956dc5c0d2ba00df0788e87591b2623196f2727"
       ],
       "tests": [
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
@@ -5843,11 +5845,11 @@
       "test_body_hashes": [
         "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
       ],
-      "rationale": "Tests no blobs materialized after tree sync",
+      "rationale": "blobs_are_lazy.rs:44-48 asserts blob_count==0 and tree_count>=1 after build_from (tree present, blobs lazy); source drifted 48->49",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:59Z",
-      "last_extracted": "2026-04-28T09:05:59Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5884,7 +5886,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench sim.sh defines sim_patch (PATCH with expected_version read back from a prior GET) and runs median3_step sim_patch -> SIM_PATCH_MS; emit-markdown.sh stamps the sim PATCH cell via fmt_ms SIM_PATCH_MS at table row 74",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:09Z",
       "last_extracted": "2026-07-15T22:09:09Z",
@@ -5909,7 +5911,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh github.sh sets GH_PATCH_MS=median3_step gh_patch (no-op PATCH), emit-markdown.sh emits GH_PATCH_CELL=fmt_ms $GH_PATCH_MS into the 'PATCH record (no-op)' github column; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -6463,7 +6465,7 @@
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
       "rationale": "Re-cited README.md:23 (caveat) -> README.md:25 (the read-one-issue bullet) and reconciled 8 ms -> canonical 6 ms; the headline-numbers-cross-check gate asserts the README read-one-issue figure equals docs/benchmarks/latency.md 'Get one record' sim. P115 T6 6b.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T12:57:40Z",
       "last_extracted": "2026-07-16T12:57:40Z",
@@ -6876,12 +6878,17 @@
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:09Z",
-      "last_extracted": "2026-04-29T02:55:09Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Superseded by docs/concepts/reposix-vs-mcp-and-sdks.md:43-45 (commit d2fd85c), which RETIRES the synthetic count_tokens-over-fixture 89.1% figure. bench_token_economy.py was rewritten (P115 T5 amendment #10) to the live GitHub-capture JSONL methodology; _assert_headline_reduction now asserts ~94.3% (main() no longer emits 89.1%). twitter.md:18 already reads '~94% fewer output tokens' (live median-of-3). Same documented decision that RETIRE_CONFIRMED the index/README/concepts 89.1% siblings (e.g. token-baseline-mcp-4883); replacement is a DIFFERENT live claim, not a rebinding.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-10-10T00:00:00Z",
+        "reason": "RETIRE_PROPOSED: 89.1% synthetic count_tokens figure superseded by documented decision (docs/concepts/reposix-vs-mcp-and-sdks.md:43-45, commit d2fd85c); confirm-retire is human-only; twitter.md:18 prose already reads ~94%",
+        "tracked_in": "P117 follow-up: owner confirm-retire twitter 89.1% row + backfill-mint a new ~94% row for twitter.md:18"
+      }
     },
     {
       "id": "audit-trail-sqlite-git-log",
@@ -6929,7 +6936,7 @@
         "23faa95b3be8306504601928b10092eef263a1bc0fd67fbbce18cbd6b9bf3df6"
       ],
       "rationale": "P115 T6 item 6a: comparison-page 8ms mirror reconciled to canonical 6ms (docs/benchmarks/latency.md 'Get one record' sim); bound to the headline-numbers-cross-check gate + its offline test (AND-drift watch), clearing MISSING_TEST.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T12:11:50Z",
       "last_extracted": "2026-07-16T12:13:48Z",
@@ -6968,9 +6975,9 @@
         "line_start": 13,
         "line_end": 13
       },
-      "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "source_hash": "c626d4ce45772c7b68434b17b51a222e3da32adabc6a45bc3488fc90ecc77719",
       "source_hashes": [
-        "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29"
+        "c626d4ce45772c7b68434b17b51a222e3da32adabc6a45bc3488fc90ecc77719"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
@@ -6980,11 +6987,11 @@
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4",
         "45ad33228fce32e4058b644e57d328a35aab09ef78e4ae891035b6dbcfa5a7cb"
       ],
-      "rationale": "dark_factory_sim_happy_path asserts a real .git/ working tree (extensions.partialClone=origin + promisor=true + partialclonefilter=blob:none) so cat/grep/edit are vanilla-git ops; clean_push_emits_ok_and_mutates_backend asserts the 'git push' half emits 'ok refs/heads/main' + mutates the backend",
+      "rationale": "dark_factory_sim_happy_path asserts a real .git/ working tree (extensions.partialClone=origin + promisor=true + partialclonefilter=blob:none, assert_eq loop L119-136) so cat/grep/edit are vanilla-git ops; clean_push_emits_ok_and_mutates_backend asserts the 'git push' half emits 'ok refs/heads/main' (L266) + one PATCH to the backend (mock .expect(1), L226). docs/index.md:13 still states the real-git-tree + cat/grep/edit/git push surface.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:45:06Z",
-      "last_extracted": "2026-07-07T22:45:06Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7241,7 +7248,7 @@
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
       "rationale": "Reconciled README 27 ms -> canonical 278 ms; headline-numbers-cross-check gate asserts the README.md:26 cold-bootstrap bullet matches docs/benchmarks/latency.md 'reposix init' cold sim (offline). P115 T6 6b.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T12:57:20Z",
       "last_extracted": "2026-07-16T12:57:20Z",
@@ -7291,7 +7298,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh jira.sh times reposix init with T0=now_ms/T1=now_ms (JR_INIT_MS=$((T1-T0)), gated on JIRA_EMAIL+JIRA_API_TOKEN+REPOSIX_JIRA_INSTANCE) and emit-markdown.sh emits JR_INIT_CELL=fmt_ms $JR_INIT_MS into the 'reposix init cold' jira column; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -7316,7 +7323,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh github.sh times reposix init with T0=now_ms/T1=now_ms (GH_INIT_MS=$((T1-T0)), gated on GITHUB_TOKEN) and emit-markdown.sh emits GH_INIT_CELL=fmt_ms $GH_INIT_MS into the 'reposix init cold' github column; still measures+emits this cell (soft threshold WARN not hard-assert)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -7341,7 +7348,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench sim.sh times reposix init cold (T0/T1 around 'reposix init sim::demo' -> SIM_INIT_MS) and emit-markdown.sh stamps it into the sim reposix-init cell (fmt_ms SIM_INIT_MS at table row 71) -- the script IS the regenerator of latency.md",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:01Z",
       "last_extracted": "2026-07-15T22:09:01Z",
@@ -7366,7 +7373,7 @@
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
       "rationale": "latency-bench.sh confluence.sh times reposix init with T0=now_ms/T1=now_ms (CF_INIT_MS=$((T1-T0)), gated on ATLASSIAN_API_KEY+ATLASSIAN_EMAIL+REPOSIX_CONFLUENCE_TENANT) and emit-markdown.sh emits CF_INIT_CELL=fmt_ms $CF_INIT_MS into the 'reposix init cold' confluence column; still measures+emits this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-15T22:09:46Z",
       "last_extracted": "2026-07-15T22:09:46Z",
@@ -7605,9 +7612,9 @@
         "line_start": 42,
         "line_end": 65
       },
-      "source_hash": "c712b2d1dc893569e012dbda83ea85e790516f15f79524e1db651f118506ffe3",
+      "source_hash": "463cca68a2a7b3685f49e2defb24cb22bbcfe495dce2a7f51bbd6f712848bdde",
       "source_hashes": [
-        "c712b2d1dc893569e012dbda83ea85e790516f15f79524e1db651f118506ffe3"
+        "463cca68a2a7b3685f49e2defb24cb22bbcfe495dce2a7f51bbd6f712848bdde"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument"
@@ -7615,11 +7622,11 @@
       "test_body_hashes": [
         "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da"
       ],
-      "rationale": "cli.rs:78-88 still asserts init --help contains BACKEND::PROJECT/<backend>::<project> spec form and mentions each backend sim/github/confluence/jira; doc section documents the same spec form with all four backend examples",
+      "rationale": "cli.rs:254-263 asserts init --help contains BACKEND::PROJECT/<backend>::<project> and each of sim/github/confluence/jira; matches the doc's spec-form + four-backend section",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T08:30:42Z",
-      "last_extracted": "2026-07-04T08:30:42Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7769,15 +7776,15 @@
         "quality/gates/perf/test_headline_numbers_cross_check.py"
       ],
       "test_body_hashes": [
-        "3c54017fcf247d8bea4007081f3ce165751389c1b8e5909e3e9e2e30bf76bb94",
+        "bff5524635dac86c2c47e72e84ee14e78f0282a10b9372f06d6931854c0a78a3",
         "dae5ca7c373bd584e01ed6e2d30bba3e0d863e5f45a5c1977ce22c20b70565ce"
       ],
-      "rationale": "Live figure. The extended headline-numbers-cross-check gate parses the reposix output-token median (1,213) from docs/benchmarks/token-economy.md and asserts the docs/index.md:31 mermaid note reads '~1.2k output tokens (live)' (offline; exit 1 + fix on drift). P115 T6 6b.",
+      "rationale": "docs/index.md:31 mermaid note '~1.2k output tokens (live)' derived from token-economy.md:37 reposix output-token median 1,213 (_fmt1/1000='1.2'); run_cross_check TOKEN_LOOP_CLAIMS output_reposix axis (L211-215) asserts the substring present and test_run_cross_check_flags_stale_loop_figure pins the ~1.2k/1,213 pairing.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:57:40Z",
-      "last_extracted": "2026-07-16T12:57:40Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/cli.md/mount_removed_v0.9.0",
@@ -7887,21 +7894,25 @@
         "line_start": 13,
         "line_end": 13
       },
-      "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "source_hash": "c626d4ce45772c7b68434b17b51a222e3da32adabc6a45bc3488fc90ecc77719",
       "source_hashes": [
-        "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29"
+        "c626d4ce45772c7b68434b17b51a222e3da32adabc6a45bc3488fc90ecc77719"
       ],
       "tests": [
-        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
       "test_body_hashes": [
-        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+        "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc",
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs has real backend tests; crates exist: reposix-github, reposix-confluence, reposix-jira",
+      "rationale": "docs/index.md:13 names Jira/GitHub Issues/Confluence; each has a real-backend init smoke in agent_flow_real.rs asserting a live REST init URL (run_init_and_assert asserts status.success + reposix::https://<api-host>/ prefix): dark_factory_real_github (api.github.com + /projects/reubenjohn/reposix), dark_factory_real_confluence (/confluence/projects/<space>), dark_factory_real_jira (/jira/projects/<project>). Expanded from github-only citation so all three named backends are covered.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:33Z",
-      "last_extracted": "2026-04-28T09:01:33Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8392,13 +8403,13 @@
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
       "test_body_hashes": [
-        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
+        "636175b3a9a970590f3fb3b0b030f30fc51430191bd0e1c1e554c2980f456dee"
       ],
-      "rationale": "Tests ARCH-10: inbound blob with id/version overrides, PATCH body contains authoritative id",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "push_conflict.rs:365-376 asserts the PATCH body drops attacker id=999999 and omits the version/id fields entirely (sanitize strips server-controlled fields); refreshes drifted test_body_hash",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8683,21 +8694,23 @@
         "line_start": 23,
         "line_end": 23
       },
-      "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+      "source_hash": "68f1c97fb5d3adf53d8448b358bf801b8284de894d8f06a5f6daf2a23d69a66a",
       "source_hashes": [
-        "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1"
+        "68f1c97fb5d3adf53d8448b358bf801b8284de894d8f06a5f6daf2a23d69a66a"
       ],
       "tests": [
-        "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit"
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_advertises_then_eof",
+        "crates/reposix-cache/tests/partial_clone_serves.rs::filtered_clone_then_checkout_serves_materialized_blobs"
       ],
       "test_body_hashes": [
-        "3c0705f7255056ba79ec95997adef10bedd1445f961123465678ad912549fe1b"
+        "51c5f5d7385e73757a4f3ea9bb88950a0cd40a3d18342a13bd5a02f5281cc01a",
+        "e1e6990522b7be382b0bfa6c45e4a9ca0e4ecc5752b08a6140ba98c8da52bada"
       ],
-      "rationale": "Handler implements stateless-connect capability; default blob limit enforced",
+      "rationale": "stateless_connect_e2e.rs:122-134 asserts the stateless-connect tunnel advertisement contains `version 2` (protocol-v2) and flush-terminates, proving stateless-connect is the read path tunneling protocol-v2; partial_clone_serves.rs:161-174 asserts a git clone --filter=blob:none succeeds against the same git upload-pack the stateless-connect path spawns.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8832,27 +8845,29 @@
     },
     {
       "id": "filesystem-layer/blob-lazy-first-cat",
-      "claim": "The first cat of an issue file triggers one REST call; subsequent cats are local",
+      "claim": "A bare POSIX cat never triggers a network call — it is a local read; blob contents materialize at git checkout/fetch time, not at cat (the tree is fetched once at init)",
       "source": {
         "file": "docs/how-it-works/filesystem-layer.md",
-        "line_start": 42,
-        "line_end": 42
+        "line_start": 43,
+        "line_end": 43
       },
-      "source_hash": "23252979b66495109f6b2495f13b592cc9383b8f9b5e9dfc298dc75dbf1a5c77",
+      "source_hash": "fee9e681a5b392a7f0dee46bd96eb18005450f112f979eabdbd297516f85640f",
       "source_hashes": [
-        "23252979b66495109f6b2495f13b592cc9383b8f9b5e9dfc298dc75dbf1a5c77"
+        "fee9e681a5b392a7f0dee46bd96eb18005450f112f979eabdbd297516f85640f"
       ],
       "tests": [
+        "crates/reposix-cache/tests/partial_clone_serves.rs::filtered_clone_then_checkout_serves_materialized_blobs",
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
       ],
       "test_body_hashes": [
+        "e1e6990522b7be382b0bfa6c45e4a9ca0e4ecc5752b08a6140ba98c8da52bada",
         "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
       ],
-      "rationale": "Hash refresh: reconciled the cached-read figure on this line 8->6 ms (P115 T6 6b, canonical latency.md 'Get one record' sim); the lazy-blob claim + its Rust test binding are unchanged.",
+      "rationale": "partial_clone_serves.rs:179-184 proves blob contents arrive at git clone --filter=blob:none + checkout (asserts checked-out issues/1.md contains 'body of issue 1'), then reads it via a local std::fs::read_to_string; blobs_are_lazy.rs:44-49 asserts blob_count==0 after build_from (tree fetched at init, contents lazy until checkout/fetch).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-16T12:58:19Z",
-      "last_extracted": "2026-07-16T12:58:19Z",
+      "last_run": "2026-07-17T06:03:17Z",
+      "last_extracted": "2026-07-17T06:03:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8863,11 +8878,16 @@
         "line_start": 24,
         "line_end": 24
       },
-      "tests": [],
       "rationale": "Catalog-first mint (P117-03 SC5a, W2): minted in the same commit that rewrote benchmarks/README.md's fabricated scripts/demo.sh / RESULTS.md provenance into the true P115 live-session-capture methodology. source_hash / source_hashes / test_body_hashes deliberately omitted -- next_action BIND defers hash + test binding to the P117 W6 doc-alignment refresh (do NOT walk/bind before then). Candidate test (not yet bound -- see parallel-array invariant, `tests`/`test_body_hashes` intentionally empty until W6): quality/gates/perf/bench_token_economy.py. W6 caveat (GTH-V15-15): that candidate test bench_token_economy.py --offline only REGENERATES from captures; the binder must confirm the bound test actually FALSIFIES the provenance claim (e.g. asserts the fixture is /mnt/-free and demo-script-free) before flipping to BIND_GREEN, not merely that it computes a number.",
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
-      "minted_at": "2026-07-16T23:05:16Z"
+      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-10-10T00:00:00Z",
+        "reason": "No committed test falsifies the reposix_session.txt provenance claim (ANSI-stripped/live-GitHub/no-mnt/no-demo); candidate bench_token_economy.py --offline only regenerates numbers from captures, and test_main_offline uses synthetic seeds asserting against the generated doc, not the fixture",
+        "tracked_in": "P117 W6 doc-alignment refresh (GTH-V15-15)"
+      }
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/numeric-id-canonical",
@@ -9504,7 +9524,7 @@
         "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
       ],
       "rationale": "bench_token_economy.py regenerates token-economy.md's four-axis table from the committed benchmarks/captures/*.json live session-usage records; test_bench_token_economy.py proves the per-axis median-of-3 reduction math (test_compute_arm_medians_and_reductions) and deterministic offline doc regeneration (test_main_offline_regenerates_doc_from_captures). The ~94.3% output-token figure is the regenerator's output over the real committed captures. Replaces the retired synthetic count_tokens 89.1%/85.5%/4883/531 rows (P115 T6 Wave1 item3).",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T11:12:10Z",
       "last_extracted": "2026-07-16T11:12:10Z",
@@ -9531,7 +9551,7 @@
         "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
       ],
       "rationale": "bench_token_economy.py computes per-axis median-of-3 USD-cost reduction from the committed live captures and emits the cost row into token-economy.md; test_bench_token_economy.py::test_compute_arm_medians_and_reductions asserts cost is one of the four reduced axes and test_main_offline_regenerates_doc_from_captures asserts the doc is regenerated deterministically. The ~74.9% cost figure is the regenerator's output over the real committed captures (P115 T6 Wave1 item3).",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T11:12:10Z",
       "last_extracted": "2026-07-16T11:12:10Z",
@@ -9558,7 +9578,7 @@
         "f2acea79aebfc5aba0286547f983582701311f943a5a44336834f4a25e9ea79a"
       ],
       "rationale": "test_bench_token_economy.py::test_load_headline_captures_excludes_smoke proves the live-capture loader reads the 6 run-labelled captures (median-of-3 x 2 arms) and excludes the smoke probe; test_main_offline_regenerates_doc_from_captures proves main(['--offline']) reads captures and regenerates the doc with no ANTHROPIC_API_KEY. bench_token_economy.py is the JSONL-session-usage regenerator these tests exercise. Supersedes the retired synthetic count_tokens-over-fixture methodology (P115 T6 Wave1 item3).",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-16T11:12:10Z",
       "last_extracted": "2026-07-16T11:12:10Z",
