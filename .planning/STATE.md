@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-17T08:15:36.000Z"
-last_activity: 2026-07-17 -- P117 (doc-truth launch-blocker purge) W1-W4 shipped GREEN (117-01..117-06); W5/117-07 phase-close IN PROGRESS, close-pending-owner-E1 (mp4 gh release upload HELD on owner-named-target approval)
+last_updated: "2026-07-17T09:00:00.000Z"
+last_activity: 2026-07-17 -- P117 CLOSED GREEN (verdict GREEN, CI green on cdf5557); launch-animation publish (gh release docs-assets + mp4 upload + animation-renders verify) OWNER-DEFERRED 2026-07-17 — re-raise only on owner initiative; next = P118
 progress:
   total_phases: 21
   completed_phases: 3
@@ -17,7 +17,12 @@ progress:
 
 ## Current Position
 
-Phase: **P117 (doc-truth launch-blocker purge) — IN PROGRESS, close-pending-owner-E1.**
+Phase: **P117 (doc-truth launch-blocker purge) — CLOSED GREEN.** Launch-animation
+publish (`gh release create docs-assets` + mp4 upload + live `animation-renders`
+playwright verify — the second, owner-gated half of 117-07) is OWNER-DEFERRED
+2026-07-17 by explicit owner choice — NOT a failure; `animation-renders` staying
+NOT-VERIFIED is an owner-accepted deferral. Re-raise ONLY on owner initiative; see
+`.planning/CONSULT-DECISIONS.md` 2026-07-17 entry.
 P116 (ADR-010 mirror-fanout decision packet + slug→id durable-create) CLOSED GREEN
 2026-07-16 — gsd-verifier verdict 12/12 must-haves PASS, 0 gaps, 0 blockers
 (`116-VERIFICATION.md`); CI green on tip `6825d13` (run `29544462493`, `success`).
@@ -40,8 +45,8 @@ asset is live, per the row's own `owner_hint`); Task 3 — cold-reader
 CI-green confirmation, unbiased gsd-verifier dispatch. See
 `.planning/phases/117-doc-truth-launch-blocker-purge/PROGRESS.md` `## NOW`/`## NEXT`
 for the live briefing.
-**3/15 v0.15.0 "Floor" phases fully complete** (P114, P115, P116); P117 close-pending;
-11 remain after P117.
+**4/15 v0.15.0 "Floor" phases complete** (P114, P115, P116, P117); 11 remain; next =
+P118.
 
 > **Milestone plan (v0.15.0 Floor — scoped 2026-07-15 gsd-roadmapper; full detail
 > `.planning/ROADMAP.md`).** 15 phases P114–P128 (continuing from v0.14.0's highest shipped

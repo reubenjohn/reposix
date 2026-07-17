@@ -273,6 +273,9 @@ the reverse pointer is deferred to whenever those part files are themselves prog
 
 ### GTH-V15-37 — Embed the owner's 80s launch animation on the mkdocs home page
 - **Source:** OWNER-APPROVED P117 LANE ADDITION (2026-07-16); manager feasibility spike VERIFIED via headless playwright (`~/workspace/reposix-animation-pitch`, client-side React/JSX, 7 scenes) — renders flawlessly, scales to iframe container, zero JS errors · **Severity: MEDIUM (owner-approved scope addition)** · STATUS: OPEN — P117-shaping input.
+  OWNER-DEFERRED 2026-07-17 — mp4 baseline embed shipped (644763a); the gh-release-upload
+  + animation-renders live verify are HELD by explicit owner choice, re-raise only on
+  owner initiative.
 - **What:** Embed the owner's 7-scene launch animation on the mkdocs home page (`docs/index.md`), productionized per the owner-approved checklist below (verbatim).
 - **Productionization checklist (MUST hold, verbatim):**
   1. Pre-compile the JSX offline to a plain JS bundle — removes the `unpkg.com` Babel-standalone/React CDN dependency AND the ~2.8s in-browser-compile blank; self-host React or inline it.
