@@ -326,3 +326,11 @@ the reverse pointer is deferred to whenever those part files are themselves prog
 - **What:** `docs/decisions/010-l2-l3-cache-coherence.md` is ~30,959 chars = 155% of the 20KB progressive-disclosure soft ceiling; the file-size hook is warn-only until the 2026-08-08 waiver expiry.
 - **Fix-sketch:** a progressive-disclosure split before the waiver expires — extract the superseded-options history / decision matrix to a child page, leaving the ADR's live decision + rationale in the parent doc under the ceiling.
 - **Effort:** small-medium — one doc-split edit + updating any inbound line-anchored doc-alignment citations that point into the extracted section (cross-reference GTH-V15-28's line-anchored-citation sharp edge). Natural home: P126 (doc-alignment polish lane).
+
+## From P117-01 SC4 Option-B ratification (2026-07-16)
+
+### GTH-V15-43 — Real `reposix detach` subcommand (SC4 Option A; deferred by L0 in favor of Option B)
+- **Source:** P117-01 SC4 (2026-07-16); L0-directed filing after ratifying Option B (reword-only) for the attach multi-SoT-conflict error · **Severity: LOW** · STATUS: OPEN — tag CLI-surface. **Needs owner/manager sign-off — DRIFTS the decision-009 LOCKED CLI-surface row.**
+- **What:** P117-01 rewrote `crates/reposix-cli/src/attach.rs`'s multi-SoT-conflict error (Option B) to teach a manual recovery — `git remote remove <remote>` then re-attach/re-init — instead of the phantom `reposix detach` subcommand it used to promise. Option A would make that promise real: a first-class `reposix detach` subcommand that unbinds a working tree from its system of record.
+- **Fix-sketch:** unbind the SoT — one `Cmd::Detach { path: Option<PathBuf> }` enum arm (`main.rs:40`+) + one dispatch arm + a new ~80-120-line `detach.rs` reusing `worktree_helpers::cache_path_from_worktree` + `doctor.rs`'s `git_config_get/set` pattern: unset `extensions.partialClone`, remove the reposix remote, optionally delete the cache dir; mirror `attach.rs`'s `.git/`-exists guard + idempotency. Adds CLI surface, so it DRIFTS the decision-009 LOCKED CLI-surface row and requires owner/manager sign-off before scheduling.
+- **Effort:** small-medium (~3-5h) — one new module + enum/dispatch arm, no new external deps; gated on owner/manager sign-off (CLI-surface lock).
