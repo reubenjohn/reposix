@@ -153,3 +153,56 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   next milestone boundary" proposal routes to the next-milestone roadmapper.
 - **Status:** RULED — design-only in v0.15; no build.
 
+---
+
+## 2026-07-16 [FABLE] docs-repro pivot: Option A (allow-list cutover) vs Option B (count uncovered)
+
+- **Decision: B** — change `quality/gates/docs-repro/snippet-extract.py:171` from
+  `len(blocks) > PIVOT_THRESHOLD` to `len(uncovered) > PIVOT_THRESHOLD`. GREEN contract
+  becomes "uncovered-block-count ≤ 50"; the per-block coverage check at `:177` (any
+  uncovered block → itemized failure) stays untouched and remains the load-bearing guard.
+- **Rationale:** (1) *Gate integrity is the binding constraint, and B strictly dominates.*
+  Option A is a fail-open inversion — README.md:25's own wording is "uncatalogued blocks
+  not flagged," so every future unmarked doc block silently passes; in a dark factory with
+  no human on each push, that quietly retires the coverage guarantee the gate exists to
+  provide. B keeps fail-closed (`:177` still reds on any uncovered block) and can never
+  hide a regression the gate previously caught: after B, `:171` fires only when uncovered
+  > 50, a strict subset of states where `:177` already fails. (2) *The current red is a
+  false positive by the gate's own artifact* — snippet-coverage.json shows all three
+  coverage/drift assertions PASS; the sole failing assertion measures total doc richness,
+  i.e. it punishes adding a covered, tested recovery block (anti-north-star; GTH-V15-49
+  itself bans gaming the count by deleting real blocks). (3) *The README pivot trigger's
+  premise is empirically falsified*: it predicted per-block tracking becomes unsustainable
+  past 50 blocks, but reality is 51 blocks / uncovered_count=0 / allow-list at 21 of its
+  own 30-entry "consider wholesale" threshold. Executing A's heavier two-file governance
+  cutover on a trigger whose premise failed is complexity without evidence. (4) *Cost +
+  reversibility*: B is ~1 line + one catalog-row assertion edit (catalog-first, verifier-
+  graded, per the binding constraint); A remains available later WITH evidence (allow-list
+  ≥ 30 entries, or chronic uncovered churn) — B preserves that option; A is culturally
+  hard to re-tighten once loosened.
+- **Implementation notes for the downstream coordinator (fix-it-twice):** commit the
+  modified `quality/catalogs/docs-reproducible.json` row (new assertion text) BEFORE the
+  code change; in the same change, update `quality/gates/docs-repro/README.md:25`'s pivot
+  rule and the `:173` error text so no doc lies about the trigger (new wording: ">50
+  *uncovered* blocks → consider wholesale allow-list mode"), and note the allow-list
+  header's 30-entry threshold as the surviving A-trigger. Do NOT bump PIVOT_THRESHOLD
+  (GTH-V15-49 names that a dodge); B changes the measured quantity, not the number.
+- **Risks + what would change this answer:** If the real pain is per-block catalog/
+  allow-list maintenance cost (not the count), B doesn't relieve it — allow-list crossing
+  30 entries, reflexive reason-less allow-list adds, or chronic uncovered churn would flip
+  the answer to A. B is only safe while `:177`'s any-uncovered failure remains; if that
+  check is ever removed, a bare ≤50-uncovered ceiling is far too lax. Post-B, `:171` is
+  near-dead code (an escalation advisory atop itemized failures) — acceptable, but the
+  reworded message must be honest about that role.
+- **Spot-checks performed:** opened `quality/gates/docs-repro/snippet-extract.py:120-199`
+  (confirmed `:171` raw-count vs `:177` uncovered are independent; allow-list feeds only
+  `block_covered`), `quality/reports/verifications/docs-repro/snippet-coverage.json`
+  (block_count=51, uncovered_count=0, exit 1, only the count assertion failed),
+  `quality/gates/docs-repro/README.md:22-26` (pivot rule verbatim),
+  `quality/catalogs/docs-reproducible-allowlist.json` header (21 entries, 30-entry
+  anti-bloat note), `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md:377-384`
+  (GTH-V15-49 full text incl. fix-sketch (a)/(b) and the no-threshold-bump rule).
+- **Status:** DECIDED — OPEN until the downstream phase-coordinator lands the
+  catalog-first row + the `:171` change and the verifier grades GREEN; delete this entry
+  on close per ledger policy.
+
