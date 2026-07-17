@@ -425,6 +425,10 @@ fn history_outside_reposix_tree_teaches_init_and_attach() {
 /// resolves under a fresh (empty) REPOSIX_CACHE_DIR, so `sim-demo.git` is
 /// absent — hermetic, no network.
 #[test]
+// test-name-honesty: ok — "teaches_git_fetch_and_refresh" asserts the ERROR
+// MESSAGE literally contains the advice strings "git fetch" and "reposix
+// refresh" (recovery text), not that the test performs a real git fetch or
+// network round-trip — hermetic, no network per the doc comment above.
 fn tokens_no_synced_cache_teaches_git_fetch_and_refresh() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let wt = reposix_tree(&tmp);
@@ -457,6 +461,10 @@ fn tokens_no_synced_cache_teaches_git_fetch_and_refresh() {
 /// is genuinely SHARED across subcommands (tokens + cost emit byte-identical
 /// populate-the-cache guidance), not copy-pasted per command.
 #[test]
+// test-name-honesty: ok — "teaches_git_fetch_and_refresh" asserts the ERROR
+// MESSAGE literally contains the advice strings "git fetch" and "reposix
+// refresh" (recovery text), not that the test performs a real git fetch or
+// network round-trip — hermetic, no network per the doc comment above.
 fn cost_no_synced_cache_teaches_git_fetch_and_refresh() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let wt = reposix_tree(&tmp);
@@ -489,6 +497,10 @@ fn cost_no_synced_cache_teaches_git_fetch_and_refresh() {
 /// case also routes through the SHARED `missing_cache_db_error` (was a bespoke
 /// `bail!` at gc.rs:74) rather than its own hand-rolled string.
 #[test]
+// test-name-honesty: ok — "teaches_git_fetch_and_refresh" asserts the ERROR
+// MESSAGE literally contains the advice strings "git fetch" and "reposix
+// refresh" (recovery text), not that the test performs a real git fetch or
+// network round-trip — hermetic, no network per the doc comment above.
 fn gc_no_synced_cache_teaches_git_fetch_and_refresh() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let wt = reposix_tree(&tmp);
