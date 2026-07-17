@@ -28,6 +28,13 @@ You have ZERO session context beyond this prompt and the row context that follow
      ```
      This refreshes both `source_hash` and `test_body_hash` (the binding tool computes them).
 
+     **Non-Rust test citation warning (GTH-V15-51):** the `<test-file>::<fn>` form is
+     Rust-only. `parse_test` (`crates/reposix-quality/src/commands/doc_alignment.rs`)
+     only resolves `::<fn>` when `<test-file>` ends in `.rs`; for a `.py`/`.sh`/other
+     non-Rust test the WHOLE string (including the literal `::fn` suffix) becomes an
+     unresolvable file path — dead-on-arrival. For Python/non-Rust test citations, cite
+     the BARE filename (`path/to/test.py`), NEVER `path/to/test.py::fn`.
+
    - **TEST_MISALIGNED** — the test exists but no longer asserts what the claim says. Call:
      ```
      reposix-quality doc-alignment mark-missing-test \

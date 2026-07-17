@@ -21,13 +21,13 @@ A behavioral claim is a statement specific enough that **a test could fail**. It
 1. **Read each input file in your shard.** Do not skim; read line-by-line.
 
 2. **For each candidate claim:**
-   - Compose a stable row ID: `<dimension-area>/<verb>-<short-noun>` (e.g. `jira-init-story-parent-symlink`, `allowlist-default-localhost-only`).
+   - Compose a stable row ID: `<dimension-area>/<verb>-<short-noun>` (e.g. `jira-init-story-parent-symlink`).
    - Cite the source as `<file>:<line-start>-<line-end>` covering the smallest contiguous range that contains the claim.
    - Search `tests/`, `crates/*/tests/`, `crates/*/src/**/tests.rs` for a binding test:
      ```
      grep -rln "<keyword from claim>" crates/ tests/ scripts/
      ```
-   - If a candidate test exists, READ THE TEST BODY. Verify the test actually asserts the claim (assertion text contains the value, not just calls a function whose name happens to match). When uncertain, treat as MISSING_TEST — false BOUND is the worst failure mode.
+   - If a candidate test exists, READ THE TEST BODY. Verify it actually asserts the claim (assertion text contains the value, not a same-named fn call). When uncertain, treat as MISSING_TEST — false BOUND is the worst failure mode.
 
 3. **Mint state via the binary** (one call per claim):
 
@@ -42,6 +42,8 @@ A behavioral claim is a statement specific enough that **a test could fail**. It
        --rationale "<file>:<line> of the test asserts <quoted assertion text>"
      ```
      The binary validates citations, computes hashes, and persists. If it errors, the citation is wrong — fix and retry.
+
+     **Non-Rust (GTH-V15-51):** `::<fn>` resolves `.rs` only; cite non-Rust bare (`test.py`), never `::fn`.
 
    - **No binding test exists:**
      ```
@@ -131,8 +133,8 @@ Four rows initially proposed `RETIRE_PROPOSED` but flipped to `MISSING_TEST` —
 - Read every cited file. Don't extract from filenames or section headers alone.
 - Citations must be the smallest contiguous line range containing the claim. Don't cite an entire file or a 50-line block.
 - Row IDs are stable across re-runs. Use the same kebab-case ID for the same claim. Conflicts surface in `merge-shards`; the orchestrator resolves them.
-- Never call `confirm-retire`. That's human-only and env-guarded.
-- If you hit a binary error you don't understand, surface it on stderr and continue with the next claim. Do not silently skip rows.
+- Never call `confirm-retire` (human-only, env-guarded).
+- If a binary error is unclear, surface it on stderr and continue with the next claim. Do not silently skip rows.
 
 ## Cross-references
 
