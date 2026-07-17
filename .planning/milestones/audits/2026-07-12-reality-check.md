@@ -7,6 +7,21 @@ accidental cancel/resume produced paired passes); pairs are unioned below, with 
 substantive disagreements stated precisely rather than averaged. No code, docs, or planning
 artifacts were modified.
 
+> **UPDATE 2026-07-17 (P118 · DOCS-09) — STALE-TAG PREMISE SUPERSEDED.** This 2026-07-12
+> audit repeats a "cut the two stalled/uncut owner-gated tags (v0.13.0, v0.14.0)" premise in
+> five places (§2 bloat map ~L338, §3 Exhibit E ~L410, §4 punch-list ~L467, §4 Option ii
+> ~L483, §5 open-question #2 ~L550). **That premise is RESOLVED.** `git tag -l` shows
+> **v0.13.0, v0.13.1, v0.14.0 all cut**, and all three are **published GitHub releases**
+> (`gh release list` → **v0.14.0 = "Latest"**, v0.13.1, v0.13.0). The archival cascade has
+> since run: P78-94 → `.planning/milestones/v0.13.0-phases/`, P102-113 →
+> `.../v0.14.0-phases/`; neither range remains in live `.planning/phases/`. So the "stalled
+> tags block the archival cascade" framing recurring below no longer holds — the tags exist
+> and the cascade completed. **This is a prose correction, NOT a literal tag cut** (the tags
+> already exist); the original 2026-07-12 sentences are preserved verbatim below as the
+> historical audit record — do NOT act on them. Companion: §5 open-question #1 (~L547, "is the
+> v1.0 headline the honest-but-synthetic 89.1%, or fund a live-MCP-server re-measurement?") is
+> likewise **RESOLVED** — P115 funded the live re-measurement (`docs/benchmarks/token-economy.md`).
+
 ## §1 North star recap
 
 v1.0 = git as the native interface for agent access to systems of record. A skeptical dev
@@ -337,6 +352,7 @@ history-rotation already practiced).
   owner-gated tags (v0.13.0, v0.14.0) — /gsd-complete-milestone archives at tag time, so part
   of the bloat is a *symptom of stalled tag cuts*, not neglect. Cutting the two tags unblocks
   the 21 loose phase dirs.
+  > **[SUPERSEDED 2026-07-17 — P118/DOCS-09: tags cut (v0.13.0/v0.13.1/v0.14.0) + released; cascade ran. See the top-of-doc banner.]**
 - Perspective numbers: ~99% of .planning/ is historical reference; the live agent entry-path
   load is ~71.6K ≈ 1% of the tree — the signal exists, it's just surrounded. The untracked
   21-*/22-* dirs collide with historical v0.7.0 phase numbering specifically. The 548M
@@ -413,6 +429,8 @@ unboundedly (523 files, no retention rule written anywhere). A fresh agent's con
 with historical reference before it reaches the live surface — the owner's "things slip
 through the cracks" diagnosis, mechanized.
 
+> **[SUPERSEDED 2026-07-17 — P118/DOCS-09: tags cut (v0.13.0/v0.13.1/v0.14.0) + released; cascade ran. See the top-of-doc banner.]**
+
 *Remediation candidate (owner-floated idea, 2026-07-12 — a decision, not a directive; see
 §5 Q7): ONE LARGE SWEEP instead of gradual archival-by-convention.* Archived planning detail
 would be DELETED or aggressively compressed — "it should just sit in the git history."
@@ -465,6 +483,7 @@ LAUNCH-BLOCKER classes — fix index.md:13 category error; rewrite/rename filesy
 un-strand `reposix list/refresh` (reuse init.rs:370's error text); delete or implement
 `reposix detach`; fix token-fixture provenance lie (relabel honestly even before
 re-measuring); fix twitter.md FUSE line. Also: cut the two stalled tags.
+> **[SUPERSEDED 2026-07-17 — P118/DOCS-09: the two tags (plus v0.13.1) are cut + released; nothing to cut. See the top-of-doc banner.]**
 
 **Bloat remediation — two candidate shapes, owner decision pending (§5 Q7).** Either way it
 slots early (M1.5/M2 in arcs A-C; folded into D's M2 meta-milestone):
@@ -483,6 +502,7 @@ slots early (M1.5/M2 in arcs A-C; folded into D's M2 meta-milestone):
   moves the 21 dead phase dirs per the existing convention, plus Exhibit C's
   archival-at-close gate so it never re-accumulates. Less blast radius, keeps grep-able
   local history; leaves ~9M of historical tree in place.
+  > **[SUPERSEDED 2026-07-17 — P118/DOCS-09: tags cut (v0.13.0/v0.13.1/v0.14.0) + released; the archival cascade already ran. See the top-of-doc banner.]**
 
 ### A — Docs-truth deep-clean first ("truth before traffic")
 v0.15 floor + truth-rot purge (Lane 1's findings) + bloat remediation; v0.17 IA rebuild
@@ -546,8 +566,10 @@ pick by appetite for launch latency vs regression risk.
    magnitude, and still anchors .planning/PROJECT.md's Context. Retract, or relabel as
    aspiration? And is the v1.0 headline the honest-but-synthetic 89.1%, or do you fund a
    live-MCP-server re-measurement (new fixture against the REAL architecture) first?
+   > **[SUPERSEDED 2026-07-17 — P118/DOCS-07+DOCS-09: RESOLVED — P115 funded the live re-measurement (`docs/benchmarks/token-economy.md`); the synthetic 89.1% is retired and PROJECT.md now cites the live figure. See the top-of-doc banner.]**
 2. **Tag cuts.** v0.13.0/v0.14.0 tags are owner-gated and stalled; they block the archival
    cascade that produces most of the .planning/ bloat. Cut both now?
+   > **[SUPERSEDED 2026-07-17 — P118/DOCS-09: ANSWERED — all three tags (v0.13.0/v0.13.1/v0.14.0) are cut + released (v0.14.0 = "Latest"); the cascade ran. See the top-of-doc banner.]**
 3. **Launch definition.** Is Show-HN gated on the real-backend journey (Connect
    Confluence/JIRA/GitHub pages + attach UX polished), or is a sim-first launch acceptable
    with real-backend guides marked beta?
