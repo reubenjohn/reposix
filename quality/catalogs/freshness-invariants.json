@@ -1373,6 +1373,46 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/container-rehearse-binary-provenance",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T16:10:48Z",
+      "comment": "P124/SC3 (DRAIN-24) -- `.github/workflows/quality-post-release.yml` runs `run.py --cadence post-release` (the cadence that grades every `kind: container` docs-repro row, which host-mounts `target/debug/reposix`) but has NO `cargo build -p reposix-cli` step and no artifact download, so the binary's presence on the runner is an unconfirmed implicit cache -- on a cold runner the container rows would silently degrade to NOT-VERIFIED for a missing host binary. This row asserts an EXPLICIT build/artifact-download step exists, precedes the post-release gate step, and carries an inline provenance comment. Minted NOT-VERIFIED in the P124 Wave 0 catalog-first commit; verifier ships in Wave 3.",
+      "sources": [
+        ".github/workflows/quality-post-release.yml",
+        "quality/gates/docs-repro/container-rehearse.sh",
+        ".planning/phases/124-container-rehearse-harness-hardening/124-PLAN.md",
+        ".planning/REQUIREMENTS.md:DRAIN-24"
+      ],
+      "command": "bash quality/gates/structure/container-rehearse-binary-provenance.sh",
+      "expected": {
+        "asserts": [
+          ".github/workflows/quality-post-release.yml contains an explicit `cargo build -p reposix-cli` (or artifact-download) step that runs BEFORE `run.py --cadence post-release`",
+          "the step is a hard dependency of the job that grades container rows -- no container docs-repro row can silently degrade to NOT-VERIFIED for a missing host binary on a cold runner",
+          "the provenance decision is documented inline in the workflow (a comment naming why the step exists)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/container-rehearse-binary-provenance.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/container-rehearse-binary-provenance.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: .github/workflows/quality-post-release.yml lacks an explicit `cargo build -p reposix-cli` (or artifact-download) step before the `run.py --cadence post-release` step -- add one with an inline comment naming why (container docs-repro rows host-mount target/debug/reposix; without it they degrade to NOT-VERIFIED on a cold runner, DRAIN-24). The named verifier ships in P124 Wave 3; NOT-VERIFIED until then (catalog-first).",
+      "claim_vs_assertion_audit": "If `target/debug/reposix` reached the quality-post-release.yml runner only via an unconfirmed implicit cache (the DRAIN-24 gap), the three asserts would falsify the provenance claim: assert 1 parses the workflow YAML and FAILS unless an explicit `cargo build -p reposix-cli` (or artifact-download) step exists AND its position precedes the `run.py --cadence post-release` step; assert 2 FAILS unless that step is a hard dependency of the job that grades container rows, so no container docs-repro row can silently degrade to NOT-VERIFIED for a missing host binary on a cold runner; assert 3 FAILS unless an inline provenance comment names why the step exists (so the question is not re-opened). A workflow that silently relied on an implicit cache would have no such step, tripping assert 1. The gate parses YAML with python3 (not brittle grep) and prints the file + missing step + fix on failure.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

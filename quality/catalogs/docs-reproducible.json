@@ -154,6 +154,7 @@
       "id": "docs-repro/example-05-blob-limit-recovery",
       "dimension": "docs-repro",
       "kind": "container",
+      "comment": "P124/SC1 (DRAIN-22): expected.asserts REWRITTEN 2026-07-18 to the real-runtime-error contract -- example-05 now drives the actual BLOB_LIMIT_EXCEEDED_FMT helper stderr refusal under REPOSIX_BLOB_LIMIT and recovers via `git sparse-checkout set`. This SUPERSEDES the 2026-07-13 honesty reword (quick 260713-q0e) that had narrowed the asserts to the pre-emptive sparse-checkout + source-constant stand-in on the then-true premise that run.sh never read helper stderr; P124 Wave 1b makes the run drive the real error, so that caveat no longer holds. Status flipped to NOT-VERIFIED pending the Wave 1b run.sh rework + a real post-release container re-grade (do not leave a stale PASS describing the old pre-emptive-only behavior). minted_at preserved (write-once).",
       "sources": [
         "examples/05-blob-limit-recovery/run.sh",
         "examples/README.md:10"
@@ -161,9 +162,9 @@
       "command": "bash examples/05-blob-limit-recovery/run.sh",
       "expected": {
         "asserts": [
-          "bash examples/05-blob-limit-recovery/run.sh exits 0 in ubuntu:24.04 container",
-          "run.sh confirms the blob-limit guard constant BLOB_LIMIT_EXCEEDED_FMT is committed in crates/reposix-remote/src/stateless_connect.rs (step [1/4], the grep gate at run.sh:28-30 exits non-zero under set -euo pipefail if the constant is absent) and applies the pre-emptive git sparse-checkout partial-clone pattern (steps [3/4]-[4/4], run.sh:45-48/55-56) that narrows the fetch scope under REPOSIX_BLOB_LIMIT=3; it does NOT trigger or read a runtime blob-limit stderr error (the fast-import fetch path bypasses the per-RPC command=fetch check -- see expected-output.md '## Why no blob_limit_exceeded audit row')",
-          "after the sparse-checkout-narrowed git checkout of refs/reposix/origin/main, at least one targeted issues/*.md record blob is materialized in the working tree (the bare 'ls issues/*.md' at run.sh:51 and again at run.sh:58 exits non-zero under set -e on a zero-match glob); the check establishes materialization of the narrowed set, not that siblings remain sparse"
+          "bash examples/05-blob-limit-recovery/run.sh exits 0 in an ubuntu:24.04 container after driving a REAL runtime blob-limit-exceeded refusal under REPOSIX_BLOB_LIMIT and recovering",
+          "the helper emits the BLOB_LIMIT_EXCEEDED_FMT stderr refusal (naming `git sparse-checkout set`) when a blob-materializing fetch/checkout of refs/reposix/origin/main would exceed REPOSIX_BLOB_LIMIT",
+          "after `git sparse-checkout set` narrows the scope, the retried checkout materializes the narrowed issues/*.md record set and completes 0 -- the observe-error-then-recover cycle"
         ]
       },
       "verifier": {
@@ -175,13 +176,13 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-05-blob-limit-recovery.json",
-      "status": "PASS",
+      "status": "NOT-VERIFIED",
       "last_verified": "2026-07-12T16:53:45Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: examples/05-blob-limit-recovery/run.sh regressed OR the blob-limit guard constant / sparse-checkout path regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) 'git sparse-checkout set 0001.md ...' using the OLD zero-padded flat pathspecs -- canonical is 'issues/1.md' (QL-001, unpadded + bucketed); the 'ls' inspection lines had the same drift. QL-001 is landed (P91-02). HONESTY REWORD (2026-07-13, quick 260713-q0e): asserts #2/#3 were reworded to the TRUTH -- example-05 does NOT observe a runtime blob-limit stderr error (the fast-import fetch path bypasses the per-RPC check; expected-output.md documents zero blob_limit_exceeded rows). It exercises the PRE-EMPTIVE git sparse-checkout pattern + the source-constant presence ONLY. The real runtime-error recovery is covered by quality/gates/agent-ux/dark-factory.sh; a deeper example-05 fix (exercise the real runtime error + recovery cycle) is filed for v0.15.0 (SURPRISES-INTAKE). Do NOT re-introduce a 'observes the error from stderr and recovers' claim here -- run.sh provably never reads helper stderr.",
+      "owner_hint": "if RED: examples/05-blob-limit-recovery/run.sh regressed OR the blob-limit guard constant / sparse-checkout path regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) 'git sparse-checkout set 0001.md ...' using the OLD zero-padded flat pathspecs -- canonical is 'issues/1.md' (QL-001, unpadded + bucketed); the 'ls' inspection lines had the same drift. QL-001 is landed (P91-02). HONESTY REWORD (2026-07-13, quick 260713-q0e): asserts #2/#3 were reworded to the TRUTH -- example-05 does NOT observe a runtime blob-limit stderr error (the fast-import fetch path bypasses the per-RPC check; expected-output.md documents zero blob_limit_exceeded rows). It exercises the PRE-EMPTIVE git sparse-checkout pattern + the source-constant presence ONLY. The real runtime-error recovery is covered by quality/gates/agent-ux/dark-factory.sh; a deeper example-05 fix (exercise the real runtime error + recovery cycle) is filed for v0.15.0 (SURPRISES-INTAKE). SUPERSEDED 2026-07-18 (P124/SC1, DRAIN-22): run.sh IS being reworked (Wave 1b) to DRIVE the real runtime BLOB_LIMIT_EXCEEDED_FMT stderr refusal + git sparse-checkout recovery, so the 'observes the error from stderr and recovers' claim is now CORRECT and the rewritten expected.asserts assert exactly that; the earlier 'never reads helper stderr' instruction applied only to the pre-P124 pre-emptive-only run.sh. Status is NOT-VERIFIED until a real post-release container run re-grades the reworked example.",
       "waiver": null,
-      "claim_vs_assertion_audit": "If the pre-emptive partial-clone workflow did not hold, run.sh exits non-zero and its asserts land in asserts_failed: the step-[1/4] grep gate (run.sh:28-30) exits 1 under set -euo pipefail if BLOB_LIMIT_EXCEEDED_FMT is absent from stateless_connect.rs, and the bare 'ls issues/*.md' (run.sh:51 and :58) exits non-zero under set -e on a zero-match glob if the sparse-checkout-narrowed checkout materialized no record. The row DELIBERATELY does not claim a runtime blob-limit stderr observation: the fast-import fetch path bypasses the per-RPC command=fetch check (expected-output.md), so example-05 provably exercises the pre-emptive sparse-checkout pattern + source-constant presence only, and the true runtime-error recovery is covered by quality/gates/agent-ux/dark-factory.sh.",
+      "claim_vs_assertion_audit": "If example-05 did NOT drive the real runtime blob-limit error and recover, the row's three rewritten asserts would each land in asserts_failed: assert 1 requires `bash examples/05-blob-limit-recovery/run.sh` to exit 0 in an ubuntu:24.04 container ONLY after a real REPOSIX_BLOB_LIMIT-triggered refusal is observed and recovered, so a run that never triggered the error (or failed to recover) exits non-zero under set -euo pipefail; assert 2 requires the captured helper stderr to contain the BLOB_LIMIT_EXCEEDED_FMT refusal naming `git sparse-checkout set` (run.sh greps its captured stderr for that token + [RPX-0503] and fails loud if absent), so a fast-import path that silently bypassed the per-RPC command=fetch check would falsify it; assert 3 requires the retried checkout AFTER `git sparse-checkout set` to materialize the narrowed issues/*.md set and exit 0, so a recovery that did not narrow-then-complete fails the bare 'ls issues/*.md' under set -e. The row is NOT-VERIFIED until a real post-release container run re-grades it -- no PASS is asserted on the old pre-emptive-only behavior.",
       "cadences": [
         "post-release"
       ],
@@ -335,6 +336,122 @@
         "pre-pr"
       ],
       "minted_at": "2026-07-16T23:59:00Z"
+    },
+    {
+      "id": "docs-repro/container-congruence-earned",
+      "dimension": "docs-repro",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T16:10:48Z",
+      "comment": "P124/SC1 (DRAIN-22, closes F-K4b) -- container-rehearse.sh must EARN each `kind: container` row's congruence by HARVESTING per-step `ASSERT-PASS:` lines from the container's own stdout, NEVER by copying row.expected.asserts verbatim into asserts_passed on a bare `exit 0`. Today a no-op `exit 0` script passes congruence identically to a real one (container-rehearse.sh:96-107/:187-193), so the per-expected-assert congruence gate (_audit_field.py::asserts_congruent) is a TAUTOLOGY. This meta-check proves the tautology is closed: the verbatim-copy path is grep-absent AND a no-op fixture FAILS congruence while a real one passes. Minted NOT-VERIFIED in the P124 Wave 0 catalog-first commit; verifier ships in Wave 1a.",
+      "sources": [
+        "quality/gates/docs-repro/container-rehearse.sh",
+        "quality/runners/_audit_field.py:asserts_congruent",
+        ".planning/phases/124-container-rehearse-harness-hardening/124-PLAN.md",
+        ".planning/REQUIREMENTS.md:DRAIN-22"
+      ],
+      "command": "bash quality/gates/docs-repro/container-congruence-earned.sh",
+      "expected": {
+        "asserts": [
+          "container-rehearse.sh contains no code path that copies row.expected.asserts into asserts_passed (grep-proven absence of the verbatim-copy line)",
+          "a fixture example that exits 0 but prints ZERO `ASSERT-PASS:` lines produces an artifact whose asserts_passed does NOT cover the row's expected.asserts, so asserts_congruent() returns False",
+          "a fixture example that prints one `ASSERT-PASS:` line per expected.assert produces a congruent artifact"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-congruence-earned.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/container-congruence-earned.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: container-rehearse.sh still copies row.expected.asserts into asserts_passed (delete the verbatim-copy path and HARVEST `^ASSERT-PASS: ` lines from container stdout instead -- see quality/gates/docs-repro/tutorial-replay.sh for the per-step-earned pattern), OR a container example stopped emitting one ASSERT-PASS line per expected.assert. The named verifier ships in P124 Wave 1a; NOT-VERIFIED until then (catalog-first).",
+      "claim_vs_assertion_audit": "If container-rehearse.sh regressed to copying row.expected.asserts verbatim into asserts_passed (the F-K4b tautology this row closes), the meta-check's three asserts would falsify the earned-congruence claim: assert 1 greps container-rehearse.sh and FAILS if any verbatim-copy line survives (a grep-proven presence of the copy path); assert 2 runs a fixture example that exits 0 while printing ZERO ASSERT-PASS lines through the harvest logic and FAILS unless asserts_congruent() returns False for it (a no-op exit-0 script must NOT satisfy congruence); assert 3 runs a fixture that prints one ASSERT-PASS line per expected.assert and FAILS unless the artifact is congruent. A tautological harness would make the no-op fixture pass congruence, tripping assert 2, so a false green cannot ride on it. The static grep-absence leg runs docker-free; the dynamic legs degrade to NOT-VERIFIED (never FAIL) where docker is absent, per OP-2.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "docs-repro/container-rehearse-sigkill-safe",
+      "dimension": "docs-repro",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T16:10:48Z",
+      "comment": "P124/SC2 (DRAIN-23) -- container-rehearse.sh backgrounds the ephemeral sim and tears it down via a bash `EXIT` trap that NEVER fires when the runner's subprocess.run(timeout=) SIGKILLs the harness (reproduced in the b773c04 CI failure: an orphaned pid left on host port 7878), and its readiness check (:135-141) curls whatever answers on 7878 so a stale orphan is silently reused. This row's selftest proves teardown is SIGKILL-proof (process-group kill + an internal `timeout` strictly shorter than the row's catalog timeout_s) and that a pre-run port-7878-free check is fail-loud. Minted NOT-VERIFIED in the P124 Wave 0 catalog-first commit; verifier ships in Wave 2.",
+      "sources": [
+        "quality/gates/docs-repro/container-rehearse.sh",
+        ".planning/phases/124-container-rehearse-harness-hardening/124-PLAN.md",
+        ".planning/REQUIREMENTS.md:DRAIN-23"
+      ],
+      "command": "bash quality/gates/docs-repro/container-rehearse-sigkill-safe.sh",
+      "expected": {
+        "asserts": [
+          "container-rehearse.sh wraps its `docker run` in an internal `timeout` strictly shorter than the row's catalog timeout_s so it reaps children before an outer SIGKILL",
+          "the ephemeral sim runs in its own process group and teardown kills the GROUP (setsid/set -m), not just the leader pid",
+          "a pre-`docker run` check FAILS LOUD (NOT-VERIFIED/error, not silent reuse) when port 7878 is already occupied by a stale sim",
+          "a selftest that SIGKILLs the harness mid-run leaves no listener on 127.0.0.1:7878 afterward"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse-sigkill-safe.sh",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/container-rehearse-sigkill-safe.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: container-rehearse.sh teardown leaked a sim on 127.0.0.1:7878 or silently reused a stale orphan -- start the sim in its own process group and `kill -TERM -- -$PGID` the group, wrap `docker run` in `timeout <timeout_s - margin>`, and add a pre-run port-7878-free fail-loud gate (`kill $(lsof -ti:7878)` recovery named in the error). The named verifier ships in P124 Wave 2; NOT-VERIFIED until then (catalog-first).",
+      "claim_vs_assertion_audit": "If container-rehearse.sh's teardown were not SIGKILL-proof (the b773c04 orphan-on-7878 bug), the four asserts would falsify the claim: assert 1 greps the harness and FAILS unless `docker run` is wrapped in an internal `timeout` strictly shorter than the row's catalog timeout_s (so the harness reaps its own children before the runner's outer subprocess.run(timeout=) SIGKILLs it); assert 2 FAILS unless the ephemeral sim is started in its own process group and teardown kills the GROUP (setsid/set -m), not just the leader pid; assert 3 FAILS unless a pre-`docker run` check refuses a stale sim already bound on 7878 fail-loud instead of silently reusing it; assert 4 runs a selftest that SIGKILLs the harness mid-run and FAILS unless no listener survives on 127.0.0.1:7878 afterward. A leaked orphan would leave a listener and trip assert 4. The selftest degrades to NOT-VERIFIED (never FAIL) where docker/lsof substrate is absent, per OP-2.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "docs-repro/container-rehearse-exit-from-artifact",
+      "dimension": "docs-repro",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T16:10:48Z",
+      "comment": "P124/SC4 (DRAIN-13) -- container-rehearse.sh currently `exit \"$EXIT_CODE\"` where $EXIT_CODE == the docker rc (:164/:199), so after Wave 1 a docker rc=0 can co-exist with an artifact exit_code=1 (a missing required ASSERT-PASS line -> congruence fail recorded in the artifact) and the harness would falsely exit 0. This row's selftest proves the harness writes the artifact FIRST, re-reads exit_code from it, and exits with THAT value, and that the pre-run readiness gate requires sim reachability (not merely a bound port -- the DRAIN-13 sim-readiness-race leg). Minted NOT-VERIFIED in the P124 Wave 0 catalog-first commit; verifier ships in Wave 4.",
+      "sources": [
+        "quality/gates/docs-repro/container-rehearse.sh",
+        ".planning/phases/124-container-rehearse-harness-hardening/124-PLAN.md",
+        ".planning/REQUIREMENTS.md:DRAIN-13"
+      ],
+      "command": "bash quality/gates/docs-repro/container-rehearse-exit-from-artifact.sh",
+      "expected": {
+        "asserts": [
+          "container-rehearse.sh writes the artifact FIRST, then re-reads exit_code from it and exits with THAT value",
+          "a forced artifact exit_code=1 while docker rc would be 0 makes the harness exit 1 (selftest-proven)",
+          "the pre-`docker run` readiness gate also requires sim reachability, not merely a bound port"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse-exit-from-artifact.sh",
+        "args": [],
+        "timeout_s": 90,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/container-rehearse-exit-from-artifact.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: container-rehearse.sh exits on the docker rc instead of the persisted artifact exit_code (a rc=0 can mask an artifact exit_code=1) -- write the artifact first, re-read its exit_code, and `exit` with that; also make the pre-run readiness gate require sim reachability, not just a bound port. The named verifier ships in P124 Wave 4; NOT-VERIFIED until then (catalog-first).",
+      "claim_vs_assertion_audit": "If the harness derived its exit from the docker rc instead of the persisted artifact exit_code (the DRAIN-13 gap where rc=0 masks an artifact exit_code=1), the three asserts would falsify the claim: assert 1 FAILS unless container-rehearse.sh writes the artifact FIRST and then re-reads exit_code from it and exits with THAT value; assert 2 forces an artifact exit_code=1 while docker rc would be 0 and FAILS unless the harness process exits 1 (selftest-proven); assert 3 FAILS unless the pre-`docker run` readiness gate requires real sim reachability (a successful curl against the sim the harness started), not merely a bound port -- the DRAIN-13 sim-readiness-race leg. A harness that exited on docker rc would exit 0 on the forced-fail fixture, tripping assert 2. Degrades to NOT-VERIFIED (never FAIL) where docker substrate is absent, per OP-2.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }
