@@ -2777,6 +2777,47 @@
       "cadences": [
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/rpx-codes-registry",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "sources": [
+        "quality/gates/agent-ux/rpx-codes-registry.sh",
+        "quality/gates/agent-ux/rpx_registry_check.py",
+        "crates/reposix-cli/tests/explain.rs",
+        "crates/reposix-core/src/codes.rs",
+        "crates/CLAUDE.md (Error-message convention section)"
+      ],
+      "command": "bash quality/gates/agent-ux/rpx-codes-registry.sh",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-cli --test explain passes (every REGISTRY code prints a non-empty cause+fix+recovery; --list enumerates every code; unknown-code teaches; rustc-parity-of-shape)",
+          "rpx_registry_check.py finds every emitted `.code`/`teach_coded`/`[RPX-xxxx]`/`*_FMT` code registered in codes.rs, entries non-empty, codes unique + format RPX-\\d{4}, and every user-facing teaching site in the CLI + helper scope carries a code",
+          "a real `reposix explain RPX-0201` prints a code header + Fix: + Recovery: on stdout",
+          "a real `reposix explain RPX-9999` (unknown) exits non-zero with a teaching message naming `reposix explain --list`"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/rpx-codes-registry.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/rpx-codes-registry.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "minted_at": "2026-07-18T01:51:13Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: one of three legs failed — (a) `cargo test -p reposix-cli --test explain` regressed (a per-code non-empty cause/fix/recovery assertion, the --list enumeration, the unknown-code-teaches case, or the rustc-parity-of-shape invariant broke — inspect reposix-cli/src/explain.rs + the REGISTRY entry named in the failure), (b) a real `reposix explain <code>` stopped printing the code header / Fix: / Recovery:, or `reposix explain RPX-9999` stopped teaching `reposix explain --list` / stopped failing non-zero, or (c) `rpx_registry_check.py` found an emitted code with no ExplainEntry, a malformed/duplicate/empty registry entry, or a NEW user-facing teaching site with no `.code(...)` — add the ExplainEntry to reposix-core/src/codes.rs and the code to the site, or mark a genuinely codeless site `// rpx-code-exempt: ok — <reason>`.",
+      "waiver": null,
+      "transport_claim": false,
+      "coverage_kind": "mechanical",
+      "claim_vs_assertion_audit": "MINTED CATALOG-FIRST (P121 W0, 2026-07-18): committed in the phase's FIRST W0.1 commit BEFORE the `reposix explain` subcommand (W2), the reposix-core::codes registry (W1), or any `.code(...)` site (W3/W4) exist — so the unbiased verifier reads a GREEN-contract row that predates every implementation SHA. Status is NOT-VERIFIED (honest): run over the pre-implementation tree the gate EXITS NON-ZERO by design — legs (a)/(b) need a `reposix` binary that does not yet build the `explain` target, and leg (c) `rpx_registry_check.py` already flags all ~30 not-yet-coded user-facing teaching sites (the M2 converse leg mechanising SC1). The row flips NOT-VERIFIED -> PASS only in W4 after a real green run of all three legs + the unbiased verifier subagent, NEVER on the executing agent's word. transport_claim is FALSE and coverage_kind is mechanical for an honest reason: every leg exercises the LOCAL `reposix` binary and the 100%-`&'static str` static REGISTRY (no code slot or explain output ever interpolates a remote byte — T-121-01), NOT a real external backend; there is no transport or performance claim here. The checker's own logic is regression-covered by `rpx_registry_check.py --self-test` (forward + all-emission-syntaxes/M3 + integrity + converse/M2 fixtures), which is GREEN independent of the real tree.",
+      "cadences": [
+        "on-demand"
+      ]
     }
   ]
 }
