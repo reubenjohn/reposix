@@ -1,9 +1,14 @@
-# C2-MILESTONE-HANDOVER.md — v0.15.0 "Floor" C2 continuation, P122/P123 boundary, 2026-07-18
+# C2-MILESTONE-HANDOVER.md — v0.15.0 "Floor" C2 continuation, P123/P124 boundary, 2026-07-18
 
 Written by the outgoing C2 milestone coordinator-of-coordinators at a **coordinated clean
-relief**: both the current C2 and L0 rotate here simultaneously. P122 is CLOSED GREEN on
-green main; P123 has NOT been dispatched yet. This is a phase boundary, not a mid-phase
-pause — the successor C2 opens by dispatching a fresh C1 for P123.
+relief**: both the current C2 and L0 rotate here simultaneously (seat #62→#63). P123 is
+CLOSED GREEN on green main; P124 has NOT been dispatched yet. This is a phase boundary,
+not a mid-phase pause — the successor C2 opens by running two EARLY quiet-point lanes
+(§6 steps 1–2) and then dispatching a fresh C1 for P124.
+
+L0 is relieving at this SAME boundary and writes its own `.planning/SESSION-HANDOVER.md`
+in parallel; at the time this file was committed that L0 handover was NOT yet committed —
+do NOT assume it exists or reference its SHA, just know L0 rotated alongside you.
 
 **Successor's required first reads, in order:** `.planning/ORCHESTRATION.md` (full — you
 are a C2, §3 governs your own relief and your C1-rotation-absorption duty), `.planning/
@@ -14,24 +19,35 @@ this file in full before dispatching anything.
 
 ## 1. Ground truth (git)
 
-- **HEAD == origin/main == `a9e1f4c4`.** `git status`: clean, nothing to commit, up to
-  date with origin/main. (Re-verify yourself — this is a snapshot at handover-write time.)
-- **Last 5 commits** (all P122 close, newest first):
-  - `a9e1f4c4` — docs(122-close): advance STATE 8→9 (P122 CLOSED GREEN); kept the two new
-    on-demand catalog rows on-demand cadence, matching P120 sibling precedent
-  - `00ab1579` — docs(122-verdict): phase-close verdict GREEN — SC1/SC2/SC3 verified
-    against reality (**verdict file: `quality/reports/verdicts/p122/VERDICT.md`**)
-  - `985e7dc2` — docs(122-review): commit gsd-code-reviewer REVIEW.md (SHIP-WITH-NITS)
-  - `cb7b511b` — fix(code): manual_let_else clippy lint in resolve_import_parent
-    (pre-push RED fix)
-  - `f5974ebe` — fix(122-close): correct RPX-0406 latch-1 corruption narrative
-- **CI, verified live via `gh run list --branch main`:** newest runs on `a9e1f4c4` are
-  ALL `success` — `CI` (run `29638768189`, 5m28s), `release-plz` (run `29638768191`),
-  `CodeQL` (run `29638768144`), `Docs` (run `29638923434`). Main is GREEN. The verdict
-  file additionally cites CI run `29637816791` @ `985e7dc2` (the pre-STATE-advance commit)
-  = success, and the P0 `code/ci-green-on-main` probe PASS (0.78s) at close.
-- **No deviations to know about** — this was a clean deterministic close (see §5 for the
-  liveness lesson that made it need to be deterministic rather than a passive relay).
+- **HEAD == origin/main == `47283d75`.** `git status`: clean, nothing to commit, up to
+  date with origin/main. **Nothing is currently unpushed** — P123's phase-close push
+  carried everything, including the prior `eb4f02c0` relief handover. (Re-verify yourself
+  — this is a snapshot at handover-write time.)
+- **This handover commit will be the ONLY unpushed commit after you commit it.** Per the
+  established pattern it rides to origin with the successor C2's first phase-close push —
+  do NOT push it standalone.
+- **Last 5 commits** (P123 close, newest first):
+  - `47283d75` — docs(planning): #61→#62 relief — P122 CLOSED, v0.15.0 at 9/15 (60%)…
+    *(NOTE: this is the STATE-advance / relief commit that closed P123 bookkeeping; the
+    STATE.md now reflects P123 CLOSED GREEN, completed_phases=10. The message header dates
+    from the relief that opened this rotation — read STATE.md for the authoritative
+    cursor, not the commit subject.)*
+  - `2f6d62ff` — gsd-verifier P123 verdict GREEN
+    (**verdict file: `quality/reports/verdicts/p123/VERDICT.md`**)
+  - `857e3c3a` — eager-fix: SC4/GTH-V15-03 graded-outcome (flags PASS + null-script,
+    cadence-agnostic)
+  - `95bc7c5f` — docs(v0.15.0): correct C2 handover liveness doctrine (L0 ruling)
+  - `eb4f02c0` — docs(planning): #61→#62 relief handover (prior rotation)
+  - *(Re-run `git log --oneline -12` yourself; the P123 execution/plan commits sit below
+    these. The load-bearing four for close are `857e3c3a` eager-fix, `2f6d62ff` verdict,
+    and the STATE advance `47283d75`.)*
+- **CI, verified live via `gh run list --branch main`:** newest runs on `47283d75` are
+  `success` — `ci.yml` (run `29648990069`) = success and `release-plz` (run
+  `29648990053`) = success. Main is GREEN. The P0 `code/ci-green-on-main` probe passes on
+  main's NEWEST `ci.yml` run.
+- **One clean close, one confirmed anti-pattern.** The P123 close itself was a clean
+  deterministic close (verifier→executor leaves, §5), but a `fork`-to-resume attempt
+  mid-close CONFABULATED a no-op — read §5 before you drive any close.
 
 ## 2. Wave/cycle state
 
@@ -45,47 +61,54 @@ this file in full before dispatching anything.
 | P119 Docs/planning simplification (P112 RAISE) | 4/4 | DONE (DP-4 pivot) | `p119/VERDICT.md` |
 | P120 CLI + helper error hardening | 1/1 | DONE | `p120/VERDICT.md` |
 | P121 RPX error-code namespace + `reposix explain` | 1/1 | DONE | `p121/VERDICT.md` (`80a37cea`) |
-| **P122 `reposix-remote` + `init` hardening** | **4/4** | **DONE — CLOSED GREEN** | `p122/VERDICT.md` (`00ab1579`); close `a9e1f4c4` |
-| **P123 Quality-runner & catalog integrity hardening** | **0/TBD** | **NOT STARTED — next** | — |
-| P124 Container-rehearse harness hardening | 0/TBD | NOT STARTED | — |
+| P122 `reposix-remote` + `init` hardening | 4/4 | DONE — CLOSED GREEN | `p122/VERDICT.md` (`00ab1579`); close `a9e1f4c4` |
+| **P123 Quality-runner & catalog integrity hardening** | **DONE — CLOSED GREEN** | **5/5 SC PASS** | `p123/VERDICT.md` (verdict `2f6d62ff`); close `47283d75` |
+| **P124 Container-rehearse harness hardening** | **0/TBD** | **NOT STARTED — next** | — |
 | P125 Real-backend cadence & mirror-drift resilience | 0/TBD | NOT STARTED | — |
 | P126 Docs-alignment tooling polish | 0/TBD | NOT STARTED | — |
 | P127 Surprises absorption (OP-8 Slot 1) | 0/TBD | NOT STARTED | — |
 | P128 Good-to-haves polish + milestone close (OP-9 Slot 2) | 0/TBD | NOT STARTED | — |
 
-**Cursor: 9/15 phases complete (P114–P122), 60%.** Next = P123.
+**Cursor: 10/15 phases complete (P114–P123), 67%.** Next = P124.
 
-**Named-incident post-mortem to read before dispatching any C1 that will push with CI
-in-flight:** the P122 close-liveness incident — full detail in §5 below. Read it; it is
-the single most important operational lesson of this rotation.
+**P123 close highlights (2026-07-18):** 5/5 SC PASS, independent gsd-verifier verdict
+GREEN at `quality/reports/verdicts/p123/VERDICT.md`, STATE advance at `47283d75`.
+- **SC4 / GTH-V15-03 graded-outcome SOUND** — the eager-fix `857e3c3a` makes the new
+  `structure/verifier-script-exists` gate flag BOTH `flags: PASS` and a null
+  `verifier.script` **cadence-agnostically**; an orthogonal all-catalog scan found **0**
+  remaining instances. P123's NEW SC4 gate caught **37 real pre-existing catalog
+  violations** on first run — a live proof it earns its keep.
+- **SC1** — `run.py` self-sources `./.env` (present-only, non-clobbering, via
+  `quality/runners/_env_load.py`), closing the false-green-preflight gap. Secret hygiene
+  held to **KEY-NAMES-only** (no values logged).
+- **SC2** downgrade-guard (`--persist` refuses to downgrade a committed-GREEN row without
+  `--allow-downgrade`) + **SC3** flock single-lane were exercised end-to-end.
+- **SC5** — `code/ci-green-on-main` now watches a required-workflow **LIST**, not
+  hardcoded `ci.yml` only.
 
-### Phase-list ground truth: P123–P128 scope is ALREADY PINNED, not a blank slate
+**Named-liveness post-mortem + confirmed anti-pattern to read before dispatching any C1
+that will push with CI in-flight OR before driving any phase close:** §5 below. Read it;
+those two operational lessons (L0-owns-CI-watch; `fork`-to-resume is an anti-pattern) are
+the most important of this rotation.
 
-**Correction to a premise you may have inherited:** the milestone-scoped
-`.planning/milestones/v0.15.0-phases/ROADMAP.md` IS a stale "PLANNING / Phase TBD" stub
-(it only contains the two old UX phase stubs + two "Phase (candidate)" entries — all four
-of which are ALREADY IMPLEMENTED as P120/P121/P122). **Do not plan phases from that file.**
-This staleness is itself tracked: **GTH-V15-27** (LOW, OPEN) — "Milestone-scoped
-`v0.15.0-phases/ROADMAP.md` is a stale stub superseded by the live `.planning/ROADMAP.md`."
+### Phase-list ground truth: P124–P128 scope is ALREADY PINNED, not a blank slate
 
 **The AUTHORITATIVE live roadmap is the top-level `.planning/ROADMAP.md`** (§ "v0.15.0
-Floor (PLANNING)"). It already has concrete Goal + Depends-on + Requirements +
-Success-Criteria for EVERY phase P123–P128 — what's NOT yet done is the `/gsd-plan-phase`
-wave/plan breakdown (`**Plans**: TBD` on all six). So the successor C2's job per phase is
-"run `/gsd-plan-phase 12X`" (which pins the concrete plan/wave shape against the
-already-scoped Goal+SC), not "invent scope from scratch." Verified by reading the live
-file directly (not trusting a paraphrase) — ground truth as of this handover:
+Floor"). It already has concrete Goal + Depends-on + Requirements + Success-Criteria for
+EVERY remaining phase P124–P128 — what's NOT yet done is the `/gsd-plan-phase` wave/plan
+breakdown. So the successor C2's job per phase is "run `/gsd-plan-phase 12X`" (which pins
+the concrete plan/wave shape against the already-scoped Goal+SC), not "invent scope from
+scratch."
 
-- **P123 — Quality-runner & catalog integrity hardening.** Reqs DRAIN-01/03/04/05/06/10.
-  SC1: `run.py` self-sources `.env` (closes the false-green-preflight gap). SC2:
-  `--persist` refuses to downgrade a committed-GREEN row without `--allow-downgrade`.
-  SC3: concurrent `--persist` runners can't race-corrupt the catalog JSON (flock/single
-  lane). SC4: a `structure/verifier-script-exists.sh` gate catches a missing/non-exec
-  `verifier.script`. SC5: `code/ci-green-on-main` watches a required-workflow LIST (not
-  hardcoded `ci.yml` only), and the t4 gate surfaces the real oid-drift stderr instead of
-  a misleading git-version fallback. **This directly absorbs the two open HIGH
-  SURPRISES-INTAKE rows below (env-loading gap, `--persist` downgrade) — they are this
-  phase's reason for being, not separate follow-up work.**
+**The ROADMAP § Progress table is now correct** — it shows P121 / P122 / P123 all
+"Complete." Do NOT carry any "progress-table fix owed" lane; that lane is DONE.
+
+The milestone-scoped `.planning/milestones/v0.15.0-phases/ROADMAP.md` is STILL a stale
+"PLANNING / Phase TBD" stub (superseded by the live top-level file) — do NOT plan phases
+from it. Tracked as **GTH-V15-27** (LOW, OPEN), good <1h eager-fix candidate for whoever
+next touches `v0.15.0-phases/`. Ground truth of the still-pinned remaining scope (verified
+against the live file at the P122/P123 boundary; unchanged this rotation):
+
 - **P124 — Container-rehearse harness hardening.** Reqs DRAIN-13/14/22/23/24. Earned
   per-step `ASSERT-PASS:` congruence (not verbatim-emitted); SIGKILL-proof sim teardown;
   `target/debug/reposix` provenance on the CI runner; exit code derived strictly from
@@ -106,9 +129,6 @@ file directly (not trusting a paraphrase) — ground truth as of this handover:
   archive (verifier grades RED if missing); `CHANGELOG.md` `[v0.15.0]` finalized;
   milestone-close verdict dispatched GREEN including the non-skippable 9th probe;
   `tag-v0.15.0.sh` authored (owner gate — owner runs it, you do not).
-
-This confirms the task premise that **P127 = OP-8 Slot 1** and **P128 = OP-9 Slot 2** —
-verified directly against the live ROADMAP, not assumed.
 
 ## 3. Binding constraints (unchanged — embed in EVERY C1 charter verbatim)
 
@@ -134,182 +154,185 @@ verified directly against the live ROADMAP, not assumed.
 - **Tainted-by-default / `REPOSIX_ALLOWED_ORIGINS` egress allowlist.** Sim is the default
   backend for every demo/unit-test/autonomous loop.
 - **Model tiering:** every C1 gets an EXPLICIT `model` override — opus for
-  security/genuinely-complex (P123's catalog-integrity + concurrency-safety work is a
-  strong opus candidate; P124's SIGKILL-proofing likewise), sonnet default, haiku
-  mechanical. Never `fable` at a leaf.
+  security/genuinely-complex (P124's SIGKILL-proofing / harness-hardening is a strong
+  opus candidate), sonnet default, haiku mechanical. Never `fable` at a leaf.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **P122 verdict:** GREEN, `quality/reports/verdicts/p122/VERDICT.md`, verdict commit
-  `00ab1579`. 3/3 SC PASS. `persist_downgrade: NONE` (569 catalog rows byte-identical
-  before/after `--persist`) — confirmed no silent corruption on this close (contrast with
-  the still-open `--persist`-downgrade SURPRISES row below, which is about a DIFFERENT,
-  earlier, real incident).
-- **Open-waiver expiry clocks (all still ticking, none newly created this rotation):**
+- **P123 verdict:** GREEN, `quality/reports/verdicts/p123/VERDICT.md`, verdict commit
+  `2f6d62ff`. 5/5 SC PASS. **No open REOPEN state.** P123 is CLOSED GREEN with no
+  outstanding gate failures.
+- **Non-gating known-FAIL (NOT a blocker):** P2 `code/shell-coverage` counter-drift —
+  `transcript.sh` self-reports 34 covered lines vs kcov's 27 (25.9% drift > 15%
+  threshold), but the aggregate coverage floor PASSED and the cadence exits 0. Filed as
+  **L1166** (LOW-MED), routed for P124 investigation. Do NOT treat it as a close blocker.
+- **Open-waiver expiry clocks:**
   - `structure/file-size-limits` OVER-BUDGET-tier `--warn-only` waiver on
-    `GOOD-TO-HAVES.md`/`SURPRISES-INTAKE.md`/etc — **expires 2026-08-08T00:00:00Z**
-    (`quality/catalogs/freshness-invariants.json` L666). See §5 OWED lane below — the
-    GOOD-TO-HAVES.md split is the concrete action item against this clock.
+    `GOOD-TO-HAVES.md` / `SURPRISES-INTAKE.md` / etc — **expires 2026-08-08T00:00:00Z**
+    (`quality/catalogs/freshness-invariants.json`). **Both files GREW this rotation:
+    `GOOD-TO-HAVES.md` is now 143,905 B and `SURPRISES-INTAKE.md` 119,234 B** — the split
+    is increasingly urgent. See §5 OWED lane + §6 step 2; this is the single most
+    time-boxed item you own.
   - Hero-number doc-alignment waivers (8 rows, BENCH-01-fed) — **expire 2026-08-15**
-    (already re-measured by P115; the waivers themselves still need to be lifted using
-    P115's figures — check `115-UNWAIVE-PATH.md` if this hasn't happened yet; not
-    verified fresh by this handover, flag as a re-ground item for the successor).
-  - GTH-V15-78 `rebase-recovery-reconciles.sh` ~42k-char over-budget tier — same
-    2026-08-08 waiver umbrella.
-- **No open REOPEN state.** P122 is CLOSED GREEN with no outstanding gate failures.
+    (already re-measured by P115; lift them using P115's figures — check
+    `115-UNWAIVE-PATH.md`; **not verified fresh** by this handover, flag as a re-ground
+    item for the successor).
 
 ## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
 
-### CRITICAL LIVENESS LESSON — read before dispatching P123's C1
+### CRITICAL OPERATIONAL LESSON #1 — L0 owns the CI watch (liveness)
 
-The P122 C1 (opus) ran the full arc — plan → execute → code-review (SHIP-WITH-NITS,
-nits fixed in `f5974ebe`) → **pushed the implementation** (`985e7dc2`) — then went
-**DORMANT** after backgrounding a CI watch that never re-woke it. The C2 (this session)
-had to take **deterministic control of the close**: dispatch gsd-verifier directly to
-grade the verdict, then gsd-executor directly to advance STATE + push, rather than
-waiting on the C1's self-resume.
+A subagent's OWN background `gh run watch` does NOT reliably re-invoke that subagent:
+when the watch concludes the completion bubbles up to L0 as "no live background children"
+and the subagent is NOT self-re-woken. **Only the TOP-LEVEL (L0) gets reliable
+background-task re-invocation.** Reliable pattern: **L0 owns CI-watching and pokes the
+coordinator (via SendMessage) on green.** When a C1 pushes and CI is in-flight, the
+coordinator STOPS-and-returns-to-C2 at the push→CI-in-flight boundary, REPORTS the run id
+up to L0 (which holds the durable watch), and does NOT end its turn assuming a self-owned
+watcher — nor a grandchild's report bubbling up — will re-wake it. Direct child-AGENT
+completion notifications DO re-invoke the parent (that path works); bare background-bash
+watchers do not.
 
-**Liveness doctrine (L0 ruling, 2026-07-17 — load-bearing).** A subagent's OWN
-background `gh run watch` does NOT reliably re-invoke that subagent: when the watch
-concludes the completion bubbles up to L0 as "no live background children" and the
-subagent is NOT self-re-woken. **Only the TOP-LEVEL (L0) gets reliable background-task
-re-invocation.** Therefore the reliable pattern is: **L0 owns CI-watching and pokes the
-coordinator (via SendMessage) on green.** A C2/C1 must NOT depend on a self-owned `gh
-run watch` to wake itself. When a C1 pushes and CI is in-flight, the coordinator
-REPORTS the run id up to L0 (which holds the durable watch) and does NOT end its turn
-assuming a self-watcher — nor a grandchild's report bubbling up — will re-wake it.
-Direct child-AGENT completion notifications DO re-invoke the parent (that path works);
-bare background-bash watchers do not. Never relieve or end a turn on a passive
-upward-relay/self-watch assumption. (This is the operational lesson behind the P122
-close-liveness incident: the C1 went dormant after backgrounding a CI watch, and the C2
-had to be poked by L0 to take deterministic control of the close.)
+**This doctrine is ALREADY FULLY LANDED** at `b2eca628` — it lives in
+`.planning/ORCHESTRATION.md` §3 and §11, the `coordinator-dispatch` skill §6a, AND root
+`CLAUDE.md`. **The successor VERIFIES it is present, no rewrite owed.** (See "Doctrine
+updates owed" below — this is item (a), already-landed.)
 
-### OWED / TRACKED lanes (carry forward — not yet actioned)
+### CRITICAL OPERATIONAL LESSON #2 — `fork`-to-resume is a CONFIRMED ANTI-PATTERN
 
-- **ROADMAP progress-table fix owed.** `.planning/ROADMAP.md`'s § Progress table (near
-  the bottom, "## Progress") shows **Phase 121 as "0/1 Not started"** and **Phase 122 as
-  stale** despite both being CLOSED GREEN (verified — I read the live table above at
-  §2's ground-truth pass: it still reads 121 = "0/1 Not started" and does not yet
-  reflect 122's 4/4-complete state either, even though the phase-index checkboxes above
-  the table DO show both `[x]`). **Fold `roadmap.update-plan-progress 121` +
-  `roadmap.update-plan-progress 122` into P123's C1's first grounding step** — its
-  planner touches the roadmap anyway when it runs `/gsd-plan-phase 123`.
-- **GOOD-TO-HAVES.md cleanup lane — timing call is YOURS to make.** The file is
-  **139,235 bytes** (~7× the 20k `.md` ceiling), no index, waived under GTH-V15-02
-  corpus-growth **until 2026-08-08**. It MUST be archived/split (resolved-entry archive
-  + index) BEFORE that waiver lapses, or pushes start blocking repo-wide. Every C1 writes
-  to this file at its own phase close (fix-twice / noticing-disposition), so the split
-  MUST run at a **no-C1-intake-writing quiet point** — a between-phase window YOU
-  control, e.g. right after a phase closes and before the next C1 is dispatched.
-  **Recommendation: run it at an EARLY between-phase boundary (e.g. after P123 or P124
-  closes) rather than gambling it lands naturally by P128** — the milestone may not
-  close before 2026-08-08, and P128 (OP-9 Slot 2, milestone close) is the wrong place to
-  discover this waiver has already lapsed and is blocking the close push itself.
-- **P117 anomaly (live, not a P122/P123 blocker).** P117's W5 coordinator close is
-  incomplete: the launch-animation E1 mp4 asset publish (`gh release upload` to the
-  `docs-assets` release) + the post-upload `animation-renders` playwright verify are
-  **owner-PENDING** (manager-deferred 2026-07-17 under standing "outward publishing =
-  owner-only" doctrine — confirmed via `.planning/CONSULT-DECISIONS.md` 2026-07-17
-  entry: "OWNER DECISION STILL PENDING"). Tracked as **GTH-V15-37**. This is E1-class —
-  see §"ESCALATE-to-L0" below. Do not self-authorize; do not let it silently rot either
-  — carry it forward in every handover until an owner ruling lands.
+Mid-P123-close, this C2 tried to resume a warm C1 by dispatching with
+`subagent_type: fork`. **The fork inherited the C2's coordinator context, behaved as a
+router, and returned a CONFABULATED no-op** — 0 tool uses, claimed "close executing"
+while nothing actually happened (STATE unchanged, no verdict dir written). It was caught
+only by verifying against reality (checking STATE.md + the verdict directory), not by
+trusting the fork's self-report.
 
-### Noticed-not-yet-filed (from this handover-writer's own grounding pass)
+**Lesson (three parts):**
+1. To resume a warm agent, use **SendMessage to its agent id** — never `fork`.
+2. To drive a phase close, dispatch **verifier → executor LEAVES directly** (the
+   P122-blessed deterministic-control pattern) — do NOT route the close through a
+   resumed/forked coordinator.
+3. NEVER `fork`-to-resume — a fork is a fresh sibling that inherits your context and
+   confabulates continuity it never had.
 
-- **Correction, not a new defect:** the SURPRISES-INTAKE HIGH row filed 2026-07-14
-  20:40 ("Confluence `list_records`-vs-`get_record` oid drift breaks partial-clone
-  checkout... page 7766017") still reads `STATUS: OPEN` in the committed file, but **P114
-  (completed 2026-07-15) already fixed and LIVE-VERIFIED this exact defect** —
-  `114-VERIFICATION.md` records a real-backend run against live Confluence TokenWorld
-  (including page 7766017) on 2026-07-15T17:56Z: checkout exit 0, all 3 pages
-  materialized, zero `OidDrift` abort, the P0 gate `agent-ux/t4-conflict-rebase-ancestry-
-  real-backend` PASS. **This SURPRISES row is stale bookkeeping, not a live product
-  defect** — it was simply never marked RESOLVED with a cross-ref to the P114 fix. There
-  IS a genuine narrower residual: the fix closes drift for **ADF-native pages only** (the
-  LIST path now requests `body-format=atlas_doc_format` with no storage fallback, while
-  `get_record` DOES fall back to `body-format=storage`) — a pre-ADF (storage-only) page
-  would still trip `OidDrift`; P114's verifier flagged this as OQ1 residual risk and
-  confirmed it did NOT manifest on the current TokenWorld substrate (all 3 known pages
-  are ADF-native). **Action for the successor:** mark this SURPRISES row RESOLVED
-  (cross-ref `114-VERIFICATION.md`) during the P123 or P127 intake sweep, and separately
-  file (if not already covered) a LOW/MEDIUM GOOD-TO-HAVE for the pre-ADF list-path
-  storage-fallback gap as a documented residual, not treat it as an open "fix-first"
-  blocker. **Do not re-litigate or re-fix the already-fixed render-parity defect** — the
-  MEDIUM sibling row (misleading git-version error message on oid-drift abort) is the one
-  genuinely-open piece, and it is ALREADY P123 SC5's scope (t4 gate real-stderr surfacing)
-  — no new phase needed for either.
-- The milestone-scoped ROADMAP staleness (GTH-V15-27, filed, LOW, OPEN) is a good <1h
-  eager-fix candidate for whichever C1 next touches `.planning/milestones/v0.15.0-phases/`
-  — either populate it with a pointer to the live top-level ROADMAP.md, or delete the
-  stub. Not urgent; flagging so it doesn't rot further.
+This anti-pattern is **genuinely absent from all doctrine** and IS the real owed early
+`/gsd-quick` — see "Doctrine updates owed" item (b).
 
-### Doctrine updates owed
+### The P123 close itself (the pattern that WORKED)
 
-**Doctrine-update owed (GSD-gated):** the corrected liveness doctrine above must be
-absorbed into `.planning/ORCHESTRATION.md` (§3/§11 liveness) AND the
-`coordinator-dispatch` skill. This is a doctrine edit — it MUST go through a GSD
-command (`/gsd-quick`), never an out-of-band edit. Successor C2: run this as an early
-`/gsd-quick` (or fold into an early between-phase quiet point) so the next generation
-of coordinators reads the tightened rule (fix-twice meta-rule).
+Driven by **DETERMINISTIC CONTROL** (the P122-blessed pattern): C2 dispatched an
+independent **gsd-verifier** directly (→ verdict `2f6d62ff`), then a **gsd-executor**
+directly (→ STATE advance `47283d75`). No passive relay, no self-watch dependency, no
+fork. This is the pattern the successor should reuse for every close.
+
+### OWED / TRACKED lanes (carry forward)
+
+- **GOOD-TO-HAVES / SURPRISES split-archive lane — run it EARLY, at THIS quiet point.**
+  `GOOD-TO-HAVES.md` = **143,905 B** (~7× the 20k `.md` ceiling), `SURPRISES-INTAKE.md` =
+  **119,234 B**; both waived under the corpus-growth umbrella **until 2026-08-08**, both
+  still growing. They MUST be archived/split (resolved-entry archive + index) BEFORE that
+  waiver lapses or pushes start blocking repo-wide. Every C1 writes to these files at its
+  own phase close (fix-twice / noticing-disposition), so the split MUST run at a
+  **no-C1-intake-writing quiet point** — a between-phase window YOU control. **This
+  P123→P124 boundary IS that quiet point** (no C1 currently writing intake). **Do NOT
+  gamble it lands naturally by P128** — the milestone may not close before 2026-08-08, and
+  P128 (OP-9 Slot 2, milestone close) is the wrong place to discover the waiver has lapsed
+  and is blocking the close push itself. Run it as §6 step 2.
+- **P117 anomaly (live, not a P124 blocker).** P117's W5 coordinator close is incomplete:
+  the launch-animation E1 mp4 asset publish (`gh release upload` to the `docs-assets`
+  release) + the post-upload `animation-renders` playwright verify are **owner-PENDING**
+  (manager-deferred 2026-07-17 under standing "outward publishing = owner-only" doctrine —
+  `.planning/CONSULT-DECISIONS.md` 2026-07-17: "OWNER DECISION STILL PENDING"). Tracked as
+  **GTH-V15-37**. E1-class — see §"ESCALATE-to-L0" below. Do not self-authorize; do not
+  let it rot — carry forward in every handover until an owner ruling lands.
+- **Milestone-scoped ROADMAP staleness (GTH-V15-27, LOW, OPEN)** — populate with a pointer
+  to the live top-level ROADMAP.md or delete the stub; <1h eager-fix for whichever C1 next
+  touches `.planning/milestones/v0.15.0-phases/`.
+- **Pre-ADF list-path storage-fallback residual (GOOD-TO-HAVE).** P114 closed the
+  Confluence oid-drift defect for **ADF-native pages only**; a pre-ADF (storage-only) page
+  would still trip `OidDrift` (P114 verifier OQ1 residual; did NOT manifest on the current
+  all-ADF TokenWorld substrate). Documented residual, not an open fix-first blocker.
+
+### Intake filed at P123 close (track, don't re-file)
+
+- **L1129** (MEDIUM) — pre-push hook now runs ~109–121s vs the documented ~55s (roughly
+  2×). Routed for **P124 investigation**.
+- **L1166** (LOW-MED) — `code/shell-coverage` counter-drift (§4). Folded note: the
+  script-exit-0-vs-catalog-FAIL two-layer honesty mechanism wants a one-line
+  `quality/CLAUDE.md` clarification. **P124.**
+- **L1198** (LOW/INFO) — SC1 `.env` self-sourcing puts real creds into every `run.py`
+  process; routed to **milestone-close security sign-off (P128)**.
+- Earlier P123 dispositions (already RESOLVED, do NOT re-open): the 2 HIGH SURPRISES rows
+  (`.env` self-sourcing false-green + `--persist` silent downgrade) → RESOLVED into
+  SC1/SC2; the stale Confluence oid-drift SURPRISES row → RESOLVED (cross-ref
+  `114-VERIFICATION.md`); a gh-auth `env -u` 2-gate audit → filed as a **P127 candidate**
+  (SURPRISES ~L1059).
+
+### Doctrine updates owed (GSD-gated) — CORRECTED SCOPE
+
+This is a **SMALL, single-item** early `/gsd-quick`, not two items:
+- **(a) L0-owns-CI-watch liveness** — **ALREADY FULLY LANDED** at `b2eca628`
+  (ORCHESTRATION §3 + §11, coordinator-dispatch skill §6a, root CLAUDE.md). Successor
+  **VERIFIES only**, no rewrite owed.
+- **(b) `fork`-to-resume anti-pattern** (Lesson #2 above) — **genuinely absent
+  everywhere**. This IS the real owed doctrine add: add it to `.planning/ORCHESTRATION.md`
+  §11 + the `coordinator-dispatch` skill. Must go through a GSD command (`/gsd-quick`),
+  never an out-of-band edit (fix-twice meta-rule).
 
 ## 6. Precise next steps (successor runbook)
 
 1. **Re-verify ground truth yourself** before dispatching anything: `git log --oneline
-   -10`, `git status`, `gh run list --branch main --limit 5` (confirm still green — do
-   not trust this handover's snapshot past your own check).
-2. **Read `.planning/ROADMAP.md` § "Phase 123" directly** (not this handover's summary)
-   for the authoritative Goal/Depends-on/Requirements/Success-Criteria before charting
-   the C1.
-3. **Dispatch a C1 `phase-coordinator` for P123** ("Quality-runner & catalog integrity
-   hardening"). Recommend **opus** tier — this phase touches the shared quality-runner
-   write path (`--persist` semantics, catalog-JSON concurrency) that many other cadences
-   depend on; a mistake here is high-blast-radius. Charter it with:
-   - Full GSD arc: `/gsd-plan-phase 123` (gsd-planner + gsd-plan-checker) → execute
-     (gsd-executor waves, catalog-first per SC4's own new gate) → gsd-code-reviewer →
-     phase-close push (fetch-rebase → `git push origin main` → `run.py --cadence
-     post-push --persist`, confirm `code/ci-green-on-main` P0 shows main's NEWEST run =
-     success) → gsd-verifier → verdict at `quality/reports/verdicts/p123/VERDICT.md` →
-     on GREEN, STATE-advance (completed_phases 9→10, percent, cursor next=P124) → commit
-     + push + re-confirm CI green.
-   - Fold in the ROADMAP progress-table fix (§5, phases 121/122 stale rows) as this C1's
-     first grounding/planning-touch step.
-   - Embed verbatim: §3 binding constraints, the OD-3 ownership charter (below), and the
-     recurring process lessons (below).
-   - Explicitly flag P123 SC1/SC2 as directly absorbing the two open HIGH
-     SURPRISES-INTAKE rows (`.env` self-sourcing false-green gap; `--persist` silent
-     downgrade) — the C1 should mark those two rows RESOLVED with a commit cross-ref at
-     its own phase close, not leave them dangling for P127.
-   - Instruct the C1 to mark the stale oid-drift SURPRISES row RESOLVED (cross-ref
-     `114-VERIFICATION.md`) as part of its intake-hygiene pass, since P123 is a natural
-     touch point for that catalog/runner-adjacent bookkeeping (or defer explicitly to
-     P127 if it doesn't fit — either is fine, just don't drop it).
-4. **When the C1 pushes with CI in-flight, ensure a LIVE watcher** per §5's liveness
-   lesson — do not end your own turn on a passive relay assumption.
-5. **Absorb the C1's own relief rotation(s) yourself** (do not bubble to L0) if P123 is
-   large enough to need one — dispatch its successor C1 pointed at its handover.
-6. **After P123 CLOSED GREEN on green main**, decide the GOOD-TO-HAVES.md split timing
-   (§5 OWED lane) — strongly consider running it now, at this early quiet point, rather
-   than deferring.
-7. **Continue P124 → P125 → P126 → P127 (OP-8) → P128 (OP-9 + milestone close)** in
-   order, each via the same one-C1-per-phase pattern, each gated CLOSED GREEN on green
-   main before the next dispatch.
-8. **At P128 (or whenever milestone-close readiness is reached):** do NOT self-authorize
-   any tag/release. Report milestone-close-ready to L0 and WAIT. Confirm BEFORE archive:
-   the OP-9 `.planning/RETROSPECTIVE.md` v0.15.0 section is distilled (verifier grades
-   RED if missing), and the non-skippable 9th probe
+   -10`, `git status`, `gh run list --branch main --limit 5` (confirm still green — do not
+   trust this handover's snapshot past your own check). Read `.planning/STATE.md` for the
+   authoritative cursor (P123 CLOSED, completed_phases=10, next=P124).
+2. **EARLY, at THIS P123→P124 quiet point (no C1 writing intake), run two lanes BEFORE
+   opening P124** so they don't collide with a C1's tree writes:
+   - **The GOOD-TO-HAVES / SURPRISES split-archive lane** (143,905 B / 119,234 B, waiver
+     lapses **2026-08-08** — do NOT gamble it lands by P128): resolved-entry archive +
+     index. This is time-boxed; treat it as the higher-priority of the two.
+   - **The small early doctrine `/gsd-quick`** — single item (b) the `fork`-to-resume
+     anti-pattern into ORCHESTRATION §11 + coordinator-dispatch skill; **verify** item (a)
+     (L0-owns-CI-watch) is already present (it is, at `b2eca628`) and do NOT rewrite it.
+   Sequence these before/alongside opening P124.
+3. **Dispatch P124's C1** (`phase-coordinator`, **explicit `model: opus`** for
+   harness-hardening / SIGKILL-proofing complexity). Full GSD arc. **CHARGE it to
+   investigate the health-decay items `L1129` (pre-push ~2× slowdown) + `L1166`
+   (shell-coverage counter-drift + the honesty-mechanism one-line clarification) as owned
+   first-grounding actions.** Embed verbatim: §3 binding constraints, the OD-3 ownership
+   charter (below), and the liveness protocol — STOP-and-return-to-C2 at the push→CI-in-
+   flight boundary; **L0 owns the durable watch**; do not self-watch to re-wake. Full arc:
+   `/gsd-plan-phase 124` (gsd-planner + gsd-plan-checker) → execute (gsd-executor waves,
+   catalog-first for any new gate) → gsd-code-reviewer → phase-close push (fetch-rebase →
+   `git push origin main` → `run.py --cadence post-push --persist`, confirm
+   `code/ci-green-on-main` P0 shows main's NEWEST ci.yml run = success) → **gsd-verifier
+   directly → verdict at `quality/reports/verdicts/p124/VERDICT.md`** → on GREEN,
+   STATE-advance (completed_phases 10→11, bump percent, cursor next=P125) → commit + push +
+   re-confirm CI green. Drive the close with **verifier→executor LEAVES directly** (§5) —
+   NEVER a `fork`-to-resume.
+4. **Continue P125 → P126 → P127 (OP-8) → P128 (OP-9 + milestone close)** in order, one C1
+   per phase, each gated CLOSED GREEN on green main before the next dispatch. Absorb C1
+   rotations below yourself (re-dispatch a fresh successor C1 pointed at its handover — do
+   NOT bubble C1 rotations to L0). Report to L0 ONLY at stop points: your own relief, an
+   owner-decision escalation, milestone-close-ready, a 2–3-phase checkpoint, and each
+   push→CI-in-flight handoff (L0 holds the watch).
+5. **Relieve yourself (the C2) past ~100k tokens of your OWN context** (hard stop ~150k,
+   absolute not %) at a PHASE boundary — dispatch `relief-handover-writer` (update this
+   file in place), report the SHA to L0, stop.
+6. **At P128 / milestone-close:** do NOT self-authorize any tag/release. **Report
+   milestone-close-ready to L0 and WAIT.** Confirm BEFORE archive: the OP-9
+   `.planning/RETROSPECTIVE.md` v0.15.0 section is distilled (verifier grades RED if
+   missing), and the non-skippable 9th probe
    `python3 quality/runners/run.py --cadence pre-release-real-backend` exits 0 with
    catalog row `agent-ux/milestone-close-vision-litmus-real-backend` PASS (P0, never
    waived).
-9. **Relieve yourself (the C2) past ~100k tokens of your OWN context** (hard stop
-   ~150k, absolute not %) at a phase boundary — dispatch `relief-handover-writer`,
-   report the SHA to L0, stop. Report to L0 ONLY for: your own relief, an owner-decision
-   escalation, milestone-close-ready, or a 2–3-phase checkpoint. Otherwise route and
-   integrate; absorb C1 rotations below yourself.
 
 ---
 
 ## ESCALATE-to-L0 list (report and WAIT — never self-authorize)
 
+- **Global `gsd-sdk state.advance-plan` STATE.md-corruption bug** — held escalated
+  upstream with L0; mitigation = **hand-advance STATE.md, NEVER that tool**. Do not use
+  `state.advance-plan` at any close.
 - **E1 launch-animation mp4/playwright publish** (GTH-V15-37, owner-PENDING per
   `.planning/CONSULT-DECISIONS.md` 2026-07-17) — never self-authorize, never tag
   `[OWNER]` without genuine owner input.
@@ -318,8 +341,10 @@ of coordinators reads the tightened rule (fix-twice meta-rule).
   milestone-close-ready to L0 and WAIT for owner routing.
 - **Milestone ARCHIVE** — before `/gsd-complete-milestone` archives v0.15.0, the OP-9
   distillation into `.planning/RETROSPECTIVE.md` MUST land, AND the non-skippable 9th
-  `pre-release-real-backend` probe must pass. Report milestone-close-ready to L0 BEFORE
+  `pre-release-real-backend` probe must exit 0. Report milestone-close-ready to L0 BEFORE
   final archive.
+- **`.env` credential sign-off** (L1198) — the real-creds-in-every-run.py-process posture
+  gets an explicit milestone-close security sign-off at P128; do not wave it through.
 - **Any user-visible breaking change**; any real-backend MUTATION beyond the sanctioned
   targets (Confluence TokenWorld / GitHub `reubenjohn/reposix` issues / JIRA `TEST`); a
   roadmap item that no longer seems right given new info.
@@ -377,6 +402,9 @@ BEFORE the implementation the verifier reads). No `--no-verify`.
   (gsd-verifier → `quality/reports/verdicts/p12X/VERDICT.md`) → on GREEN advance STATE
   (completed_phases+1, bump percent, cursor next=P12Y) → commit+push+re-confirm CI. Only
   advance to the next phase after the current is CLOSED GREEN on green main.
+- Drive every close with **verifier→executor LEAVES dispatched directly**; NEVER
+  `fork`-to-resume a warm coordinator (confabulates a no-op — §5 Lesson #2). Resume a warm
+  agent via SendMessage-to-its-id.
 - Absorb C1 rotations below the top: when a C1 relieves (writes a handover under
   `.planning/phases/12X-*/`), the C2 re-dispatches a FRESH successor C1 pointed at that
   handover — do NOT bubble C1 rotations to L0.
@@ -384,4 +412,5 @@ BEFORE the implementation the verifier reads). No `--no-verify`.
   at a PHASE boundary (never mid-phase): dispatch relief-handover-writer → report SHA to
   L0 → stop.
 - Report to L0 only: (a) own relief, (b) owner-decision escalation, (c)
-  milestone-close-ready, (d) a 2–3-phase checkpoint. Otherwise route and integrate.
+  milestone-close-ready, (d) a 2–3-phase checkpoint, (e) each push→CI-in-flight handoff
+  (L0 holds the durable watch). Otherwise route and integrate.
