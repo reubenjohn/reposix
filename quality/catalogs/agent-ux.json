@@ -2818,6 +2818,57 @@
       "cadences": [
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/import-parent-resolve-fails-loud",
+      "dimension": "agent-ux",
+      "cadences": ["on-demand"],
+      "kind": "mechanical",
+      "sources": ["crates/reposix-remote/src/main.rs:450-469", "crates/reposix-remote/src/main.rs:422"],
+      "expected": { "asserts": [
+        "cargo test -p reposix-remote (bare per-crate, bin-target unit tests) exits 0 for the resolve_import_parent regression tests",
+        "resolve_import_parent returns Ok(None) ONLY for spawn-success + exit-1 + empty-stdout (genuine ref-absent first-fetch parentless seed)",
+        "resolve_import_parent returns Err (loud) on a NON-absence git failure (spawn failure or a non-1 non-zero exit), proven by an injected fake-git shim that exits 128",
+        "resolve_import_parent returns Err (loud, RPX-0508) on an anomalous exit-0-with-empty-stdout (git rev-parse --verify --quiet always prints an oid on success, so empty stdout is a broken-git signal, not a benign absence) rather than silently degrading to the parentless overlay",
+        "the loud non-absence failure emits the RPX-0508 coded teaching instead of silently degrading to the parentless overlay"
+      ] },
+      "verifier": { "script": "quality/gates/agent-ux/import-parent-resolve-fails-loud.sh", "args": [], "timeout_s": 180 },
+      "artifact": "quality/reports/verifications/agent-ux/import-parent-resolve-fails-loud.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "minted_at": "2026-07-17T00:00:00Z",
+      "coverage_kind": "mechanical",
+      "transport_claim": false,
+      "blast_radius": "P1",
+      "owner_hint": "crates/reposix-remote/src/main.rs::resolve_import_parent — distinguish ref-absent from non-absence git failure",
+      "claim_vs_assertion_audit": "If resolve_import_parent still degraded to Ok(None) on a non-absence git failure, the injected exit-128 fake-git shim test would observe Ok(None) / a parentless overlay instead of the asserted Err + RPX-0508 teaching, so the assertion would fail — that falsifies the description claim that non-absence failures now error loudly rather than silently.",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/init-refuses-nested-in-shared-tree",
+      "dimension": "agent-ux",
+      "cadences": ["on-demand"],
+      "kind": "mechanical",
+      "sources": ["crates/reposix-cli/src/init.rs:135-168", "crates/reposix-cli/src/init.rs:266-350", ".claude/hooks/leaf-isolation-guard.sh:170-184"],
+      "expected": { "asserts": [
+        "cargo test -p reposix-cli (the P122 init-refusal regression tests) exits 0",
+        "reposix init into a fresh subdir nested inside a NON-/tmp git working tree is refused with the RPX-0406 coded teaching that names reposix attach and prints a copy-paste recovery",
+        "reposix init into a fresh subdir under a /tmp throwaway clone SUCCEEDS (the sanctioned dark-factory flow is preserved)",
+        "a symlink/.. path that canonicalizes back into a non-/tmp git working tree is still refused (realpath canonicalization holds, mirroring leaf-isolation-guard.sh is_safe)",
+        "the worktree-shared-config self-check fires: when git init binds the target to a SHARED git-dir (git -C <path> rev-parse --absolute-git-dir != <path>/.git, e.g. GIT_DIR injected by a subprocess/worktree bypass), reposix init aborts with RPX-0406 BEFORE any git config write reaches the shared config (test case (e))",
+        "reposix attach against an existing checkout still succeeds (attach adoption is not regressed)"
+      ] },
+      "verifier": { "script": "quality/gates/agent-ux/init-refuses-nested-in-shared-tree.sh", "args": [], "timeout_s": 240 },
+      "artifact": "quality/reports/verifications/agent-ux/init-refuses-nested-in-shared-tree.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "minted_at": "2026-07-17T00:00:00Z",
+      "coverage_kind": "mechanical",
+      "transport_claim": false,
+      "blast_radius": "P0",
+      "owner_hint": "crates/reposix-cli/src/init.rs — add nested-in-worktree refusal (RPX-0406) mirroring leaf-isolation-guard.sh is_safe; init only, never attach",
+      "claim_vs_assertion_audit": "If reposix init did NOT refuse a fresh subdir nested inside a non-/tmp git working tree, the nested-in-non-tmp-repo test would observe a successful init (the shared-tree corruption vector left open) instead of the asserted RPX-0406 refusal — that falsifies the description claim; the /tmp-succeeds and attach-succeeds asserts independently falsify any over-broad refusal that broke the dark-factory flow or attach adoption. If the worktree-shared-config self-check were absent or a no-op, case (e) — which forces absolute-git-dir != <path>/.git via a GIT_DIR-injected shared store — would observe a completed init (config writes reaching the shared config) instead of the asserted pre-config RPX-0406 abort, falsifying the self-check claim.",
+      "waiver": null
     }
   ]
 }
