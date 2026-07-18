@@ -1281,8 +1281,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/persist-refuses-downgrade.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T12:09:08Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: --persist's write path lacks the pre-write committed-status comparison; add a `git show HEAD:<catalog>` read + status-ordinal comparison (PASS/WAIVED outrank everything else) before each row write, refuse without --allow-downgrade, and print the literal recovery command named in expected.asserts.",
