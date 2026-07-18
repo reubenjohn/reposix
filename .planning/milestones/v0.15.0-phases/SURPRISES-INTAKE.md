@@ -927,3 +927,44 @@ the redaction-regression exemplar list in `crates/CLAUDE.md`.
 - **RESOLVED (P122 W3, `92614edc`):** extended `_PASS_CALL` to `\bteach(?:_coded)?\s*\(` (recognizes both `teach(` and `teach_coded(`), mirroring `rpx_registry_check.py`. Fuller scope than the W2 sketch: running `--scope cli` at HEAD revealed **26** un-dispositioned blocks (not just the 5 helper ones) — 25 were `teach_coded(` sites cleared by the regex, and 1 residual (`init.rs:155`, the hand-rolled RPX-0401 `bail!`) was a SEPARATE P121 comment-expansion regression that pushed its `// teach-exempt: ok` marker 8 lines above the `bail!`, outside teach_scan's 2-line lookback window — fixed by hugging the marker to the `bail!`. Added a `teach_coded(...)` self-test fixture. After the fix: `--scope cli` (14 files), `--scope helper` (7 files), and `--self-test` all CLEAN (exit 0).
 
 **STATUS:** RESOLVED (P122 W3, `92614edc`)
+
+## 2026-07-18 11:09 | discovered-by: gsd-executor 123-01 (catalog-first Wave 1) | severity: MEDIUM
+
+**What:** The global `gsd-sdk query state.advance-plan` call (per this repo's own `execute-plan.md`
+`<state_updates>` step) failed to parse this project's STATE.md (`"Cannot parse Current Plan or
+Total Plans in Phase from STATE.md"` — expected, since this repo's STATE.md is a heavily-customized
+narrative document, not the generic GSD scaffold), BUT still mutated the file as a side effect
+before returning that error: `last_updated` was bumped, the `progress:` frontmatter block was
+overwritten with numbers computed by scanning ALL phase directories on disk (`total_phases: 21,
+completed_phases: 3, total_plans: 28, completed_plans: 10, percent: 14` — nonsensical for the
+active v0.15.0 milestone, which tracks 15 phases / 9 complete per the narrative body), and the
+load-bearing `last_activity:` frontmatter line (referenced throughout STATE.md's own prose as the
+primary machine-readable cursor) was DROPPED entirely. Root cause: `readModifyWriteStateMd()`
+(`sdk/src/query/state-mutation.ts`) unconditionally calls `syncStateFrontmatter()` on every
+invocation — even one whose modifier ultimately reports an error — so ANY `state.*` mutation
+verb touches frontmatter as a side effect, not just the one the caller intended. Caught only
+because `git status`/`git diff` was inspected before staging (per this repo's own "verify against
+reality" + targeted-staging discipline); reverted via `git checkout -- .planning/STATE.md` before
+any commit. `state.record-metric` was ALSO attempted and returned a clean `{recorded: false,
+reason: 'Performance Metrics section not found'}` with no mutation (this repo's STATE.md has no
+`## Performance Metrics` / `## Decisions` / `## Blockers` sections either) — so that verb is safe
+to call, but `state.advance-plan` is NOT, on this repo's STATE.md shape.
+
+**Why out-of-scope for the discovering session:** The fix lives in the globally-installed
+`get-shit-done-cc` npm package (`sdk/src/query/state-mutation.ts`), not in this repo — not a
+reposix code change, and not something a phase-execution session should patch mid-task. This repo's
+`execute-plan.md` workflow (also a global `~/.claude/get-shit-done/` asset) is the OTHER half of the
+fix-twice obligation.
+
+**Sketched resolution:** Two independent fixes, either sufficient defense-in-depth together: (1)
+upstream `get-shit-done-cc`: `readModifyWriteStateMd` should skip the frontmatter resync + file
+write entirely when the modifier signals an error/no-op (today it writes unconditionally,
+conflating "parse succeeded, no change needed" with "parse failed, do not touch the file"); (2)
+this repo's `.planning/CLAUDE.md` / `ORCHESTRATION.md` should document that `gsd-sdk query
+state.advance-plan` is UNSAFE to call against this repo's narrative STATE.md shape (no generic
+`Current Plan`/`Total Plans in Phase` fields) and that any executor hitting the
+`state.advance-plan` parse error should immediately `git diff .planning/STATE.md` and revert via
+`git checkout -- .planning/STATE.md` before staging anything, rather than trusting the error
+response to mean "no side effect occurred."
+
+**STATUS:** OPEN

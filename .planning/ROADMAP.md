@@ -232,7 +232,7 @@
   4. A catalog row with a missing or non-executable `verifier.script` is caught by a dedicated `quality/gates/structure/verifier-script-exists.sh` gate.
   5. `code/ci-green-on-main`'s phase-close probe watches a required-workflow list (not a hardcoded `ci.yml` only), and the t4 gate surfaces the real oid-drift stderr instead of a misleading git-version fallback.
 **Plans**: 7 plans (6 waves: Wave 1 catalog-first · Wave 2 two parallel plans · Waves 3-5 sequential — SC1/SC2/SC3 all touch `run.py` + the shared `structure` catalog file, so they serialize by file-conflict wave-bumping even though they are logically independent · Wave 6 close)
-- [ ] 123-01-PLAN.md — catalog-first: 4 new structure rows (SC1-SC4) + SC5a/SC5b existing-row contract updates
+- [x] 123-01-PLAN.md — catalog-first: 4 new structure rows (SC1-SC4) + SC5a/SC5b existing-row contract updates
 - [ ] 123-02-PLAN.md — SC1/DRAIN-03: `run.py` self-sources `./.env` (new `_env_load.py` sibling module)
 - [ ] 123-03-PLAN.md — SC5a/DRAIN-10 + SC5b/DRAIN-01: `ci-green-on-main` required-workflow list + t4 real-stderr surfacing
 - [ ] 123-04-PLAN.md — SC2/DRAIN-04: `--allow-downgrade` persist-refuses-downgrade guard (new `_persist_guard.py`)
@@ -309,7 +309,7 @@
 | 120. CLI + helper error hardening | 1/1 | Complete | 2026-07-17 |
 | 121. RPX error-code namespace + explain | 1/1 | Complete | 2026-07-17 |
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
-| 123. Quality-runner & catalog integrity | 0/7 | Not started | - |
+| 123. Quality-runner & catalog integrity | 1/7 | In Progress|  |
 | 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
 | 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
