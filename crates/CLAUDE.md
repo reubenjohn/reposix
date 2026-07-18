@@ -133,7 +133,36 @@ through — pure string formatting (no `anyhow`, `forbid(unsafe_code)`-clean). R
 `<headline>\nFix: …\nAlternative: …\nRecovery:\n  <cmd>…`, with the `Fix:`/`Alternative:`/
 `Recovery:` limbs each independently omitted when empty (a hollow `Alternative:` line
 never appears for an error with no genuine alternative). Full API + the `.code()`
-P121 forward-compat slot: doc comments in `crates/reposix-core/src/errmsg.rs`.
+slot that attaches an `RPX-xxxx` code (now LIVE — see § The `RPX-xxxx` error-code
+registry below): doc comments in `crates/reposix-core/src/errmsg.rs`.
+
+### The `RPX-xxxx` error-code registry + `reposix explain` (P121, live)
+
+Every stable error code lives ONCE in `crates/reposix-core/src/codes.rs`: an
+`ids::*` name constant (typo-proof — call sites reference `ids::CACHE_BUILD`, never
+the bare `"RPX-0201"`) plus one `ExplainEntry` in `REGISTRY` carrying the extended
+cause/fix/alternative/recovery that `reposix explain <code>` prints (the
+`rustc --explain`-grade half of the north star). All fields are `&'static str` — no
+remote byte reaches the code slot or the explain output (OP-2).
+
+**Render path (`errmsg.rs`):** `teach_coded(ids::NAME, headline, fix, alt, recovery)`
+(or `Teach::new(headline)…​.code(ids::NAME)`). The `[RPX-xxxx]` tag rides the FIRST
+headline line and an `Explain: reposix explain RPX-xxxx` nudge trails the body; an
+UNSET code renders byte-identical to the P120 no-code shape (the ~40 uncoded sites
+are untouched). Terse limbs come from the CALL SITE, extended prose from the
+REGISTRY — the two tiers are SUPPOSED to differ, so there is no single-render
+coherence gate.
+
+**Adding a code:** (1) add a `pub const` to `ids` + an `ExplainEntry` to `REGISTRY`
+in `codes.rs`; (2) emit it at the call site via `teach_coded(ids::NAME, …)` /
+`.code(ids::NAME)`. The gate `quality/gates/agent-ux/rpx_registry_check.py` enforces
+BOTH directions: every EMITTED code is registered, AND — leg 5, reverse-completeness
+— every REGISTERED code is actually emitted somewhere (a registered-but-unused code
+FAILS the gate; `EMISSION_EXEMPT` is empty). It also requires each entry to teach a
+non-empty cause/fix/recovery and each code to be a unique four-digit `RPX-\d{4}`.
+User-facing index: `docs/reference/error-codes.md`; always-current runtime
+enumerator: `reposix explain --list`. (`codes.rs` is a deliberate oversized single
+source of truth — see GOOD-TO-HAVES GTH-V15-68.)
 
 ### `errors.rs` shape helpers + scan scope
 

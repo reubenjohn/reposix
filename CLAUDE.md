@@ -334,6 +334,7 @@ linearly; grep for the section you need.
 | Working on… | Read |
 |---|---|
 | Rust crates / build / code conventions | `crates/CLAUDE.md` |
+| RPX error codes / `reposix explain` / adding a code | `crates/CLAUDE.md` § RPX registry, `docs/reference/error-codes.md` |
 | Planning, GSD, orchestration dispatch | `.planning/CLAUDE.md`, `.planning/ORCHESTRATION.md` |
 | Quality gates / catalogs / verifiers | `quality/CLAUDE.md`, `quality/PROTOCOL.md`, `quality/catalogs/README.md` |
 | OP-8/OP-9 long-form (surprises, retro) | `.planning/PRACTICES.md` |
