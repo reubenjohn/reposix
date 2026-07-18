@@ -2826,6 +2826,7 @@
       "dimension": "agent-ux",
       "cadences": ["on-demand"],
       "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P122 W1 catalog-first commit (2026-07-17, GTH-V15-05 / DRAIN-08) per quality/PROTOCOL.md Step 3 — the verifier grades the row from committed artifacts once the resolve_import_parent loud-fail (RPX-0508) fix lands.",
       "sources": ["crates/reposix-remote/src/main.rs:450-469", "crates/reposix-remote/src/main.rs:422"],
       "expected": { "asserts": [
         "cargo test -p reposix-remote (bare per-crate, bin-target unit tests) exits 0 for the resolve_import_parent regression tests",
@@ -2851,6 +2852,7 @@
       "dimension": "agent-ux",
       "cadences": ["on-demand"],
       "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P122 W1 catalog-first commit (2026-07-17, GTH-V15-06 / DRAIN-09) per quality/PROTOCOL.md Step 3 — the verifier grades the row from committed artifacts once the RPX-0406 nested-init-in-shared-tree refusal lands.",
       "sources": ["crates/reposix-cli/src/init.rs:135-168", "crates/reposix-cli/src/init.rs:266-350", ".claude/hooks/leaf-isolation-guard.sh:170-184"],
       "expected": { "asserts": [
         "cargo test -p reposix-cli (the P122 init-refusal regression tests) exits 0",
