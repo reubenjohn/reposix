@@ -5,7 +5,7 @@ Row: quality/catalogs/agent-ux.json -> agent-ux/rpx-codes-registry
 Driver: quality/gates/agent-ux/rpx-codes-registry.sh (leg c). Source-grep, no cargo.
 
 The RPX namespace has ONE source of truth: crates/reposix-core/src/codes.rs (the
-`REGISTRY: &[ExplainEntry]` array + the `ids` const module). Four legs:
+`REGISTRY: &[ExplainEntry]` array + the `ids` const module). Five legs:
 
   (1) FORWARD / M3. Every code EMITTED in crates/reposix-cli/** OR
       crates/reposix-remote/** has a matching ExplainEntry. "Emitted" is caught in
@@ -25,6 +25,13 @@ The RPX namespace has ONE source of truth: crates/reposix-core/src/codes.rs (the
       justified). Scope is IMPORTED from teach_scan, never re-invented.
   (4) UNKNOWN-CODE UX. The explain-meta code (RPX-0900) must exist so `reposix
       explain <bogus>` has a teaching home (runtime assertion: gate + tests/explain.rs).
+  (5) REVERSE / completeness (P121 W3.5, closes the SC1 const-string blind spot).
+      Every REGISTERED code must be EMITTED at least once across EMIT_ROOTS (via any
+      M3 syntax). This catches a code that is registered but whose ONLY emission is a
+      raw const-string / `crate::diag` line that never carried the `[RPX-xxxx]` tag —
+      invisible to legs 1 (forward: fires only when an emission EXISTS) and 3 (M2:
+      scans teach-shaped sites only). A deliberately-unemitted code is dispositioned
+      in `EMISSION_EXEMPT` with a justification, never silently orphaned.
 
 CATALOG-FIRST: committed in the phase's FIRST commit, before codes.rs / the
 `.code()` sites exist. Over the pre-impl tree it EXITS NON-ZERO (leg 3 flags every
@@ -66,6 +73,22 @@ EXPLAIN_META_CODE = "RPX-0900"  # the unknown-code teaching path's own code (W2)
 # `// rpx-code-exempt: ok — <reason>` marker (line-drift-robust); reserve this set
 # for sites a marker cannot reach. Each entry MUST carry a justifying comment.
 RPX_CODE_ALLOWLIST: set[str] = set()
+
+# --- EMISSION_EXEMPT (leg 5 reverse-completeness escape hatch — P121 W3.5) ----
+# A REGISTERED code that is deliberately NOT emitted at a tagged site (yet). Leg 5
+# requires every OTHER registered code to be EMITTED somewhere in EMIT_ROOTS, so a
+# code cannot be registered-but-orphaned silently — exempting one is a reviewable,
+# deliberate act with a justification. Prefer wiring the tag over adding an entry.
+EMISSION_EXEMPT: dict[str, str] = {
+    # RPX-0401: init.rs::refuse_existing_repo_root is a bespoke `// teach-exempt`
+    # bail! (the exemplar) whose hand-rolled multi-line headline is intentionally
+    # NOT routed through teach_coded — so it carries no `[RPX-0401]` tag today.
+    # Tagging it is filed in v0.15.0 GOOD-TO-HAVES.
+    "RPX-0401": "init.rs bespoke teach-exempt bail (exemplar); tag wiring filed GOOD-TO-HAVE",
+    # RPX-0402: INIT_FETCH_FAILED is registered but not yet wired to any emission
+    # site. Filed in v0.15.0 GOOD-TO-HAVES; wire the tag or retire the entry.
+    "RPX-0402": "INIT_FETCH_FAILED registered but not yet emitted; wire-or-retire filed GOOD-TO-HAVE",
+}
 
 _RPX_ANY = re.compile(r"RPX-\d+")
 _RPX_OK = re.compile(r"^RPX-\d{4}$")
@@ -295,6 +318,39 @@ def scan_missing_codes(text: str, rel: str) -> list[str]:
     return msgs
 
 
+def reverse_completeness_errors(
+    entry_codes: set[str], emitted_codes: set[str]
+) -> tuple[list[str], list[str]]:
+    """Leg 5 (REVERSE / completeness, P121 W3.5). Every REGISTERED code must be
+    EMITTED at least once across EMIT_ROOTS (any M3 syntax: `.code(...)` /
+    `teach_coded(...)` / a `[RPX-xxxx]` bracket / a `const …_FMT|&str` carrying the
+    code). This closes the SC1 blind spot the M2 leg could not see: a code
+    registered but whose ONLY emission was a raw const-string / diag that never
+    carried the tag was invisible to every prior leg. A deliberately-unemitted code
+    is dispositioned in `EMISSION_EXEMPT` with a justification (reviewable), never
+    silently dropped. Returns `(errors, notes)`."""
+    errors: list[str] = []
+    notes: list[str] = []
+    for code in sorted(entry_codes):
+        if code in emitted_codes:
+            continue
+        if code in EMISSION_EXEMPT:
+            notes.append(
+                f"reverse-completeness: {code} registered but not emitted — "
+                f"EXEMPT ({EMISSION_EXEMPT[code]})"
+            )
+            continue
+        errors.append(
+            f"{CODES_RS}: registered code {code} is NEVER emitted in "
+            f"{'/'.join(EMIT_ROOTS)} — a registered-but-orphaned code (its emission "
+            f"carries no `[{code}]` tag / `.code(...)` / `teach_coded(...)` / "
+            f"`*_FMT`). Tag the human-facing emission site so it renders the code, "
+            f"or add {code} to EMISSION_EXEMPT with a justification if it is "
+            f"intentionally unemitted."
+        )
+    return errors, notes
+
+
 def run(repo_root: Path) -> int:
     errors: list[str] = []
     notes: list[str] = []
@@ -307,7 +363,9 @@ def run(repo_root: Path) -> int:
         entry_codes, ids_map = set(), {}
         notes.append(f"{CODES_RS} not present yet (pre-W1) — registry treated as empty")
 
-    # leg 1 (forward) across both emitting crates.
+    # leg 1 (forward) across both emitting crates. Accumulate every emitted code
+    # so leg 5 (reverse) can assert the registry has no orphaned entries.
+    emitted_codes: set[str] = set()
     for root in EMIT_ROOTS:
         base = repo_root / root
         if not base.is_dir():
@@ -315,11 +373,17 @@ def run(repo_root: Path) -> int:
         for p in sorted(base.rglob("*.rs")):
             rel = p.relative_to(repo_root).as_posix()
             for c, ln in extract_emitted(p.read_text(encoding="utf-8"), ids_map):
+                emitted_codes.add(c)
                 if c not in entry_codes:
                     errors.append(
                         f"{rel}:{ln}: {c} referenced but not in REGISTRY "
                         f"— add an ExplainEntry to {CODES_RS}"
                     )
+
+    # leg 5 (reverse / completeness — P121 W3.5): every registered code is emitted.
+    rev_errors, rev_notes = reverse_completeness_errors(entry_codes, emitted_codes)
+    errors.extend(rev_errors)
+    notes.extend(rev_notes)
 
     # leg 3 (converse / M2) over the teach_scan scope.
     for rel in CLI_SCOPE + HELPER_SCOPE:
@@ -443,10 +507,32 @@ def self_test() -> int:
     check("M2: non-teaching teach-exempt block needs no code",
           len(scan_missing_codes(teach_exempt, "x.rs")), 0)
 
+    # leg 5 reverse-completeness: emitted PASSES, orphaned RAISES, exempt PASSES.
+    rev_emitted, _ = reverse_completeness_errors({"RPX-0001"}, {"RPX-0001"})
+    check("leg5: an emitted registered code passes", len(rev_emitted), 0)
+    rev_orphan, _ = reverse_completeness_errors({"RPX-0001", "RPX-7777"}, {"RPX-0001"})
+    check(
+        "leg5: a registered-but-unemitted code is flagged",
+        any("RPX-7777" in e and "NEVER emitted" in e for e in rev_orphan),
+        True,
+    )
+    # An EMISSION_EXEMPT code (real entry) is NOT flagged even with no emission.
+    exempt_code = next(iter(EMISSION_EXEMPT))
+    rev_exempt, rev_exempt_notes = reverse_completeness_errors({exempt_code}, set())
+    check("leg5: an EMISSION_EXEMPT code is not flagged", len(rev_exempt), 0)
+    check(
+        "leg5: an exempt code emits an EXEMPT note",
+        any(exempt_code in n and "EXEMPT" in n for n in rev_exempt_notes),
+        True,
+    )
+
     if failures:
         print(f"rpx_registry_check --self-test: {failures} FAILURE(s)", file=sys.stderr)
         return 1
-    print("rpx_registry_check --self-test: PASS (forward + M3 + integrity + M2 all proven)")
+    print(
+        "rpx_registry_check --self-test: PASS "
+        "(forward + M3 + integrity + M2 + reverse-completeness all proven)"
+    )
     return 0
 
 
