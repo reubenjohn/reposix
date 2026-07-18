@@ -68,6 +68,8 @@ name is grep-able and survives that churn; a line range isn't.
 | `1` | `tokens` | working tree missing, no `cache.db` audit log alongside the cache | `crates/reposix-cli/src/tokens.rs` (`run`) |
 | `1` | `cost` | working tree missing, no `cache.db`, `--since` parse failure | `crates/reposix-cli/src/cost.rs` (`run`) |
 | `1` | `gc` | invalid strategy combo, working tree missing, IO failure walking the cache | `crates/reposix-cli/src/gc.rs` (`run`, `run_orphans`) |
+| `0` | `explain` | known `RPX-xxxx` code (prints extended cause/fix/alternative/recovery), `--list`, or no code (enumerates every registered code + title) | `crates/reposix-cli/src/explain.rs` (`run`, `print_one`, `print_list`) |
+| `1` | `explain` | unknown/mistyped code — a teaching `RPX-0900` message naming `reposix explain --list`; note the bare `reposix explain` form enumerates rather than erroring, so there is no missing-argument exit path | `crates/reposix-cli/src/explain.rs` (`print_one`) |
 | `0` | `version` | always | `crates/reposix-cli/src/main.rs` (`Cmd::Version` arm) |
 
 ### What "anyhow propagation" looks like in practice

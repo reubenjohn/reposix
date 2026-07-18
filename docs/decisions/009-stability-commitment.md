@@ -38,7 +38,7 @@ major bump).
    be added (additive change, minor bump); the URL shape itself MAY
    NOT change without a major bump.
 2. **CLI subcommand surface.** The set
-   `reposix init|sim|list|refresh|spaces|log|history|tokens|cost|gc|doctor|--version`
+   `reposix sim|init|attach|list|refresh|spaces|sync|doctor|history|log|at|gc|tokens|cost|explain|version`
    is locked. New subcommands MAY be added as additive minor versions.
    Removing a subcommand name, or removing/renaming an existing
    argument name, is a breaking change.

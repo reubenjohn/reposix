@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-18T04:06:30Z",
+    "last_walked": "2026-07-18T04:53:05Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -2220,8 +2220,8 @@
       "claim": "CLI subcommand surface (sim|init|attach|list|refresh|spaces|sync|doctor|history|log|at|gc|tokens|cost|explain|version) is locked under semver; new subcommands additive minor versions only",
       "source": {
         "file": "crates/reposix-cli/src/main.rs",
-        "line_start": 41,
-        "line_end": 367
+        "line_start": 61,
+        "line_end": 387
       },
       "source_hash": "be6c876de058b54de84d989bb1e3fa422546db5b132ea86619e4a193e8dc2f7f",
       "source_hashes": [
@@ -2233,11 +2233,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "P121-W4: rebind after the explain (RPX-code lookup) variant was added to the Cmd enum in W2; refresh the locked-surface enumeration to the current shipped set (adds at + explain), ADR-009 semver-additive semantics unchanged.",
+      "rationale": "P121-close: rebind after a665eaec's module-doc rewrite grew the //! header by +20 lines, shifting the enum Cmd surface from old lines 41-367 to 61-387 (source line-range drift, not a surface change). Also corrected the ADR-009 prose enumeration in the same commit: it had gone stale at 12 subcommands (missing attach/sync/at/explain) while the actual + catalog surface is 16; enumeration now matches the Cmd enum. ADR-009 semver-additive semantics unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-18T04:06:30Z",
-      "last_extracted": "2026-07-18T04:06:30Z",
+      "last_run": "2026-07-18T04:52:07Z",
+      "last_extracted": "2026-07-18T04:52:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3205,11 +3205,11 @@
       "source": {
         "file": "docs/reference/exit-codes.md",
         "line_start": 20,
-        "line_end": 157
+        "line_end": 159
       },
-      "source_hash": "58433f0847b6ca406bc1029d722802047610b5847a950958970678a490848d88",
+      "source_hash": "71b6aed72de7908b4d4916ec2e2798b93c26f02fd16e87f4d345e971764df0d7",
       "source_hashes": [
-        "58433f0847b6ca406bc1029d722802047610b5847a950958970678a490848d88"
+        "71b6aed72de7908b4d4916ec2e2798b93c26f02fd16e87f4d345e971764df0d7"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::exit_codes_locked_reposix_and_helper",
@@ -3219,11 +3219,11 @@
         "f206a1c252c982003da21b09fd665b8240373cd2b340a36bf03043d5866df098",
         "8dd5b26f84545ccaa6e269e5cdeda06eb5fbb3a816ad8333308da128e831274f"
       ],
-      "rationale": "Two-arm table-driven test pins the exact code sets: CLI arm drives reposix through version(0)/spaces --backend github(1)/mount unrecognized-subcommand(2); helper arm drives git-remote-reposix through capabilities-only(0)/SG-02 bulk-delete refusal(1)/missing-argv crash(2). Claim text updated (2026-07-04) to note the CLI's code-2 path is clap's own usage-error layer, not the anyhow-handler layer exit-codes.md's TL;DR table describes -- exit-codes.md itself does not yet document this clap layer (noted as a doc-gap candidate, not fixed in this pass).",
+      "rationale": "P121-close: rebind after adding the two reposix explain rows to the per-subcommand exit-code table (FIX 1, cli-subcommand-parity), which grew the hashed 20-157 span by +2 lines to 20-159. explain uses only the existing 0 (success/list/known-code) and 1 (unknown-code teaching RPX-0900) codes, so the locked 0/1/2 contract is unchanged; this is a source-range/hash refresh, not a claim change. Prior rationale: two-arm table-driven test pins the exact code sets (CLI 0/1/2 + helper 0/1/2).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-06T01:24:16Z",
-      "last_extracted": "2026-07-06T01:24:16Z",
+      "last_run": "2026-07-18T04:53:05Z",
+      "last_extracted": "2026-07-18T04:53:05Z",
       "last_extracted_by": "bind-call"
     },
     {
