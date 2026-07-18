@@ -114,7 +114,8 @@ fn real_main() -> Result<bool> {
     if argv.len() < 3 {
         anyhow::bail!(
             "{}",
-            reposix_core::errmsg::teach(
+            reposix_core::errmsg::teach_coded(
+                reposix_core::codes::ids::HELPER_USAGE,
                 "git-remote-reposix was invoked with too few arguments (it needs <alias> and <url>).",
                 "git-remote-reposix is a git REMOTE HELPER — git runs it automatically for \
                  `reposix::` remotes; you normally never invoke it by hand.",

@@ -460,7 +460,8 @@ fn precheck_mirror_drift(mirror_url: &str, mirror_remote_name: &str) -> Result<M
         let ls_cmd = format!("git ls-remote {mirror_remote_name}   # confirm the mirror answers");
         return Err(anyhow!(
             "{}",
-            reposix_core::errmsg::teach(
+            reposix_core::errmsg::teach_coded(
+                reposix_core::codes::ids::HELPER_MALFORMED_BUS_URL,
                 &headline,
                 "the mirror is unreachable or misconfigured — confirm the mirror \
                  URL is correct and the host is reachable",

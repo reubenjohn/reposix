@@ -439,7 +439,8 @@ fn missing_env_error(kind: BackendKind, missing: &[&str]) -> anyhow::Error {
     );
     anyhow!(
         "{}",
-        reposix_core::errmsg::teach(
+        reposix_core::errmsg::teach_coded(
+            reposix_core::codes::ids::MISSING_ENV_HELPER,
             &headline,
             "export each listed variable (your API token / account email / tenant subdomain), \
              then retry — the helper reads credentials from the environment git runs it in.",

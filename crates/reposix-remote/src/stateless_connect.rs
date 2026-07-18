@@ -86,7 +86,8 @@ fn upload_pack_failure_error(
     );
     anyhow::anyhow!(
         "{}",
-        reposix_core::errmsg::teach(
+        reposix_core::errmsg::teach_coded(
+            reposix_core::codes::ids::HELPER_UPLOAD_PACK,
             &headline,
             "the cache's bare repo could not serve upload-pack — usually an \
              incompatible git (partial-clone reads need git 2.34+) or a \
@@ -114,6 +115,7 @@ fn eof_midrequest_error() -> anyhow::Error {
              git process or a broken pipe is the usual trigger"
         )
         .recovery(&["git fetch origin   # re-drive the fetch on a fresh connection"])
+        .code(reposix_core::codes::ids::HELPER_EOF)
     )
 }
 

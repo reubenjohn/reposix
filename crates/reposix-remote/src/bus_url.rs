@@ -62,7 +62,8 @@ fn malformed_bus_url_error(reason: &str, got: &str) -> anyhow::Error {
     let headline = format!("malformed reposix bus URL `{safe}`: {reason}.");
     anyhow!(
         "{}",
-        reposix_core::errmsg::teach(
+        reposix_core::errmsg::teach_coded(
+            reposix_core::codes::ids::HELPER_MALFORMED_BUS_URL,
             &headline,
             "a bus URL is `reposix::<sot-spec>?mirror=<mirror-url>` — the SoT spec \
              (a `sim::`/`github::`/… origin, resolved to `<scheme>://<host>/projects/<id>`) \
