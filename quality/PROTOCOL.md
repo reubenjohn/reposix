@@ -175,6 +175,25 @@ at every push — the HIGH bug P96 fixed). Consequences:
   a gate run no longer writes the catalog. The regression is locked by
   `structure/catalog-immutable-on-read` (`quality/gates/structure/catalog-immutable-on-read.sh`).
 
+**Downgrade guard (P123 SC2 / DRAIN-04, `_persist_guard.py`):** even a `--persist`
+MINT will **refuse** to write a committed-GREEN row (`PASS`/`WAIVED`, read from
+the LAST COMMITTED catalog via `git show HEAD:<path>` — never the dirty working
+copy) back at an EXPLICIT worse grade (`FAIL`/`PARTIAL`) unless you pass
+`--allow-downgrade`. The refusal names the row id, the old→new status, and the
+copy-paste `--allow-downgrade` recovery command; a blocked downgrade forces a
+non-zero exit (never swallowed into a green run). `--allow-downgrade` restores
+the write but still prints a loud `ALLOWED downgrade` notice per row (never
+silent). **A demotion to `NOT-VERIFIED` is NOT a downgrade** and is ALWAYS
+allowed with no flag — regardless of cause (freshness-TTL expiry, missing
+verifier, env-skip, exit-75): `NOT-VERIFIED` is the designed-in ungraded channel,
+and blocking it would deadlock a phase's own freshness-invariant mints (which
+legitimately produce `NOT-VERIFIED`). A brand-new row absent from git HEAD has no
+baseline and mints freely. Locked by `structure/persist-refuses-downgrade`
+(`quality/gates/structure/persist-refuses-downgrade.sh`). This closes the
+silent-catalog-corruption near-miss where a rotation's `--persist` downgraded
+`vision-litmus` PASS→FAIL on an env-skip false negative, caught only by a manual
+diff review before staging.
+
 **OD-2 hard-RED skip-semantics (89-OWNER-DECISIONS.md, binding):** If the
 `pre-release-real-backend` cadence cannot EXECUTE against the sanctioned
 target at milestone-close, the milestone-close verdict is **RED**. Milestone
