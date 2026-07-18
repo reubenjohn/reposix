@@ -1241,8 +1241,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/quality-runner-sources-dotenv.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T11:25:23Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED/NOT-VERIFIED: mirror scripts/preflight-real-backends.sh's `if [ -f ./.env ] && [ -z \"${VAR:-}...\" ]; then set -a; . ./.env; set +a; fi` pattern inside run.py's own startup (before catalog load), so `run.py --cadence pre-release-real-backend` behaves identically whether or not the caller pre-sourced .env.",

@@ -49,6 +49,7 @@ from _freshness import is_stale as _is_stale_impl
 import _realbackend  # P89 RBF-FW-01: env-gate + exit-code map (sibling per anti-bloat rule)
 import _audit_field  # P89 RBF-FW-11: claim_vs_assertion_audit + kind:shell-subprocess cross-check
 import _shell_verdict  # D-P96-01 (extended): deterministic committed verdict for kind:shell-subprocess
+import _env_load  # P123 SC1/DRAIN-03: conditional ./.env self-sourcing (present-only, non-clobbering)
 
 # Re-export so existing callers and tests can keep doing `from run import parse_duration`.
 parse_duration = _parse_duration_impl
@@ -441,6 +442,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # P123 SC1/DRAIN-03: self-source ./.env FIRST — before any catalog load or
+    # real-backend gating — so a `pre-release-real-backend` cadence exercises
+    # real creds even when the caller did not pre-source .env into the shell.
+    # Present-only + non-clobbering (existing env wins); a harmless no-op for
+    # cadences that never consult real-backend creds and for CI (no .env).
+    _env_load.load_dotenv_if_present(REPO_ROOT)
     args = _build_arg_parser().parse_args(argv)
 
     mode = ("MINT (--persist: catalog writes ON)" if args.persist
