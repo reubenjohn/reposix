@@ -2,7 +2,7 @@
 
 `reposix` is a thin orchestrator. The agent's day-to-day surface is plain `git` against a partial-clone working tree; the CLI exists to bootstrap that working tree, run the simulator, and surface a few backend-shaped queries with no clean git equivalent.
 
-Built from `crates/reposix-cli`. Subcommands as of v0.9.0:
+Built from `crates/reposix-cli`. Subcommands:
 
 ```text
 reposix — git-native partial clone for autonomous agents
@@ -24,6 +24,7 @@ Commands:
   gc       Evict materialized blobs (or detect orphan caches) from reposix state
   tokens   Print a token-economy ledger from the audit log
   cost     Per-op cost table over the token-cost ledger (Markdown)
+  explain  Explain a stable RPX-xxxx error code (like rustc --explain)
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
@@ -321,6 +322,22 @@ reposix spaces --backend confluence
 ```
 
 Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, and `REPOSIX_ALLOWED_ORIGINS` — see the [Confluence reference](confluence.md).
+
+## `reposix explain`
+
+Print the extended explanation for a stable `RPX-xxxx` error code — the same idea as `rustc --explain E0308`. When a command fails, its message carries an `[RPX-xxxx]` tag plus an `Explain: reposix explain RPX-xxxx` nudge; run that to read the full cause, fix, alternative, and copy-paste recovery.
+
+```bash
+reposix explain RPX-0201   # one code's extended explanation
+reposix explain --list     # every registered code + title
+```
+
+| Argument / flag | Purpose |
+|---|---|
+| `<code>` | The `RPX-xxxx` code to explain (four digits, e.g. `RPX-0201`). |
+| `--list` | List every registered code with its one-line title instead of explaining one. Also the default when no code is given. |
+
+Unknown or mistyped codes report `RPX-0900` with a pointer to `reposix explain --list`. See the [error-codes reference](error-codes.md) for the family map and the full code index.
 
 ## Removed subcommands
 

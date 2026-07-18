@@ -12,7 +12,7 @@
     "alignment_ratio": 0.7867867867867868,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-17T09:02:02Z",
+    "last_walked": "2026-07-18T04:06:30Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -539,28 +539,28 @@
     },
     {
       "id": "docs/reference/cli.md/subcommands_exist",
-      "claim": "All 15 CLI subcommands (sim, init, attach, list, refresh, spaces, sync, doctor, history, log, at, gc, tokens, cost, version) are documented in help text",
+      "claim": "All 16 CLI subcommands (sim, init, attach, list, refresh, spaces, sync, doctor, history, log, at, gc, tokens, cost, explain, version) are documented in help text",
       "source": {
         "file": "docs/reference/cli.md",
         "line_start": 5,
-        "line_end": 29
+        "line_end": 30
       },
-      "source_hash": "afd37974ff5116384f2a3f8dfcd9a73f612ca1fc50562da0ec1d003829263548",
+      "source_hash": "edbaaea1acf91dd1b6e3e9bdffde0e380cfcb79bd95f0928f83d36ead6fd60bc",
       "source_hashes": [
-        "afd37974ff5116384f2a3f8dfcd9a73f612ca1fc50562da0ec1d003829263548"
+        "edbaaea1acf91dd1b6e3e9bdffde0e380cfcb79bd95f0928f83d36ead6fd60bc"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
       ],
       "test_body_hashes": [
-        "b9760d8447b6227b6fb5a4f04e3105173d9a3b26db161c0d0fca01f1d49efb80"
+        "8dc0f91335fc93fc9f5e99059705f43888e3db5d1caa126c9117315a41115594"
       ],
-      "rationale": "help_lists_all_subcommands now asserts all 15 subcommand names appear in reposix --help stdout (extended from a 4/15 subset that was itself the false-BOUND catch); claim text updated to include attach+sync, previously omitted (R2 stale-claim finding, 2026-07-04).",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T17:53:13Z",
-      "last_extracted": "2026-07-04T17:53:52Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
@@ -2217,15 +2217,15 @@
     },
     {
       "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
-      "claim": "CLI subcommand surface (init|attach|sim|list|refresh|spaces|sync|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
+      "claim": "CLI subcommand surface (sim|init|attach|list|refresh|spaces|sync|doctor|history|log|at|gc|tokens|cost|explain|version) is locked under semver; new subcommands additive minor versions only",
       "source": {
         "file": "crates/reposix-cli/src/main.rs",
-        "line_start": 39,
-        "line_end": 319
+        "line_start": 41,
+        "line_end": 367
       },
-      "source_hash": "1c4c23d661db0f1e7ecb3a0363862177f45a67530ae9d043b43865ca2b2dd331",
+      "source_hash": "be6c876de058b54de84d989bb1e3fa422546db5b132ea86619e4a193e8dc2f7f",
       "source_hashes": [
-        "1c4c23d661db0f1e7ecb3a0363862177f45a67530ae9d043b43865ca2b2dd331"
+        "be6c876de058b54de84d989bb1e3fa422546db5b132ea86619e4a193e8dc2f7f"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -2233,11 +2233,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "v0.15.0 FIX-02 added a systematic oid-drift caveat to the Sync clap doc-comment inside the bound region (~L169-180); subcommand surface enum unchanged, real-backend dark-factory test still exercises it.",
+      "rationale": "P121-W4: rebind after the explain (RPX-code lookup) variant was added to the Cmd enum in W2; refresh the locked-surface enumeration to the current shipped set (adds at + explain), ADR-009 semver-additive semantics unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-15T17:14:18Z",
-      "last_extracted": "2026-07-15T17:14:18Z",
+      "last_run": "2026-07-18T04:06:30Z",
+      "last_extracted": "2026-07-18T04:06:30Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2954,8 +2954,8 @@
       "claim": "Environment variables documented: REPOSIX_ALLOWED_ORIGINS, REPOSIX_CONFLUENCE_TENANT, REPOSIX_JIRA_INSTANCE, GITHUB_TOKEN, ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, RUST_LOG",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 334,
-        "line_end": 343
+        "line_start": 351,
+        "line_end": 360
       },
       "source_hash": "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5",
       "source_hashes": [
@@ -2967,12 +2967,12 @@
       "test_body_hashes": [
         "cb73e2521aa9a65e788f297414f05c883ccce13ebeb433f62ec79ff0cf94c958"
       ],
-      "rationale": "env_vars_are_consumed_by_binary greps the CLI's own source for a real std::env::var(\"<VAR>\") call site per var (doctor.rs/init.rs/list.rs/refresh.rs), plus EnvFilter::try_from_default_env() for RUST_LOG's implicit tracing_subscriber convention.",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T17:53:28Z",
-      "last_extracted": "2026-07-04T17:53:52Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/simulator.md/ephemeral-mode",
@@ -3231,8 +3231,8 @@
       "claim": "Exit codes documented: 0 (success), 1 (expected failure), 2 (unexpected error, including malformed/incomplete invocations that clap rejects before dispatch)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 345,
-        "line_end": 351
+        "line_start": 362,
+        "line_end": 368
       },
       "source_hash": "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9",
       "source_hashes": [
@@ -3244,12 +3244,12 @@
       "test_body_hashes": [
         "924c97672411e6c421920e75b40af90c2752e43b0804f54af81013a256bba6c5"
       ],
-      "rationale": "exit_codes_match_documented_contract drives reposix through all three documented codes: version(0), spaces --backend sim expected-failure(1), and init with missing required positional args -- a clap usage error resolved before any subcommand handler runs -- (2). Claim text tightened to include the clap-layer origin of code 2, previously described only as an application-level 'unexpected error'.",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T17:53:44Z",
-      "last_extracted": "2026-07-04T17:53:52Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "git-remote/export-push-path",
@@ -7609,8 +7609,8 @@
       "claim": "reposix init subcommand documented with backend::project spec form",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 42,
-        "line_end": 65
+        "line_start": 43,
+        "line_end": 66
       },
       "source_hash": "463cca68a2a7b3685f49e2defb24cb22bbcfe495dce2a7f51bbd6f712848bdde",
       "source_hashes": [
@@ -7622,11 +7622,11 @@
       "test_body_hashes": [
         "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da"
       ],
-      "rationale": "cli.rs:254-263 asserts init --help contains BACKEND::PROJECT/<backend>::<project> and each of sim/github/confluence/jira; matches the doc's spec-form + four-backend section",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-17T06:03:17Z",
-      "last_extracted": "2026-07-17T06:03:17Z",
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7659,8 +7659,8 @@
       "claim": "reposix list queries backend list_records and dumps JSON or table format",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 102,
-        "line_end": 117
+        "line_start": 103,
+        "line_end": 118
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
       "source_hashes": [
@@ -7672,11 +7672,11 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" — test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T08:33:33Z",
-      "last_extracted": "2026-07-04T08:33:33Z",
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7684,8 +7684,8 @@
       "claim": "reposix list subcommand documented with flags (backend, project, format, no-truncate)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 102,
-        "line_end": 117
+        "line_start": 103,
+        "line_end": 118
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
       "source_hashes": [
@@ -7697,11 +7697,11 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "crates/reposix-cli/tests/cli.rs:109 asserts list --help succeeds and documents the list-subcommand flags [--project, --origin, --format]; pure line-shift refresh, section content unchanged",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T08:34:02Z",
-      "last_extracted": "2026-07-04T08:34:02Z",
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7791,8 +7791,8 @@
       "claim": "reposix mount subcommand was removed in v0.9.0",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 325,
-        "line_end": 332
+        "line_start": 342,
+        "line_end": 349
       },
       "source_hash": "31500ccab7b727642ff67653ce0dc918190d5f60860b99729df22fb5759d9e25",
       "source_hashes": [
@@ -7804,11 +7804,11 @@
       "test_body_hashes": [
         "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
       ],
-      "rationale": "crates/reposix-cli/tests/cli.rs:43 mount_subcommand_is_removed runs 'reposix mount /tmp/nowhere' and asserts !out.status.success() -- confirms the removed subcommand errors; D-CONV-3 (2026-07-04) retargeted the demo line from the deleted scripts/dark-factory-test.sh shim to quality/gates/agent-ux/dark-factory.sh, shifting the cited range's bytes without changing its meaning.",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:28:54Z",
-      "last_extracted": "2026-07-04T09:28:54Z",
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7866,8 +7866,8 @@
       "claim": "reposix spaces lists readable Confluence spaces (Confluence-only backend)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 315,
-        "line_end": 323
+        "line_start": 316,
+        "line_end": 324
       },
       "source_hash": "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567",
       "source_hashes": [
@@ -7879,12 +7879,12 @@
       "test_body_hashes": [
         "5a09fc856653d498933a8855a6ac42cf02640e96f070b84ab10ceb8693b50695"
       ],
-      "rationale": "spaces_rejects_non_confluence_backend drives reposix spaces --backend github pre-egress (no network attempted), asserts non-zero exit, and asserts stderr names confluence as the supported backend.",
+      "rationale": "P121-W4: rebind after adding the `explain` subcommand to cli.md's Commands block (line shift) + explain reference page; content otherwise unchanged.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T17:53:48Z",
-      "last_extracted": "2026-07-04T17:53:52Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-18T04:04:06Z",
+      "last_extracted": "2026-07-18T04:04:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/rest-supported-backends",

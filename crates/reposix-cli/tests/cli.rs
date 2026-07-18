@@ -15,12 +15,13 @@ fn workspace_root() -> PathBuf {
 }
 
 /// docs/reference/cli.md/subcommands_exist — `reposix --help` must list
-/// every one of the 15 subcommands (clap `Cmd` enum,
-/// `crates/reposix-cli/src/main.rs:39-343`). Previously asserted only
+/// every one of the 16 subcommands (clap `Cmd` enum,
+/// `crates/reposix-cli/src/main.rs:42-367`). Previously asserted only
 /// 4/15 (sim, init, list, version) — a false-BOUND catch (R2 § F): the
 /// doc-alignment claim text itself also enumerated only 13 names, missing
-/// `attach` and `sync` (both shipped + documented at cli.md:14,19). Fixed
-/// at rebind (2026-07-04); this test now grounds the full-15 claim.
+/// `attach` and `sync` (both shipped + documented in the Commands block).
+/// `explain` (the `RPX-xxxx` lookup) was added in v0.15.0/P121, bringing
+/// the set to 16; this test now grounds the full-16 claim.
 #[test]
 fn help_lists_all_subcommands() {
     use assert_cmd::Command;
@@ -31,11 +32,11 @@ fn help_lists_all_subcommands() {
         .unwrap();
     let s = String::from_utf8_lossy(&out.stdout);
     // v0.9.0: `mount` and `demo` removed; `init` is the canonical entry point.
-    // Full 15-subcommand set per main.rs `Cmd` enum + cli.md's own
-    // Commands block (cli.md:5-29).
+    // Full 16-subcommand set per main.rs `Cmd` enum + cli.md's own
+    // Commands block (cli.md:5-30).
     for sub in [
         "sim", "init", "attach", "list", "refresh", "spaces", "sync", "doctor", "history", "log",
-        "at", "gc", "tokens", "cost", "version",
+        "at", "gc", "tokens", "cost", "explain", "version",
     ] {
         assert!(s.contains(sub), "help missing {sub}: {s}");
     }
