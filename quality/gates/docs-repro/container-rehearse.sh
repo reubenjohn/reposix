@@ -50,20 +50,57 @@ fi
 ARTIFACT_ABS="$REPO_ROOT/$ARTIFACT_PATH"
 mkdir -p "$(dirname "$ARTIFACT_ABS")"
 
-write_skip_artifact() {
-    local error="$1"
+# Write a result artifact carrying an EXPLICIT exit_code + error message. Two named
+# wrappers make the intent unambiguous at every call site:
+#   write_skip_artifact (exit_code=0, NOT-VERIFIED) -- a substrate-absent SKIP (docker
+#     missing/unreachable, target/debug/reposix not built, manual-kind row). Never a pass,
+#     never a fail: the runner reads NOT-VERIFIED.
+#   write_fail_artifact (exit_code=1) -- a REAL failure that must NOT be masked as success
+#     (DRAIN-13 sim-readiness leg: the harness's own sim never became reachable).
+write_result_artifact() {
+    local code="$1"; local error="$2"
     cat > "$ARTIFACT_ABS" <<EOF
 {
   "ts": "$(now_iso)",
   "row_id": "$ROW_ID",
-  "exit_code": 0,
+  "exit_code": $code,
   "asserts_passed": [],
   "asserts_failed": [],
   "error": "$error"
 }
 EOF
-    echo "container-rehearse: $error -- emitted NOT-VERIFIED artifact at $ARTIFACT_PATH" >&2
+    echo "container-rehearse: $error -- emitted artifact (exit_code=$code) at $ARTIFACT_PATH" >&2
 }
+write_skip_artifact() { write_result_artifact 0 "$1"; }
+write_fail_artifact() { write_result_artifact 1 "$1"; }
+
+# DRAIN-13 (SC4): the harness exit is derived STRICTLY from the persisted artifact
+# exit_code. EVERY path that produced an artifact exits through HERE -- we re-read the
+# exit_code we just wrote and exit with THAT, so a docker/timeout rc that DISAGREES with
+# the recorded exit_code can never mask it (the exact W1a-reproduced rc=0-masks-exit_code=1
+# gap). Fail-closed: an unreadable/missing/non-numeric artifact exits 1, never 0.
+exit_from_artifact() {
+    local code
+    code=$(python3 - "$ARTIFACT_ABS" <<'PY'
+import json, sys
+try:
+    print(int(json.load(open(sys.argv[1])).get("exit_code", 1)))
+except Exception:
+    print(1)
+PY
+)
+    [[ "$code" =~ ^[0-9]+$ ]] || code=1
+    exit "$code"
+}
+
+# DRAIN-13/SC4 docker-free selftest hook: given a PRE-WRITTEN artifact path, run the REAL
+# exit-derivation path (exit_from_artifact) and exit with the code it reads. Lets
+# container-rehearse-exit-from-artifact.sh prove `harness exit == persisted artifact
+# exit_code` WITHOUT spinning a container -- it grades THIS code, not a copy.
+if [[ "${1:-}" == "--selftest-exit-from-artifact" ]]; then
+    ARTIFACT_ABS="${2:?usage: $0 --selftest-exit-from-artifact <artifact-path>}"
+    exit_from_artifact
+fi
 
 # DRAIN-23 (SC2): SIGKILL-proof sim lifecycle + fail-loud stale-orphan gate. The
 # reaping mechanism (own-process-group start + group teardown), the pre-run
@@ -161,7 +198,13 @@ fi
 # whatever answers -- the exact :135-141 miss the old readiness curl committed.
 assert_port_7878_free
 # DRAIN-23 cut (1): start the sim in its OWN process group so teardown can group-kill it.
-start_sim_in_own_pgroup "$REPO_ROOT/quality/reports/verifications/docs-repro/.sim-${ROW_ID//\//-}.log"
+# The per-run stdout/stderr log lives under quality/reports/verifications/docs-repro/ and
+# is git-ignored (DRAIN-14: `.sim-*.log` pattern) -- transient runtime noise, not evidence.
+SIM_LOG="$REPO_ROOT/quality/reports/verifications/docs-repro/.sim-${ROW_ID//\//-}.log"
+start_sim_in_own_pgroup "$SIM_LOG"
+# DRAIN-13 sim-REACHABILITY readiness gate: the pre-docker-run gate is not just port-free
+# (assert_port_7878_free, above) -- it also requires the sim the harness STARTED to actually
+# ANSWER a request. A bound-but-unresponsive sim (the readiness-race leg) is caught here.
 SIM_READY=0
 for _ in $(seq 1 30); do
     if curl -fsS "http://127.0.0.1:7878/projects/demo/issues" >/dev/null 2>&1; then
@@ -171,8 +214,14 @@ for _ in $(seq 1 30); do
     sleep 0.5
 done
 if [[ "$SIM_READY" -ne 1 ]]; then
-    write_skip_artifact "ephemeral sim failed to become ready on 127.0.0.1:7878 (NOT-VERIFIED)"
-    exit 0
+    # DRAIN-13 sim-readiness leg: the harness STARTED its own sim (docker present, binary
+    # present, port was free) but it never answered on 127.0.0.1:7878 within the readiness
+    # budget. That is a REAL failure of the harness's own sim -- surface it NON-ZERO
+    # (exit_code=1 via write_fail_artifact) so a sim-not-reachable flake is never MASKED as a
+    # pass. Substrate-absent SKIPs (docker missing / binary not built) stayed NOT-VERIFIED /
+    # exit 0 ABOVE; this is not one of those. Exit derives from the persisted artifact.
+    write_fail_artifact "ephemeral sim the harness started never became reachable on 127.0.0.1:7878 within the readiness budget (DRAIN-13 sim-readiness leg) -- a broken or too-slow sim must not be masked as success; inspect the sim log at $SIM_LOG, and free any stale listener with 'kill \$(lsof -ti:7878)' before re-running"
+    exit_from_artifact
 fi
 
 # 3. Run in container. Mount workspace read-only; mount target/ read-write so
@@ -219,12 +268,21 @@ STDERR_TAIL=$(tail -c 4096 "$STDERR_TMP")
 # assert. Tempfile-then-grep (P56 SIGPIPE lesson), never copied from expected.asserts.
 grep '^ASSERT-PASS: ' "$STDOUT_TMP" > "$HARVEST_TMP" 2>/dev/null || true
 
-# Status is exit_code-driven; asserts_passed is the HARVESTED set (never the row's
-# expected.asserts verbatim). The generic run line is emitted as DIAGNOSTIC context
-# only -- deliberately NOT a congruence source (closes the F-K4b tautology).
-python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" "$HARVEST_TMP" <<'PY'
-import json, sys
-artifact, rid, container, command, exit_code, stdout, stderr, ts, harvest_path = sys.argv[1:10]
+# 4c. Write the artifact with the AUTHORITATIVE (persisted) exit_code (DRAIN-13 / SC4).
+# The harness exits with the PERSISTED exit_code -- NOT the raw docker/timeout rc (below,
+# via exit_from_artifact). A clean docker exit (rc=0) is a PASS ONLY when every
+# expected.assert is EARNED by a harvested ASSERT-PASS line (asserts_congruent); a rc=0
+# with missing/uncongruent asserts is recorded exit_code=1 (a FAIL, never a silent pass --
+# the rc-masks-artifact gap W1a reproduced). Any non-zero docker/timeout rc is exit_code=1.
+# asserts_passed stays the HARVESTED set; the row's expected.asserts are read ONLY to grade
+# coverage for the exit code, NEVER copied into asserts_passed (the F-K4b tautology stays
+# closed -- the variable is named `expected`, not the verbatim-copy token the SC1 gate bans).
+python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" "$HARVEST_TMP" "$CATALOG" "$REPO_ROOT" <<'PY'
+import json, os, sys
+artifact, rid, container, command, docker_rc, stdout, stderr, ts, harvest_path, catalog, repo_root = sys.argv[1:12]
+sys.path.insert(0, os.path.join(repo_root, "quality", "runners"))
+from _audit_field import asserts_congruent
+
 PREFIX = "ASSERT-PASS: "
 harvested = []
 try:
@@ -237,27 +295,62 @@ try:
                     harvested.append(text)
 except FileNotFoundError:
     pass
+
+# Read the row's expected.asserts ONLY to grade coverage for the exit code (never to
+# populate asserts_passed -- that was the closed F-K4b tautology).
+expected = []
+try:
+    rows = json.loads(open(catalog).read())["rows"]
+    row = next((r for r in rows if r.get("id") == rid), None)
+    if row:
+        expected = (row.get("expected") or {}).get("asserts") or []
+except Exception:
+    expected = []
+
+docker_rc = int(docker_rc)
+unmatched = []
+if not expected:
+    congruent = True                                 # no asserts to earn -> exit tracks docker rc
+elif not harvested:
+    congruent, unmatched = False, list(expected)     # supposed to emit lines, emitted none
+else:
+    congruent, unmatched = asserts_congruent(expected, harvested)
+
+# DRAIN-13: the AUTHORITATIVE (persisted) exit_code. The harness re-reads THIS from the
+# file (exit_from_artifact) and exits with it -- never the raw docker rc.
+authoritative = 0 if (docker_rc == 0 and congruent) else 1
+
+asserts_failed = []
+if docker_rc != 0:
+    asserts_failed.append(f"container {container} exited with docker rc {docker_rc}")
+if unmatched:
+    asserts_failed.append(
+        "DRAIN-22/F-K4b: expected assert(s) not earned by any harvested ASSERT-PASS line: "
+        + " | ".join(unmatched)
+    )
+
 data = {
     "ts": ts,
     "row_id": rid,
-    "exit_code": int(exit_code),
+    # AUTHORITATIVE persisted exit_code -- the harness re-reads THIS and exits with it, so a
+    # docker rc that disagrees can never mask it (DRAIN-13 rc-masks-artifact gap closed).
+    "exit_code": authoritative,
+    "docker_rc": docker_rc,   # diagnostic only: the raw docker/timeout rc (may disagree)
     "container": container,
     "command": command,
     "stdout": stdout,
     "stderr": stderr,
-    # DRAIN-22: asserts_passed is HARVESTED from the container's ASSERT-PASS lines,
-    # NEVER copied from row.expected.asserts. asserts_congruent() (grade time) now
-    # falsifies a row whose example stopped emitting a covering line for some
-    # expected.assert -- a no-op `exit 0` that emits nothing earns no congruence.
+    # HARVESTED from the container's ASSERT-PASS lines, NEVER copied from row.expected.asserts.
     "asserts_passed": list(harvested),
-    "asserts_failed": [],
-    # Diagnostic context only -- NOT a congruence source (see comment above).
-    "diagnostic": f"container {container} ran command and exited {exit_code}",
+    "asserts_failed": asserts_failed,
+    # Diagnostic context only -- NOT a congruence source.
+    "diagnostic": f"container {container} ran command; docker rc={docker_rc}, authoritative exit_code={authoritative}",
     "harvested_assert_pass_count": len(harvested),
 }
-if int(exit_code) != 0:
-    data["asserts_failed"].append(f"container {container} exited with code {exit_code}")
 open(artifact, "w").write(json.dumps(data, indent=2) + "\n")
 PY
 
-exit "$EXIT_CODE"
+# DRAIN-13 (SC4): exit STRICTLY from the persisted artifact exit_code -- re-read the value
+# just written and exit with it. The harness rc now provably equals the artifact exit_code,
+# closing the W1a-reproduced rc=0-masks-artifact-exit_code=1 disagreement.
+exit_from_artifact

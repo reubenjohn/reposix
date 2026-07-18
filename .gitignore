@@ -87,6 +87,12 @@ quality/reports/verifications/*/*.cobertura.xml
 # p94-git243-fallback-sentinel.sh archives the full cargo-test log here on
 # failure (post-mortem diagnostics) — per-run runtime snapshot, not evidence.
 quality/reports/verifications/agent-ux/p94-git243-fallback-sentinel-cargo-test-failure.log
+# P124 DRAIN-14: container-rehearse.sh writes a per-run ephemeral-sim stdout/stderr log
+# at quality/reports/verifications/docs-repro/.sim-<row-id>.log (SIM_LOG) for each rehearsal.
+# It is transient runtime noise (regenerated on every run), never committed evidence —
+# previously it leaked as untracked. Scoped to the docs-repro dir (NOT a repo-wide *.sim
+# glob), mirroring the p94 sentinel-log precedent above.
+quality/reports/verifications/docs-repro/.sim-*.log
 # Exception: P84 webhook-latency.json is `asset-exists`-kind committed
 # evidence — the verifier `webhook-latency-floor.sh` READS this artifact
 # on every pre-release run; it's not a per-run runtime snapshot.
