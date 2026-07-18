@@ -864,3 +864,38 @@ cargo/rustc, which would trip the mutex itself); that path is covered by the OOM
 + the unchanged exit-2 contract, cited in a code comment.
 
 **STATUS:** RESOLVED (P120 CLOSE Wave A — see this commit; hook + regression test + this entry landed together)
+
+## 2026-07-17 | discovered-by: P120 phase-close verifier (OD-3 adversarial credential-flow sweep) | severity: MEDIUM
+
+**What:** `reposix doctor` echoes the RAW `remote.*.url` — including any embedded
+`?mirror=https://user:token@…` bus credentials — into three `DoctorFinding` messages
+(`crates/reposix-cli/src/doctor.rs:440`, `:444`, `:454`, and the recovery hint at `:456`).
+`strip_bus_query(url)` strips the mirror half only for the `sot` that feeds
+`parse_remote_url`; the echoed `format!("reposix remote={url}")` / `format!("remote url={url} …")`
+still interpolates the FULL raw URL. This is the SAME leak class WR-02 (`sync.rs`) and WR-03
+(`worktree_helpers.rs`) closed with `backend_dispatch::redact_userinfo`, but `doctor.rs`
+was left untouched — its findings surface the user's own mirror token to stdout/stderr
+(and thence any captured `reposix doctor` log, CI artifact, or screenshot).
+
+**Why out-of-scope for the discovering session:** `doctor.rs` is a DELIBERATE exception to
+P120's `teach_scan.py` scope (it emits a structured `DoctorReport`, not a `bail!`, so the
+3-part teaching bar / scanner does not apply — documented in `crates/CLAUDE.md` §
+"doctor.rs is exempt from the teach-scan by scope"). It is NOT in the enumerated retrofit
+surface nor the WR-01/02/03 set the code reviewer found, so it falls outside P120's charter.
+The teach-scan exemption is about the TEACHING bar, not the credential-redaction invariant —
+so the leak was never in the scanner's field of view. Severity is MEDIUM not HIGH because the
+credential is the user's OWN mirror token rendered in their OWN `reposix doctor` output
+(lower exfil surface than WR-01's git-triggered append-only audit row or the git-triggered
+helper stderr WR-02/WR-03 closed) — but it is a real raw-URL echo symmetric to the three
+just fixed, and doctor output is routinely captured.
+
+**Sketched resolution:** Wrap each `{url}` interpolation at `doctor.rs:440/444/454/456` in
+`reposix_remote::backend_dispatch::redact_userinfo(url)` (NOT `strip_url_userinfo` — the
+outer `reposix::` scheme defeats `Url::parse` and passes the token through, the exact
+footgun documented in `crates/CLAUDE.md`). Add a regression test mirroring
+`wr03_cache_path_error_redacts_mirror_credentials_in_malformed_bus_url` that runs `doctor`
+on a tree with a credentialed `?mirror=` remote and asserts the token is absent from the
+`DoctorReport`. ~30 min, no new dependency. Consider whether `doctor.rs` should be added to
+the redaction-regression exemplar list in `crates/CLAUDE.md`.
+
+**STATUS:** OPEN

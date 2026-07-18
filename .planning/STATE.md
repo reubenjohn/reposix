@@ -3,19 +3,31 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-17T15:30:00.000Z"
-last_activity: 2026-07-17 -- P119 CLOSED GREEN (verdict GREEN at quality/reports/verdicts/p119/VERDICT.md, committed 835d65dd; CI green on main tip c5e1195b): intention-preserving DP-4 pivot — the 5-day-stale literal SC-1/SC-2 deletion plan was NOT executed blind; targets found still-live at execution time and DEFERRED with evidence to v0.15.0 SURPRISES-INTAKE (RAISE-2a catalog.py/v0.11.1-catalog.json live KEEP-AS-CANONICAL row; RAISE-2b docs_reproducible_catalog.json 8 live breadcrumbs); SC-3 (ORCHESTRATION §3 handover-template split <20000B) + SC-4 (six P79-P84 broken Plan links repointed) + clean edits (OP-8 reword, ROADMAP reconcile, PROJECT de-stale, P117 parenthetical honesty) LANDED; the P117 launch-animation publish (E1/GTH-V15-37) remains owner-approval PENDING; next = P120
+last_updated: "2026-07-17T16:15:00.000Z"
+last_activity: 2026-07-17 -- P120 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p120/VERDICT.md): CLI/helper error-message hardening + credential-hygiene — SC1 (CLI 3-part teach errors) + SC2 (helper errors dispositioned) + SC3 (catalog-first ordering, W0 142e1278 precedes first impl 15e971bc) all PASS; the 3 credential-leak regression tests each ASSERT non-leakage and RUN green (WR-01 bus_handler scrubs token from operator diag AND persisted cache.db audit row; WR-02 sync.rs; WR-03 worktree_helpers.rs). One MEDIUM out-of-scope noticing filed: doctor.rs echoes raw remote.*.url mirror creds into DoctorFindings (same leak class, outside P120 WR scope) -> SURPRISES-INTAKE. GTH-V15-67 (cred-hygiene inline allow-marker) deliberately filed-not-implemented pending owner review. Impl @ 859ba0e3, CI 29601596722 success; next = P121
 progress:
   total_phases: 15
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 3
   completed_plans: 2
-  percent: 40
+  percent: 47
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P120 (CLI/helper error-message hardening + credential-hygiene fixes, v0.15.0 UX-01) — CLOSED GREEN 2026-07-17.**
+gsd-verifier verdict GREEN (`quality/reports/verdicts/p120/VERDICT.md`); SC1–SC3 all PASS. The three
+credential-leak fixes each carry a genuine non-leakage assertion (verifier RAN them green): WR-01
+`bus_handler` (token scrubbed from BOTH the operator diag AND the persisted `cache.db` audit row — the
+OP-3 leg), WR-02 `sync.rs`, WR-03 `worktree_helpers.rs`. Catalog-first ordering held (W0 catalog commit
+`142e1278` strictly precedes first impl `15e971bc`). One MEDIUM out-of-scope noticing filed to
+`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md`: `doctor.rs:440/444/454/456` echoes raw
+`remote.*.url` (mirror creds) into `DoctorFinding`s — same leak class as WR-02/WR-03 but outside
+P120's WR charter, so a valid follow-up not an SC gap. GTH-V15-67 (cred-hygiene.sh inline test-fixture
+allow-marker) stays deliberately filed-not-implemented pending owner review. Impl landed `859ba0e3`
+(CI `29601596722` = success). **7/15 v0.15.0 "Floor" phases complete** (P114–P120); next = P121.
 
 Phase: **P119 (docs/planning simplification, the "P112 RAISE") — CLOSED GREEN 2026-07-17.**
 gsd-verifier verdict GREEN (`quality/reports/verdicts/p119/VERDICT.md`, committed `835d65dd`);
@@ -129,7 +141,7 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 120` (CLI + helper error hardening to Rust-compiler-grade). Carried
+Next step: `/gsd-plan-phase 121`. Carried
 owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
@@ -171,7 +183,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P119 CLOSED GREEN (verdict GREEN, intention-preserving DP-4 pivot); 6/15 phases complete (P114, P115, P116, P117, P118, P119). Next: `/gsd-plan-phase 120`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P120 CLOSED GREEN (verdict GREEN); 7/15 phases complete (P114–P120). Next: `/gsd-plan-phase 121`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
