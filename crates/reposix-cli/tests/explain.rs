@@ -132,7 +132,7 @@ fn list_output_is_sorted_by_code() {
     let (_ok, stdout, _stderr) = run_explain(&["--list"]);
     let codes_in_order: Vec<&str> = stdout
         .lines()
-        .filter_map(|l| l.trim().split_whitespace().next())
+        .filter_map(|l| l.split_whitespace().next())
         .filter(|tok| tok.starts_with("RPX-"))
         .collect();
     let mut sorted = codes_in_order.clone();
