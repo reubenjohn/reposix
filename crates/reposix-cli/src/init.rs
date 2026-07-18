@@ -20,6 +20,7 @@ use std::process::Command;
 use anyhow::{anyhow, bail, Context, Result};
 use reposix_core::codes::ids;
 use reposix_core::errmsg::teach_coded;
+use reposix_remote::backend_dispatch::redact_userinfo;
 
 use crate::errors::{missing_env_var_error, spec_parse_error};
 
@@ -389,15 +390,18 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
             // RPX-0402 (INIT_FETCH_FAILED): the remote was configured but the initial
             // fetch brought nothing back. Routed through `teach_coded` so the
             // `[RPX-0402]` tag + `Explain:` nudge render (matching every other coded
-            // site). git's own stderr is SURFACED, not swallowed — it carries no
-            // userinfo (a `reposix::` URL embeds no credentials, and the helper redacts
-            // at its own boundary). Regression-guarded by
+            // site). git's own stderr is SURFACED (not swallowed) but REDACTED first
+            // with `redact_userinfo` — the crates/CLAUDE.md rule is "never interpolate
+            // raw git stderr", and this makes the no-leak guarantee independent of
+            // git's version (modern git strips userinfo from its "unable to access
+            // '<url>'" line; an older git could echo it). Matches the sibling redaction
+            // in `bus_handler::precheck_mirror_drift`. Regression-guarded by
             // `init_errors_nonzero_when_initial_fetch_fails`.
+            let safe_stderr = redact_userinfo(stderr.trim());
             let headline = format!(
                 "reposix init: could not sync `{path_str}` from backend `{url}` — the repo was \
                  configured but nothing was fetched, so it has no commits yet.\n\
-                 git stderr:\n  {stderr}",
-                stderr = stderr.trim(),
+                 git stderr:\n  {safe_stderr}",
             );
             let fetch_in_place = format!(
                 "git -C {path_str} fetch --filter=blob:none origin   # sync the configured tree in place"
@@ -632,9 +636,10 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             format!("invoke `git fetch --filter=blob:none {cache_str} {oid_hex}` from {path_str}")
         })?;
     if !fetch_out.status.success() {
-        let git_stderr = String::from_utf8_lossy(&fetch_out.stderr)
-            .trim()
-            .to_string();
+        // Redact any `scheme://user:secret@` userinfo git might echo before it
+        // reaches a user-facing error (crates/CLAUDE.md § "never interpolate raw
+        // git stderr"; defense-in-depth, version-independent).
+        let git_stderr = redact_userinfo(String::from_utf8_lossy(&fetch_out.stderr).trim());
         bail!(
             "{}",
             teach_coded(
@@ -662,7 +667,10 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             .output()
             .with_context(|| format!("update-ref {refname} -> {oid_hex}"))?;
         if !out.status.success() {
-            let git_stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+            // Redact any `scheme://user:secret@` userinfo git might echo before it
+            // reaches a user-facing error (crates/CLAUDE.md § "never interpolate raw
+            // git stderr"; defense-in-depth, version-independent).
+            let git_stderr = redact_userinfo(String::from_utf8_lossy(&out.stderr).trim());
             bail!(
                 "{}",
                 teach_coded(
