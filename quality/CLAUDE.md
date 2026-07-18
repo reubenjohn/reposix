@@ -76,6 +76,17 @@ source (see the `shell-coverage` job in `.github/workflows/ci.yml`); `sudo apt-g
 Follow-up (documented, left at 0%): the cargo/sim-dependent gates are unexercised by the
 harnesses, so they sit at 0% and drag the aggregate down — closing them is deferred.
 
+**CI-green-on-main required-workflow list (P123/SC5a, DRAIN-01):**
+`code/ci-green-on-main` (`gates/code/ci-green-on-main.sh`) watches a required-workflow
+LIST, not one hardcoded workflow — `WORKFLOWS=(ci.yml release-plz.yml)`, the only two
+confirmed (by reading the workflow files) to fire unconditionally on `push: branches:
+[main]` with no path filter. Before adding a THIRD workflow, re-verify its trigger shape
+first — the script's header comment names why `audit.yml` (path-filtered) and
+`docs.yml`/`quality-post-release.yml` (`workflow_run`-triggered, not `push`) are
+deliberately excluded. Aggregation: NOT-VERIFIED (any watched workflow unknowable — gh
+error, no run found, still in-progress) always outranks FAIL (a red workflow) when
+rolling up the per-workflow verdicts to one row grade.
+
 **Cadences:** `pre-commit` (<2s) · `pre-push` (<60s) · `pre-pr` (PR CI, <10min) ·
 `weekly` (cron, alerting) · `pre-release` (on tag, <15min) · `post-release` (alerting) ·
 `on-demand` · `pre-release-real-backend` (local + milestone-close, env-gated, mandatory
