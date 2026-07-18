@@ -50,6 +50,7 @@ import _realbackend  # P89 RBF-FW-01: env-gate + exit-code map (sibling per anti
 import _audit_field  # P89 RBF-FW-11: claim_vs_assertion_audit + kind:shell-subprocess cross-check
 import _shell_verdict  # D-P96-01 (extended): deterministic committed verdict for kind:shell-subprocess
 import _env_load  # P123 SC1/DRAIN-03: conditional ./.env self-sourcing (present-only, non-clobbering)
+import _persist_guard  # P123 SC2/DRAIN-04: committed-GREEN downgrade guard (git-HEAD baseline)
 
 # Re-export so existing callers and tests can keep doing `from run import parse_duration`.
 parse_duration = _parse_duration_impl
@@ -438,6 +439,20 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "--persist (D-P96-01)."
         ),
     )
+    parser.add_argument(
+        "--allow-downgrade",
+        action="store_true",
+        help=(
+            "DOWNGRADE OVERRIDE (P123 SC2): by default --persist REFUSES to "
+            "write a committed-GREEN (PASS/WAIVED, per `git show HEAD:`) row "
+            "back at an EXPLICIT worse grade (FAIL/PARTIAL) — it prints the row "
+            "id, old->new status, and this flag as the recovery. Passing "
+            "--allow-downgrade restores the unconditional-write behavior for "
+            "that regression, still printing a loud per-row notice (never "
+            "silent). A demotion to NOT-VERIFIED is NOT a downgrade and never "
+            "needs this flag. Default OFF."
+        ),
+    )
     return parser
 
 
@@ -462,6 +477,7 @@ def main(argv: list[str] | None = None) -> int:
 
     all_rows: list[dict] = []
     pending_mint: list[str] = []  # catalogs with unpersisted flips (validate-only)
+    blocked_downgrade_catalogs: list[str] = []  # P123 SC2: --persist refused a downgrade
     counts = {"PASS": 0, "FAIL": 0, "PARTIAL": 0, "WAIVED": 0, "NOT-VERIFIED": 0}
 
     for cat_path in catalogs:
@@ -523,7 +539,33 @@ def main(argv: list[str] | None = None) -> int:
         # sees it without any tree write.
         if catalog_dirty(original, data):
             if args.persist:
-                save_catalog(cat_path, data)
+                # P123 SC2 (DRAIN-04): refuse to silently downgrade a committed-
+                # GREEN (PASS/WAIVED, per `git show HEAD:`) row to an EXPLICIT
+                # regression (FAIL/PARTIAL) without --allow-downgrade. A demotion
+                # to NOT-VERIFIED (freshness-TTL/missing-verifier/env-skip/exit-75)
+                # is NOT a downgrade and is always allowed (see _persist_guard).
+                committed = _persist_guard.committed_head_statuses(REPO_ROOT, cat_path)
+                violations = _persist_guard.refuse_downgrade_without_flag(
+                    committed, data["rows"])
+                if violations and not args.allow_downgrade:
+                    for row_id, old, new in violations:
+                        print(
+                            f"REFUSED to persist {row_id}: committed status was "
+                            f"{old}, this run graded {new}. Pass --allow-downgrade "
+                            f"to override: python3 quality/runners/run.py --cadence "
+                            f"{args.cadence} --persist --allow-downgrade",
+                            file=sys.stderr,
+                        )
+                    blocked_downgrade_catalogs.append(cat_path.name)
+                else:
+                    if violations:  # --allow-downgrade set: persist, but loudly.
+                        for row_id, old, new in violations:
+                            print(
+                                f"ALLOWED downgrade (--allow-downgrade): "
+                                f"{row_id} {old} -> {new}",
+                                file=sys.stderr,
+                            )
+                    save_catalog(cat_path, data)
             else:
                 pending_mint.append(cat_path.name)
 
@@ -535,6 +577,16 @@ def main(argv: list[str] | None = None) -> int:
             f"python3 quality/runners/run.py --cadence {args.cadence} --persist"
         )
 
+    if blocked_downgrade_catalogs:
+        print(
+            f"note: --persist REFUSED a committed-GREEN downgrade in "
+            f"{len(blocked_downgrade_catalogs)} catalog(s) "
+            f"({', '.join(sorted(set(blocked_downgrade_catalogs)))}); those files "
+            f"were NOT written (see the REFUSED line(s) above). Re-run with "
+            f"--allow-downgrade only if the regression is intended.",
+            file=sys.stderr,
+        )
+
     exit_code = compute_exit_code(all_rows)
     summary = (
         f"summary: {counts['PASS']} PASS, {counts['FAIL']} FAIL, "
@@ -542,6 +594,11 @@ def main(argv: list[str] | None = None) -> int:
         f"{counts['NOT-VERIFIED']} NOT-VERIFIED -> exit={exit_code}"
     )
     print(summary)
+    # P123 SC2: a blocked downgrade always surfaces as a failing run, never
+    # swallowed into an otherwise-green exit (a refused P2 downgrade would not
+    # trip compute_exit_code on its own).
+    if blocked_downgrade_catalogs:
+        exit_code = max(exit_code, 1)
     return exit_code
 
 

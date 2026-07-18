@@ -32,6 +32,7 @@ import io
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -44,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run  # noqa: E402
 import _env_load  # noqa: E402  (P123 SC1 / DRAIN-03: ./.env self-sourcing)
+import _persist_guard  # noqa: E402  (P123 SC2 / DRAIN-04: committed-GREEN downgrade guard)
 
 
 def _write_verifier(repo_root: Path, rel: str, exit_code: int) -> None:
@@ -212,6 +214,262 @@ class TestEnvSelfSourcing(unittest.TestCase):
             self.assertIn("BAZ", captured, "loaded KEY name not reported")
             self.assertNotIn("bar", captured, "secret VALUE 'bar' leaked to stderr")
             self.assertNotIn("qux", captured, "secret VALUE 'qux' leaked to stderr")
+
+
+class TestPersistDowngradeGuard(unittest.TestCase):
+    """P123 SC2 / DRAIN-04: --persist refuses to silently downgrade a
+    committed-GREEN (PASS/WAIVED) catalog row to an EXPLICIT regression
+    (FAIL/PARTIAL) without --allow-downgrade. Backs catalog row
+    structure/persist-refuses-downgrade.
+
+    Load-bearing distinction (Test 6): a demotion to NOT-VERIFIED (freshness-TTL
+    expiry, missing verifier, env-skip, exit-75) is NOT a regression and must
+    NEVER need the flag — otherwise the phase's own freshness-invariant mints
+    (which produce NOT-VERIFIED) would deadlock against this guard.
+
+    Reality-faithful: each test builds a THROWAWAY /tmp git repo, commits a
+    "before" catalog so the guard has a real `git show HEAD:` baseline to read,
+    then drives the REAL run.main() persist path over that repo. All git setup +
+    the run happen within one test method — no shared-repo writes (the git init /
+    config / commit target a disposable tempdir, never the project repo).
+    """
+
+    # A committer identity + config isolation applied to every throwaway repo.
+    # Local-only (never --global); global/system config are pinned to os.devnull
+    # so the fixture never reads or writes the developer's ~/.gitconfig.
+    _GIT_ENV_EXTRA = {
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
+    }
+
+    def _git(self, td: Path, *args: str) -> None:
+        env = {**os.environ, "HOME": str(td), **self._GIT_ENV_EXTRA}
+        subprocess.run(
+            ["git", *args], cwd=str(td), env=env,
+            check=True, capture_output=True, text=True,
+        )
+
+    def _seed_repo(self, td: Path, *, head_rows: list[dict],
+                   working_status: str, working_blast: str, verifier_exit: int) -> Path:
+        """Init a throwaway git repo, commit `head_rows` as the HEAD baseline,
+        then overwrite the working copy with a single row at `working_status`
+        (which may differ from HEAD) and drop a verifier that exits
+        `verifier_exit`. Returns the catalog path."""
+        cat_dir = td / "quality" / "catalogs"
+        cat_dir.mkdir(parents=True)
+        cat_path = cat_dir / "synthetic.json"
+        _write_verifier(td, "quality/gates/synthetic-verifier.sh", verifier_exit)
+
+        # 1) Commit the HEAD baseline (what `git show HEAD:` will return).
+        run.save_catalog(cat_path, {"dimension": "structure", "rows": head_rows})
+        self._git(td, "init", "-q")
+        self._git(td, "config", "user.email", "gate@test.invalid")
+        self._git(td, "config", "user.name", "downgrade-guard-test")
+        self._git(td, "config", "commit.gpgsign", "false")
+        self._git(td, "add", "quality/catalogs/synthetic.json")
+        self._git(td, "commit", "-q", "-m", "seed baseline")
+
+        # 2) Overwrite the WORKING copy (may differ from HEAD — this is what
+        #    run.py loads + re-grades). The guard still reads HEAD, not this.
+        run.save_catalog(cat_path, {"dimension": "structure",
+                                    "rows": [_synthetic_row(status=working_status,
+                                                            blast=working_blast)]})
+        return cat_path
+
+    def _run_persist(self, td: Path, cat_path: Path, *, allow_downgrade: bool
+                     ) -> tuple[int, bytes, bytes, dict, str]:
+        """Drive run.main() --persist over the throwaway repo. Returns
+        (exit_code, catalog_bytes_before, catalog_bytes_after, row_on_disk_after,
+        stderr_text)."""
+        cat_dir = cat_path.parent
+        argv = ["--cadence", "pre-push", "--persist"]
+        if allow_downgrade:
+            argv.append("--allow-downgrade")
+        # Preserve PATH (git + bash lookup) + a clean HOME; pin git config to
+        # devnull; clear all other env (incl. any real-backend creds).
+        penv = {
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": str(td),
+            **self._GIT_ENV_EXTRA,
+        }
+        before = cat_path.read_bytes()
+        err = io.StringIO()
+        with mock.patch.object(run, "REPO_ROOT", td), \
+             mock.patch.object(run, "CATALOG_DIR", cat_dir), \
+             mock.patch.object(run, "REPORTS_DIR", td / "quality" / "reports"), \
+             mock.patch.dict(os.environ, penv, clear=True), \
+             contextlib.redirect_stdout(io.StringIO()), \
+             contextlib.redirect_stderr(err):
+            exit_code = run.main(argv)
+        after = cat_path.read_bytes()
+        row_after = json.loads(after)["rows"][0]
+        return exit_code, before, after, row_after, err.getvalue()
+
+    def test_1_committed_pass_downgraded_to_fail_is_refused(self):
+        # Committed PASS, fresh grade FAIL, NO --allow-downgrade -> save_catalog
+        # NOT called (disk stays PASS) and the refusal names row id + PASS + FAIL
+        # + the literal --allow-downgrade recovery command.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="PASS")],
+                working_status="PASS", working_blast="P1", verifier_exit=1)
+            exit_code, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertEqual(before, after,
+                             "REFUSED downgrade still wrote the catalog (silent overwrite)")
+            self.assertEqual(row["status"], "PASS",
+                             "committed PASS was overwritten with FAIL without --allow-downgrade")
+            self.assertIn("test/synthetic-immutable", err, "refusal did not name the row id")
+            self.assertIn("PASS", err, "refusal did not name the old status")
+            self.assertIn("FAIL", err, "refusal did not name the new status")
+            self.assertIn("--allow-downgrade", err,
+                          "refusal did not teach the --allow-downgrade recovery command")
+            self.assertEqual(exit_code, 1, "a blocked downgrade must surface as a failing run")
+
+    def test_2_allow_downgrade_flag_persists_the_regression(self):
+        # Same setup, but --allow-downgrade -> save_catalog IS called (FAIL
+        # persisted) and a loud per-row notice is still printed (never silent).
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="PASS")],
+                working_status="PASS", working_blast="P1", verifier_exit=1)
+            _exit, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=True)
+            self.assertNotEqual(before, after,
+                                "--allow-downgrade did not persist the regression")
+            self.assertEqual(row["status"], "FAIL",
+                             "--allow-downgrade did not write the FAIL grade")
+            self.assertIn("test/synthetic-immutable", err,
+                          "the allowed-downgrade notice did not name the row")
+            self.assertTrue(
+                any(tok in err for tok in ("ALLOWED", "allow-downgrade")),
+                "an explicitly-permitted downgrade was persisted SILENTLY (no notice)")
+
+    def test_3_committed_waived_downgraded_to_fail_is_refused(self):
+        # WAIVED counts as green: WAIVED -> FAIL is also blocked without the flag.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="WAIVED")],
+                working_status="WAIVED", working_blast="P1", verifier_exit=1)
+            _exit, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertEqual(before, after, "WAIVED->FAIL downgrade was silently written")
+            self.assertEqual(row["status"], "WAIVED",
+                             "committed WAIVED was overwritten with FAIL without the flag")
+            self.assertIn("WAIVED", err, "refusal did not name the old WAIVED status")
+            self.assertIn("FAIL", err, "refusal did not name the new FAIL status")
+
+    def test_4_brand_new_row_absent_from_head_mints_freely(self):
+        # A row NOT present in the git-HEAD catalog (e.g. straight out of a
+        # catalog-first commit) has no committed baseline -> never blocked,
+        # regardless of its fresh grade.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[],  # HEAD has NO rows -> no baseline for our id
+                working_status="PASS", working_blast="P1", verifier_exit=1)
+            _exit, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertNotEqual(before, after,
+                                "a brand-new row (absent from HEAD) failed to mint")
+            self.assertEqual(row["status"], "FAIL",
+                             "a brand-new row did not mint its fresh grade")
+            self.assertNotIn("REFUSED", err,
+                             "a brand-new row was wrongly blocked by the downgrade guard")
+
+    def test_5_unchanged_pass_is_not_blocked(self):
+        # Committed PASS, fresh grade STILL PASS -> not a downgrade; nothing
+        # changes and nothing is refused.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="PASS")],
+                working_status="PASS", working_blast="P1", verifier_exit=0)
+            _exit, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertEqual(before, after, "an unchanged PASS row dirtied the catalog")
+            self.assertEqual(row["status"], "PASS")
+            self.assertNotIn("REFUSED", err, "an unchanged PASS was wrongly refused")
+        # Direct-function reinforcement: PASS->PASS is never a violation.
+        self.assertEqual(
+            _persist_guard.refuse_downgrade_without_flag(
+                {"x": "PASS"}, [{"id": "x", "status": "PASS"}]),
+            [], "PASS->PASS must not be reported as a downgrade")
+
+    def test_6_downgrade_to_not_verified_is_always_allowed(self):
+        # SC2 regression-vs-TTL semantics / deadlock prevention: committed PASS,
+        # fresh grade NOT-VERIFIED (here via an exit-75 verifier — the same shape
+        # as a freshness-TTL expiry / missing-verifier / env-skip demotion) is
+        # NOT blocked and needs NO --allow-downgrade. This is the exact case that
+        # must never deadlock the phase's own freshness-invariant mints.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="PASS")],
+                working_status="PASS", working_blast="P1", verifier_exit=75)
+            _exit, before, after, row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertNotEqual(before, after,
+                                "a legitimate NOT-VERIFIED demotion failed to persist")
+            self.assertEqual(row["status"], "NOT-VERIFIED",
+                             "PASS->NOT-VERIFIED demotion was not written")
+            self.assertNotIn("REFUSED", err,
+                             "PASS->NOT-VERIFIED was wrongly treated as a downgrade "
+                             "(would deadlock freshness-TTL mints)")
+        # Direct-function reinforcement across EVERY NOT-VERIFIED cause: the
+        # guard consults status only, so any committed-green -> NOT-VERIFIED is [].
+        for old in ("PASS", "WAIVED"):
+            self.assertEqual(
+                _persist_guard.refuse_downgrade_without_flag(
+                    {"x": old}, [{"id": "x", "status": "NOT-VERIFIED"}]),
+                [], f"{old}->NOT-VERIFIED must never be a downgrade")
+
+    def test_7_blocked_downgrade_forces_nonzero_exit_even_for_p2(self):
+        # The blocked-downgrade -> exit 1 contract is INDEPENDENT of
+        # compute_exit_code: a P2 FAIL does not itself trip compute_exit_code
+        # (only P0/P1 do), so a green-looking run must STILL exit non-zero when a
+        # downgrade was refused — a block is never swallowed into a green exit.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_path = self._seed_repo(
+                td, head_rows=[_synthetic_row(status="PASS", blast="P2")],
+                working_status="PASS", working_blast="P2", verifier_exit=1)
+            exit_code, before, after, _row, err = self._run_persist(
+                td, cat_path, allow_downgrade=False)
+            self.assertEqual(exit_code, 1,
+                             "a refused P2 downgrade was swallowed into a green exit code")
+            self.assertEqual(before, after, "refused P2 downgrade still wrote the catalog")
+            self.assertIn("REFUSED", err)
+
+    def test_allow_downgrade_default_is_off(self):
+        # Mirror test_persist_default_is_off: the whole refuse-by-default contract
+        # hinges on --allow-downgrade parsing to False when absent.
+        parser = run._build_arg_parser()
+        self.assertFalse(
+            parser.parse_args(["--cadence", "pre-push"]).allow_downgrade,
+            "--allow-downgrade must default to False (refuse-by-default)")
+        self.assertTrue(
+            parser.parse_args(
+                ["--cadence", "pre-push", "--persist", "--allow-downgrade"]
+            ).allow_downgrade)
+
+    def test_committed_head_statuses_none_when_no_baseline(self):
+        # No git repo / untracked catalog -> None (not an error): the caller
+        # treats None as "no baseline", exempting every row. Guards the exact
+        # fail-open path the existing TestPersistGate --persist test relies on.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_dir = td / "quality" / "catalogs"
+            cat_dir.mkdir(parents=True)
+            cat_path = cat_dir / "synthetic.json"
+            run.save_catalog(cat_path, {"dimension": "structure", "rows": []})
+            # td is NOT a git repo -> git show fails -> None.
+            self.assertIsNone(
+                _persist_guard.committed_head_statuses(td, cat_path),
+                "a non-git / untracked catalog must yield None, not raise or fabricate")
 
 
 if __name__ == "__main__":
