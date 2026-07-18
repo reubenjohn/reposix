@@ -194,6 +194,22 @@ silent-catalog-corruption near-miss where a rotation's `--persist` downgraded
 `vision-litmus` PASS→FAIL on an env-skip false negative, caught only by a manual
 diff review before staging.
 
+**Concurrency lock (P123 SC3 / DRAIN-05, `_persist_guard.py::catalog_persist_lock`):**
+a `--persist` MINT holds an OS-level advisory `flock`
+(`quality/reports/.persist.lock`, gitignored) across the ENTIRE per-catalog
+read-modify-write — acquired BEFORE `load_catalog` and released AFTER
+`save_catalog`, NOT just around the write. Two concurrent `--persist` runners on
+the same catalog therefore serialize: the second's read cannot begin until the
+first's write commits, so neither can overwrite the other's flip from a stale
+snapshot (the GTH-V15-01 lost-update hazard). A validate-only (no `--persist`) run
+takes a `contextlib.nullcontext()` branch and never opens or contends for the lock
+— read-only GATE runs stay lock-free. There is deliberately **no timeout**: a
+`--persist` run is short-lived and the kernel releases an `flock` on process
+exit/crash including SIGKILL, so a crashed holder can never wedge future runs — do
+NOT "fix" the absent timeout (it would reintroduce a race). POSIX-only. Locked by
+`structure/persist-catalog-write-locked`
+(`quality/gates/structure/persist-catalog-write-locked.sh`).
+
 **OD-2 hard-RED skip-semantics (89-OWNER-DECISIONS.md, binding):** If the
 `pre-release-real-backend` cadence cannot EXECUTE against the sanctioned
 target at milestone-close, the milestone-close verdict is **RED**. Milestone
