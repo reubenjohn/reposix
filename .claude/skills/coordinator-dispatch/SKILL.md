@@ -109,6 +109,14 @@ holds the durable watch) and SendMessages you to resume on green. Everything bef
 push runs straight through — only this one boundary is a stop-and-return point. Full
 doctrine: `.planning/ORCHESTRATION.md` §3.
 
+**Corollary — never `fork` to resume or close.** Resume happens by SendMessage-to-id (the
+warm agent's context is intact), NOT by forking it. To drive a phase close, dispatch the
+verifier→executor LEAVES directly (the P122-blessed deterministic pattern) — NEVER `fork`
+a coordinator to "resume/close" it. A fork clones the parent's context and can confabulate
+a no-op close (P123-close: the fork returned ZERO tool uses while claiming "close
+executing," STATE.md unchanged, caught only by verify-against-reality).
+`.planning/ORCHESTRATION.md` §11.
+
 ## 7. Pause/resume brief template (owner-invoked pause)
 
 Finish the current atomic unit first, THEN dispatch relief-handover-writer with:

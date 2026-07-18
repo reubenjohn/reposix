@@ -289,7 +289,12 @@ no consult; escalate ONLY if the fix turns architectural (STOP + report to manag
 — owner ruling 2026-07-13 (git history). **A `fork` is never a safe no-op or discard
 placeholder** — it inherits full context and becomes a live PARALLEL tree-writer
 (single-writer-discipline violation, §2). Never dispatch a fork to "throw away"; end the
-turn instead.
+turn instead. **Nor is `fork` a way to resume or close a warm agent** — to resume a warm
+agent, SendMessage its id (its context is intact); to drive a phase close, dispatch the
+verifier→executor LEAVES directly (the P122-blessed deterministic pattern), NEVER `fork` a
+coordinator to "resume/close" it, since a fork clones the parent's context and can
+confabulate a no-op close (P123-close incident: the fork returned ZERO tool uses while
+claiming "close executing," STATE.md unchanged — caught only by verify-against-reality).
 
 ## 12. Honest corrective iteration (HCI)
 
