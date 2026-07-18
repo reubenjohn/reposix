@@ -17,6 +17,19 @@
 #
 # Exit 0 = aggregate >= floor (and counter validated); exit 1 = below floor or
 # kcov missing.
+#
+# TWO honesty layers cross-check here and CAN legitimately diverge: (1) kcov's
+# runtime line instrumentation is the coverage metric itself; (2) scripts/
+# shell_coverage.py's static bash-aware `coverable_line_count` is an independent
+# anti-gaming counter, cross-checked to stay within 15% of kcov's own coverable
+# total (catches a denominator gamed so kcov sees artificially few coverable
+# lines). They estimate the SAME "coverable lines" by different heuristics (the
+# static parser's heredoc / case-arm / multi-line-continuation skip rules vs
+# kcov's interpreter-driven instrumentation), so on a SMALL script a handful of
+# structurally-ambiguous lines is a large PERCENT on a tiny absolute gap — e.g.
+# transcript.sh at counter=34 vs kcov=27 is a 7-line gap reading as 25.9% — which
+# WARNs and flips only the P2 counter-validation assert, never the aggregate-floor
+# pass/fail. A >15% drift on a small script is expected, not evidence of gaming.
 set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"

@@ -57,10 +57,11 @@ This ledger exceeded the *.md 20k budget and was split into 9 per-part child fil
   - From P120 CLOSE push-preview (2026-07-17, first full pre-push run on the close commits)
   - From P121 W4 (2026-07-18, docs + bookkeeping close-out — triaged W3.6 noticings)
   - From P121 review (post-review fix wave, 2026-07-18)
-- [`good-to-haves/part-09.md`](good-to-haves/part-09.md) — 6 entries:
+- [`good-to-haves/part-09.md`](good-to-haves/part-09.md) — 7 entries:
   - From P121 CLOSE (bookkeeping + push, 2026-07-17)
   - From P122 W4 (stateless-connect read-path verification, 2026-07-18)
   - From P122 close (deterministic close, 2026-07-18)
   - From Phase 123 close (P114 OQ1 residual carry-forward)
   - From Phase 123 close (REQUIREMENTS.md coverage-table staleness noticing)
   - From Phase 123 close (Lane 1 code-review noticing, file-size early-warning)
+  - From Phase 124 close (container-rehearse harness hardening, 2026-07-18)

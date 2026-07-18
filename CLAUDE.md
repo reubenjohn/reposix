@@ -200,8 +200,10 @@ after the push, run `quality/runners/run.py --cadence post-push --persist` — t
 (not merely that some older green run exists), and `verdict.py --phase` grades the phase
 RED if it did not. Never open the next phase over a red main. Milestone-close adds a
 non-skippable 9th probe (`pre-release-real-backend`) — `.planning/CLAUDE.md`. Hook budgets are fixed whole-repo costs, NOT diff-size-scaled —
-`pre-commit` ≈1s, `pre-push` ≈55s (dominated by kcov shell-coverage + full-workspace
-clippy/mkdocs, not by what changed): `quality/CLAUDE.md` § Cadences.
+`pre-commit` ≈1s, `pre-push` ≈90-120s (re-measured 2026-07-18/P124: 122s — dominated by
+`code/shell-coverage` kcov aggregate alone at ~65s, plus a long tail of full-workspace
+subprocess gates + clippy/mkdocs; the original ≈55s target was outgrown by corpus growth,
+not by what changed; the hook WARNs past 90s, never blocks): `quality/CLAUDE.md` § Cadences.
 
 ## Commands you'll actually use
 

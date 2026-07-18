@@ -76,6 +76,22 @@ source (see the `shell-coverage` job in `.github/workflows/ci.yml`); `sudo apt-g
 Follow-up (documented, left at 0%): the cargo/sim-dependent gates are unexercised by the
 harnesses, so they sit at 0% and drag the aggregate down — closing them is deferred.
 
+**Two honesty layers (why a >15% counter-drift can be legitimate, not gaming):** the gate
+runs (1) **kcov's runtime line instrumentation** — the coverage metric that grades the
+aggregate floor — alongside (2) an independent **anti-gaming counter**, `scripts/
+shell_coverage.py`'s static bash-aware `coverable_line_count`, cross-checked to stay within
+15% of kcov's own coverable-line total (so a script can't be restructured to make kcov see
+artificially few coverable lines). Both estimate the SAME "coverable lines" quantity by
+different heuristics (the static parser's heredoc / `case`-arm / multi-line-continuation skip
+rules vs kcov's interpreter-driven instrumentation), so on a SMALL script a few
+structurally-ambiguous lines are a large PERCENT on a tiny absolute gap — e.g. `transcript.sh`
+at counter=34 vs kcov=27 is a 7-line gap that reads as 25.9%. That drift **WARNs and flips
+only the P2 counter-validation assert, never the aggregate-floor pass/fail**, so it is
+non-blocking; a >15% drift on a small script is expected divergence, not evidence of a gamed
+denominator (this is a *clarification of the mechanism*, not a fix of the drift — the
+reconcile/threshold decision is tracked in `SURPRISES-INTAKE.md`'s `code/shell-coverage`
+drift entries).
+
 **CI-green-on-main required-workflow list (P123/SC5a, DRAIN-01):**
 `code/ci-green-on-main` (`gates/code/ci-green-on-main.sh`) watches a required-workflow
 LIST, not one hardcoded workflow — `WORKFLOWS=(ci.yml release-plz.yml)`, the only two
@@ -106,7 +122,7 @@ never strip those vars from a gate that runs only in a CI/cron cadence, where
 `GITHUB_TOKEN` is the sole available credential (see `SURPRISES-INTAKE.md`'s P123-close
 gh-auth audit entry for the per-gate classification).
 
-**Cadences:** `pre-commit` (<2s) · `pre-push` (<60s) · `pre-pr` (PR CI, <10min) ·
+**Cadences:** `pre-commit` (<2s) · `pre-push` (~90-120s, see § Runtime below) · `pre-pr` (PR CI, <10min) ·
 `weekly` (cron, alerting) · `pre-release` (on tag, <15min) · `post-release` (alerting) ·
 `on-demand` · `pre-release-real-backend` (local + milestone-close, env-gated, mandatory
 at tag-time; default-skips to NOT-VERIFIED when `REPOSIX_ALLOWED_ORIGINS` + creds unset —
@@ -115,14 +131,18 @@ never skip-counts-as-pass, per PROTOCOL.md OD-2).
 **Runtime does NOT scale with diff size.** Both budgets are fixed whole-repo costs, not
 per-changed-file costs — measured 2026-07-12: pre-commit ≈0.7s (fmt --check on staged
 `.rs` only, ~0.5s + runner ~0.2s — the only piece that scales at all, and only with
-staged file *count*, not diff size). pre-push ≈55s, dominated by fixed-cost gates that
-walk the whole tree regardless of what changed: `code/shell-coverage` (kcov aggregate,
-~29s), `agent-ux/rebase-recovery-reconciles` (~9s), `docs-build/mkdocs-strict` (~2s),
-full-workspace clippy/fmt (~1s combined). A one-line commit and a 500-file commit pay
-the same pre-push tax. If pre-push ever creeps meaningfully past 60s, suspect a new
-whole-repo gate (another kcov-style full-corpus walk), not diff growth — profile with
-`python3 quality/runners/run.py --cadence pre-push` (per-row timing above) before
-adding budget.
+staged file *count*, not diff size). pre-push ≈90-120s (re-measured 2026-07-18/P124: 122s;
+corroborated by P121 ~92s and P123 109-121s — the original ≈55s budget has been outgrown by
+kcov-corpus growth + new whole-repo subprocess gates, NOT by diff size). Dominated by
+fixed-cost gates that walk the whole tree regardless of what changed: `code/shell-coverage`
+(kcov aggregate, ~65s — up from ~29s as the shell corpus grew, and the single largest cost
+by far), `agent-ux/rebase-recovery-reconciles` (~15s), `docs-repro/container-rehearse-sigkill-safe`
+(~11s, added P124), `docs-build/mkdocs-strict` (~4s), full-workspace clippy/fmt (~2s combined).
+A one-line commit and a 500-file commit pay the same pre-push tax. The `.githooks/pre-push`
+timing tripwire prints a stderr `WARN` (never blocks) once a run exceeds 90s; if pre-push
+creeps meaningfully past ~120s, suspect a NEW whole-repo gate (another kcov-style full-corpus
+walk), not diff growth — profile with `python3 quality/runners/run.py --cadence pre-push`
+(per-row timing above) before adding budget.
 
 **Kinds:** `mechanical` · `container` · `asset-exists` · `subagent-graded` · `manual`
 (TTL freshness) · `shell-subprocess` (real subprocess vs a real binary/backend + a

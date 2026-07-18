@@ -142,3 +142,44 @@ specific paths. Cross-ref **GTH-V15-21** (archived-milestone handover files star
 pushes when this waiver expires) and **GTH-V15-78** (rebase-recovery-reconciles.sh 42k `.sh`).
 
 **STATUS:** OPEN
+
+## 2026-07-18 | discovered-by: P124 W1a + W2 (source=P124, migrated at phase close from phase-local `deferred-items.md`) | severity: LOW-MEDIUM
+
+> **Third + fourth corroborating data points for the existing `code/shell-coverage`
+> counter-validation-drift entry above (`2026-07-18 | gsd-verifier P123 phase-close
+> verdict | LOW-MEDIUM`).** Does NOT duplicate — confirms the drift is stable across two
+> more independent P124-wave runs on the SAME box, tightening the "environmental / local
+> kcov, not a regression" diagnosis. Drain jointly with the P123-verifier entry.
+
+**What:** Two P124 waves independently observed `code/shell-coverage` grade **FAIL (P2)**
+locally, each time from the SAME anti-gaming counter-validation flip, NOT the aggregate
+floor: `quality/gates/agent-ux/lib/transcript.sh` measures `counter=34 vs kcov=27 = 25.9%`
+(> the gate's 15% cross-check), so the assert "coverable-line counter validated within 15%
+of kcov on all executed scripts" fails. Wave 1a (SC1/DRAIN-22): FAIL at 64.81s, aggregate
+17.78% ≥ 13.0% floor (aggregate assert PASSES). Wave 2 (SC2/DRAIN-23): FAIL at 62.10s,
+aggregate 17.52% ≥ floor. The P124 close-wave re-measured a THIRD time (this migration
+run, 2026-07-18): identical FAIL at 64.97s, same 34-vs-27 flip. Committed HEAD status is
+**PASS** (last CI-verified 2026-07-16); `transcript.sh` + `scripts/shell_coverage.py` are
+untouched by every P124 wave (last touched 2026-07-13, pre-P124); the new P124 scripts
+only enter the aggregate denominator (which stays above floor), never the counter-validated
+harness set. P2 → does not gate the pre-push P0/P1 exit code; `run.py` here is validate-only
+(no `--persist`) so the FAIL is never written back to the committed catalog. It is case (c)
+in the row's own `owner_hint` (kcov line-counter drift) and a documented local-vs-CI kcov
+discrepancy (`quality/CLAUDE.md` § Shell-coverage ratchet — the two-honesty-layer note added
+at P124 close explains *why* a small script legitimately breaches the 15% relative threshold).
+
+**Why out-of-scope for the discovering session:** Each P124 wave's charter was its own SC
+(container-rehearse harness hardening), not reconciling a pre-existing P2 counter drift in a
+gate outside every wave's touched-file set. SCOPE BOUNDARY: only auto-fix issues DIRECTLY
+caused by the wave's changes; this FAIL predates P124 and reproduces on unchanged files.
+
+**Sketched resolution (drain jointly with the P123-verifier entry above):** If the drift
+recurs in **CI** (not just this box's local kcov), retune `scripts/shell_coverage.py`'s
+`coverable_line_count` bash-aware skip rules for `transcript.sh` so the static counter
+converges under 15% of kcov's coverable total — OR, if both counters are individually
+correct but measuring genuinely different "coverable" heuristics (the P124-close honesty
+note argues this for small scripts), raise the per-file cross-check threshold or exempt
+scripts under N coverable lines from the relative-drift assert. Do NOT lower the aggregate
+floor — that assert is healthy.
+
+**STATUS:** OPEN
