@@ -26,12 +26,21 @@ The RPX namespace has ONE source of truth: crates/reposix-core/src/codes.rs (the
   (4) UNKNOWN-CODE UX. The explain-meta code (RPX-0900) must exist so `reposix
       explain <bogus>` has a teaching home (runtime assertion: gate + tests/explain.rs).
   (5) REVERSE / completeness (P121 W3.5, closes the SC1 const-string blind spot).
-      Every REGISTERED code must be EMITTED at least once across EMIT_ROOTS (via any
-      M3 syntax). This catches a code that is registered but whose ONLY emission is a
-      raw const-string / `crate::diag` line that never carried the `[RPX-xxxx]` tag —
-      invisible to legs 1 (forward: fires only when an emission EXISTS) and 3 (M2:
-      scans teach-shaped sites only). A deliberately-unemitted code is dispositioned
-      in `EMISSION_EXEMPT` with a justification, never silently orphaned.
+      Every REGISTERED code must be EMITTED at least once in PRODUCTION SOURCE across
+      EMIT_ROOTS (via any M3 syntax). This catches a code that is registered but whose
+      ONLY emission is a raw const-string / `crate::diag` line that never carried the
+      `[RPX-xxxx]` tag — invisible to legs 1 (forward: fires only when an emission
+      EXISTS) and 3 (M2: scans teach-shaped sites only). Emission is counted from
+      production `src/` ONLY: a code whose only appearance is a `tests/` assertion
+      string (e.g. `assert!(s.contains("[RPX-xxxx]"))`) does NOT satisfy completeness
+      (P121-review FIX 4 — leg 1 still scans tests, so a test reference to an
+      UNregistered code is still caught; only the reverse leg is src-scoped). A
+      deliberately-unemitted code is dispositioned in `EMISSION_EXEMPT` with a
+      justification, never silently orphaned.
+      RESIDUAL (honest): src-scoping is DIRECTORY-level — a `#[cfg(test)]` module
+      INSIDE a `src/` file is still counted as a production emission (module-boundary
+      parsing is out of scope). No current defect: every registered code has a genuine
+      non-test `src/` emission.
 
 CATALOG-FIRST: committed in the phase's FIRST commit, before codes.rs / the
 `.code()` sites exist. Over the pre-impl tree it EXITS NON-ZERO (leg 3 flags every
@@ -106,6 +115,18 @@ _IDS_CONST = re.compile(r'\bconst\s+(\w+)\s*:\s*&(?:\'static\s+)?str\s*=\s*"(RPX
 _ENTRY_CODE_LIT = re.compile(r'\bcode\s*:\s*"(RPX-\d{4})"')
 _ENTRY_CODE_IDS = re.compile(r"\bcode\s*:\s*" + _IDS_TAIL)
 _EMPTY_FIELD = re.compile(r'\b(title|cause|fix|recovery)\s*:\s*(?:""|&\s*\[\s*\])')
+
+
+def is_production_src(rel_path: str) -> bool:
+    """True iff `rel_path` (repo-relative, posix) is production source — i.e. NOT
+    an integration-test target under `<crate>/tests/`. Leg 5 (reverse-
+    completeness) counts emissions from production `src/` ONLY, so a code whose
+    only appearance is a `tests/` assertion string cannot falsely satisfy
+    completeness (P121-review FIX 4). Leg 1 (forward) deliberately keeps scanning
+    tests, so this does NOT gate that leg. Directory-level by design: a
+    `#[cfg(test)]` module inside a `src/` file still counts (see the module
+    docstring's RESIDUAL note)."""
+    return "tests" not in rel_path.split("/")
 
 
 def _lineno(text: str, pos: int) -> int:
@@ -320,9 +341,11 @@ def reverse_completeness_errors(
     entry_codes: set[str], emitted_codes: set[str]
 ) -> tuple[list[str], list[str]]:
     """Leg 5 (REVERSE / completeness, P121 W3.5). Every REGISTERED code must be
-    EMITTED at least once across EMIT_ROOTS (any M3 syntax: `.code(...)` /
-    `teach_coded(...)` / a `[RPX-xxxx]` bracket / a `const …_FMT|&str` carrying the
-    code). This closes the SC1 blind spot the M2 leg could not see: a code
+    EMITTED at least once in PRODUCTION SOURCE across EMIT_ROOTS (any M3 syntax:
+    `.code(...)` / `teach_coded(...)` / a `[RPX-xxxx]` bracket / a `const …_FMT|&str`
+    carrying the code). `emitted_codes` MUST be the src-only emission set (the caller
+    filters via `is_production_src`) — a `tests/`-string-only emission does NOT count
+    (FIX 4). This closes the SC1 blind spot the M2 leg could not see: a code
     registered but whose ONLY emission was a raw const-string / diag that never
     carried the tag was invisible to every prior leg. A deliberately-unemitted code
     is dispositioned in `EMISSION_EXEMPT` with a justification (reviewable), never
@@ -339,10 +362,11 @@ def reverse_completeness_errors(
             )
             continue
         errors.append(
-            f"{CODES_RS}: registered code {code} is NEVER emitted in "
-            f"{'/'.join(EMIT_ROOTS)} — a registered-but-orphaned code (its emission "
-            f"carries no `[{code}]` tag / `.code(...)` / `teach_coded(...)` / "
-            f"`*_FMT`). Tag the human-facing emission site so it renders the code, "
+            f"{CODES_RS}: registered code {code} is NEVER emitted in PRODUCTION SRC of "
+            f"{'/'.join(EMIT_ROOTS)} — a registered-but-orphaned code (no `src/` "
+            f"emission carries the `[{code}]` tag / `.code(...)` / `teach_coded(...)` / "
+            f"`*_FMT`; a `tests/`-only assertion string does NOT count). Tag the "
+            f"human-facing emission site in production src so it renders the code, "
             f"or add {code} to EMISSION_EXEMPT with a justification if it is "
             f"intentionally unemitted."
         )
@@ -361,25 +385,32 @@ def run(repo_root: Path) -> int:
         entry_codes, ids_map = set(), {}
         notes.append(f"{CODES_RS} not present yet (pre-W1) — registry treated as empty")
 
-    # leg 1 (forward) across both emitting crates. Accumulate every emitted code
-    # so leg 5 (reverse) can assert the registry has no orphaned entries.
-    emitted_codes: set[str] = set()
+    # leg 1 (forward) across both emitting crates — scans tests too, so a test
+    # reference to an UNregistered code is caught. Leg 5 (reverse) needs a stricter
+    # signal: emission from PRODUCTION SOURCE only, so a code whose ONLY appearance
+    # is a `tests/` assertion string cannot falsely satisfy completeness (FIX 4).
+    emitted_codes: set[str] = set()  # all (leg 1)
+    src_emitted_codes: set[str] = set()  # production src only (leg 5)
     for root in EMIT_ROOTS:
         base = repo_root / root
         if not base.is_dir():
             continue
         for p in sorted(base.rglob("*.rs")):
             rel = p.relative_to(repo_root).as_posix()
+            prod = is_production_src(rel)
             for c, ln in extract_emitted(p.read_text(encoding="utf-8"), ids_map):
                 emitted_codes.add(c)
+                if prod:
+                    src_emitted_codes.add(c)
                 if c not in entry_codes:
                     errors.append(
                         f"{rel}:{ln}: {c} referenced but not in REGISTRY "
                         f"— add an ExplainEntry to {CODES_RS}"
                     )
 
-    # leg 5 (reverse / completeness — P121 W3.5): every registered code is emitted.
-    rev_errors, rev_notes = reverse_completeness_errors(entry_codes, emitted_codes)
+    # leg 5 (reverse / completeness — P121 W3.5): every registered code is emitted
+    # in production src (test-string-only emissions do NOT count — FIX 4).
+    rev_errors, rev_notes = reverse_completeness_errors(entry_codes, src_emitted_codes)
     errors.extend(rev_errors)
     notes.extend(rev_notes)
 
@@ -513,6 +544,46 @@ def self_test() -> int:
         "leg5: a registered-but-unemitted code is flagged",
         any("RPX-7777" in e and "NEVER emitted" in e for e in rev_orphan),
         True,
+    )
+
+    # FIX 4 (P121-review): the src-vs-tests emission classifier + the leg-5
+    # blind-spot closure. A code that appears ONLY in a `tests/` assertion string
+    # must NOT satisfy reverse-completeness — emission is counted from production
+    # `src/` only.
+    check(
+        "is_production_src: a src/ file is emission-eligible",
+        is_production_src("crates/reposix-cli/src/init.rs"),
+        True,
+    )
+    check(
+        "is_production_src: a tests/ integration target is NOT",
+        is_production_src("crates/reposix-remote/tests/push_conflict.rs"),
+        False,
+    )
+    # Simulate run()'s src-scoped accumulation: the SAME bracket emission is
+    # counted from a src/ path but SKIPPED from a tests/ path.
+    test_only_emit = 'assert!(s.contains("[RPX-6666]"));'
+    src_scoped_from_tests = {
+        c
+        for c, _ in extract_emitted(test_only_emit, ids_map)
+        if is_production_src("crates/reposix-remote/tests/push_conflict.rs")
+    }
+    rev_test_only, _ = reverse_completeness_errors({"RPX-6666"}, src_scoped_from_tests)
+    check(
+        "leg5 FIX4: a code emitted ONLY in a tests/ string is still flagged orphaned",
+        any("RPX-6666" in e and "NEVER emitted" in e for e in rev_test_only),
+        True,
+    )
+    src_scoped_from_src = {
+        c
+        for c, _ in extract_emitted(test_only_emit, ids_map)
+        if is_production_src("crates/reposix-cli/src/foo.rs")
+    }
+    rev_src_ok, _ = reverse_completeness_errors({"RPX-6666"}, src_scoped_from_src)
+    check(
+        "leg5 FIX4: the same emission in a src/ file satisfies completeness",
+        len(rev_src_ok),
+        0,
     )
     # An EMISSION_EXEMPT code is NOT flagged even with no emission. Inject a
     # synthetic fixture so this proves the exempt branch INDEPENDENT of the real
