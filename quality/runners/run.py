@@ -33,6 +33,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import subprocess
@@ -481,93 +482,109 @@ def main(argv: list[str] | None = None) -> int:
     counts = {"PASS": 0, "FAIL": 0, "PARTIAL": 0, "WAIVED": 0, "NOT-VERIFIED": 0}
 
     for cat_path in catalogs:
-        original = load_catalog(cat_path)
-        # Deep-copy via JSON round-trip so we can compare status before/after
-        # without sharing references that mutate during run_row().
-        data = json.loads(json.dumps(original))
-        in_scope = [r for r in data["rows"] if is_in_scope(r, args.cadence, now)]
-        if not in_scope:
-            continue
-        in_scope_sorted = sort_by_blast_radius(in_scope)
-        print(f"  catalog: {cat_path.name} ({len(data['rows'])} rows; {len(in_scope_sorted)} in scope)")
-        # Map id -> original status for last_verified rollback below.
-        orig_status_by_id = {r["id"]: r.get("status") for r in original["rows"]}
-        orig_lv_by_id = {r["id"]: r.get("last_verified") for r in original["rows"]}
-        for row in in_scope_sorted:
-            updated, elapsed = run_row(row, REPO_ROOT, now)
-            counts[updated.get("status", "NOT-VERIFIED")] += 1
-            extra = ""
-            if updated.get("status") == "NOT-VERIFIED":
-                if updated.get("_stale"):
-                    extra = (
-                        f"freshness expired: last_verified+{row.get('freshness_ttl')} < now "
-                        f"(input last_verified={orig_lv_by_id.get(updated['id'])})"
-                    )
-                elif updated.get("_skipped_real_backend"):
-                    extra = "skipped: env not set (real-backend origins/creds absent)"
-                elif updated.get("_exit75_not_verified"):
-                    extra = "verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)"
-                elif updated.get("_verifier_missing"):
-                    extra = (
-                        f"verifier not found at {row.get('verifier', {}).get('script')} "
-                        f"(RBF-FW-07a: demoted from prior status; deploy glitch vs regression "
-                        f"-> see artifact `error` field)"
-                    )
-                else:
-                    extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
-            elif updated.get("status") == "WAIVED":
-                w = updated.get("waiver") or {}
-                extra = f"waived until {w.get('until', '?')} — {w.get('reason', '')[:60]}"
-            print_row_summary(updated, elapsed, extra)
-            all_rows.append(updated)
-        # Roll back last_verified for rows whose status did NOT change;
-        # persist only on real status flips. Per-run timestamp churn
-        # belongs in the artifact, not the catalog (see catalog_dirty).
-        for row in data["rows"]:
-            row.pop("_stale", None)  # transient render flags — never persisted
-            row.pop("_skipped_real_backend", None)
-            row.pop("_exit75_not_verified", None)
-            row.pop("_verifier_missing", None)
-            rid = row.get("id")
-            if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
-                row["last_verified"] = orig_lv_by_id[rid]
-        # D-P96-01: only an explicit --persist MINT run writes graded status
-        # back to disk. A bare cadence GATE run (pre-push/pre-pr hook + CI) is
-        # validate-only -- it computed the flip in memory (compute_exit_code
-        # below STILL blocks RED off that in-memory status), but must NOT
-        # self-mutate the committed catalog. Record the pending flip so a human
-        # sees it without any tree write.
-        if catalog_dirty(original, data):
-            if args.persist:
-                # P123 SC2 (DRAIN-04): refuse to silently downgrade a committed-
-                # GREEN (PASS/WAIVED, per `git show HEAD:`) row to an EXPLICIT
-                # regression (FAIL/PARTIAL) without --allow-downgrade. A demotion
-                # to NOT-VERIFIED (freshness-TTL/missing-verifier/env-skip/exit-75)
-                # is NOT a downgrade and is always allowed (see _persist_guard).
-                committed = _persist_guard.committed_head_statuses(REPO_ROOT, cat_path)
-                violations = _persist_guard.refuse_downgrade_without_flag(
-                    committed, data["rows"])
-                if violations and not args.allow_downgrade:
-                    for row_id, old, new in violations:
-                        print(
-                            f"REFUSED to persist {row_id}: committed status was "
-                            f"{old}, this run graded {new}. Pass --allow-downgrade "
-                            f"to override: python3 quality/runners/run.py --cadence "
-                            f"{args.cadence} --persist --allow-downgrade",
-                            file=sys.stderr,
+        # P123 SC3 (DRAIN-05, cites GTH-V15-01): a --persist MINT run holds an
+        # OS-level advisory flock across the ENTIRE per-catalog read-modify-write
+        # (load_catalog -> grade -> save_catalog), so two concurrent --persist
+        # runners cannot both read the same pre-mutation on-disk snapshot and then
+        # lost-update each other's flips with a stale full-file overwrite. The lock
+        # MUST wrap load_catalog THROUGH save_catalog -- a narrower scope (only
+        # around the write, or only around the committed_head_statuses read below)
+        # leaves the lost-update window open. A validate-only run takes the
+        # nullcontext branch and never opens or contends for the lock file at all
+        # (backs structure/persist-catalog-write-locked; validate-only stays
+        # lock-free per that row's second expected assert).
+        persist_cm = (
+            _persist_guard.catalog_persist_lock(REPO_ROOT)
+            if args.persist else contextlib.nullcontext()
+        )
+        with persist_cm:
+            original = load_catalog(cat_path)
+            # Deep-copy via JSON round-trip so we can compare status before/after
+            # without sharing references that mutate during run_row().
+            data = json.loads(json.dumps(original))
+            in_scope = [r for r in data["rows"] if is_in_scope(r, args.cadence, now)]
+            if not in_scope:
+                continue
+            in_scope_sorted = sort_by_blast_radius(in_scope)
+            print(f"  catalog: {cat_path.name} ({len(data['rows'])} rows; {len(in_scope_sorted)} in scope)")
+            # Map id -> original status for last_verified rollback below.
+            orig_status_by_id = {r["id"]: r.get("status") for r in original["rows"]}
+            orig_lv_by_id = {r["id"]: r.get("last_verified") for r in original["rows"]}
+            for row in in_scope_sorted:
+                updated, elapsed = run_row(row, REPO_ROOT, now)
+                counts[updated.get("status", "NOT-VERIFIED")] += 1
+                extra = ""
+                if updated.get("status") == "NOT-VERIFIED":
+                    if updated.get("_stale"):
+                        extra = (
+                            f"freshness expired: last_verified+{row.get('freshness_ttl')} < now "
+                            f"(input last_verified={orig_lv_by_id.get(updated['id'])})"
                         )
-                    blocked_downgrade_catalogs.append(cat_path.name)
-                else:
-                    if violations:  # --allow-downgrade set: persist, but loudly.
+                    elif updated.get("_skipped_real_backend"):
+                        extra = "skipped: env not set (real-backend origins/creds absent)"
+                    elif updated.get("_exit75_not_verified"):
+                        extra = "verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)"
+                    elif updated.get("_verifier_missing"):
+                        extra = (
+                            f"verifier not found at {row.get('verifier', {}).get('script')} "
+                            f"(RBF-FW-07a: demoted from prior status; deploy glitch vs regression "
+                            f"-> see artifact `error` field)"
+                        )
+                    else:
+                        extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
+                elif updated.get("status") == "WAIVED":
+                    w = updated.get("waiver") or {}
+                    extra = f"waived until {w.get('until', '?')} — {w.get('reason', '')[:60]}"
+                print_row_summary(updated, elapsed, extra)
+                all_rows.append(updated)
+            # Roll back last_verified for rows whose status did NOT change;
+            # persist only on real status flips. Per-run timestamp churn
+            # belongs in the artifact, not the catalog (see catalog_dirty).
+            for row in data["rows"]:
+                row.pop("_stale", None)  # transient render flags — never persisted
+                row.pop("_skipped_real_backend", None)
+                row.pop("_exit75_not_verified", None)
+                row.pop("_verifier_missing", None)
+                rid = row.get("id")
+                if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
+                    row["last_verified"] = orig_lv_by_id[rid]
+            # D-P96-01: only an explicit --persist MINT run writes graded status
+            # back to disk. A bare cadence GATE run (pre-push/pre-pr hook + CI) is
+            # validate-only -- it computed the flip in memory (compute_exit_code
+            # below STILL blocks RED off that in-memory status), but must NOT
+            # self-mutate the committed catalog. Record the pending flip so a human
+            # sees it without any tree write.
+            if catalog_dirty(original, data):
+                if args.persist:
+                    # P123 SC2 (DRAIN-04): refuse to silently downgrade a committed-
+                    # GREEN (PASS/WAIVED, per `git show HEAD:`) row to an EXPLICIT
+                    # regression (FAIL/PARTIAL) without --allow-downgrade. A demotion
+                    # to NOT-VERIFIED (freshness-TTL/missing-verifier/env-skip/exit-75)
+                    # is NOT a downgrade and is always allowed (see _persist_guard).
+                    committed = _persist_guard.committed_head_statuses(REPO_ROOT, cat_path)
+                    violations = _persist_guard.refuse_downgrade_without_flag(
+                        committed, data["rows"])
+                    if violations and not args.allow_downgrade:
                         for row_id, old, new in violations:
                             print(
-                                f"ALLOWED downgrade (--allow-downgrade): "
-                                f"{row_id} {old} -> {new}",
+                                f"REFUSED to persist {row_id}: committed status was "
+                                f"{old}, this run graded {new}. Pass --allow-downgrade "
+                                f"to override: python3 quality/runners/run.py --cadence "
+                                f"{args.cadence} --persist --allow-downgrade",
                                 file=sys.stderr,
                             )
-                    save_catalog(cat_path, data)
-            else:
-                pending_mint.append(cat_path.name)
+                        blocked_downgrade_catalogs.append(cat_path.name)
+                    else:
+                        if violations:  # --allow-downgrade set: persist, but loudly.
+                            for row_id, old, new in violations:
+                                print(
+                                    f"ALLOWED downgrade (--allow-downgrade): "
+                                    f"{row_id} {old} -> {new}",
+                                    file=sys.stderr,
+                                )
+                        save_catalog(cat_path, data)
+                else:
+                    pending_mint.append(cat_path.name)
 
     if pending_mint and not args.persist:
         print(

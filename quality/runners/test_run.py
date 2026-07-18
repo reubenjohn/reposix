@@ -35,6 +35,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -470,6 +471,207 @@ class TestPersistDowngradeGuard(unittest.TestCase):
             self.assertIsNone(
                 _persist_guard.committed_head_statuses(td, cat_path),
                 "a non-git / untracked catalog must yield None, not raise or fabricate")
+
+
+class TestPersistCatalogLock(unittest.TestCase):
+    """P123 SC3 / DRAIN-05: concurrent --persist runners cannot race-corrupt the
+    shared catalog. Backs catalog row structure/persist-catalog-write-locked.
+
+    Three invariants (each an expected.assert on the backing row) + a fourth
+    end-to-end reality proof of the closed race:
+      1. a second --persist writer BLOCKS on the OS-level flock while a first
+         holds it -- proven by a REAL subprocess and a wall-clock >= ~1.8s (a
+         mock or in-process-only lock would be ~0s and never stop a real process).
+      2. a validate-only (no --persist) run never opens or contends for the lock.
+      3. single-writer --persist minting is unchanged with the lock in place.
+      4. (reality) two concurrent run.py --persist processes on the SAME catalog
+         produce valid/parseable JSON with NO lost update -- both writers'
+         intended row flips survive because the whole read-modify-write serializes
+         (an unlocked runner would drop one writer's flip via a stale full-file
+         overwrite -- the exact GTH-V15-01 hazard this row closes).
+
+    All setup lives under tempfile.TemporaryDirectory (no shared-repo writes); the
+    lock file is <td>/quality/reports/.persist.lock, contended by REAL subprocesses
+    so the exclusivity proof is genuine OS behavior, not an in-process assertion.
+    The concurrency verifiers are trivial sleep/exit bash scripts -- deliberately
+    cargo-free (two cargo builds in parallel would violate the one-cargo rule).
+    """
+
+    _RUNNERS_DIR = str(Path(__file__).resolve().parent)
+
+    # Holder: acquire the real flock, drop a sentinel so the test knows the lock
+    # is genuinely HELD (not merely that the process started), then sleep.
+    _HOLDER = (
+        "import sys, time\n"
+        "from pathlib import Path\n"
+        "sys.path.insert(0, sys.argv[1])\n"
+        "import _persist_guard\n"
+        "td = Path(sys.argv[2]); hold = float(sys.argv[3])\n"
+        "with _persist_guard.catalog_persist_lock(td):\n"
+        "    (td / '.locked').write_text('held')\n"
+        "    time.sleep(hold)\n"
+    )
+
+    # Driver: point run's module globals at the throwaway repo and drive the REAL
+    # run.main() --persist path in a SEPARATE interpreter, so the OS-level flock
+    # actually engages across processes (an in-process call shares one flock owner).
+    _DRIVER = (
+        "import sys\n"
+        "from pathlib import Path\n"
+        "sys.path.insert(0, sys.argv[1])\n"
+        "import run\n"
+        "td = Path(sys.argv[2]); cadence = sys.argv[3]\n"
+        "run.REPO_ROOT = td\n"
+        "run.CATALOG_DIR = td / 'quality' / 'catalogs'\n"
+        "run.REPORTS_DIR = td / 'quality' / 'reports'\n"
+        "sys.exit(run.main(['--cadence', cadence, '--persist']))\n"
+    )
+
+    def _spawn_holder(self, td: Path, hold: float) -> subprocess.Popen:
+        proc = subprocess.Popen(
+            [sys.executable, "-c", self._HOLDER,
+             self._RUNNERS_DIR, str(td), str(hold)])
+        # Wait for the sentinel so we time against a genuinely-HELD lock, never a
+        # process that has spawned but not yet acquired.
+        deadline = time.monotonic() + 5.0
+        while not (td / ".locked").exists():
+            if time.monotonic() > deadline:
+                proc.kill()
+                self.fail("holder subprocess never acquired the lock (no sentinel)")
+            time.sleep(0.02)
+        return proc
+
+    def test_1_second_persist_blocks_on_held_lock(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            holder = self._spawn_holder(td, hold=2.5)
+            try:
+                t0 = time.monotonic()
+                with _persist_guard.catalog_persist_lock(td):
+                    elapsed = time.monotonic() - t0
+                self.assertGreaterEqual(
+                    elapsed, 1.8,
+                    f"acquire returned in {elapsed:.2f}s -- it did NOT block on the "
+                    f"real held OS-level flock (a mock/in-process lock would be ~0s), "
+                    f"so a second real --persist writer could interleave")
+            finally:
+                holder.wait(timeout=10)
+
+    def test_2_validate_only_never_touches_the_lock(self):
+        # Part A: a validate-only run.main() completes promptly even while a
+        # separate process holds the persist lock (nullcontext branch -> no wait).
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_dir = td / "quality" / "catalogs"
+            cat_dir.mkdir(parents=True)
+            _write_verifier(td, "quality/gates/synthetic-verifier.sh", 0)
+            run.save_catalog(cat_dir / "synthetic.json",
+                             {"dimension": "structure",
+                              "rows": [_synthetic_row(status="NOT-VERIFIED")]})
+            holder = self._spawn_holder(td, hold=8.0)
+            try:
+                t0 = time.monotonic()
+                with mock.patch.object(run, "REPO_ROOT", td), \
+                     mock.patch.object(run, "CATALOG_DIR", cat_dir), \
+                     mock.patch.object(run, "REPORTS_DIR", td / "quality" / "reports"), \
+                     contextlib.redirect_stdout(io.StringIO()):
+                    run.main(["--cadence", "pre-push"])
+                elapsed = time.monotonic() - t0
+                self.assertLess(
+                    elapsed, 2.0,
+                    f"validate-only run blocked {elapsed:.2f}s while the persist lock "
+                    f"was held -- it must never acquire or contend for the lock")
+            finally:
+                holder.kill()
+                holder.wait(timeout=10)
+        # Part B: a validate-only run in a clean tree never CREATES the lock file.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            _drive(td, committed_status="NOT-VERIFIED", verifier_exit=0, persist=False)
+            self.assertFalse(
+                (td / "quality" / "reports" / ".persist.lock").exists(),
+                "a validate-only run opened/created the persist lock file")
+
+    def test_3_single_writer_persist_still_mints(self):
+        # Uncontended --persist under the always-on lock still writes the flip
+        # (the lock must not regress single-writer minting) AND does open the lock
+        # file (contrast with Part B above -- the persist path DOES take the lock).
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            _exit, before, after, row = _drive(
+                td, committed_status="NOT-VERIFIED", verifier_exit=0, persist=True)
+            self.assertNotEqual(before, after,
+                                "--persist under the lock failed to mint the grade")
+            self.assertEqual(row["status"], "PASS",
+                             "--persist under the lock did not write the live PASS grade")
+            self.assertTrue(
+                (td / "quality" / "reports" / ".persist.lock").exists(),
+                "the --persist path did not open the lock file")
+
+    @staticmethod
+    def _lock_test_row(rid: str, cadence: str, verifier_rel: str) -> dict:
+        # New-regime row: carries minted_at + claim_vs_assertion_audit so that
+        # AFTER the first writer flips it PASS (which stamps a fresh, >=P90-cutoff
+        # last_verified), the SECOND writer's load_catalog -> validate_row does NOT
+        # reject it for a missing minted_at anchor. A legacy no-minted_at row would
+        # crash the second loader instead of exercising the concurrency path.
+        # No expected.asserts -> F-K4b congruence is a no-op; a bare exit-0
+        # verifier grades PASS cleanly.
+        return {
+            "id": rid, "dimension": "structure", "kind": "mechanical",
+            "minted_at": "2026-07-18T00:00:00Z",
+            "claim_vs_assertion_audit": (
+                "Synthetic lock-contention fixture row: two concurrent --persist "
+                "writers each flip a different row; the full read-modify-write "
+                "lock must let both flips survive without a lost update."
+            ),
+            "status": "NOT-VERIFIED", "last_verified": "2026-04-01T00:00:00Z",
+            "freshness_ttl": None, "blast_radius": "P1", "cadences": [cadence],
+            "artifact": f"quality/reports/verifications/{rid.replace('/', '-')}.json",
+            "verifier": {"script": verifier_rel},
+        }
+
+    def test_4_two_concurrent_persist_no_lost_update(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_dir = td / "quality" / "catalogs"
+            cat_dir.mkdir(parents=True)
+            # Two sleeping verifiers widen the read-modify window so an UNLOCKED
+            # runner would lost-update; both exit 0 -> both rows must flip PASS.
+            for rel in ("quality/gates/slow-a.sh", "quality/gates/slow-b.sh"):
+                p = td / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("#!/usr/bin/env bash\nsleep 0.8\nexit 0\n", encoding="utf-8")
+                p.chmod(p.stat().st_mode | stat.S_IEXEC)
+            cat_path = cat_dir / "concurrent.json"
+            run.save_catalog(cat_path, {"dimension": "structure", "rows": [
+                self._lock_test_row("test/lock-row-a", "pre-push", "quality/gates/slow-a.sh"),
+                self._lock_test_row("test/lock-row-b", "pre-pr", "quality/gates/slow-b.sh"),
+            ]})
+            # Two writers on the SAME catalog: A flips only row-a (pre-push), B
+            # flips only row-b (pre-pr). Each writes the WHOLE file. With the
+            # full-RMW lock, whichever runs second reads the first's committed
+            # flip, so BOTH survive; unlocked, the second overwrites from a stale
+            # snapshot and one flip is lost.
+            procs = [
+                subprocess.Popen(
+                    [sys.executable, "-c", self._DRIVER,
+                     self._RUNNERS_DIR, str(td), cadence],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                for cadence in ("pre-push", "pre-pr")
+            ]
+            for p in procs:
+                p.wait(timeout=30)
+            # (a) valid/parseable JSON -- no torn/interleaved write.
+            final = json.loads(cat_path.read_text(encoding="utf-8"))
+            by_id = {r["id"]: r.get("status") for r in final["rows"]}
+            # (b) NO lost update -- both writers' intended flips survive.
+            self.assertEqual(
+                by_id.get("test/lock-row-a"), "PASS",
+                "row-a's flip was lost to a concurrent --persist writer (lost update)")
+            self.assertEqual(
+                by_id.get("test/lock-row-b"), "PASS",
+                "row-b's flip was lost to a concurrent --persist writer (lost update)")
 
 
 if __name__ == "__main__":

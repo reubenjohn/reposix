@@ -1,4 +1,14 @@
-"""Committed-GREEN downgrade guard for the Quality Gates runner. P123 SC2 (DRAIN-04).
+"""Persist-path integrity guards for the Quality Gates runner. P123 (DRAIN-04/05).
+
+Two independent guards over run.py's `--persist` write path share this module:
+  * `committed_head_statuses` + `refuse_downgrade_without_flag` — the SC2
+    committed-GREEN downgrade guard (DRAIN-04), documented immediately below.
+  * `catalog_persist_lock` — the SC3 concurrency guard (DRAIN-05): an OS-level
+    advisory `flock` that serializes the whole per-catalog read-modify-write so
+    two concurrent `--persist` runners cannot lost-update each other's writes.
+    POSIX-only (fcntl); the kernel releases the flock on process exit/crash
+    INCLUDING SIGKILL, so there is no wedge-forever risk and no explicit timeout
+    is needed (do NOT "fix" the absent timeout — it would reintroduce a race).
 
 Stdlib-only sibling of run.py (mirrors _freshness.py / _realbackend.py /
 _audit_field.py / _shell_verdict.py / _env_load.py — keeps run.py under its
@@ -42,8 +52,11 @@ never a blanket freeze on minting new rows.
 """
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import json
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 
 # A committed row in one of these statuses is "green" — a downgrade away from it
@@ -124,3 +137,49 @@ def refuse_downgrade_without_flag(
         if old in _GREEN and new in _REGRESSION:
             violations.append((rid, old, new))
     return violations
+
+
+@contextlib.contextmanager
+def catalog_persist_lock(repo_root: Path) -> Iterator[Path]:
+    """Serialize the `--persist` read-modify-write with an OS-level advisory flock.
+
+    P123 SC3 (DRAIN-05), cites GTH-V15-01 (P104: two runners observed minting the
+    same catalog file mid-verification). run.py's per-catalog loop reads the whole
+    catalog (`load_catalog`), re-grades in-scope rows against that in-memory copy,
+    then writes the WHOLE file back (`save_catalog`). If two `--persist` runners
+    both complete their read before either writes, the second `save_catalog`
+    overwrites the first's persisted flips from a now-stale snapshot — a
+    lost-update race. Holding this lock across the ENTIRE read-modify-write
+    (acquired BEFORE `load_catalog`, released AFTER `save_catalog`) makes that
+    critical section mutually exclusive, so the second runner's read cannot begin
+    until the first runner's write has committed and released.
+
+    The lock target is ``<repo_root>/quality/reports/.persist.lock`` (a single
+    process-coordination file under the already-gitignored reports dir; per the
+    plan's threat register T-123-11 one global lock is accepted — cross-catalog
+    serialization is a non-issue because `--persist` runs are infrequent and
+    short). `fcntl.flock(..., LOCK_EX)` blocks with NO arbitrary timeout by
+    design: a `--persist` run is short-lived, and the kernel releases an flock
+    automatically on process exit/crash INCLUDING SIGKILL, so a crashed holder can
+    never wedge future runs (T-123-10 accept). POSIX-only — this project claims no
+    Windows support anywhere in its docs.
+
+    Callers must take this ONLY on the `--persist` path; a validate-only run uses
+    `contextlib.nullcontext()` so it never opens or contends for the lock file.
+    """
+    lock_dir = Path(repo_root) / "quality" / "reports"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = lock_dir / ".persist.lock"
+    # Append-binary: never truncates (the file is a pure lock target, its bytes
+    # are irrelevant) and creates on first use.
+    fh = open(lock_path, "ab")
+    try:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        yield lock_path
+    finally:
+        # LOCK_UN then close. close() alone would release the flock, but an
+        # explicit unlock keeps the release point obvious to a future reader.
+        try:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            fh.close()

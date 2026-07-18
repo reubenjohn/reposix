@@ -109,3 +109,9 @@ quality/reports/verdicts/*/[0-9]*.md
 quality/reports/transcripts/*.txt
 quality/reports/verdicts/session-end/SESSION-VERDICT.md
 quality/reports/badge.json
+# P123 SC3 (DRAIN-05): the advisory persist-lock file
+# (quality/runners/_persist_guard.py::catalog_persist_lock) — a zero-payload
+# OS-level flock target used only to serialize concurrent `--persist` runners.
+# Pure runtime coordination state, never evidence; the kernel releases the flock
+# on process exit so a stale file is harmless.
+quality/reports/.persist.lock
