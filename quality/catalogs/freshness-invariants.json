@@ -1213,6 +1213,165 @@
       "cadences": [
         "pre-push"
       ]
+    },
+    {
+      "id": "structure/quality-runner-sources-dotenv",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T10:58:08Z",
+      "comment": "P123/SC1 (DRAIN-03) — closes the false-green-preflight / silent-skip gap (.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md 2026-07-14 20:43 HIGH entry): quality/runners/run.py does not source ./.env while scripts/preflight-real-backends.sh does, so the pre-release-real-backend cadence silently skips every real-backend row to NOT-VERIFIED when invoked without the caller pre-sourcing .env, while preflight independently reports the backends reachable -- the two together give a false impression of full coverage. run.py must conditionally self-source ./.env (present-only, non-clobbering) so the cadence exercises real creds instead of silently skipping.",
+      "sources": [
+        "quality/runners/run.py",
+        "scripts/preflight-real-backends.sh (sibling self-sourcing convention to mirror)",
+        ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
+        ".planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md (2026-07-14 20:43 HIGH entry)"
+      ],
+      "command": "bash quality/gates/structure/quality-runner-sources-dotenv.sh",
+      "expected": {
+        "asserts": [
+          "a ./.env at repo root is parsed and its KEY=VALUE pairs exported into os.environ, but ONLY for keys not already present (explicit shell env always wins)",
+          "no .env present is a silent no-op -- no error, no CI behavior change",
+          "no secret VALUE is ever printed to stdout/stderr -- only which KEY names were loaded, if any"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/quality-runner-sources-dotenv.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/quality-runner-sources-dotenv.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED/NOT-VERIFIED: mirror scripts/preflight-real-backends.sh's `if [ -f ./.env ] && [ -z \"${VAR:-}...\" ]; then set -a; . ./.env; set +a; fi` pattern inside run.py's own startup (before catalog load), so `run.py --cadence pre-release-real-backend` behaves identically whether or not the caller pre-sourced .env.",
+      "claim_vs_assertion_audit": "If run.py failed to self-source ./.env, or clobbered an already-exported credential, or printed a secret value, the verifier would drive run.py against a synthetic .env fixture and: (a) assert a shell-exported KEY survives untouched (explicit env wins) -- failing if run.py overwrote it; (b) assert a KEY present ONLY in .env lands in run.py's os.environ -- failing if run.py never sourced the file; (c) assert stdout/stderr contain KEY names but never the VALUE -- failing on any leak; (d) assert a missing .env is a silent no-op -- failing on any error or behavior change. Each predicate independently falsifies the claim if run.py's dotenv-sourcing were absent, wrong-precedence, or leaky.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/persist-refuses-downgrade",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T10:58:08Z",
+      "comment": "P123/SC2 (DRAIN-04) — closes the silent-catalog-corruption gap (.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md 2026-07-14 20:44 HIGH entry -- a real near-miss: a run downgraded vision-litmus PASS->FAIL in the --persist write, caught only by manual `git restore` before commit). --persist must refuse to write a row from a committed-GREEN status (per `git show HEAD:<catalog>`, meaning PASS/WAIVED) to worse without --allow-downgrade.",
+      "sources": [
+        "quality/runners/run.py (--persist write path)",
+        ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
+        ".planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md (2026-07-14 20:44 HIGH entry)"
+      ],
+      "command": "bash quality/gates/structure/persist-refuses-downgrade.sh",
+      "expected": {
+        "asserts": [
+          "a row whose committed status is PASS or WAIVED, and whose freshly graded status is anything else, is NOT persisted unless --allow-downgrade is passed",
+          "the refusal prints the row id, old status, new status, and the literal recovery command `python3 quality/runners/run.py --cadence <c> --persist --allow-downgrade`",
+          "a row absent from the git-HEAD committed catalog (brand-new) is exempt and mints freely",
+          "--allow-downgrade restores the prior unconditional-persist behavior, still printing a loud per-row notice"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/persist-refuses-downgrade.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/persist-refuses-downgrade.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: --persist's write path lacks the pre-write committed-status comparison; add a `git show HEAD:<catalog>` read + status-ordinal comparison (PASS/WAIVED outrank everything else) before each row write, refuse without --allow-downgrade, and print the literal recovery command named in expected.asserts.",
+      "claim_vs_assertion_audit": "If --persist silently downgraded a committed PASS/WAIVED row to a worse status without --allow-downgrade, the verifier would seed a synthetic catalog with a committed PASS row, force a fresh grade to FAIL, invoke run.py --persist, and assert the committed file is UNCHANGED (still PASS) -- a silent overwrite would flip that assertion. It further asserts the printed refusal names the row id / old status / new status / the literal --allow-downgrade recovery command -- a missing or vague message fails that assertion. Finally it asserts --allow-downgrade DOES persist the downgrade with a loud notice, and that a brand-new row (absent from git HEAD) mints freely without needing the flag -- proving the guard is scoped to downgrades of PRE-EXISTING green rows only, not a blanket freeze.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/persist-catalog-write-locked",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T10:58:08Z",
+      "comment": "P123/SC3 (DRAIN-05, cites GTH-V15-01) — two concurrent --persist runners must not interleave writes to the same catalog file -- an advisory OS-level flock wraps the whole check+write critical section. GTH-V15-01: a live near-miss observed two runners minting the same catalog file mid-verification (P104, PID 351077 held the lock while the verifier ran).",
+      "sources": [
+        "quality/runners/run.py (--persist write path)",
+        ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
+        ".planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md § GTH-V15-01"
+      ],
+      "command": "bash quality/gates/structure/persist-catalog-write-locked.sh",
+      "expected": {
+        "asserts": [
+          "a second --persist invocation targeting the same catalog while a first holds the lock BLOCKS until release, rather than interleaving writes",
+          "the lock is scoped to --persist runs only -- a validate-only run never contends for it",
+          "single-writer --persist behavior (mint / no-op / RED, from the existing TestPersistGate suite) is unchanged"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/persist-catalog-write-locked.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/persist-catalog-write-locked.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: wrap the check+write critical section of --persist in an advisory flock (e.g. Python's fcntl.flock) scoped to a per-catalog lockfile; validate-only runs must not acquire it.",
+      "claim_vs_assertion_audit": "If two concurrent --persist invocations against the same catalog file were allowed to interleave, the verifier would launch two run.py --persist processes concurrently against one throwaway catalog copy (one artificially slowed) and assert the SECOND writer BLOCKS until the first releases rather than both writers racing to a torn/interleaved JSON file -- a missing flock would let the second writer proceed immediately and the resulting file would fail to round-trip through json.load or would drop one writer's row, falsifying the claim. It further asserts a concurrent validate-only (no --persist) run never blocks on the lock, and that the existing TestPersistGate mint/no-op/RED behaviors are unchanged with the lock in place.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/verifier-script-exists",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-18T10:58:08Z",
+      "comment": "P123/SC4 (DRAIN-06, cites GTH-V15-03) — a row backed by a missing or non-executable verifier.script is a framework-integrity hole -- a false PASS could ride on a verifier that can't run. Scans every catalog row (excluding *-allowlist.json and the docs-alignment dimension, which has no per-row verifier.script field) and asserts every declared script exists AND is executable. NOT tagged pre-commit yet -- this row's own verifier script does not exist until 123-06 lands in wave 5; a P1 NOT-VERIFIED row tagged pre-commit here would self-block every commit through wave 5. 123-06 adds pre-commit to this row's cadences once its verifier script exists on disk.",
+      "sources": [
+        "quality/catalogs/*.json (every row's verifier.script field)",
+        ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
+        ".planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md § GTH-V15-03"
+      ],
+      "command": "bash quality/gates/structure/verifier-script-exists.sh",
+      "expected": {
+        "asserts": [
+          "every row with a non-null verifier.script in every quality/catalogs/*.json (excluding *-allowlist.json and docs-alignment) resolves to a file that exists on disk",
+          "every resolved verifier.script carries the executable bit (os.access(path, os.X_OK))",
+          "a row whose verifier.script is null/absent (outside docs-alignment) is ALSO a violation",
+          "a violation prints the offending catalog + row id + path + a concrete fix (chmod +x, or author/correct the path)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/verifier-script-exists.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/verifier-script-exists.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: the printed violation names the offending catalog+row id+path; missing file -> author quality/gates/<dim>/<name>.sh; non-executable -> chmod +x <path>; null/absent verifier.script (outside docs-alignment) -> add the field pointing at a real script.",
+      "claim_vs_assertion_audit": "If any catalog row declared a verifier.script that does not exist on disk, or exists but lacks the executable bit, or omitted verifier.script entirely (outside docs-alignment, which has no such field), the verifier would iterate every quality/catalogs/*.json (excluding *-allowlist.json and doc-alignment.json), resolve each row's verifier.script path, and assert os.path.isfile() AND os.access(path, os.X_OK) both hold -- a missing file fails isfile(), a non-executable file fails access(), and a null/absent script fails an explicit not-null assertion. Any one of these failure modes would surface as a printed catalog+row id+path+concrete fix (chmod +x or author the path), directly falsifying the claim that every row's verifier is real and runnable.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }
