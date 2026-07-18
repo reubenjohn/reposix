@@ -28,7 +28,12 @@ crates/
 - Git: `gix` 0.83 (pinned with `=`, gix is pre-1.0). **Git `2.34+` recommended**
   for reliable partial-clone reads / `stateless-connect` (`extensions.partialClone`);
   the simulator flow runs on older git (verified down to 2.25) — `doctor` WARNs, not
-  ERRORs, below 2.34.
+  ERRORs, below 2.34. The modern-git `stateless-connect` (protocol-v2) READ path is
+  now PROVEN to reconcile after SoT drift (not just the old-git `import` path):
+  P122 W4 runs both drift scenarios via protocol-v2 on git 2.50.1 with a
+  `GIT_TRACE_PACKET` wire proof (`command=fetch`+`version 2`, zero import stream) in
+  `quality/gates/agent-ux/rebase-recovery-reconciles.sh` — P105 §5 resolved, Branch A
+  convergence (GTH-V15-04 / DRAIN-07).
 - Storage: `rusqlite` 0.32 with `bundled` (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 

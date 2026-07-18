@@ -170,6 +170,20 @@ serialize; Lane 3 is cargo-free and can overlap Lane 2's non-cargo portions.
 
 ## 5. Open question the executor MUST resolve (does NOT block the fix)
 
+> **RESOLVED (P122 W4, 2026-07-18) — Branch A (convergence).** This VM's git moved to
+> **2.50.1** (the "only git 2.25.1 is installed / `protocol.version=2` errors with `bad
+> line length 2`" claim below was accurate at P105 authoring time but is now STALE — the
+> real floor for stateless-connect is git ≥ 2.34). `quality/gates/agent-ux/rebase-recovery
+> -reconciles.sh` was extended (GTH-V15-04 / DRAIN-07) to re-run both drift scenarios with
+> the `protocol.version=0` forcing LIFTED, so git negotiates protocol-v2 and selects the
+> real stateless-connect READ path. Result: **both scenarios CONVERGE** via the documented
+> `git pull --rebase && git push`, proven at the wire level by `GIT_TRACE_PACKET`
+> (`command=fetch` + `version 2`, ZERO fast-import/reposix-import lines on the pull). So the
+> RBF-LR-03 bug is `import`-path-only (git-version-scoped); the `import` fix still ships for
+> old git and the gate's import legs keep forcing v0 to guard it. NO second cache-side fix
+> site materialized. (Note verified against reality: `refs/reposix-import/main` is written
+> by the EXPORT/push path, not the fetch — it is NOT a valid read-path discriminator.)
+
 **Does the `stateless-connect` (protocol-v2) fetch path — used by git ≥ 2.34 — ALSO
 break, or does it already fast-forward off the cache's chained history?** The cache's
 `refs/heads/main` is a correct linear chain (verified), so a stateless-connect fetch
