@@ -26,7 +26,9 @@ use clap::{Parser, Subcommand};
 
 // All subcommand modules live in `lib.rs` so integration tests can call
 // them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
-use reposix_cli::{attach, cost, doctor, gc, history, init, list, refresh, spaces, sync, tokens};
+use reposix_cli::{
+    attach, cost, doctor, explain, gc, history, init, list, refresh, spaces, sync, tokens,
+};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
@@ -343,6 +345,23 @@ enum Cmd {
         #[arg(long)]
         chars_per_token: Option<f64>,
     },
+    /// Explain a stable `RPX-xxxx` error code — like `rustc --explain E0308`.
+    ///
+    /// Prints the extended cause, fix, alternative, and copy-paste recovery for
+    /// the code (the codified half of reposix's Rust-compiler-grade UX). When
+    /// an inline error shows `[RPX-0201]` on stderr, run
+    /// `reposix explain RPX-0201` to read the full explanation.
+    ///
+    /// With no code (or `--list`) it enumerates every registered code + title.
+    ///   reposix explain RPX-0201   # one code's extended explanation
+    ///   reposix explain --list     # every code + title
+    Explain {
+        /// The `RPX-xxxx` code to explain. Omit (or pass `--list`) to enumerate.
+        code: Option<String>,
+        /// List every registered code + title instead of explaining one.
+        #[arg(long)]
+        list: bool,
+    },
     /// Print the version.
     Version,
 }
@@ -474,6 +493,7 @@ async fn main() -> Result<()> {
             since,
             chars_per_token,
         } => cost::run(path, since, chars_per_token),
+        Cmd::Explain { code, list } => explain::run(code, list),
     }
 }
 

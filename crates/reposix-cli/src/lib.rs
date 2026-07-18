@@ -17,6 +17,7 @@ pub mod cache_db;
 pub mod cost;
 pub mod doctor;
 pub mod errors;
+pub mod explain;
 pub mod gc;
 pub mod history;
 pub mod init;
