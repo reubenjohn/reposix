@@ -79,16 +79,14 @@ RPX_CODE_ALLOWLIST: set[str] = set()
 # requires every OTHER registered code to be EMITTED somewhere in EMIT_ROOTS, so a
 # code cannot be registered-but-orphaned silently — exempting one is a reviewable,
 # deliberate act with a justification. Prefer wiring the tag over adding an entry.
-EMISSION_EXEMPT: dict[str, str] = {
-    # RPX-0401: init.rs::refuse_existing_repo_root is a bespoke `// teach-exempt`
-    # bail! (the exemplar) whose hand-rolled multi-line headline is intentionally
-    # NOT routed through teach_coded — so it carries no `[RPX-0401]` tag today.
-    # Tagging it is filed in v0.15.0 GOOD-TO-HAVES.
-    "RPX-0401": "init.rs bespoke teach-exempt bail (exemplar); tag wiring filed GOOD-TO-HAVE",
-    # RPX-0402: INIT_FETCH_FAILED is registered but not yet wired to any emission
-    # site. Filed in v0.15.0 GOOD-TO-HAVES; wire the tag or retire the entry.
-    "RPX-0402": "INIT_FETCH_FAILED registered but not yet emitted; wire-or-retire filed GOOD-TO-HAVE",
-}
+# EMPTY as of P121 W3.6 (GTH-V15-69 absorbed): every registered code is now
+# EMITTED at a tagged site — RPX-0401 (init.rs::refuse_existing_repo_root, hand-
+# emitted `[RPX-0401]` tag + `Explain:` nudge) and RPX-0402 (init.rs fetch-failure
+# path, wired through teach_coded) were the last two exemptions and are now wired.
+# Keep this dict for the ONE legitimate future case: a registered code that is
+# deliberately not yet emitted — add it here with a justification rather than
+# leaving it silently orphaned (leg 5 raises otherwise).
+EMISSION_EXEMPT: dict[str, str] = {}
 
 _RPX_ANY = re.compile(r"RPX-\d+")
 _RPX_OK = re.compile(r"^RPX-\d{4}$")
@@ -516,15 +514,23 @@ def self_test() -> int:
         any("RPX-7777" in e and "NEVER emitted" in e for e in rev_orphan),
         True,
     )
-    # An EMISSION_EXEMPT code (real entry) is NOT flagged even with no emission.
-    exempt_code = next(iter(EMISSION_EXEMPT))
-    rev_exempt, rev_exempt_notes = reverse_completeness_errors({exempt_code}, set())
-    check("leg5: an EMISSION_EXEMPT code is not flagged", len(rev_exempt), 0)
-    check(
-        "leg5: an exempt code emits an EXEMPT note",
-        any(exempt_code in n and "EXEMPT" in n for n in rev_exempt_notes),
-        True,
-    )
+    # An EMISSION_EXEMPT code is NOT flagged even with no emission. Inject a
+    # synthetic fixture so this proves the exempt branch INDEPENDENT of the real
+    # map's contents (which is empty when every registered code is wired — P121
+    # W3.6). `reverse_completeness_errors` reads the module-global map, so patch
+    # it under a try/finally.
+    exempt_code = "RPX-9998"
+    EMISSION_EXEMPT[exempt_code] = "self-test fixture — not a real registered code"
+    try:
+        rev_exempt, rev_exempt_notes = reverse_completeness_errors({exempt_code}, set())
+        check("leg5: an EMISSION_EXEMPT code is not flagged", len(rev_exempt), 0)
+        check(
+            "leg5: an exempt code emits an EXEMPT note",
+            any(exempt_code in n and "EXEMPT" in n for n in rev_exempt_notes),
+            True,
+        )
+    finally:
+        del EMISSION_EXEMPT[exempt_code]
 
     if failures:
         print(f"rpx_registry_check --self-test: {failures} FAILURE(s)", file=sys.stderr)
