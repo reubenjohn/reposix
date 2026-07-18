@@ -36,6 +36,21 @@ jobs:
           curl -L --proto '=https' --tlsv1.2 -sSf \
             https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
+      # DRAIN-24 (P124/SC3) — binary provenance for the container docs-repro rows.
+      # The `post-release` cadence grades every `kind: container` docs-repro row
+      # (example-01/02/04/05); each host-mounts `target/debug/reposix` into an
+      # ubuntu:24.04 container via quality/gates/docs-repro/container-rehearse.sh
+      # (see that harness's `-v $REPO_ROOT/target:/workspace/target` mount + its
+      # "cargo build -p reposix-cli first" recovery hint). Without an EXPLICIT build
+      # the binary's presence on a cold runner is an unconfirmed implicit cache, and
+      # those rows would silently degrade to NOT-VERIFIED for a missing host binary.
+      # This step makes the binary a hard, provenance-guaranteed dependency of the
+      # gate run (it precedes "Run post-release cadence gates"; if it fails the job
+      # fails before grading). Enforced by
+      # quality/gates/structure/container-rehearse-binary-provenance.sh.
+      - name: Build reposix (host binary the container docs-repro rows mount)
+        run: cargo build -p reposix-cli
+
       - name: Run post-release cadence gates
         env:
           GH_TOKEN: ${{ github.token }}
