@@ -112,6 +112,11 @@ pub mod ids {
     pub const ATTACH_DUPLICATE_IDS: &str = "RPX-0404";
     /// `RPX-0405` — the tree is already attached to a different backend.
     pub const ATTACH_MULTI_SOT: &str = "RPX-0405";
+    /// `RPX-0406` — refusing to `reposix init` a target nested inside another git
+    /// working tree (outside /tmp) — the binary-side backstop for the D2
+    /// shared-tree-corruption recurrence (subprocess/worktree bypass of the
+    /// Bash-tool leaf-isolation guard).
+    pub const INIT_NESTED_IN_REPO: &str = "RPX-0406";
     /// `RPX-0501` — the cache could not serve `git upload-pack`.
     pub const HELPER_UPLOAD_PACK: &str = "RPX-0501";
     /// `RPX-0502` — unexpected EOF mid-request (protocol desync).
@@ -545,6 +550,31 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::INIT_NESTED_IN_REPO,
+        title: "refusing to `reposix init` a target nested inside another git repository",
+        cause: "`reposix init` CREATES a fresh partial-clone working tree — it runs \
+                `git init` and writes `core.bare` + `remote.origin`. The target path \
+                canonicalizes to a location NESTED INSIDE an existing git working \
+                tree (outside the /tmp throwaway zone), and initializing a repo there \
+                risks corrupting the enclosing repository — the exact shape behind \
+                the 2026-07-12 shared-tree incident, where a `reposix init` reached \
+                the shared checkout through a subprocess/worktree that bypassed the \
+                Bash-tool leaf-isolation guard. Only a refusal INSIDE the binary cuts \
+                that subprocess/worktree vector, so reposix refuses fail-closed. The \
+                path is canonicalized first (realpath -m semantics, mirroring \
+                .claude/hooks/leaf-isolation-guard.sh), so a symlink or `..` \
+                traversal cannot smuggle the target back into an enclosing repo.",
+        fix: "Point `init` at a FRESH path that is NOT inside another git \
+              repository — a new directory of its own.",
+        alternative: "To adopt an EXISTING checkout (or a tree nested inside one) into \
+                      a reposix backend, use `reposix attach`. For throwaway test \
+                      trees, init under /tmp — the sanctioned dark-factory zone.",
+        recovery: &[
+            "reposix init <backend>::<project> /tmp/reposix-demo   # a throwaway tree under /tmp",
+            "reposix attach <backend>::<project>                   # adopt an existing/nested checkout instead",
+        ],
+    },
+    ExplainEntry {
         code: ids::HELPER_UPLOAD_PACK,
         title: "the reposix cache could not serve `git upload-pack`",
         cause: "On a fetch, `git-remote-reposix` tunnels git's protocol-v2 request \
@@ -892,6 +922,7 @@ mod tests {
             ids::ATTACH_NOT_GIT_TREE,
             ids::ATTACH_DUPLICATE_IDS,
             ids::ATTACH_MULTI_SOT,
+            ids::INIT_NESTED_IN_REPO,
             ids::HELPER_UPLOAD_PACK,
             ids::HELPER_EOF,
             ids::HELPER_BLOB_LIMIT,

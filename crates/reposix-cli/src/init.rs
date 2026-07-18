@@ -14,7 +14,7 @@
 //! helper-compatible `reposix::<scheme>://<host>/projects/<project>` URL is
 //! [`translate_spec_to_url`].
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -167,6 +167,133 @@ fn refuse_existing_repo_root(path: &Path) -> Result<()> {
     )
 }
 
+/// Canonicalize `path` with `realpath -m` semantics — resolve symlinks through the
+/// DEEPEST EXISTING ancestor, then apply the (possibly non-existent) tail
+/// components LEXICALLY (`.` skipped, `..` popped) onto that real ancestor.
+///
+/// Unlike [`std::fs::canonicalize`] this does NOT require the leaf to exist, and
+/// unlike a naive per-component `push` it collapses `..` in the tail against the
+/// canonicalized ancestor — so a tail like `newdir/../../etc` cannot climb OUT of
+/// the canonicalized ancestor and defeat the /tmp-safe-zone check (the classic
+/// `..`-escape). Resolving symlinks in the existing prefix FIRST (before the
+/// lexical `..` pass) matches GNU `realpath -m` and defeats a
+/// `/tmp/link -> /elsewhere` smuggle. This MIRRORS
+/// `.claude/hooks/leaf-isolation-guard.sh::is_safe`'s `realpath -m` resolution so
+/// the binary and the Bash-tool hook agree on which targets are safe — a
+/// divergence would let one layer pass what the other refuses.
+fn canonicalize_lexical_existing(path: &Path) -> PathBuf {
+    // Make absolute (join CWD for a relative path) so the ancestor walk has a root.
+    let abs = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("/"))
+            .join(path)
+    };
+    // Find the LONGEST existing prefix and canonicalize it (resolves every symlink
+    // in the existing part, yields an absolute real path). Shrink from the end one
+    // component at a time until a prefix canonicalizes.
+    let comps: Vec<Component> = abs.components().collect();
+    let mut split = comps.len();
+    let (canon_prefix, tail_start) = loop {
+        let prefix: PathBuf = comps[..split].iter().copied().collect();
+        if let Ok(c) = std::fs::canonicalize(&prefix) {
+            break (c, split);
+        }
+        if split == 0 {
+            // Pathological (even `/` is unreadable) — fall back to a purely lexical
+            // normalization of the whole absolute path below.
+            break (PathBuf::from("/"), 0);
+        }
+        split -= 1;
+    };
+    // Apply the remaining (non-existent) tail LEXICALLY onto the real ancestor.
+    let mut result = canon_prefix;
+    for comp in &comps[tail_start..] {
+        match comp {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                result.pop();
+            }
+            Component::Normal(seg) => result.push(seg),
+            // An absolute reset mid-tail cannot occur for a tail peeled off an
+            // already-absolute path; ignore defensively.
+            Component::RootDir | Component::Prefix(_) => {}
+        }
+    }
+    result
+}
+
+/// `true` iff `canon` (an already-canonicalized path) is inside the sanctioned
+/// throwaway zone — `/tmp` or `/private/tmp` (macOS). MIRRORS the
+/// `/tmp|/tmp/*|/private/tmp|/private/tmp/*` safe-zone set in
+/// `.claude/hooks/leaf-isolation-guard.sh::is_safe`. Component-wise `starts_with`
+/// (not a string prefix) so `/tmpfoo` does NOT read as `/tmp`.
+fn is_tmp_safe(canon: &Path) -> bool {
+    canon.starts_with("/tmp") || canon.starts_with("/private/tmp")
+}
+
+/// Refuse to `reposix init` a fresh target that NESTS inside an existing git
+/// working tree OUTSIDE the /tmp throwaway zone.
+///
+/// Binary-side backstop for the D2 shared-tree-corruption recurrence: the
+/// Bash-tool `leaf-isolation-guard.sh` (P102) only fires on the Claude Code Bash
+/// TOOL, so a `reposix init` reaching the shared checkout via a subprocess/worktree
+/// bypasses it — the exact 2026-07-12 recurrence path. Only a refusal INSIDE the
+/// binary cuts that vector; it runs BEFORE any git/filesystem mutation.
+///
+/// MIRRORS `leaf-isolation-guard.sh::is_safe`: canonicalize the effective target
+/// (realpath -m via [`canonicalize_lexical_existing`]); if it is under
+/// /tmp or /private/tmp → ALLOW (the sanctioned dark-factory zone, keeping the
+/// `git clone /tmp/leaf && reposix init … subdir` flow working). Otherwise walk UP
+/// the canonical ancestors; if any holds a `.git` (dir OR gitfile) the target nests
+/// inside an existing working tree → refuse RPX-0406.
+///
+/// # Errors
+/// Returns the RPX-0406 teaching error when the canonical target nests inside a
+/// non-/tmp git working tree.
+fn refuse_nested_in_worktree(path: &Path) -> Result<()> {
+    let canon = canonicalize_lexical_existing(path);
+    // /tmp safe zone — mirrors leaf-isolation-guard.sh::is_safe. Keeps the
+    // dark-factory flow working; Test B proves a /tmp nested init still reaches the
+    // fetch step rather than being refused.
+    if is_tmp_safe(&canon) {
+        return Ok(());
+    }
+    // Walk UP from the target's PARENT: if any ancestor is a git working tree (a
+    // `.git` dir or gitfile), the fresh target would nest inside it.
+    let mut cur = canon.parent();
+    while let Some(dir) = cur {
+        if dir.join(".git").exists() {
+            let headline = format!(
+                "reposix init: refusing to initialize `{target}` — it is nested inside \
+                 an existing git working tree at `{enclosing}` (outside /tmp).",
+                target = path.display(),
+                enclosing = dir.display(),
+            );
+            bail!(
+                "{}",
+                teach_coded(
+                    ids::INIT_NESTED_IN_REPO,
+                    &headline,
+                    "point init at a FRESH path that is NOT inside another git repository \
+                     (a new directory of its own) — `reposix init` runs `git init` and \
+                     rewrites core.bare/remote.origin, and doing that inside an enclosing \
+                     repo can corrupt it (the 2026-07-12 shared-tree incident).",
+                    "to adopt this existing/nested checkout into a reposix backend instead, \
+                     use `reposix attach`; for a throwaway test tree, init under /tmp.",
+                    &[
+                        "reposix init <backend>::<project> /tmp/reposix-demo   # a throwaway tree under /tmp",
+                        "reposix attach <backend>::<project>                   # adopt an existing/nested checkout",
+                    ],
+                )
+            );
+        }
+        cur = dir.parent();
+    }
+    Ok(())
+}
+
 /// Run `git <args...>` and return a useful error on non-zero exit.
 fn run_git(args: &[&str]) -> Result<()> {
     let mut cmd = Command::new("git");
@@ -271,6 +398,12 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     // shared checkout via a worktree/subprocess that never touched the
     // PreToolUse guard). Only a refusal INSIDE the binary can cut that vector.
     refuse_existing_repo_root(&path)?;
+    // Latch 1 (P122 / RPX-0406, DRAIN-09): refuse a FRESH target that nests inside
+    // an existing NON-/tmp git working tree — `refuse_existing_repo_root` only
+    // catches a target that IS a repo root; this closes the residual "fresh subdir
+    // inside the shared tree" vector. Canonicalized + /tmp-safe so it mirrors
+    // leaf-isolation-guard.sh::is_safe and never breaks the dark-factory flow.
+    refuse_nested_in_worktree(&path)?;
 
     let url = translate_spec_to_url(&spec)?;
 
