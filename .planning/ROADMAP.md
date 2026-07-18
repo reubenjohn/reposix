@@ -245,10 +245,10 @@
 **Depends on**: Nothing
 **Requirements**: DRAIN-13, DRAIN-14, DRAIN-22, DRAIN-23, DRAIN-24
 **Success Criteria** (what must be TRUE):
-  1. Container-row congruence is EARNED via per-step `ASSERT-PASS:` harvesting, not emitted verbatim from `expected.asserts`; example-05 exercises a real runtime blob-limit-exceeded error + `git sparse-checkout` recovery cycle.
-  2. Sim teardown survives an outer SIGKILL (an internal `timeout` shorter than the row's `timeout_s`, and/or a killed process group); a stale orphaned sim on port 7878 is detected fail-loud, not silently reused.
-  3. `target/debug/reposix`'s provenance on the `quality-post-release.yml` runner is confirmed via an explicit build/artifact-download step, or documented inline if one already exists.
-  4. The harness exit code is derived strictly from the persisted `exit_code` (not a possibly-disagreeing rc=0), and a `.sim-*.log` `.gitignore` pattern is added under `quality/reports/verifications/docs-repro/`.
+  1. *(DRAIN-22)* Container-row congruence is EARNED via per-step `ASSERT-PASS:` harvesting, not emitted verbatim from `expected.asserts`; example-05 exercises a real runtime blob-limit-exceeded error + `git sparse-checkout` recovery cycle.
+  2. *(DRAIN-23)* Sim teardown survives an outer SIGKILL (an internal `timeout` shorter than the row's `timeout_s`, and/or a killed process group); a stale orphaned sim on port 7878 is detected fail-loud, not silently reused.
+  3. *(DRAIN-24)* `target/debug/reposix`'s provenance on the `quality-post-release.yml` runner is confirmed via an explicit build/artifact-download step, or documented inline if one already exists.
+  4. *(DRAIN-13 + DRAIN-14)* The harness exit code is derived strictly from the persisted `exit_code` (not a possibly-disagreeing rc=0), and a `.sim-*.log` `.gitignore` pattern is added under `quality/reports/verifications/docs-repro/`.
 **Plans**: TBD
 
 ### Phase 125: Real-backend cadence & mirror-drift resilience
