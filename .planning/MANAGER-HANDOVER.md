@@ -14,6 +14,16 @@ does reposix work itself. Keep this file lean; git history is the archive.
   w1:p5 3300 "<handled CI run ids>" /home/reuben/workspace/reposix` (no local
   copy — the skill's is canonical). On wake, inspect (`herdr agent explain/read`,
   ghost-text trap) before acting. Never `agent send` blind.
+- **WAKE-SOURCE RULE (incident 2026-07-18 — all-day stall):** NEVER end a manager
+  turn without a verified freshly-armed poll (the one-shot is CONSUMED by the wake
+  that delivered it). Three liveness layers now stand: L1 = re-arm poll every wake;
+  L2 = in-session CronCreate deadman tick (~2x/hr; SESSION-ONLY — every successor
+  re-creates it, see first actions); L3 = external
+  `~/.claude/skills/herdr-manager/scripts/liveness-watchdog.sh` (setsid, flock,
+  crontab respawn `*/17min`, log `~/.local/state/herdr-watchdog/watchdog.log`) —
+  nudges the MANAGER pane when either pane's screen is static ≥40min or a
+  `[Pasted text]` block is stuck ≥15min, 45min cooldown. L2/L3 are insurance,
+  not substitutes for L1.
 - **Workhorse seat rotation — never bare `/clear` (proven 2026-07-15)**: `/clear`
   does NOT stop background shells/monitors; orphans survive (same PIDs) and their
   later events INJECT into the successor session, which cannot even enumerate them.
@@ -32,9 +42,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   load-bearing claim from any wrap report before relaying it. Workhorse self-reports
   are verified, not trusted.
 - **Context budget**: self under ~400k hard (soft ~350k; owner raise 2026-07-12) —
-  refresh this file, commit+push, run § Rotation. Workhorse: instruct ~100k soft /
-  ~150k hard, then it REPLACES `.planning/SESSION-HANDOVER.md`, commits+pushes, ends
-  turn; you `/clear` w1:p5 and launch its successor pointing at that file.
+  refresh this file, commit+push, run § Rotation. Workhorse: relieve at **~18%
+  gauge soft / ~22% hard** (Opus 1M seat; fresh-seat baseline is ~6% ≈ 60k system
+  overhead — the old "100k/150k absolute" phrasing read as 10–15% gauge and caused
+  premature 15-min legs #55/#59), then it REPLACES `.planning/SESSION-HANDOVER.md`,
+  commits+pushes, ends turn; you `/clear` w1:p5 and launch its successor pointing
+  at that file. Charter the gauge numbers, not raw token counts.
 - **Real-backend mutations PRE-AUTHORIZED**: Confluence TokenWorld, GitHub
   reubenjohn/reposix issues, JIRA TEST. Credentials/spend beyond those still
   owner-gated.
@@ -86,7 +99,46 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed at rotation #11→#12, 2026-07-17 ~02:05 UTC)
+## Live state (refreshed at rotation #12→#13, 2026-07-18 ~01:05 UTC)
+
+- **SUCCESSOR #13 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
+  `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 1200 ""
+  /home/reuben/workspace/reposix`. (2) Re-create the L2 in-session deadman tick
+  (CronCreate died with #12's session): cron `11,53 * * * *`, recurring, prompt =
+  "WATCHDOG TICK: if your last turn did not end with a freshly armed unfired
+  manager-poll, triage w1:p5 + origin/CI and re-arm; else one-line ack, stop."
+  (3) Verify L3 watchdog alive: `pgrep -f liveness-watchdog.sh` (crontab respawns
+  it ≤17min; SIGTERM it only if retiring the mechanism). (4) **Seat #61 mid-leg**:
+  P120 CLOSED GREEN (`f6de50d3`, milestone 7/15 ≈47%); #61 continues the roadmap
+  (P121 next) under the recalibrated relief line (18%/22% gauge). Rotate it per
+  the skill (pane-clear, never bare /clear; verify charter CONSUMED, not just
+  box-empty — see send-race craft below). (5) **Owner gates OPEN:** E1 animation
+  publish — manager-deferred, owner PENDING (`gh release create docs-assets
+  --latest=false` + 6.9MB mp4 + animation-renders verify; NEVER self-authorize,
+  NEVER tag [OWNER] without genuine owner input — 2026-07-17 honesty incident);
+  PR #74 v0.14.1 cut (recommended CUT, awaiting owner word).
+
+- **SHIFT #12 SUMMARY (2026-07-17 02:4x → 07-18 01:0x UTC):** Seats #54→#61;
+  **P117+P118+P119+P120 all CLOSED GREEN** (milestone 14%→47%). P117 highlights:
+  19-commit push-blocker chain cleared honestly across three seats (#56
+  root-caused a hand-written `"BIND"` enum corrupting doc-alignment.json, #57
+  decided the 17-row refresh, #58 applied+pushed with GTH-V15-49 Option B);
+  E1 animation upload escalated → manager-deferred under outward-publishing
+  doctrine; close commit mis-tagged the deferral [OWNER] → honesty fix `97a4008`.
+  #60 single-leg closed P118+P119 after the relief-line recalibration. **PR #77**:
+  explored via subagent (verdict: flake — live crates.io probes inside the
+  "hermetic" runner unit test), rerun green, un-drafted + squash-merged by
+  manager under explicit owner direction; hermetic-test debt row filed.
+  **INCIDENT (2026-07-18): all-day relay gap** — #12 ended a turn without
+  re-arming the consumed one-shot poll; worker #60 finished a 5h leg and sat
+  unrotated ~4.5h. Root fix = the 3-layer liveness stack (see standing rules).
+  **Send-race craft:** a long `agent send` lands as a `[Pasted text]` block that
+  may survive MULTIPLE Enters while subagents hold input — verify the message
+  was CONSUMED (visible in transcript / turn started), never trust box-looks-
+  empty; L3 watchdog now flags stuck blocks. Owner interactions: merge-PR#77
+  directive (executed), watchdog design question (answered + built).
+
+## Prior live state (rotation #11→#12, 2026-07-17 ~02:05 UTC — historical)
 
 - **SUCCESSOR #12 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (prior one-shots
   consumed): `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5
