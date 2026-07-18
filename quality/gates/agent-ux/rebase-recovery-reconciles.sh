@@ -11,7 +11,10 @@
 # NEGATIVE GUARD proving the pre-fix parentless emission RED-s so the gate bites.
 #
 # ────────────────────────────────────────────────────────────────────────────
-# CURRENT STATUS (2026-07-12, Phase 105 Lane 2 → layer-2): PASS (exit 0).
+# CURRENT STATUS (2026-07-18, P122 W4 / GTH-V15-04): PASS (exit 0). Extends the
+# P105 Lane-2 import-path gate with modern-git stateless-connect legs (this VM's
+# git is 2.50.1, protocol.version UNSET) — see MODERN-GIT COVERAGE below. The
+# original P105 status (2026-07-12, Lane 2 → layer-2) was PASS on the import path.
 #
 # RBF-LR-03 shipped in two layers:
 #   - Layer-1 (90ddaff) chained the synthesized tracking commit onto the
@@ -61,15 +64,22 @@
 #
 # IMPORT-PATH FORCING (PLAN §3 / §5). The RBF-LR-03 bug lives on git's `import`
 # capability fetch path. git 2.25 selects `import` unaided; on a modern git
-# (>= 2.34) fetch would route via `stateless-connect` (protocol v2). To exercise
-# the broken path DETERMINISTICALLY on any git, this gate exports
-# GIT_CONFIG_COUNT/KEY_0/VALUE_0 = protocol.version=0 for EVERY git subprocess
-# (including the ones `reposix init`/`reposix-sim` shell out to), forcing v0 →
-# the `import` path. The stateless-connect path (PLAN §5 open question) is NOT
-# exercised here: only git 2.25.1 is installed in this environment, and forcing
-# protocol.version=2 on 2.25 errors before the fetch (`bad line length 2`). See
-# the STATELESS-CONNECT block below — it records a labelled skip + TODO rather
-# than faking a result.
+# (>= 2.34) fetch routes via `stateless-connect` (protocol v2, git's default
+# since 2.26). To exercise the import path DETERMINISTICALLY on any git, the
+# import legs below export GIT_CONFIG_COUNT/KEY_0/VALUE_0 = protocol.version=0 for
+# EVERY git subprocess (including the ones `reposix init`/`reposix-sim` shell out
+# to), forcing v0 → the `import` path. This guards OLD-GIT support and must stay.
+#
+# MODERN-GIT COVERAGE (P122 W4, GTH-V15-04 / DRAIN-07). The real floor for the
+# stateless-connect (protocol-v2) READ path is git >= 2.34; it is exercised here
+# LOCALLY now — this VM's git is 2.50.1. (The earlier "only git 2.25.1 installed
+# / protocol.version=2 errors with `bad line length 2`" comments were STALE: the
+# environment moved to 2.50.1; those claims are corrected here — fix-twice.) The
+# STATELESS-CONNECT block below LIFTS the protocol.version forcing (unset) and
+# re-runs both drift scenarios so git negotiates protocol-v2 and selects the real
+# stateless-connect path, adjudicating each deterministically (convergence, or a
+# loud fail surfacing a cache-side second fix site per P105 §5) — never a bare
+# TODO. CI (ubuntu-latest, git >= 2.43) runs the same modern-git legs.
 #
 # Implements catalog row agent-ux/rebase-recovery-reconciles.
 # Usage: rebase-recovery-reconciles.sh [--row-id <id>]
@@ -475,19 +485,138 @@ else
 fi
 
 # ============================================================================
-# STATELESS-CONNECT (PLAN §5 open question) — modern-git (>= 2.34) path.
-# Only git 2.25.1 is installed here; forcing protocol.version=2 on 2.25 errors
-# before the fetch (`bad line length 2`). We therefore CANNOT verify whether the
-# stateless-connect fetch path also breaks. Record a labelled skip + TODO rather
-# than fake a result (charter: verify against reality, never fake).
+# STATELESS-CONNECT (PLAN §5 open question — RESOLVED here) — modern-git
+# (>= 2.34) READ path. This VM's git is 2.50.1 (>= 2.34): re-run the peer-push
+# and external-REST drift scenarios WITHOUT the protocol.version=0 forcing, so
+# git negotiates protocol-v2 and selects the REAL stateless-connect fetch path
+# (git's default since 2.26). The import legs above already guard the old-git
+# `import` path; these legs close the coverage gap on the majority-git read path
+# (GTH-V15-04 / DRAIN-07). Each scenario is adjudicated deterministically:
+# converge (Branch A — RBF-LR-03 holds on modern git) OR a loud FAIL surfacing a
+# SECOND, cache-side fix site (Branch B — file it, do NOT silently expand this
+# lane, per P105 §5). Never a bare TODO, never a silent skip, never a faked green.
+#
+# TRANSPORT PROOF (proves the RECOVERY FETCH used stateless-connect, not import):
+# the recovery `git pull --rebase` runs under GIT_TRACE_PACKET (set ONLY on the
+# pull — the `&&`-chained push does NOT inherit it), and the pull's pkt-line trace
+# is asserted to carry the protocol-v2 stateless-connect wire signatures
+# (`command=fetch` + `version 2`) with ZERO fast-import/reposix-import signatures.
+#
+# WHY NOT a ref-namespace discriminator (verified against reality, P122 W4):
+# refs/reposix-import/main is NOT a valid READ-path discriminator — it is written
+# by the EXPORT (push) path, NOT the fetch. On the stateless-connect read path,
+# `reposix init` and `git pull --rebase` create ONLY refs/reposix/origin/main (no
+# import ref — confirmed via GIT_TRACE_PACKET showing command=fetch/version 2 and
+# zero import-stream lines); the private refs/reposix-import/main appears only
+# AFTER the `git push` half of the documented recovery. So a naive "import ref
+# absent" check is a false negative for the READ path. The GIT_TRACE_PACKET wire
+# signature is the honest, direct proof of the transport.
 # ============================================================================
 GIT_VER="$(git --version | grep -oE '[0-9]+\.[0-9]+' | head -1)"
 GIT_MAJ="${GIT_VER%%.*}"; GIT_MIN="${GIT_VER#*.}"
 if [[ "$GIT_MAJ" -gt 2 || ( "$GIT_MAJ" -eq 2 && "$GIT_MIN" -ge 34 ) ]]; then
-  tlog "STATELESS-CONNECT: modern git (${GIT_VER}) present — TODO: re-run both scenarios WITHOUT the protocol.version=0 forcing to exercise the stateless-connect path and record whether it also breaks (PLAN §5). If it also breaks, that is a SEPARATE cache-side fix site — file to SURPRISES-INTAKE, do NOT expand this gate."
-  echo "  NOTE: modern git present — stateless-connect §5 check is a TODO in this gate (see transcript)." >&2
+  # Lift the import-path forcing for the stateless-connect legs. Safe in the main
+  # shell: ALL import scenarios (A/B/C) have already run above; nothing below
+  # needs protocol.version=0. `${...:-}` guards `set -u` after the unset.
+  unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
+  tlog "STATELESS-CONNECT: git ${GIT_VER} (>= 2.34) — protocol.version forcing LIFTED (GIT_CONFIG_COUNT=${GIT_CONFIG_COUNT:-<unset>}); git negotiates protocol-v2 → the real stateless-connect read path."
+  echo "rebase-recovery-reconciles: STATELESS-CONNECT legs (git ${GIT_VER}, protocol.version unset)" >&2
+  SC_DIVERGED=0
+
+  # ── Stateless Scenario A — peer git-push drift (protocol-v2 read path) ──────
+  # SP pushes an edit to issue3 (SoT drifts); SA holds an unpushed edit on issue4
+  # (a DIFFERENT record → clean rebase replay, isolating fetch-recovery from
+  # merge-conflict). issue2 was deleted by Scenario C above; issues 3/4/5 are
+  # untouched by the import legs, so this leg starts from a clean base.
+  CACHE_SP="$(init_clone SP)"
+  CACHE_SA="$(init_clone SA)"
+  ( cd "${RUN_DIR}/SP" && printf '\nEdit by SP (sc)\n' >> issues/3.md && git add -A && git commit -q -m "SP edits issue3" \
+      && REPOSIX_CACHE_DIR="$CACHE_SP" git push -q origin main ) >"${RUN_DIR}/SP_push.log" 2>&1
+  sleep 2
+  ( cd "${RUN_DIR}/SA" && printf '\nEdit by SA (sc)\n' >> issues/4.md && git add -A && git commit -q -m "SA edits issue4" )
+  SCA_BEFORE="$(issue_version 4)"
+  # GIT_TRACE_PACKET (absolute path) is set ONLY on the pull, so the &&-chained
+  # push does NOT pollute the READ-path trace. The documented single-command
+  # recovery chain is preserved verbatim.
+  SCA_TRACE="${RUN_DIR}/SCA_pull_trace.txt"
+  ( cd "${RUN_DIR}/SA" && GIT_TRACE_PACKET="$SCA_TRACE" REPOSIX_CACHE_DIR="$CACHE_SA" git pull --rebase origin main \
+      && REPOSIX_CACHE_DIR="$CACHE_SA" git push origin main ) >"${RUN_DIR}/SCA_recovery.log" 2>&1
+  SCA_EXIT=$?
+  SCA_AFTER="$(issue_version 4)"
+  SCA_PROTO="$(grep -aoE 'command=fetch|command=ls-refs|version 2' "$SCA_TRACE" 2>/dev/null | sort | uniq -c | tr '\n' ';')"
+  tlog "--- STATELESS-CONNECT Scenario A recovery.log ---"; tlog "$(cat "${RUN_DIR}/SCA_recovery.log")"
+  tlog "STATELESS-CONNECT A: recovery_exit=${SCA_EXIT} issue4_before=${SCA_BEFORE} issue4_after=${SCA_AFTER} pull_proto=[${SCA_PROTO}]"
+  SCA_EXPECT=$(( SCA_BEFORE + 1 ))
+  if [[ "$SCA_EXIT" -eq 0 && "$SCA_AFTER" == "$SCA_EXPECT" ]] && ! grep -qE "$FATAL_RE|$REFLOCK_RE" "${RUN_DIR}/SCA_recovery.log"; then
+    pass "STATELESS-CONNECT Scenario A (peer git-push drift, protocol-v2): documented \`git pull --rebase && git push\` exits 0 and SA's edit converged (issue4 v${SCA_BEFORE}->v${SCA_AFTER}) via the real stateless-connect read path — no \`does not contain\`/\`fatal: fast-import\`, no \`cannot lock ref\`"
+  else
+    SC_DIVERGED=1
+    SCA_ERR="$(grep -Ei 'fatal|error|cannot lock|does not contain' "${RUN_DIR}/SCA_recovery.log" | head -3 | tr '\n' ' ')"
+    fail "STATELESS-CONNECT Scenario A did NOT converge on the protocol-v2 path (recovery_exit=${SCA_EXIT}, issue4 v${SCA_BEFORE}->v${SCA_AFTER}); stderr: ${SCA_ERR} — SECOND (cache-side) fix site [P105 §5 Branch B]"
+  fi
+  # TRANSPORT PROOF: the recovery pull genuinely used protocol-v2 stateless-connect.
+  if grep -qa 'command=fetch' "$SCA_TRACE" 2>/dev/null && grep -qa 'version 2' "$SCA_TRACE" 2>/dev/null && ! grep -qaE 'fast-import|reposix-import' "$SCA_TRACE" 2>/dev/null; then
+    pass "STATELESS-CONNECT Scenario A TRANSPORT-PROOF: the recovery pull's GIT_TRACE_PACKET carries the protocol-v2 stateless-connect wire signatures (command=fetch + version 2) and ZERO fast-import/reposix-import signatures — the real stateless-connect READ path was exercised, not the legacy import path"
+  else
+    SC_DIVERGED=1
+    fail "STATELESS-CONNECT Scenario A TRANSPORT-PROOF: the recovery pull trace did NOT prove protocol-v2 stateless-connect (need command=fetch + version 2, no import stream); pull_proto=[${SCA_PROTO}] — the stateless-connect read path was NOT exercised"
+  fi
+
+  # ── Stateless Scenario B — external REST PATCH drift (protocol-v2 read path) ─
+  # A direct `curl -X PATCH` moves the SoT (issue3) — NOT a git push. SB holds an
+  # unpushed edit on issue5 (distinct record). Same expected outcome as A.
+  CACHE_SB="$(init_clone SB)"
+  ( cd "${RUN_DIR}/SB" && printf '\nEdit by SB (sc)\n' >> issues/5.md && git add -A && git commit -q -m "SB edits issue5" )
+  tlog "--- STATELESS-CONNECT Scenario B external PATCH issue3 ---"
+  curl -s -X PATCH "${SIM_URL}/projects/demo/issues/3" \
+    -H 'content-type: application/json' \
+    -d '{"body":"EXTERNALLY EDITED VIA REST (sc)\n"}' >>"$TRANSCRIPT" 2>&1
+  tlog ""
+  sleep 2
+  SCB_BEFORE="$(issue_version 5)"
+  SCB_TRACE="${RUN_DIR}/SCB_pull_trace.txt"
+  ( cd "${RUN_DIR}/SB" && GIT_TRACE_PACKET="$SCB_TRACE" REPOSIX_CACHE_DIR="$CACHE_SB" git pull --rebase origin main \
+      && REPOSIX_CACHE_DIR="$CACHE_SB" git push origin main ) >"${RUN_DIR}/SCB_recovery.log" 2>&1
+  SCB_EXIT=$?
+  SCB_AFTER="$(issue_version 5)"
+  SCB_PROTO="$(grep -aoE 'command=fetch|command=ls-refs|version 2' "$SCB_TRACE" 2>/dev/null | sort | uniq -c | tr '\n' ';')"
+  tlog "--- STATELESS-CONNECT Scenario B recovery.log ---"; tlog "$(cat "${RUN_DIR}/SCB_recovery.log")"
+  tlog "STATELESS-CONNECT B: recovery_exit=${SCB_EXIT} issue5_before=${SCB_BEFORE} issue5_after=${SCB_AFTER} pull_proto=[${SCB_PROTO}]"
+  SCB_EXPECT=$(( SCB_BEFORE + 1 ))
+  if [[ "$SCB_EXIT" -eq 0 && "$SCB_AFTER" == "$SCB_EXPECT" ]] && ! grep -qE "$FATAL_RE|$REFLOCK_RE" "${RUN_DIR}/SCB_recovery.log"; then
+    pass "STATELESS-CONNECT Scenario B (external REST PATCH drift, protocol-v2): documented \`git pull --rebase && git push\` exits 0 and SB's edit converged (issue5 v${SCB_BEFORE}->v${SCB_AFTER}) via the real stateless-connect read path"
+  else
+    SC_DIVERGED=1
+    SCB_ERR="$(grep -Ei 'fatal|error|cannot lock|does not contain' "${RUN_DIR}/SCB_recovery.log" | head -3 | tr '\n' ' ')"
+    fail "STATELESS-CONNECT Scenario B did NOT converge on the protocol-v2 path (recovery_exit=${SCB_EXIT}, issue5 v${SCB_BEFORE}->v${SCB_AFTER}); stderr: ${SCB_ERR} — SECOND (cache-side) fix site [P105 §5 Branch B]"
+  fi
+  # TRANSPORT PROOF: the recovery pull genuinely used protocol-v2 stateless-connect.
+  if grep -qa 'command=fetch' "$SCB_TRACE" 2>/dev/null && grep -qa 'version 2' "$SCB_TRACE" 2>/dev/null && ! grep -qaE 'fast-import|reposix-import' "$SCB_TRACE" 2>/dev/null; then
+    pass "STATELESS-CONNECT Scenario B TRANSPORT-PROOF: the recovery pull's GIT_TRACE_PACKET carries the protocol-v2 stateless-connect wire signatures (command=fetch + version 2) and ZERO fast-import/reposix-import signatures — the real stateless-connect READ path was exercised, not the legacy import path"
+  else
+    SC_DIVERGED=1
+    fail "STATELESS-CONNECT Scenario B TRANSPORT-PROOF: the recovery pull trace did NOT prove protocol-v2 stateless-connect (need command=fetch + version 2, no import stream); pull_proto=[${SCB_PROTO}] — the stateless-connect read path was NOT exercised"
+  fi
+
+  # ── SC1 verdict — maps the two 122-01 expected.asserts (F-K4b congruence) ───
+  if [[ "$SC_DIVERGED" -eq 0 ]]; then
+    pass "STATELESS-CONNECT MODERN-GIT (git ${GIT_VER} >= 2.34): the gate ALSO runs BOTH drift scenarios via the real stateless-connect path (protocol.version UNSET; proven by the GIT_TRACE_PACKET protocol-v2 command=fetch/version 2 wire signatures) — no bare TODO-skip remains on modern git"
+    pass "STATELESS-CONNECT VERDICT: deterministic per-scenario verdict — both drift scenarios CONVERGE via the documented \`git pull --rebase && git push\` on the stateless-connect read path [P105 §5 Branch A: RBF-LR-03 holds on modern git; GTH-V15-04 VERIFIED], never a silent skip or a faked green"
+    tlog "STATELESS-CONNECT: P105 §5 RESOLVED — Branch A (convergence). RBF-LR-03 holds on BOTH the import (old-git) and stateless-connect (modern-git) read paths."
+  else
+    # Branch B: a leg diverged. This is a SECOND, cache-side fix site (P105 §5).
+    # The gate FAILs loudly (NOT-VERIFIED) so the executor files SURPRISES-INTAKE
+    # and converts this leg into a labelled, filed known-divergence guard. This
+    # arm ALSO stays live as a forward regression guard once Branch A is proven:
+    # if the stateless-connect path ever regresses, the gate goes NOT-VERIFIED
+    # loudly rather than silently passing.
+    BLOCKED=1
+    [[ -z "$REASON" ]] && REASON="STATELESS-CONNECT divergence (P105 §5 Branch B): the protocol-v2 stateless-connect read path does NOT reconcile after drift — a SECOND, cache-side fix site. See transcript ${TRANSCRIPT}."
+    tlog "STATELESS-CONNECT: P105 §5 → Branch B (divergence). A cache-side second fix site is live on the modern-git read path — file HIGH to SURPRISES-INTAKE."
+  fi
 else
-  tlog "STATELESS-CONNECT: SKIPPED — git ${GIT_VER} < 2.34; protocol.version=2 errors on 2.25 before the fetch (bad line length 2). PLAN §5 open question UNRESOLVED in this environment; needs a modern-git CI run. Not faked."
+  tlog "STATELESS-CONNECT: git ${GIT_VER} < 2.34 — protocol-v2 stateless-connect is not selectable on this git; the import legs above exercise the REAL fetch path for this git. Deterministic not-applicable (not a silent TODO). Modern-git coverage runs on this VM (git 2.50.1) and CI (ubuntu-latest, git >= 2.43)."
+  echo "  NOTE: git ${GIT_VER} < 2.34 — stateless-connect not applicable on this git; the import legs guard it. Modern-git legs run on 2.50.1 / CI." >&2
 fi
 
 # ============================================================================
