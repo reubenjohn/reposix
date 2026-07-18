@@ -2805,8 +2805,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/rpx-codes-registry.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T02:52:50Z",
       "minted_at": "2026-07-18T01:51:13Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
