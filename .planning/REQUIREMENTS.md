@@ -219,15 +219,15 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   all persist ops through a single locked lane.
 - [ ] **DRAIN-06** *(MED, GTH-V15-03)*: No gate checks a catalog row's `verifier.script`
   exists + is executable — add `quality/gates/structure/verifier-script-exists.sh`.
-- [ ] **DRAIN-07** *(HIGH, GTH-V15-04)*: RBF-LR-03's rebase-recovery fix (`bd5b9cb`) is
+- [x] **DRAIN-07** *(HIGH, GTH-V15-04)*: RBF-LR-03's rebase-recovery fix (`bd5b9cb`) is
   proven GREEN only on git 2.25.1 via the `import` path — exercise
   `rebase-recovery-reconciles.sh` on a modern-git (≥2.34) CI runner and resolve whether
   `stateless-connect` exhibits the same fetch-ref-lock behavior.
-- [ ] **DRAIN-08** *(MED, GTH-V15-05)*: `resolve_import_parent()`
+- [x] **DRAIN-08** *(MED, GTH-V15-05)*: `resolve_import_parent()`
   (`crates/reposix-remote/src/main.rs:400-419`) degrades to the parentless path on ANY git
   error, not just ref-absence — distinguish ref-absent from spawn/other rev-parse failure,
   error loudly on the latter, add a regression test.
-- [ ] **DRAIN-09** *(HIGH, GTH-V15-06)*: Add a binary-side self-safety refusal in
+- [x] **DRAIN-09** *(HIGH, GTH-V15-06)*: Add a binary-side self-safety refusal in
   `reposix init` (not `attach`) so a non-Bash-tool subprocess/worktree bypass targeting the
   shared source tree is refused with a Rust-compiler-grade error, without breaking the
   sanctioned `/tmp` dark-factory flow.
@@ -324,9 +324,9 @@ goals, and success criteria).
 | DRAIN-04 | Phase 123 | Pending |
 | DRAIN-05 | Phase 123 | Pending |
 | DRAIN-06 | Phase 123 | Pending |
-| DRAIN-07 | Phase 122 | Pending |
-| DRAIN-08 | Phase 122 | Pending |
-| DRAIN-09 | Phase 122 | Pending |
+| DRAIN-07 | Phase 122 | Complete |
+| DRAIN-08 | Phase 122 | Complete |
+| DRAIN-09 | Phase 122 | Complete |
 | DRAIN-10 | Phase 123 | Pending |
 | DRAIN-11 | Phase 119 | Pending |
 | DRAIN-12 | Phase 125 | Pending |

@@ -3,19 +3,34 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-18T05:19:04.000Z"
-last_activity: 2026-07-17 -- P121 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p121/VERDICT.md, commit 80a37cea): RPX error-code namespace + `reposix explain` — all 6/6 SC + OP-2 verified against reality. 33-code RPX registry (reposix_core::codes) with rustc --explain-grade extended explanations; `reposix explain <code>` shipped; teach_coded emission wired across CLI + helper; agent-ux/rpx_registry_check gate (5 legs incl. reverse-completeness) GREEN, EMISSION_EXEMPT now empty. 5 LOW GTHs filed (GTH-V15-73..77: RPX-0402 url redaction defense-in-depth, ADR-009 clap flag-surface lock, doc-alignment line-span narrowing, exit-codes.md clap code-2 layer, pre-push 92s kcov drift). Impl @ 9b80538c, verdict @ 80a37cea; next = P122
+last_updated: "2026-07-18T09:04:00.000Z"
+last_activity: 2026-07-18 -- P122 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p122/VERDICT.md, verdict commit 00ab1579): reposix-remote + init hardening — 3/3 SC verified against reality (GTH-V15-04 RBF-LR-03 modern-git ref-lock; GTH-V15-05 resolve_import_parent loud-fail RPX-0508; GTH-V15-06 init self-safety refusal RPX-0406). 9/15 v0.15.0 "Floor" phases complete (P114–P122); next = P123.
 progress:
   total_phases: 15
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 3
   completed_plans: 2
-  percent: 53
+  percent: 60
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P122 (reposix-remote + init hardening, v0.15.0 GTH-V15-04/05/06) — CLOSED GREEN 2026-07-18.**
+gsd-verifier verdict GREEN (`quality/reports/verdicts/p122/VERDICT.md`, verdict commit
+`00ab1579`); 3/3 success criteria verified against reality: GTH-V15-04 (RBF-LR-03 modern-git
+ref-lock hardening), GTH-V15-05 (`resolve_import_parent` loud-fail on non-absence git failure,
+coded RPX-0508, instead of silently degrading to the parentless overlay), and GTH-V15-06
+(`reposix init` self-safety refusal of a nested-in-shared-tree target, coded RPX-0406, both the
+pre-mutation nesting latch and the worktree-shared-config self-check). Origin/main tip `985e7dc2`;
+CI run `29637816791` = success. Close wave resolved the two on-demand catalog rows
+(`agent-ux/import-parent-resolve-fails-loud`, `agent-ux/init-refuses-nested-in-shared-tree`) —
+both greened via a direct scoped-verifier run against reality (real `cargo test -p reposix-remote`
+/ `cargo test -p reposix-cli` invocations, 0 failures) and KEPT at `on-demand` cadence (matching
+the P120 sibling rows' precedent: `agent-ux/cli-errors-teach-recovery`,
+`agent-ux/helper-errors-teach-recovery`, `agent-ux/rpx-codes-registry`), documented as
+GTH-V15-79. **9/15 v0.15.0 "Floor" phases complete** (P114–P122); next = **P123**.
 
 Phase: **P121 (RPX error-code namespace + `reposix explain`, v0.15.0 UX-02) — CLOSED GREEN 2026-07-17.**
 gsd-verifier verdict GREEN (`quality/reports/verdicts/p121/VERDICT.md`, commit `80a37cea`); all 6/6
@@ -150,7 +165,7 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 122`. Carried
+Next step: `/gsd-plan-phase 123`. Carried
 owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
@@ -192,7 +207,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P121 CLOSED GREEN (verdict GREEN); 8/15 phases complete (P114–P121). Next: `/gsd-plan-phase 122`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P122 CLOSED GREEN (verdict GREEN); 9/15 phases complete (P114–P122). Next: `/gsd-plan-phase 123`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
