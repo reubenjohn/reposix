@@ -205,7 +205,7 @@
   1. Every user-facing error across the CLI + helper surface emits a structured `RPX-xxxx` code.
   2. `reposix explain <code>` exists and, for every code emitted anywhere in the CLI or helper, prints a non-empty cause + fix + copy-paste recovery.
   3. The output pattern is verified side-by-side against `rustc --explain E0308` for parity of shape.
-**Plans**: TBD
+**Plans**: 1
 
 ### Phase 122: `reposix-remote` + `init` hardening (HIGH carry-forwards)
 **Goal**: The git helper and `reposix init` close two HIGH-severity carry-forward robustness gaps from the v0.14.0 intake.
@@ -296,7 +296,7 @@
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
 | 119. Docs/planning simplification | 4/4 | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
 | 120. CLI + helper error hardening | 0/TBD | Not started | - |
-| 121. RPX error-code namespace + explain | 0/TBD | Not started | - |
+| 121. RPX error-code namespace + explain | 0/1 | Not started | - |
 | 122. reposix-remote + init hardening | 0/TBD | Not started | - |
 | 123. Quality-runner & catalog integrity | 0/TBD | Not started | - |
 | 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
