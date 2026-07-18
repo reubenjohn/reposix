@@ -134,6 +134,22 @@ milestone boundaries or an E1–E4 escalation. **No new agent type is needed:**
 charter SCOPE (milestone → C2; single phase → C1), and each tier relieves on its OWN ~100k
 line.
 
+**Liveness doctrine (push→CI-in-flight boundary — load-bearing, L0 ruling 2026-07-17,
+root-caused by the P122 close-liveness incident).** Background-task re-invocation is
+reliable ONLY at L0 (top-level) — a coordinator's OWN backgrounded `gh run watch` (or
+any self-owned background-bash watcher) does NOT reliably re-invoke it; it goes dormant
+and stalls the phase close (the P122 C1 backgrounded its own CI watch and never woke; the
+C2 had to be poked by L0 to take deterministic control). A coordinator must therefore
+NEVER background its own CI watch and end its turn assuming it will wake. Everything
+BEFORE the push (plan → execute → code-review) runs straight through; the
+push→CI-in-flight boundary is the ONE stop-and-return point: the coordinator STOPS and
+RETURNS to its dispatching parent a short status — pushed SHA + in-flight `ci.yml` run id
++ "awaiting CI green to run post-push cadence + close." Direct child-agent completion
+notifications DO reliably re-invoke a parent (that path works); bare background-bash
+watchers do not — the parent relays the run id up to L0 (which holds the durable CI
+watch) and SendMessages the coordinator to resume the phase close on green. Never relieve
+or end a turn on a passive self-watch/upward-relay assumption.
+
 A relieved coordinator must be **told in advance** it is being relieved, so it writes a
 deliberate, complete handover (persistence is solicited, not automatic). Dispatch
 `relief-handover-writer` with the ORCHESTRATION handover template:
@@ -236,7 +252,9 @@ not every session); this section is the map, not the territory.
 WHOLE drive reaches end state by ~10% of L0's own context — report-only diet, never reads
 source/builds/edits. The practical shape: substantive work lands **two levels below** the top
 seat (L0 routes → C1/C2 coordinate → leaves execute); L0's own window stays reserved for
-routing, gate checks, and verification. L1 portion coordinator (opus) owns one large portion, charters L2s. L2
+routing, gate checks, and verification — including owning the durable CI watch at the
+push→CI-in-flight boundary (§3 "Liveness doctrine"): a C1/C2 never self-owns a background
+watch to wake itself; it stops and returns status instead. L1 portion coordinator (opus) owns one large portion, charters L2s. L2
 phase/drain-window coordinator (opus for security-judgment work, sonnet otherwise) owns a
 phase/window, charters L3 lanes. (A milestone-scoped L1 is the C2 coordinator-of-coordinators;
 a phase-scoped L2 is a C1 — §3 carries the C1-relief-absorbed-by-C2 rule.) L3 work lanes

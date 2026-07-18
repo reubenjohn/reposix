@@ -96,6 +96,19 @@ phase**; a relieving C1's successor is dispatched by its parent C2, not by L0. S
 `phase-coordinator` type at both tiers — the tier is just charter scope (milestone vs
 single phase).
 
+## 6a. Liveness — never self-watch CI (push→CI-in-flight is a stop-and-return point)
+
+**Never background your OWN `gh run watch` and end your turn expecting it to re-wake
+you** — background-task re-invocation is reliable ONLY at L0; a coordinator's self-owned
+watcher goes dormant and stalls the close (root cause: P122 close-liveness incident,
+2026-07-18). At the push→CI-in-flight boundary, STOP and RETURN to your dispatching
+parent: pushed SHA + in-flight `ci.yml` run id + "awaiting CI green to run post-push
+cadence + close." Direct child-agent completion notifications DO reliably re-invoke you;
+bare background-bash watchers do not — your parent relays the run id up to L0 (which
+holds the durable watch) and SendMessages you to resume on green. Everything before the
+push runs straight through — only this one boundary is a stop-and-return point. Full
+doctrine: `.planning/ORCHESTRATION.md` §3.
+
 ## 7. Pause/resume brief template (owner-invoked pause)
 
 Finish the current atomic unit first, THEN dispatch relief-handover-writer with:

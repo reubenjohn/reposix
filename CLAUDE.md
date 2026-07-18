@@ -125,6 +125,9 @@ lives in **`.planning/ORCHESTRATION.md`** (read before dispatching any agent).
   stop ~150k) at a wave boundary — absolute, not % of the window (write+commit a handover
   first). L0 launches a **coordinator-of-coordinators** per milestone so C1 rotations are
   absorbed below the top, not at L0 (`.planning/ORCHESTRATION.md` §3).
+- **L0 owns the durable CI watch** — a coordinator stops and returns status at the
+  push→CI-in-flight boundary rather than self-watching (`.planning/ORCHESTRATION.md` §3
+  "Liveness doctrine").
 - **Uncommitted = didn't happen** — enforced by `.claude/hooks/` (cargo mutex,
   stop-on-dirty, precompact-persist). External mutations need owner-named-target approval.
 - Understand **intention over faithful plan execution**.
