@@ -136,6 +136,7 @@ nav:
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
       - CLI: reference/cli.md
+      - Error codes: reference/error-codes.md
       - Exit codes: reference/exit-codes.md
       - Glossary: reference/glossary.md
       - Simulator: reference/simulator.md
