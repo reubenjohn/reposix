@@ -1320,8 +1320,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/persist-catalog-write-locked.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T12:32:25Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: wrap the check+write critical section of --persist in an advisory flock (e.g. Python's fcntl.flock) scoped to a per-catalog lockfile; validate-only runs must not acquire it.",
