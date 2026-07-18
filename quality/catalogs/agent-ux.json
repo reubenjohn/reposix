@@ -1741,7 +1741,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "P92 SC1 real-backend (TokenWorld) arm, minted NOT-VERIFIED at phase catalog-first scaffold -- NOT implemented this session. Scope: the sibling sim-arm scenario (agent-ux/t4-conflict-rebase-ancestry) re-run against the sanctioned real-backend target (TokenWorld Confluence space, docs/reference/testing-targets.md) using two independent working trees + caches, asserting the same no-fresh-root-commit claim. Gated behind pre-release-real-backend per RBF-FW-06 (env-gated, fails closed to NOT-VERIFIED when REPOSIX_ALLOWED_ORIGINS/creds are unset -- never skip-counts-as-pass, OD-2).",
+      "comment": "P92 SC1 real-backend (TokenWorld) arm, minted NOT-VERIFIED at phase catalog-first scaffold -- NOT implemented this session. Scope: the sibling sim-arm scenario (agent-ux/t4-conflict-rebase-ancestry) re-run against the sanctioned real-backend target (TokenWorld Confluence space, docs/reference/testing-targets.md) using two independent working trees + caches, asserting the same no-fresh-root-commit claim. Gated behind pre-release-real-backend per RBF-FW-06 (env-gated, fails closed to NOT-VERIFIED when REPOSIX_ALLOWED_ORIGINS/creds are unset -- never skip-counts-as-pass, OD-2). P123/SC5b (DRAIN-10) fixes quality/gates/agent-ux/lib/t4-real-backend-flow.sh's two `git checkout -B main ... || hard_fail_exit \"...\" \"requires git >= 2.34 stateless-connect fetch\"` call sites (lines 48, 50) -- the fallback detail is ALWAYS misleading when reached, because the caller (t4-conflict-rebase-ancestry-real-backend.sh, ~L179-192) already confirmed git >= 2.34 upstream; a failure here is never a version problem, most commonly the Confluence list-vs-get oid-drift class fixed for page 7766017 in Phase 114 (.planning/phases/114-t4-confluence-oid-drift-fix-first-reconcile-audit/114-VERIFICATION.md), not proven universal (114's OQ1 residual: a pre-ADF page would still drift). Cites the 2026-07-14 20:41 MEDIUM SURPRISES-INTAKE entry.",
       "sources": [
         "docs/reference/testing-targets.md (TokenWorld sanctioned target)",
         ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC1 'against sim AND TokenWorld')",
@@ -1751,7 +1751,8 @@
       "expected": {
         "asserts": [
           "bash quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh exits 0 against real TokenWorld with credentials set, or NOT-VERIFIED (env-gated) without",
-          "two independent working trees against TokenWorld reproduce the same conflict-reject + no-fresh-root-on-refetch behavior as the sim arm"
+          "two independent working trees against TokenWorld reproduce the same conflict-reject + no-fresh-root-on-refetch behavior as the sim arm",
+          "a `git checkout -B main` failure surfaces the REAL captured git stderr as the `hard_fail_exit` detail -- never the hardcoded git-version fallback -- since the version precondition is already gated earlier in the same script"
         ]
       },
       "verifier": {
