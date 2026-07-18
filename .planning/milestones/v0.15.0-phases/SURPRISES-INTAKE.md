@@ -93,7 +93,13 @@
 
 **Sketched resolution:** Fix candidates: (1) align the Confluence adapter so `list_records` and `get_record` render the same body per page, OR (2) have `build_from` compute tree oids from the get-representation it will actually materialize from. Impact: this is THE reason the `agent-ux/t4-conflict-rebase-ancestry-real-backend` (P0) caveat does NOT retire; partial-clone checkout against live Confluence is broken for at least page 7766017, likely broader. Reliable reproducer via the t4 gate. Evidence: t4 cadence run 2026-07-15; log `/tmp/t4-realbackend-run.log`; artifact `quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry-real-backend.json`.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — 2026-07-15, Phase 114 (list_records/get_record
+render-parity fix, ADF body-format alignment). Cross-ref:
+.planning/phases/114-t4-confluence-oid-drift-fix-first-reconcile-audit/114-VERIFICATION.md (SC1
+— live TokenWorld checkout incl. page 7766017, zero OidDrift). Stale bookkeeping: this HIGH row
+predates P114's fix landing; do NOT re-open or re-fix. The OQ1 pre-ADF list-path
+storage-fallback residual P114 flagged is tracked separately as GTH-V15-80 (filed in this same
+close wave).
 
 ## 2026-07-14 20:41 | discovered-by: L0 rotation #22 (t4 real-backend re-run, same session as the oid-drift defect above) | severity: MEDIUM
 
@@ -103,7 +109,9 @@
 
 **Sketched resolution:** `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh` should surface the real stderr (`oid drift … for issue 7766017`) instead of falling back to the git-version message whenever the actual failure is an oid-drift abort rather than a stateless-connect/git-version gate failure.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — Phase 123 SC5b (`adb51c0c`;
+`quality/gates/agent-ux/lib/t4-real-backend-flow.sh` now captures and surfaces real git checkout
+stderr instead of the hardcoded git-version fallback).
 
 ## 2026-07-14 20:42 | discovered-by: L0 rotation #22 (t4 real-backend re-run, pre-release-real-backend cadence) | severity: MEDIUM
 
@@ -127,7 +135,8 @@ C (post-write snapshot fan-out) upgrade if the pre-step becomes a real recurring
 
 **Sketched resolution:** Make `run.py` source `.env` itself (e.g. load it via Python's own env-loading at startup), OR bake `set -a; . ./.env; set +a` into the documented invocation everywhere `pre-release-real-backend` is referenced. Fix-it-twice: update the `pre-release-real-backend` doc references in `.planning/CLAUDE.md` and `docs/reference/testing-targets.md` to show the corrected invocation (or note that `run.py` now self-sources), so the next agent does not silently skip-and-declare-green again.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — Phase 123 SC1 (`a99d87cb`; `quality/runners/_env_load.py`, `run.py`
+self-sources `./.env` when present).
 
 ## 2026-07-14 20:44 | discovered-by: L0 rotation #22 (t4 real-backend re-run — `--persist` write review) | severity: HIGH
 
@@ -137,7 +146,8 @@ C (post-write snapshot fan-out) upgrade if the pre-step becomes a real recurring
 
 **Sketched resolution:** Gate skip/fail-driven `status` rewrites behind an opt-in flag (e.g. `--allow-downgrade`), or refuse by default to rewrite a committed GREEN `status` to a worse value without an explicit confirm flag — surfacing a loud warning instead ("row X was PASS, new result is FAIL/SKIP — pass --allow-downgrade to persist this change") so a false-negative run cannot silently corrupt catalog state. Pairs with the preceding env-loading-gap and mirror-staleness entries as root causes that feed spurious downgrades into this behavior.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — Phase 123 SC2 (`584b6691`; `--allow-downgrade` opt-in, refuse-by-default
+guard in `quality/runners/_persist_guard.py`).
 
 ## 2026-07-15 06:30 | discovered-by: L0 rotation #26 intake-filing leaf (carried forward across workhorse #24→#25→#26 handovers, 2 rotations un-filed) | severity: MEDIUM
 
@@ -1042,3 +1052,76 @@ independently tracked (P97 cross-platform, 117-07 W5 animation, GOOD-TO-HAVES-04
 — path (a) is still available to build them out on their own timelines, now purely additive.
 
 **STATUS:** RESOLVED
+
+## 2026-07-18 | discovered-by: 123-07 close-wave Lane 2 (PLANNING-CLOSE + AUDIT, security audit tasked by the coordinator) | severity: MEDIUM
+
+**What:** SC1's `.env` self-sourcing (`quality/runners/_env_load.py`, P123/DRAIN-03) loads
+`GITHUB_TOKEN`/`GH_TOKEN` from the repo's `.env` into `run.py`'s process env whenever present.
+Several gates shell out to the `gh` CLI, which prefers `GH_TOKEN`/`GITHUB_TOKEN` over an
+operator's `gh auth login` keyring session — so a `.env`-sourced token can silently SHADOW the
+operator's own `gh` auth for any gate invoked in a context where `run.py` (or a caller that
+inherited its self-sourced env) shells to `gh`. `quality/gates/code/ci-green-on-main.sh` was
+already hardened with `env -u GH_TOKEN -u GITHUB_TOKEN` ahead of this close wave. Audited the 7
+other `gh`-mentioning gates the coordinator named, reading each file directly (not assumed) and
+cross-referencing its catalog row's `cadences`:
+
+1. **`quality/gates/code/ci-job-status.sh`** (row `code/cargo-test-pass`, cadence **on-demand**,
+   `owner_hint`: "manual post-hoc audits") — REAL `gh run list` invocation. **Local/keyring-reliant.
+   Candidate for `env -u GH_TOKEN -u GITHUB_TOKEN`** (P127).
+2. **`quality/gates/agent-ux/webhook-trigger-dispatch.sh`** (row
+   `agent-ux/webhook-trigger-dispatch`, cadence **on-demand**, `owner_hint` explicitly notes it
+   "needs gh auth wired") — REAL `gh api repos/.../contents/...` invocation against the EXTERNAL
+   mirror repo. **Local/keyring-reliant. Candidate for `env -u GH_TOKEN -u GITHUB_TOKEN`** (P127).
+3. **`quality/gates/release/installer-asset-bytes.py`** (3 rows in `release-assets.json`, cadence
+   **weekly** — cron-triggered via `.github/workflows/quality-weekly.yml`) — REAL `gh run list`
+   invocation. **CI-cadence: its ONLY credential in that context is the Actions runner's
+   `GITHUB_TOKEN` — CRITICAL: do NOT strip GH_TOKEN/GITHUB_TOKEN here, stripping would BREAK the
+   scheduled cron job (no keyring exists on a GH Actions runner).**
+4. **`quality/gates/agent-ux/p111-ci-wait-helper.sh`** (row `agent-ux/p111-ci-wait-helper`, cadence
+   on-demand) — read in full: it never invokes `gh` itself; it is a STATIC `grep` check asserting
+   `scripts/ci-wait.sh` (a DIFFERENT, sibling file) contains the string pattern `gh run
+   (view|list)`. Not affected by the shadowing hazard at all — false-positive in the coordinator's
+   candidate list (the earlier grep matched inside a header comment).
+5. **`quality/gates/agent-ux/webhook-first-run-empty-mirror.sh`** (row
+   `agent-ux/webhook-first-run-empty-mirror`, cadence **pre-pr**) — read in full: pure local
+   git-fixture harness (`git init --bare` + local pushes); the only `gh` mentions are inside
+   comments describing what a real `gh repo create --add-readme` would do. No live `gh` call.
+   Not affected — false-positive.
+6. **`quality/gates/docs-alignment/dvcs-mirror-setup-walkthrough.sh`** (catalogued in
+   `doc-alignment.json`) — read in full: `grep`s `docs/guides/dvcs-mirror-setup.md`'s PROSE for
+   the literal strings `'gh repo create'` / `'gh secret set'` / `'gh workflow disable'`. Never
+   executes `gh`. Not affected — false-positive.
+7. **`quality/gates/code/shell-coverage-tests/60-code-ci.sh`** (a kcov coverage-driver for
+   `ci-green-on-main.sh`, itself part of the pre-push `code/shell-coverage` gate) — read in full:
+   installs a STUB `gh` binary on `PATH` returning canned JSON, explicitly "WITHOUT touching the
+   network." Never invokes real `gh`/real auth. Not affected — false-positive.
+
+So of the 7 named files, only 2 (`ci-job-status.sh`, `webhook-trigger-dispatch.sh`) make a REAL
+`gh` call AND run in a local/on-demand context where an operator's keyring `gh auth login` session
+is the intended credential — these are the genuine `env -u` candidates. 1 (`installer-asset-bytes.py`)
+makes a real `gh` call but runs ONLY in a CI-cron context where `GITHUB_TOKEN` IS the (only)
+correct credential — stripping it would be a regression, not a fix. The remaining 4 never invoke
+live `gh` at all, so the shadowing hazard does not apply to them regardless of cadence.
+
+**Why out-of-scope for the discovering session:** This lane's charter (123-07 close-wave Lane 2)
+is planning-artifact + intake work — modifying a CI-cadence `gh` gate right before the phase-close
+push carries CI-break risk if the local-vs-CI classification above is misjudged under time
+pressure; the careful per-gate patch (with a live re-run of the weekly cron's real invocation
+context to double-confirm classification 3 before touching anything) belongs to its own reviewed
+lane, not folded into a phase-close audit pass.
+
+**Sketched resolution — P127 candidate:** (1) Patch `quality/gates/code/ci-job-status.sh` and
+`quality/gates/agent-ux/webhook-trigger-dispatch.sh` with the same `env -u GH_TOKEN -u
+GITHUB_TOKEN` wrapper `ci-green-on-main.sh` already carries, so a `.env`-sourced token cannot
+shadow the operator's keyring session for these two local/on-demand gates. (2) Do **NOT** touch
+`installer-asset-bytes.py` — its weekly-cron cadence needs `GITHUB_TOKEN` un-stripped; if this
+gate is ever also run locally by an operator, revisit then (a mode flag, not a blanket strip). (3)
+No change needed for the 4 false-positive files identified above (`p111-ci-wait-helper.sh`,
+`webhook-first-run-empty-mirror.sh`, `dvcs-mirror-setup-walkthrough.sh`, `60-code-ci.sh`) — they
+never shell to a real, unstubbed `gh`. **CRITICAL caveat for whoever picks this up:** re-verify the
+CI-vs-local classification for each candidate against its CURRENT catalog `cadences` field before
+patching (cadences can move between phases) — stripping `GH_TOKEN`/`GITHUB_TOKEN` from a gate that
+turns out to run in a CI-only context with no other credential would silently break that gate's
+only auth path.
+
+**STATUS:** OPEN

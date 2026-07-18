@@ -159,7 +159,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 
 **SURPRISES-INTAKE (8 rows):**
 
-- [ ] **DRAIN-01** *(MED)*: Fix the t4 gate's misleading error — it misattributes
+- [x] **DRAIN-01** *(MED)*: Fix the t4 gate's misleading error — it misattributes
   oid-drift aborts to a git-version problem. `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`
   should surface the real stderr (`oid drift … for issue 7766017`) instead of the
   git-version fallback whenever the actual failure is an oid-drift abort.
@@ -167,12 +167,12 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   `pre-release-real-backend` cadence — run `scripts/refresh-tokenworld-mirror.sh` first (or
   make the litmus self-reconcile, see DRAIN-12/GTH-V15-09), so a second-run vision-litmus
   doesn't false-negative on its own prior push re-staling the GitHub mirror.
-- [ ] **DRAIN-03** *(HIGH)*: `quality/runners/run.py` doesn't source `./.env` (unlike
+- [x] **DRAIN-03** *(HIGH)*: `quality/runners/run.py` doesn't source `./.env` (unlike
   `scripts/preflight-real-backends.sh`) — a false-green-preflight / silent-skip gap. Make
   `run.py` self-source `.env`, or bake `set -a; . ./.env; set +a` into every documented
   `pre-release-real-backend` invocation; fix-it-twice the doc references in
   `.planning/CLAUDE.md` + `docs/reference/testing-targets.md`.
-- [ ] **DRAIN-04** *(HIGH)*: `--persist` silently downgrades a committed-GREEN catalog row
+- [x] **DRAIN-04** *(HIGH)*: `--persist` silently downgrades a committed-GREEN catalog row
   to a worse status on a skip/false-negative run with no confirm gate — add an
   `--allow-downgrade` opt-in (default refuse) so a false-negative run cannot silently
   corrupt catalog state.
@@ -214,7 +214,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 
 **GOOD-TO-HAVES (17 of 18 rows; GTH-V15-19 is FIX-02 above):**
 
-- [ ] **DRAIN-05** *(MED, GTH-V15-01)*: Concurrent `--persist` runners can race-corrupt the
+- [x] **DRAIN-05** *(MED, GTH-V15-01)*: Concurrent `--persist` runners can race-corrupt the
   shared catalog JSON — advisory `flock` around catalog persist in `run.py`, or serialize
   all persist ops through a single locked lane.
 - [x] **DRAIN-06** *(MED, GTH-V15-03)*: No gate checks a catalog row's `verifier.script`
@@ -231,7 +231,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   `reposix init` (not `attach`) so a non-Bash-tool subprocess/worktree bypass targeting the
   shared source tree is refused with a Rust-compiler-grade error, without breaking the
   sanctioned `/tmp` dark-factory flow.
-- [ ] **DRAIN-10** *(MED, GTH-V15-07)*: `code/ci-green-on-main`'s phase-close probe
+- [x] **DRAIN-10** *(MED, GTH-V15-07)*: `code/ci-green-on-main`'s phase-close probe
   hardcodes `WORKFLOW=ci.yml` and never watches release-plz — parameterize into a
   required-workflow list (or add a sibling `code/release-green-on-main` row) after
   resolving whether release-plz runs on every push and how a no-op run's conclusion is
@@ -318,16 +318,16 @@ goals, and success criteria).
 | UX-02 | Phase 121 | Pending |
 | BENCH-01 | Phase 115 | Pending |
 | ADR-01 | Phase 116 | Pending |
-| DRAIN-01 | Phase 123 | Pending |
+| DRAIN-01 | Phase 123 | Complete |
 | DRAIN-02 | Phase 125 | Pending |
-| DRAIN-03 | Phase 123 | Pending |
-| DRAIN-04 | Phase 123 | Pending |
-| DRAIN-05 | Phase 123 | Pending |
+| DRAIN-03 | Phase 123 | Complete |
+| DRAIN-04 | Phase 123 | Complete |
+| DRAIN-05 | Phase 123 | Complete |
 | DRAIN-06 | Phase 123 | Complete |
 | DRAIN-07 | Phase 122 | Complete |
 | DRAIN-08 | Phase 122 | Complete |
 | DRAIN-09 | Phase 122 | Complete |
-| DRAIN-10 | Phase 123 | Pending |
+| DRAIN-10 | Phase 123 | Complete |
 | DRAIN-11 | Phase 119 | Pending |
 | DRAIN-12 | Phase 125 | Pending |
 | DRAIN-13 | Phase 124 | Pending |

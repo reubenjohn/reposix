@@ -175,6 +175,27 @@ at every push — the HIGH bug P96 fixed). Consequences:
   a gate run no longer writes the catalog. The regression is locked by
   `structure/catalog-immutable-on-read` (`quality/gates/structure/catalog-immutable-on-read.sh`).
 
+**`.env` self-sourcing (P123 SC1 / DRAIN-03, `_env_load.py`):** `run.py` conditionally
+loads `./.env` into `os.environ` before grading — present-only (silent no-op if absent)
+and non-clobbering (`os.environ.setdefault` per key, so an operator- or CI-exported
+credential is NEVER overridden by a stale `.env` value). This closes the false-green
+divergence where `scripts/preflight-real-backends.sh` already sourced `.env` and reported
+real backends reachable, while a bare `run.py --cadence pre-release-real-backend`
+invocation did not and silently skipped every real-backend row to `NOT-VERIFIED` —
+manual pre-sourcing (`set -a; . ./.env; set +a`) is no longer required for that cadence.
+Parsing is a deliberate minimal SUBSET of shell `source` semantics (`KEY=value` /
+`export KEY=value`, `#`-comments, blank lines, matched single/double quotes; a leading
+`export ` token is stripped so the loaded key is `KEY`, not `"export KEY"`) — no
+expansion, substitution, or multi-line values. OP-1 fail-closed is unchanged: a real
+backend still fires only when creds are present AND `REPOSIX_ALLOWED_ORIGINS` is
+non-default. Secret hygiene: the one diagnostic line names loaded KEY NAMES only, never
+values. Sharp edge: a self-sourced `GITHUB_TOKEN`/`GH_TOKEN` can shadow an operator's `gh
+auth login` keyring session in any gate that shells out to `gh` — local/on-demand `gh`
+gates should run under `env -u GH_TOKEN -u GITHUB_TOKEN` (as `code/ci-green-on-main.sh`
+already does); a gate that runs ONLY in a CI/cron cadence must NOT strip those vars, since
+`GITHUB_TOKEN` is its sole credential there (per-gate classification: P123-close
+`SURPRISES-INTAKE.md` gh-auth audit entry, P127 candidate).
+
 **Downgrade guard (P123 SC2 / DRAIN-04, `_persist_guard.py`):** even a `--persist`
 MINT will **refuse** to write a committed-GREEN row (`PASS`/`WAIVED`, read from
 the LAST COMMITTED catalog via `git show HEAD:<path>` — never the dirty working

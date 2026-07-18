@@ -87,6 +87,25 @@ deliberately excluded. Aggregation: NOT-VERIFIED (any watched workflow unknowabl
 error, no run found, still in-progress) always outranks FAIL (a red workflow) when
 rolling up the per-workflow verdicts to one row grade.
 
+**`.env` self-sourcing (P123/SC1, DRAIN-03):** `quality/runners/run.py` conditionally
+self-sources `./.env` (via the sibling `quality/runners/_env_load.py`) before grading,
+present-only and non-clobbering (`os.environ.setdefault` per key — an operator/CI-exported
+credential always wins over a `.env` value). This closes the false-green-preflight /
+silent-skip gap where `scripts/preflight-real-backends.sh` sourced `.env` and reported
+backends reachable, but `run.py` itself did not and silently skipped every real-backend
+row to `NOT-VERIFIED`. Parsing is a deliberately minimal subset of shell `source`
+(`KEY=value` and `export KEY=value` lines, `#`-comments, blank lines, matched quotes —
+the leading `export ` token is stripped so an exported credential loads under its bare
+key, not `"export KEY"`); it does not interpret expansion/substitution/multi-line values.
+OP-1 fail-closed is unchanged — sourcing `.env` only makes creds-in-`.env` effective; a
+real backend is still hit only when creds are present AND `REPOSIX_ALLOWED_ORIGINS` is
+non-default. Because a `.env`-sourced `GITHUB_TOKEN`/`GH_TOKEN` can shadow an operator's
+`gh auth login` keyring session, any LOCAL/on-demand gate that shells out to `gh` should
+run it under `env -u GH_TOKEN -u GITHUB_TOKEN` (precedent: `code/ci-green-on-main.sh`) —
+never strip those vars from a gate that runs only in a CI/cron cadence, where
+`GITHUB_TOKEN` is the sole available credential (see `SURPRISES-INTAKE.md`'s P123-close
+gh-auth audit entry for the per-gate classification).
+
 **Cadences:** `pre-commit` (<2s) · `pre-push` (<60s) · `pre-pr` (PR CI, <10min) ·
 `weekly` (cron, alerting) · `pre-release` (on tag, <15min) · `post-release` (alerting) ·
 `on-demand` · `pre-release-real-backend` (local + milestone-close, env-gated, mandatory
