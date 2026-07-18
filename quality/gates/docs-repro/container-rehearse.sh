@@ -65,6 +65,20 @@ EOF
     echo "container-rehearse: $error -- emitted NOT-VERIFIED artifact at $ARTIFACT_PATH" >&2
 }
 
+# DRAIN-23 (SC2): SIGKILL-proof sim lifecycle + fail-loud stale-orphan gate. The
+# reaping mechanism (own-process-group start + group teardown), the pre-run
+# port-7878-free fail-loud gate, and the docker-free selftest hooks live in the sourced
+# lib; cut (2) (the internal `timeout` wrapping `docker run`) lives in the main flow
+# below. Full rationale: lib/sim-lifecycle.sh header + 124-PLAN.md § Wave 2. Selftest:
+# container-rehearse-sigkill-safe.sh.
+# shellcheck source=quality/gates/docs-repro/lib/sim-lifecycle.sh
+source "$REPO_ROOT/quality/gates/docs-repro/lib/sim-lifecycle.sh"
+SIM_BIN="$REPO_ROOT/target/debug/reposix"
+SIM_PID=""
+SIM_PGID=""
+# Docker-free selftest entry points (no-op passthrough for a real row id).
+sim_lifecycle_selftest_dispatch "$@"
+
 # 1. Docker availability gate
 if ! command -v docker >/dev/null 2>&1; then
     write_skip_artifact "docker not installed; rehearsal skipped (NOT-VERIFIED)"
@@ -94,6 +108,17 @@ fi
 
 COMMAND=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(r.get('command','') or '')")
 CONTAINER=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print((r.get('verifier') or {}).get('container') or 'ubuntu:24.04')")
+# DRAIN-23 cut (2): the row's OUTER grading budget (what the runner passes to
+# subprocess.run(timeout=)). We wrap `docker run` in an internal `timeout` strictly
+# shorter than this so the harness reaps its own sim before the outer SIGKILL fires.
+ROW_TIMEOUT_S=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(int((r.get('verifier') or {}).get('timeout_s', 600) or 600))")
+# Margin 60s (teardown + reap headroom); floor 30s so a tiny timeout_s still yields
+# a positive internal bound. STRICTLY < ROW_TIMEOUT_S by construction.
+if [[ "$ROW_TIMEOUT_S" -gt 90 ]]; then
+    DOCKER_TIMEOUT=$(( ROW_TIMEOUT_S - 60 ))
+else
+    DOCKER_TIMEOUT=30
+fi
 # DRAIN-22 / F-K4b (P124 Wave 1a): congruence is EARNED, never emitted. This
 # harness NO LONGER resolves row.expected.asserts to copy them verbatim into
 # asserts_passed on a bare `exit 0` -- that made _audit_field.py::asserts_congruent
@@ -118,19 +143,25 @@ fi
 #     host sim (Linux-only; on a host without host-networking the example's
 #     own `sim not reachable` guard fails the row honestly rather than lying).
 #     Starting the pre-built `reposix` binary is NOT a cargo invocation.
-SIM_BIN="$REPO_ROOT/target/debug/reposix"
-SIM_PID=""
+#     (SIM_BIN / SIM_PID / SIM_PGID + the process-group helpers are defined at the
+#     top of this file alongside the DRAIN-23 selftest hooks.)
 STDOUT_TMP=$(mktemp)
 STDERR_TMP=$(mktemp)
 HARVEST_TMP=$(mktemp)
-trap 'rm -f "$STDOUT_TMP" "$STDERR_TMP" "$HARVEST_TMP"; [[ -n "$SIM_PID" ]] && kill "$SIM_PID" 2>/dev/null; wait "$SIM_PID" 2>/dev/null' EXIT
+# DRAIN-23 cut (1): the EXIT trap tears down the sim's whole PROCESS GROUP, not
+# just the leader pid (cleanup -> teardown_sim). Reaps grandchildren too.
+trap cleanup EXIT
 
 if [[ ! -x "$SIM_BIN" ]]; then
     write_skip_artifact "target/debug/reposix not built; cannot start sim for rehearsal (NOT-VERIFIED) -- run 'cargo build -p reposix-cli' first"
     exit 0
 fi
-"$SIM_BIN" sim --bind 127.0.0.1:7878 --ephemeral > "$REPO_ROOT/quality/reports/verifications/docs-repro/.sim-${ROW_ID//\//-}.log" 2>&1 &
-SIM_PID=$!
+# DRAIN-23 pre-run gate: refuse to start over a stale orphan on 7878. FAILS LOUD
+# (teaching error + NOT-VERIFIED artifact + exit 75) rather than silently reusing
+# whatever answers -- the exact :135-141 miss the old readiness curl committed.
+assert_port_7878_free
+# DRAIN-23 cut (1): start the sim in its OWN process group so teardown can group-kill it.
+start_sim_in_own_pgroup "$REPO_ROOT/quality/reports/verifications/docs-repro/.sim-${ROW_ID//\//-}.log"
 SIM_READY=0
 for _ in $(seq 1 30); do
     if curl -fsS "http://127.0.0.1:7878/projects/demo/issues" >/dev/null 2>&1; then
@@ -153,7 +184,14 @@ fi
 # exercised yet consumed the whole timeout budget via apt. Do NOT re-add build-essential.
 SETUP="apt-get update -qq && apt-get install -y -qq curl ca-certificates python3 git sqlite3 >/dev/null 2>&1"
 
-docker run --rm \
+# DRAIN-23 cut (2): wrap `docker run` in an internal `timeout` STRICTLY shorter than
+# the row's outer timeout_s (DOCKER_TIMEOUT computed above). If the container hangs,
+# `timeout` SIGTERMs the `docker run` client (--rm tears the container down), then
+# `--kill-after` SIGKILLs it -- and control returns HERE so the EXIT trap reaps the
+# sim group. This guarantees the harness completes teardown BEFORE the runner's outer
+# subprocess.run(timeout=timeout_s) SIGKILLs it (the b773c04 orphan path).
+timeout --signal=TERM --kill-after=15 "$DOCKER_TIMEOUT" \
+    docker run --rm \
     --network host \
     -v "$REPO_ROOT:/workspace:ro" \
     -v "$REPO_ROOT/target:/workspace/target:rw" \
@@ -162,6 +200,13 @@ docker run --rm \
     sh -c "$SETUP && export PATH=/workspace/target/debug:\$PATH && $COMMAND" \
     > "$STDOUT_TMP" 2> "$STDERR_TMP"
 EXIT_CODE=$?
+# `timeout` exit 124 (TERM fired) / 137 (kill-after SIGKILL) => the container blew
+# the internal budget. Surface it as a distinct diagnostic so a hung container is not
+# mistaken for a plain assertion failure (Wave 4 derives the final exit from the
+# persisted artifact; here we just annotate).
+if [[ "$EXIT_CODE" -eq 124 || "$EXIT_CODE" -eq 137 ]]; then
+    echo "container-rehearse: docker run exceeded internal timeout ${DOCKER_TIMEOUT}s (< row timeout_s ${ROW_TIMEOUT_S}s); container killed, sim group reaped on exit" >&2
+fi
 
 # 4. Tempfile-then-grep stdout/stderr (P56 SIGPIPE lesson: do NOT pipe-into-head).
 STDOUT_TAIL=$(tail -c 4096 "$STDOUT_TMP")
