@@ -21,7 +21,8 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use reposix_core::{BackendConnector, Record};
 use reposix_github::GithubReadOnlyBackend;
 use reposix_jira::{JiraBackend, JiraCreds};
@@ -275,7 +276,8 @@ pub(crate) fn read_confluence_env_from(
     if !missing.is_empty() {
         anyhow::bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::MISSING_ENV_CLI,
                 &format!(
                     "confluence backend requires these env vars; currently unset: {}.",
                     missing.join(", ")
@@ -339,7 +341,8 @@ pub(crate) fn read_jira_env_from(
     if !missing.is_empty() {
         anyhow::bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::MISSING_ENV_CLI,
                 &format!(
                     "jira backend requires these env vars; currently unset: {}.",
                     missing.join(", ")

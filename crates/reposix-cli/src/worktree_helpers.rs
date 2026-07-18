@@ -19,7 +19,8 @@ use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 use reposix_cache::path::resolve_cache_path;
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use reposix_core::parse_remote_url;
 use reposix_remote::backend_dispatch::redact_userinfo;
 
@@ -192,7 +193,8 @@ pub fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
         // message (P120 leverage — fix at the source).
         anyhow!(
             "{}",
-            teach(
+            teach_coded(
+                ids::NOT_A_REPOSIX_TREE,
                 &format!(
                     "no reposix remote in {} — this directory is not a reposix working tree.",
                     work.display()

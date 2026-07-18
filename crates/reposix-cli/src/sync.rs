@@ -36,7 +36,8 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use reposix_cache::Cache;
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use reposix_remote::backend_dispatch::{self, BackendKind};
 
 use crate::errors::cache_build_error;
@@ -92,7 +93,8 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     let url = resolve_reposix_remote_url(&work).ok_or_else(|| {
         anyhow!(
             "{}",
-            teach(
+            teach_coded(
+                ids::NOT_A_REPOSIX_TREE,
                 &format!(
                     "`reposix sync` found no reposix remote in {}.",
                     work.display()
@@ -122,7 +124,8 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     let mut parsed = backend_dispatch::parse_remote_url(sot).map_err(|e| {
         anyhow!(
             "{}",
-            teach(
+            teach_coded(
+                ids::BOUND_TREE_URL_PARSE,
                 &format!(
                     "the reposix remote URL in this tree could not be parsed: `{safe_url}`.\n\
                      (underlying: {e:#})"

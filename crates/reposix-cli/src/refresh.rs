@@ -13,7 +13,8 @@ use std::process::Command;
 use anyhow::{bail, Context as _, Result};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use reposix_core::BackendConnector as _;
 use reposix_github::GithubReadOnlyBackend;
 use reposix_jira::{JiraBackend, JiraCreds};
@@ -69,7 +70,8 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
     if cfg.offline {
         bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::REFRESH_OFFLINE_UNIMPL,
                 "`reposix refresh --offline` is not implemented yet.",
                 "refresh always fetches a fresh snapshot from the backend today — there is no \
                  offline read path. The working tree already holds the last-fetched `.md` \
@@ -293,7 +295,8 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
 fn missing_confluence_env_error() -> anyhow::Error {
     anyhow::anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::MISSING_ENV_CLI,
             "confluence backend requires ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, and \
              REPOSIX_CONFLUENCE_TENANT env vars, but at least one is unset.",
             "set all three Atlassian Cloud vars — ATLASSIAN_EMAIL (your account email), \
@@ -318,7 +321,8 @@ fn missing_confluence_env_error() -> anyhow::Error {
 fn missing_jira_env_error() -> anyhow::Error {
     anyhow::anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::MISSING_ENV_CLI,
             "jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, and REPOSIX_JIRA_INSTANCE \
              env vars, but at least one is unset.",
             "set all three Atlassian Cloud vars — JIRA_EMAIL (your account email), \

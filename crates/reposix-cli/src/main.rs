@@ -433,7 +433,8 @@ async fn main() -> Result<()> {
             if !time_travel {
                 anyhow::bail!(
                     "{}",
-                    reposix_core::errmsg::teach(
+                    reposix_core::errmsg::teach_coded(
+                        reposix_core::codes::ids::LOG_NEEDS_TIME_TRAVEL,
                         "`reposix log` currently requires the `--time-travel` flag.",
                         "pass `--time-travel` to list the `refs/reposix/sync/<ts>` sync history; \
                          the bare `reposix log` form is reserved for a future commit-graph view.",

@@ -25,7 +25,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Duration, Utc};
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use rusqlite::Connection;
 
 use crate::errors::missing_cache_db_error;
@@ -69,7 +70,8 @@ pub fn parse_since(since: &str) -> Result<DateTime<Utc>> {
         .map_err(|e| {
             anyhow!(
                 "{}",
-                teach(
+                teach_coded(
+                    ids::SINCE_PARSE,
                     &format!("invalid --since value `{since}`: {e}."),
                     "--since takes a duration shortcut (`7d`, `30d`, `1m`, `1y`, `12h`, `30min`) \
                      or a full RFC-3339 timestamp.",

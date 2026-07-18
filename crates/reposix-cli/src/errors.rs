@@ -24,7 +24,8 @@
 use std::path::Path;
 
 use anyhow::anyhow;
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 
 /// The `<backend>::<project>` spec-parse failure (missing `::`, empty project, or
 /// unknown backend). Shared by `init` / `attach` / `sync` / `refresh` via
@@ -36,7 +37,8 @@ use reposix_core::errmsg::teach;
 pub fn spec_parse_error(spec: &str, cause: &str) -> anyhow::Error {
     anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::SPEC_PARSE,
             &format!("invalid backend spec `{spec}`: {cause}."),
             "a spec is `<backend>::<project>` — one of `sim::<slug>`, `github::<owner>/<repo>`, \
              `confluence::<space>`, `jira::<key>`.",
@@ -62,7 +64,8 @@ pub fn missing_env_var_error(var: &str, backend: &str, example_value: &str) -> a
     let export = format!("export {var}={example_value}");
     anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::MISSING_ENV_CLI,
             &headline,
             &fix,
             "no Atlassian tenant handy? the simulator needs no credentials — use `sim::demo` instead.",
@@ -94,7 +97,8 @@ pub fn cache_build_error(
         format!("reposix doctor   # check reachability + credentials for the `{backend}` backend");
     anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::CACHE_BUILD,
             &headline,
             "reposix builds a local git cache from the backend's REST API; that step could not \
              reach or read it — usually the backend is down or its credentials are unset.",
@@ -126,7 +130,8 @@ pub fn missing_cache_db_error(cache_path: &Path) -> anyhow::Error {
     );
     anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::NO_SYNCED_CACHE,
             &headline,
             "reposix builds this cache (and its token/audit ledger) from the backend on the first \
              fetch; run one from inside the working tree, then re-run the command.",

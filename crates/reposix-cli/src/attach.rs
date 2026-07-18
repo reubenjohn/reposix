@@ -39,7 +39,8 @@ use std::process::Command;
 use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 use reposix_core::BackendConnector;
 use reposix_remote::backend_dispatch::{self, BackendKind};
 
@@ -121,7 +122,8 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     if !work.join(".git").exists() {
         bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::ATTACH_NOT_GIT_TREE,
                 &format!("not a git working tree: {} (no `.git/` here).", work.display()),
                 "`reposix attach` adopts an EXISTING checkout — cd into (or pass) a directory that \
                  is already a git repository.",
@@ -216,7 +218,8 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         let dup = &report.duplicate_id_files;
         bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::ATTACH_DUPLICATE_IDS,
                 &format!(
                     "duplicate id across local records: {dup:?} — two files claim the same \
                      frontmatter `id`. Reconciliation aborted (no rows committed)."
@@ -413,7 +416,8 @@ pub(crate) fn multi_sot_conflict_error(existing_sot: &str, remote_name: &str) ->
     let remove = format!("git remote remove {remote_name}");
     anyhow::anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::ATTACH_MULTI_SOT,
             &format!(
                 "this working tree is already attached to a different system of record: `{existing_sot}`."
             ),

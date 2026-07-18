@@ -18,7 +18,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{anyhow, bail, Context, Result};
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 
 use crate::errors::{missing_env_var_error, spec_parse_error};
 
@@ -276,7 +277,8 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     let path_str = path.to_str().ok_or_else(|| {
         anyhow!(
             "{}",
-            teach(
+            teach_coded(
+                ids::INIT_PATH_NOT_UTF8,
                 &format!("the target path is not valid UTF-8: {}", path.display()),
                 "reposix shells out to git, which needs a UTF-8 path — rename the directory to \
                  plain UTF-8 (ASCII is safest).",
@@ -391,7 +393,8 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
             let retry = format!("reposix init <backend>::<project> {path_str}");
             bail!(
                 "{}",
-                teach(
+                teach_coded(
+                    ids::GIT_NOT_ON_PATH,
                     &format!("reposix init: could not invoke `git fetch` for `{path_str}`: {e}"),
                     "`git` must be installed and on PATH (>= 2.34 for reliable partial-clone \
                      fetches) — the fetch subprocess could not be spawned.",
@@ -541,7 +544,8 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
         );
         bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::SINCE_NO_CACHE,
                 &format!(
                     "no cache at {} for `--since` to rewind into.",
                     cache_path.display()
@@ -561,7 +565,8 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
         let recovery = format!("reposix init {spec} <path>   # (no --since) for the latest state");
         anyhow!(
             "{}",
-            teach(
+            teach_coded(
+                ids::SINCE_NO_TAG,
                 &format!(
                     "no sync tag at-or-before `{target_rfc3339}` in {}.",
                     cache_path.display()
@@ -603,7 +608,8 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             .to_string();
         bail!(
             "{}",
-            teach(
+            teach_coded(
+                ids::SINCE_FETCH_FAILED,
                 &format!(
                     "could not bring historical commit {oid_hex} into the working tree from cache \
                      {cache}.\ngit stderr:\n  {git_stderr}",
@@ -630,7 +636,8 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
             let git_stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
             bail!(
                 "{}",
-                teach(
+                teach_coded(
+                    ids::SINCE_UPDATE_REF_FAILED,
                     &format!(
                         "could not move `{refname}` to the historical snapshot {oid_hex}.\n\
                          git stderr:\n  {git_stderr}"

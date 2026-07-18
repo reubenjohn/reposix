@@ -7,7 +7,8 @@
 
 use anyhow::{anyhow, Context, Result};
 use reposix_confluence::{ConfSpaceSummary, ConfluenceBackend, ConfluenceCreds};
-use reposix_core::errmsg::teach;
+use reposix_core::codes::ids;
+use reposix_core::errmsg::teach_coded;
 
 use crate::list::{read_confluence_env, ListBackend};
 
@@ -63,7 +64,8 @@ pub async fn run(backend: ListBackend) -> Result<()> {
 fn spaces_requires_confluence_error(requested: &str) -> anyhow::Error {
     anyhow!(
         "{}",
-        teach(
+        teach_coded(
+            ids::SPACES_CONFLUENCE_ONLY,
             &format!(
                 "`reposix spaces` supports only the Confluence backend; you requested \
                  `{requested}`."
