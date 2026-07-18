@@ -23,6 +23,23 @@
 # rationale (confluence pages/ bucket, mass-delete guard provenance, HIGH-1
 # regression this scenario locks).
 
+_t4_checkout_or_fail() {  # _t4_checkout_or_fail <tree> <label>
+  # SC5b (DRAIN-01): surfaces the REAL captured git stderr as the failure
+  # detail instead of a hardcoded "requires git >= 2.34 stateless-connect
+  # fetch" string, which is misleading BY CONSTRUCTION at this call site --
+  # the caller (t4-conflict-rebase-ancestry-real-backend.sh, lines ~179-193)
+  # already verified `git --version >= 2.34` before this function ever runs,
+  # so any failure reaching here is NEVER a version problem. Most commonly
+  # the Confluence list-vs-get oid-drift class documented in
+  # .planning/phases/114-t4-confluence-oid-drift-fix-first-reconcile-audit/
+  # 114-VERIFICATION.md. `2>&1 >/dev/null` duplicates stderr onto the command
+  # substitution's capture pipe FIRST, then redirects stdout to /dev/null --
+  # so $err holds ONLY the real stderr, never the (irrelevant) checkout stdout.
+  local tree="$1" label="$2" err
+  err="$(git -C "$tree" checkout -B main refs/reposix/origin/main 2>&1 >/dev/null)" \
+    || hard_fail_exit "git checkout -B main (${label}) failed" "$err"
+}
+
 _t4_real_backend_flow() {
   local run_dir a b cache_a cache_b root_b page_file_a page_basename page_file_b
   local b_push1_log b_push1_exit new_root_b commit_count_after md id
@@ -44,10 +61,8 @@ _t4_real_backend_flow() {
   git -C "$b" config user.email "writer-b-confluence@example.invalid"
   git -C "$b" config user.name "writer-B-confluence"
 
-  git -C "$a" checkout -B main refs/reposix/origin/main \
-    || hard_fail_exit "git checkout -B main (A) failed" "requires git >= 2.34 stateless-connect fetch"
-  git -C "$b" checkout -B main refs/reposix/origin/main \
-    || hard_fail_exit "git checkout -B main (B) failed" "requires git >= 2.34 stateless-connect fetch"
+  _t4_checkout_or_fail "$a" "A"
+  _t4_checkout_or_fail "$b" "B"
   note_pass "two independent working trees against TokenWorld: A and B each bootstrapped via reposix init confluence::${SPACE} with SEPARATE REPOSIX_CACHE_DIR caches (cacheA/cacheB)"
 
   # ROOT_B captured right after checkout, BEFORE any edits -- the ancestry
