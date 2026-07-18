@@ -104,3 +104,41 @@ docstring (already documents the non-clobbering / present-only contract) so the 
 cites the real implementation, not just this intake row's paraphrase.
 
 **STATUS:** OPEN
+
+## 2026-07-18 15:47 | discovered-by: quick-260718-fork (fork-anti-pattern doctrine + intake-filing lane) | severity: MEDIUM
+
+**What:** The P123→P124 split-archive lane (commit `f654cfc3`) split the two v0.15.0
+intake ledgers (`GOOD-TO-HAVES.md`, `SURPRISES-INTAKE.md`) under the 20k budget — but that
+did NOT de-risk the `structure/file-size-limits` waiver deadline. That waiver is a
+**SINGLE GLOBAL row** in `quality/catalogs/freshness-invariants.json`
+(`waiver.until: 2026-08-08T00:00:00Z`) still covering **91 over-budget files** (re-counted
+2026-07-18 via the gate; the row's own historical "56 files" 45/6/5 breakdown is now
+**STALE ON THE COUNT** — the reason text self-notes this). Splitting the two intakes
+removed exactly those two ledgers from the set; the remaining **91** still ride the global
+waiver, including STATE.md, ORCHESTRATION.md (now 21733B — grew further via THIS quick's
+own §11 edit), the three milestones' ROADMAP/REQUIREMENTS pairs, archived phase/handover
+bundles, and GTH-V15-78's `quality/gates/agent-ux/rebase-recovery-reconciles.sh` (~42k, 4×
+the 10k `.sh` ceiling). Several — STATE.md (concurrent-writer, never hand-edit) and
+ORCHESTRATION.md (read-first entry-point contract) — **cannot** be ledger-split without
+breaking their "read-first entry-point" contract, so no amount of `split_ledger.py` sweeps
+clears them; they need a per-file permanent waiver or an accepted-residual decision.
+
+**Why out-of-scope for the discovering session:** This quick's charter was the
+fork-to-resume anti-pattern doctrine (ORCHESTRATION §11 + coordinator-dispatch §6a) plus
+this intake filing — not a repo-wide waiver-remediation sweep. The remediation decision
+spans three milestones' planning artifacts plus repo-wide docs/scripts, needs an L0/owner
+call on which residuals are genuinely un-splittable, and is broader than v0.15.0.
+
+**Sketched resolution (needs L0/owner decision — broader than v0.15.0):** Three options.
+(a) **Extend** the global waiver `until` past 2026-08-08 — buys time, defers the real work,
+lowest effort. (b) **Split-sweep + permanent per-file waiver:** run `scripts/split_ledger.py`
+across the genuinely-splittable `## `-delimited ledgers (the mechanic already proven on the
+v0.13.0 + v0.15.0 intake twins), AND grant a **permanent** per-file waiver for the
+genuinely-un-splittable entry-point docs (STATE.md, ORCHESTRATION.md — splitting breaks
+their read-first contract) plus the large single-purpose scripts (rebase-recovery-reconciles.sh
+needs a `lib/` source-helper convention before factoring — GTH-V15-78). (c) **Accept** the
+residual set as permanently waived and downgrade the gate to print-only WARN for those
+specific paths. Cross-ref **GTH-V15-21** (archived-milestone handover files start BLOCKING
+pushes when this waiver expires) and **GTH-V15-78** (rebase-recovery-reconciles.sh 42k `.sh`).
+
+**STATUS:** OPEN
