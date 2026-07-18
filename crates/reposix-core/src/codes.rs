@@ -124,6 +124,9 @@ pub mod ids {
     pub const HELPER_PUSH_CONFLICT: &str = "RPX-0505";
     /// `RPX-0506` — the lazy cache cannot serve an UNFILTERED fetch (needs `--filter=blob:none`).
     pub const HELPER_UNFILTERED_FETCH: &str = "RPX-0506";
+    /// `RPX-0507` — fetch/import rejected: backend unreachable while listing records
+    /// to import. The FETCH-path sibling of RPX-0504 (which is PUSH-specific).
+    pub const HELPER_IMPORT_UNREACHABLE: &str = "RPX-0507";
     /// `RPX-0601` — malformed reposix bus URL (fails to PARSE — a syntax fault).
     pub const HELPER_MALFORMED_BUS_URL: &str = "RPX-0601";
     /// `RPX-0602` — the git remote helper was invoked with too few arguments.
@@ -641,6 +644,36 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::HELPER_IMPORT_UNREACHABLE,
+        title: "fetch rejected — the backend was unreachable while listing records to import",
+        cause: "On a fetch driven through the helper's `import` capability \
+                (protocol v0, or an older git that does not use `stateless-connect`), \
+                `git-remote-reposix` imports the backend's current records by calling \
+                its REST `list_records` endpoint and streaming them to git as a \
+                fast-import batch. That call could not reach or read the backend, so \
+                there is nothing to import and the fetch is rejected fail-closed \
+                rather than synthesizing an empty tree. The usual causes are a backend \
+                that is down or unreachable (for the simulator, it was not started), \
+                credentials that are unset or wrong, or an origin the \
+                REPOSIX_ALLOWED_ORIGINS egress allowlist does not permit. This is the \
+                FETCH-path sibling of RPX-0504, which rejects a PUSH when its pre-push \
+                conflict check cannot reach the backend; here the unreachable call is \
+                the fetch's record listing. git prints the protocol-standard \
+                `backend-unreachable` status; the accompanying diag line carries this \
+                code and the underlying connector error — read it for the specific \
+                fault.",
+        fix: "Confirm the backend is running and reachable (and credentials + \
+              allowlist are set), then re-drive the fetch. `reposix doctor` checks \
+              reachability and credentials.",
+        alternative: "For the simulator, make sure `reposix sim` is running in another \
+                      terminal before fetching.",
+        recovery: &[
+            "reposix sim      # start the simulator, if this is a sim:: remote",
+            "reposix doctor   # check backend reachability + credentials",
+            "git fetch        # re-drive once the backend is reachable",
+        ],
+    },
+    ExplainEntry {
         code: ids::HELPER_MALFORMED_BUS_URL,
         title: "malformed reposix bus URL",
         cause: "A `reposix::` remote URL is either `reposix::<sot-spec>` (single \
@@ -824,6 +857,7 @@ mod tests {
             ids::HELPER_BACKEND_UNREACHABLE,
             ids::HELPER_PUSH_CONFLICT,
             ids::HELPER_UNFILTERED_FETCH,
+            ids::HELPER_IMPORT_UNREACHABLE,
             ids::HELPER_MALFORMED_BUS_URL,
             ids::HELPER_USAGE,
             ids::HELPER_MIRROR_UNREACHABLE,

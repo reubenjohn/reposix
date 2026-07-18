@@ -352,6 +352,27 @@ fn fail_push<R: std::io::Read, W: std::io::Write>(
     Ok(())
 }
 
+/// Build the 3-part teaching detail for a fetch/import backend-unreachable
+/// failure (RPX-0507). Split out so a unit test can pin that the `[RPX-0507]`
+/// tag + `Explain:` nudge render on this path WITHOUT a live protocol exchange
+/// (the detail otherwise flows to real stderr via `diag`, which is not
+/// in-process capturable). The `underlying` connector error is surfaced, not
+/// swallowed (leverage #3); it carries no userinfo — backend credentials live
+/// in request headers, never in the origin URL (OP-2).
+fn import_unreachable_detail(underlying: &str) -> String {
+    reposix_core::errmsg::teach_coded(
+        reposix_core::codes::ids::HELPER_IMPORT_UNREACHABLE,
+        &format!("could not list records from the backend to import: {underlying}"),
+        "the SoT backend could not be reached or read — usually the simulator is not \
+         running, or a real backend's credentials are unset.",
+        "for a no-network check, start the simulator and target a `sim::` remote.",
+        &[
+            "reposix sim      # start the simulator, if this is a sim:: remote",
+            "reposix doctor   # check backend reachability + credentials",
+        ],
+    )
+}
+
 fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     state: &mut State,
     proto: &mut Protocol<R, W>,
@@ -380,23 +401,11 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     {
         Ok(v) => v,
         Err(e) => {
-            // Retrofit the DIAG detail to the 3-part teaching shape (P120 W4).
-            // The `error refs/heads/main backend-unreachable` PROTOCOL line
-            // (emitted by `fail_push`) stays verbatim — git parses it — while
-            // this teaching rides the accompanying stderr `error:` diag. The
-            // connector's own `{e:#}` is surfaced, not swallowed (leverage #3);
-            // it carries no userinfo (backend creds live in headers, not the
-            // origin URL).
-            let detail = reposix_core::errmsg::teach(
-                &format!("could not list records from the backend to import: {e:#}"),
-                "the SoT backend could not be reached or read — usually the simulator is not \
-                 running, or a real backend's credentials are unset.",
-                "for a no-network check, start the simulator and target a `sim::` remote.",
-                &[
-                    "reposix sim      # start the simulator, if this is a sim:: remote",
-                    "reposix doctor   # check backend reachability + credentials",
-                ],
-            );
+            // The DIAG detail is the 3-part teaching (P120 W4), now CODED with
+            // RPX-0507 (P121 W3.6). The `error refs/heads/main backend-unreachable`
+            // PROTOCOL line (emitted by `fail_push`) stays verbatim — git parses it
+            // — while this teaching rides the accompanying stderr `error:` diag.
+            let detail = import_unreachable_detail(&format!("{e:#}"));
             return fail_push(proto, state, "backend-unreachable", &detail).map_err(Into::into);
         }
     };
@@ -803,6 +812,45 @@ mod fork_b_tests {
         assert!(
             out.is_err(),
             "a genuine (non-NotFound) delete error must still fail the action, not be swallowed"
+        );
+    }
+}
+
+#[cfg(test)]
+mod import_teach_tests {
+    //! P121 W3.6 (SC1): the fetch/import backend-unreachable teaching carries the
+    //! RPX-0507 code. The detail flows to real stderr via `diag` (an `eprintln!`
+    //! not in-process capturable), so we pin the string-builder — the exact bytes
+    //! `handle_import_batch`'s `Err` arm hands to `fail_push` — directly. The live
+    //! `import`-command → dead-backend path is verified against reality by driving
+    //! the built helper binary with an `import` command (see the W3.6 evidence).
+
+    use super::import_unreachable_detail;
+
+    #[test]
+    fn import_unreachable_detail_renders_rpx0507_tag_and_explain_nudge() {
+        let detail = import_unreachable_detail("connection refused (os error 111)");
+        // The code tag rides the FIRST line of the headline.
+        assert!(
+            detail.starts_with("could not list records from the backend to import: ")
+                && detail.lines().next().unwrap().ends_with("[RPX-0507]"),
+            "the [RPX-0507] tag must ride the first headline line, got:\n{detail}"
+        );
+        // The full 3-part teaching shape survives the code render.
+        assert!(detail.contains("Fix:"), "missing Fix: limb:\n{detail}");
+        assert!(
+            detail.contains("Recovery:"),
+            "missing Recovery: block:\n{detail}"
+        );
+        // The trailing explain nudge (the codified north-star touch).
+        assert!(
+            detail.contains("Explain: reposix explain RPX-0507"),
+            "missing the `reposix explain RPX-0507` nudge:\n{detail}"
+        );
+        // The underlying connector error is surfaced, not swallowed.
+        assert!(
+            detail.contains("connection refused (os error 111)"),
+            "underlying connector error must be surfaced:\n{detail}"
         );
     }
 }
