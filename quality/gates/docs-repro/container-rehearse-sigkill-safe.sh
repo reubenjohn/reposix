@@ -48,7 +48,16 @@ port_bound() {
     (exec 3<>/dev/tcp/127.0.0.1/7878) 2>/dev/null && { exec 3>&- 3<&-; return 0; }
     return 1
 }
-port_pids() { lsof -ti:7878 2>/dev/null | tr '\n' ' '; }
+# Listener pids on 7878. Mirror the lib's lsof|ss fallback (sim-lifecycle.sh
+# find_port_pids) so sweep_7878 is NOT a silent no-op on an ss-only host (which
+# would leak the listener on 7878 -- LOW-2, P124 review).
+port_pids() {
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -ti:7878 2>/dev/null | tr '\n' ' '
+    elif command -v ss >/dev/null 2>&1; then
+        ss -H -ltnp 'sport = :7878' 2>/dev/null | grep -oE 'pid=[0-9]+' | grep -oE '[0-9]+' | tr '\n' ' '
+    fi
+}
 # Sweep any listener WE started off 7878 (safe: STATIC precondition asserts 7878 was
 # free at entry, so anything here is ours). Also runs on EXIT so the port never leaks.
 sweep_7878() {
@@ -188,13 +197,21 @@ else
         fi
         sweep_7878
 
-        # CONTROL case (rubber-stamp guard): inner(30) >= outer(4). The outer SIGKILL
+        # CONTROL case (rubber-stamp guard): inner(30) >= outer(8). The outer SIGKILL
         # lands first -> harness SIGKILLed, EXIT trap skipped -> sim ORPHANS -> 7878 busy.
         # Proves the test can DETECT the bug; then a GROUP-kill of the orphan frees 7878.
+        # De-flake (LOW/MED-2, P124 review): the control's ONLY reliability requirement
+        # is that the ephemeral sim actually binds 7878 so the orphan is OBSERVABLE. On a
+        # loaded VM sim startup can lag, so (1) outer is 8s (was 4s) giving the sim ample
+        # time to bind BEFORE the SIGKILL, and (2) the post-SIGKILL wait is a bounded 10s
+        # (was 3s) retry that returns the instant 7878 binds -- so it only spends wall-clock
+        # when the sim is genuinely slow, and a healthy VM pays ~nothing extra. This keeps
+        # the P1 strength (a truly non-orphaning harness still NOT-VERIFIEs) while removing
+        # the self-inflicted flaky NOT-VERIFIED -> push-block on a loaded host.
         if wait_port_free 4; then
-            CTL_OUT="$(run_under_outer_sigkill 4 --selftest-sigkill-lifecycle 30 30)"
+            CTL_OUT="$(run_under_outer_sigkill 8 --selftest-sigkill-lifecycle 30 30)"
             CTL_PGID="$(grep -oE 'SIM_PGID=[0-9]+' <<<"$CTL_OUT" | head -1 | cut -d= -f2)"
-            if grep -q 'HARNESS_EXIT=TIMEOUT_SIGKILLED' <<<"$CTL_OUT" && wait_port_bound 3; then
+            if grep -q 'HARNESS_EXIT=TIMEOUT_SIGKILLED' <<<"$CTL_OUT" && wait_port_bound 10; then
                 # The bug is reproducible (orphan present) -> the FIX-case "free" is meaningful.
                 # Now group-kill the orphan and assert 7878 frees (the literal process-group SIGKILL).
                 [[ -n "$CTL_PGID" ]] && kill -KILL -- "-${CTL_PGID}" 2>/dev/null || true

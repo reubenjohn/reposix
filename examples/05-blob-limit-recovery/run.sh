@@ -87,7 +87,11 @@ git -C "$WORK" sparse-checkout init --no-cone
 # three blobs -> at the limit (3 is NOT > 3), so the retry is allowed.
 git -C "$WORK" sparse-checkout set '/issues/1.md' '/issues/2.md' '/issues/3.md'
 git -C "$WORK" checkout -B main refs/reposix/origin/main
-narrowed_count="$(ls "$WORK"/issues/*.md 2>/dev/null | wc -l | tr -d ' ')"
+# Count via a glob array (SC2012-safe: never parse `ls` output). The array holds
+# the literal pattern when nothing matches, so guard on the first element existing.
+narrowed_files=("$WORK"/issues/*.md)
+narrowed_count=0
+[[ -e "${narrowed_files[0]}" ]] && narrowed_count=${#narrowed_files[@]}
 if [[ "$narrowed_count" -ne 3 ]]; then
     echo "FAIL: expected 3 narrowed issue files after recovery, got ${narrowed_count}" >&2
     exit 1

@@ -137,7 +137,9 @@ kcov-corpus growth + new whole-repo subprocess gates, NOT by diff size). Dominat
 fixed-cost gates that walk the whole tree regardless of what changed: `code/shell-coverage`
 (kcov aggregate, ~65s — up from ~29s as the shell corpus grew, and the single largest cost
 by far), `agent-ux/rebase-recovery-reconciles` (~15s), `docs-repro/container-rehearse-sigkill-safe`
-(~11s, added P124), `docs-build/mkdocs-strict` (~4s), full-workspace clippy/fmt (~2s combined).
+(~13s — added P124, bumped from ~11s when the P124-review de-flake widened the SIGKILL control
+budget: outer 4s→8s + a bounded 10s post-SIGKILL bind retry, so a loaded VM stops flaky
+NOT-VERIFYing the P1 row), `docs-build/mkdocs-strict` (~4s), full-workspace clippy/fmt (~2s combined).
 A one-line commit and a 500-file commit pay the same pre-push tax. The `.githooks/pre-push`
 timing tripwire prints a stderr `WARN` (never blocks) once a run exceeds 90s; if pre-push
 creeps meaningfully past ~120s, suspect a NEW whole-repo gate (another kcov-style full-corpus

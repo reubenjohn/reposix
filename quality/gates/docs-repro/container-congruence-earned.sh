@@ -11,8 +11,16 @@
 # Two legs, BOTH docker-free (this gate deliberately needs no container: the
 # end-to-end container proof is the post-release rows example-01/02/04/05; this
 # gate is the unit-level guard on the harvest+congruence PROPERTY):
-#   STATIC leg  -- greps container-rehearse.sh: the verbatim-copy path is GONE
-#                  and the `^ASSERT-PASS: ` harvest path is PRESENT.
+#   STATIC leg  -- greps container-rehearse.sh: the verbatim-copy path is GONE,
+#                  the `^ASSERT-PASS: ` harvest path is PRESENT, AND the
+#                  empty-harvest guard (`elif not harvested:` -> congruent=False)
+#                  is PRESENT. That last check is load-bearing: asserts_congruent()
+#                  AND run.py's apply_pass_gates BOTH no-op True on an EMPTY
+#                  asserts_passed, so the harness's `elif not harvested:` branch is
+#                  the ONLY line that forces a zero-line (no-op `exit 0`) example to
+#                  exit_code=1. A harness with the harvest grep + PREFIX but NO guard
+#                  silently reopens the F-K4b tautology (empirically confirmed in
+#                  the P124 code review), so the static leg must pin it.
 #   LOGIC  leg  -- runs the identical harvest transform over two fixture stdouts
 #                  (a real one and a no-op one) and asserts earned==True/False.
 #
@@ -59,6 +67,20 @@ else
         : # harvest path present; congruence is earned per-step
     else
         FAILED+=("STATIC: container-rehearse.sh is missing the '^ASSERT-PASS: ' harvest path (grep pattern + PREFIX constant)")
+    fi
+    # (c) empty-harvest guard PRESENT: an example that emits ZERO ASSERT-PASS lines
+    #     MUST force congruent=False (authoritative exit_code=1). This is the ONLY
+    #     branch closing the F-K4b tautology at grade time -- asserts_congruent()
+    #     AND run.py's apply_pass_gates BOTH no-op True on an EMPTY asserts_passed,
+    #     so WITHOUT this `elif not harvested:` branch a no-op `exit 0` fixture
+    #     (harvests nothing) rides green again. The P124 code review EMPIRICALLY
+    #     confirmed that a harness carrying the harvest grep + PREFIX but NO guard
+    #     PASSES this gate, silently reopening the tautology -- so pin the guard.
+    if grep -Eq '^[[:space:]]*elif not harvested:' "$HARNESS" \
+       && grep -Eq 'congruent[, a-z_]*=[[:space:]]*False, list\(expected\)' "$HARNESS"; then
+        PASSED+=("container-rehearse.sh forces congruent=False (authoritative exit_code=1) when ZERO ASSERT-PASS lines are harvested (the 'elif not harvested:' guard) -- the only branch closing the empty-harvest tautology, since asserts_congruent() and apply_pass_gates both no-op True on an empty asserts_passed")
+    else
+        FAILED+=("STATIC: container-rehearse.sh is missing the empty-harvest guard (\`elif not harvested:\` -> \`congruent, unmatched = False, list(expected)\`); WITHOUT it a no-op fixture that harvests zero ASSERT-PASS lines rides green -- the F-K4b tautology reopens because asserts_congruent()/apply_pass_gates both no-op True on an empty list")
     fi
 fi
 

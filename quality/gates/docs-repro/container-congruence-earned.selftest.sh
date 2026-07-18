@@ -10,6 +10,12 @@
 #       verbatim copy NOR the `^ASSERT-PASS: ` harvest path (missing harvest).
 #   T4  the harvest transform itself: a real fixture (N ASSERT-PASS lines) EARNS
 #       congruence; a no-op fixture (zero lines) does NOT.
+#   T5  the gate FAILS when pointed at a fixture harness that HAS the harvest path
+#       (grep + PREFIX) but LACKS the empty-harvest guard (`elif not harvested:`
+#       -> congruent=False). This is the P124-code-review falsifiability case: a
+#       harness that harvests but never forces a zero-line example to exit 1 would
+#       reopen the F-K4b tautology (asserts_congruent/apply_pass_gates both no-op
+#       True on an empty asserts_passed), and the gate must catch it statically.
 #
 # All fixtures live under /tmp (never the shared tree). Exit 0 iff all pass.
 
@@ -108,6 +114,28 @@ if [[ $? -eq 0 ]]; then
     ok "T4 harvest transform: real fixture earns congruence, no-op does not"
 else
     bad "T4 harvest transform failed to distinguish real vs no-op"
+fi
+
+# ---- T5: fixture with the harvest path PRESENT but the empty-harvest guard
+#      ABSENT -> FAIL (the P124-code-review falsifiability case). NO verbatim
+#      copy, HAS `grep '^ASSERT-PASS: '` + PREFIX, but NO `elif not harvested:`.
+cat > "$WORK/harness-noguard.sh" <<'EOF'
+#!/usr/bin/env bash
+# Fixture: harvests ASSERT-PASS lines but NEVER forces a zero-line example to
+# exit 1 -- the guard branch is missing, reopening the F-K4b tautology.
+grep '^ASSERT-PASS: ' /dev/null || true
+PREFIX = "ASSERT-PASS: "
+# grading with NO `elif not harvested:` branch:
+#   if not expected:
+#       congruent = True
+#   else:
+#       congruent, unmatched = asserts_congruent(expected, harvested)
+EOF
+if CRE_HARNESS_PATH="$WORK/harness-noguard.sh" CRE_ARTIFACT_PATH="$WORK/t5.json" \
+        bash "$GATE" >/dev/null 2>&1; then
+    bad "T5 gate PASSED a harness missing the empty-harvest guard (should FAIL)"
+else
+    ok "T5 gate FAILS a harness with the harvest path but no empty-harvest guard"
 fi
 
 echo
