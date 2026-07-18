@@ -417,9 +417,22 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     // and `git pull --rebase && git push` reconciles after SoT drift. git
     // sets GIT_DIR for the helper RPC, so a bare `git rev-parse` resolves
     // against the caller's repo (same proven pattern as the bus handler's
-    // mirror-drift check). Ref absent (first fetch) → None → parentless root.
+    // mirror-drift check). Ref genuinely absent (first fetch) → Ok(None) →
+    // parentless root; a NON-absence git failure errors LOUDLY (RPX-0508) via
+    // fail_push below rather than silently degrading to the parentless overlay.
     // The ref name is a static literal, never a remote byte (OP-2 taint).
-    let parent = resolve_import_parent();
+    let parent = match resolve_import_parent() {
+        Ok(p) => p,
+        Err(e) => {
+            // resolve_import_parent already built the loud RPX-0508 teaching; surface
+            // it via fail_push (protocol `error` line + teaching diag) rather than a
+            // torn pipe or a silent parentless overlay (the RBF-LR-03 `does not
+            // contain` regression). Mirrors the RPX-0507 backend-unreachable arm above.
+            let detail = format!("{e:#}");
+            return fail_push(proto, state, "import-parent-resolve-failed", &detail)
+                .map_err(Into::into);
+        }
+    };
     let mut sink: Vec<u8> = Vec::with_capacity(1024 + issues.len() * 256);
     emit_import_stream(&mut sink, &issues, bucket, parent.as_ref())?;
     proto.send_raw(&sink)?;
@@ -427,11 +440,83 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     Ok(())
 }
 
+/// One `git rev-parse` subprocess outcome, normalized for
+/// [`resolve_import_parent`]'s tri-state logic and injectable in tests without a
+/// real `git` on `PATH`.
+///
+/// `code` is the process exit status (`None` when git was terminated by a signal
+/// — also a non-absence failure); `stdout` is the trimmed standard output (the
+/// resolved oid on a success exit). Neither field carries a remote byte: the only
+/// inputs are a static ref name and git's own local output/status for it (OP-2).
+struct RevParseRun {
+    /// Process exit code, or `None` when git was killed by a signal.
+    code: Option<i32>,
+    /// Trimmed stdout — the resolved object id on a success exit.
+    stdout: String,
+}
+
+/// Build the RPX-0508 teaching for a NON-absence `git rev-parse` failure while
+/// resolving the client's import parent. Split out (mirroring
+/// [`import_unreachable_detail`] for RPX-0507) so a unit test can pin the
+/// `[RPX-0508]` tag + 3-part body directly — the detail otherwise flows to real
+/// stderr via `diag`, which is not in-process capturable.
+///
+/// `what` is a LOCAL diagnostic (a spawn `io::Error`, an exit-code integer, or a
+/// static anomaly description) — never git's stderr and never a remote byte, so no
+/// redaction is required (T-122-04): this path reads only a static ref name and
+/// git's exit status/stdout for it, and deliberately does NOT surface `out.stderr`.
+fn import_parent_resolve_detail(what: &str) -> String {
+    reposix_core::errmsg::teach_coded(
+        reposix_core::codes::ids::HELPER_IMPORT_PARENT_RESOLVE,
+        &format!(
+            "could not resolve the client's `refs/reposix/origin/main` tracking tip \
+             to chain the import onto: {what}"
+        ),
+        "make sure `git` is installed and on PATH and the directory git invoked the \
+         helper in is a valid git repository, then re-drive the fetch.",
+        "for a tree that was never bootstrapped by reposix, re-run `reposix init` / \
+         `reposix attach` to lay down a valid partial-clone tree instead of fetching \
+         into a hand-made one.",
+        &[
+            "git --version                          # confirm git is installed and on PATH",
+            "git rev-parse --is-inside-work-tree    # confirm the caller dir is a valid git repo",
+            "git fetch                              # re-drive once git + the repo are healthy",
+        ],
+    )
+}
+
+/// Run one real `git rev-parse --verify --quiet <arg>` against the caller's repo.
+/// git sets `GIT_DIR` for the remote-helper RPC, so a bare `rev-parse` (no `-C`)
+/// resolves against the caller's repo (the same pattern the bus mirror-drift check
+/// relies on). This is the production runner behind [`resolve_import_parent`];
+/// tests inject a fake in its place.
+fn real_rev_parse(arg: &str) -> std::io::Result<RevParseRun> {
+    let out = std::process::Command::new("git")
+        .args(["rev-parse", "--verify", "--quiet", arg])
+        .output()?;
+    Ok(RevParseRun {
+        code: out.status.code(),
+        // Only git's stdout (the resolved oid) is read — never `out.stderr`, so no
+        // git message can ride the RPX-0508 diag (T-122-04).
+        stdout: String::from_utf8_lossy(&out.stdout).trim().to_owned(),
+    })
+}
+
 /// Resolve the client's current `refs/reposix/origin/main` tip (commit + tree
-/// oids) via `git rev-parse`, for RBF-LR-03 parent chaining. Returns `None`
-/// when the ref is absent (first fetch → parentless seed) or git is somehow
-/// unavailable — both degrade to the original parentless behavior, never an
-/// error, so a fresh clone still bootstraps.
+/// oids) via `git rev-parse`, for RBF-LR-03 parent chaining. TRI-STATE:
+///
+/// - `Ok(Some(ImportParent))` — the ref resolved (a present tracking tip).
+/// - `Ok(None)` — the ref is genuinely ABSENT (spawn-success + exit 1 + empty
+///   stdout, the `--verify --quiet` contract): a legitimate first fetch →
+///   parentless seed, so a fresh clone still bootstraps.
+/// - `Err(_)` — a NON-absence `git rev-parse` failure: a spawn failure (git not
+///   on PATH), a non-1 non-zero exit (e.g. 128 corrupt-repo / bad-revision), a
+///   signal, or an anomalous exit-0 with empty stdout (`--verify --quiet` always
+///   prints the oid on success, so an empty stdout on exit 0 is a broken-git
+///   signal, not a benign absence). These error LOUDLY (coded RPX-0508) rather
+///   than silently degrading to the parentless overlay, which would hide a real
+///   environmental fault and could re-open the RBF-LR-03 non-descendant `does not
+///   contain` fast-import abort with no operator-facing error.
 ///
 /// Ref-absence is a genuine first-fetch / uninitialized state for BOTH bootstrap
 /// paths: `reposix init` seeds this ref via its `+refs/heads/*:refs/reposix/origin/*`
@@ -439,33 +524,71 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
 /// `reposix attach` seeds it to the mirror merge-base at attach time
 /// (`crates/reposix-cli/src/attach.rs::seed_tracking_ref`). So on a
 /// correctly-bootstrapped tree the ref is present by the SECOND fetch and this
-/// returns a real parent — the parentless branch is the true first-sync seed,
-/// not a silent attach defect. (Pre-fix attach trees with the ref never seeded
-/// heal by re-running `reposix attach`; runtime auto-heal here is v0.15.0-deferred.)
+/// returns a real parent — the parentless branch is the true first-sync seed, not
+/// a silent attach defect. (Pre-fix attach trees with the ref never seeded heal by
+/// re-running `reposix attach`; runtime auto-heal here is v0.15.0-deferred.)
 ///
-/// git sets `GIT_DIR` for the remote-helper RPC, so the bare `rev-parse`
-/// resolves against the caller's repo without a `-C` (the same pattern the bus
-/// mirror-drift check relies on). The ref name is a fixed literal — never a
-/// remote-influenced byte — so there is no `Tainted<T>` concern (OP-2).
-fn resolve_import_parent() -> Option<ImportParent> {
-    use std::process::Command;
+/// The ref name is a fixed literal — never a remote-influenced byte — so there is
+/// no `Tainted<T>` concern (OP-2).
+fn resolve_import_parent() -> anyhow::Result<Option<ImportParent>> {
+    resolve_import_parent_with(real_rev_parse)
+}
+
+/// [`resolve_import_parent`] with the `git rev-parse` runner injected, so a unit
+/// test can drive the tri-state logic (spawn failure / exit 128 / exit-0-empty /
+/// exit-1-absent / present) without a real `git` on `PATH`.
+fn resolve_import_parent_with<F>(run: F) -> anyhow::Result<Option<ImportParent>>
+where
+    F: Fn(&str) -> std::io::Result<RevParseRun>,
+{
     const REF: &str = "refs/reposix/origin/main";
-    let rev_parse = |arg: &str| -> Option<String> {
-        let out = Command::new("git")
-            .args(["rev-parse", "--verify", "--quiet", arg])
-            .output()
-            .ok()?;
-        if !out.status.success() {
-            return None;
-        }
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_owned();
-        (!s.is_empty()).then_some(s)
+    let rev_parse = |arg: &str| -> anyhow::Result<Option<String>> {
+        let what: String = match run(arg) {
+            // (a) spawn failure — git not on PATH / could not exec.
+            Err(e) => format!("the `git rev-parse` subprocess could not be spawned ({e})"),
+            // present: a success exit WITH a resolved oid.
+            Ok(RevParseRun {
+                code: Some(0),
+                stdout,
+            }) if !stdout.is_empty() => {
+                return Ok(Some(stdout));
+            }
+            // (c) anomalous: a success exit but NO oid printed — a broken-git signal,
+            // NOT a benign absence. `--verify --quiet` always prints the oid on exit 0.
+            Ok(RevParseRun { code: Some(0), .. }) => {
+                "`git rev-parse --verify --quiet` exited 0 but printed no object id \
+                 (a broken-git / malformed-subprocess signal)"
+                    .to_owned()
+            }
+            // benign ABSENCE: the `--verify --quiet` contract for a missing ref.
+            Ok(RevParseRun { code: Some(1), .. }) => return Ok(None),
+            // (b) any OTHER non-zero exit (e.g. 128 corrupt-repo / bad-revision).
+            Ok(RevParseRun {
+                code: Some(other), ..
+            }) => {
+                format!("`git rev-parse --verify --quiet` exited with status {other}")
+            }
+            // (b') terminated by a signal — also a non-absence failure.
+            Ok(RevParseRun { code: None, .. }) => {
+                "the `git rev-parse` subprocess was terminated by a signal".to_owned()
+            }
+        };
+        // The terminal RPX-0508 teaching (3-part, coded) lives in import_parent_resolve_detail;
+        // teach-exempt: ok — this thin anyhow! only surfaces that helper's teaching (teach_scan can't resolve the helper indirection — a documented residual — so the bar is met there, not inline).
+        Err(anyhow::anyhow!("{}", import_parent_resolve_detail(&what)))
     };
-    let commit = rev_parse(REF)?;
-    // `<ref>^{tree}` peels the commit to its tree oid; if the commit resolved
-    // this must too, but stay defensive and fall back to no-parent on failure.
-    let tree = rev_parse(&format!("{REF}^{{tree}}"))?;
-    Some(ImportParent { commit, tree })
+    let commit = match rev_parse(REF)? {
+        Some(c) => c,
+        None => return Ok(None),
+    };
+    // `<ref>^{tree}` peels the commit to its tree oid; if the commit resolved this
+    // should too. A NON-absence failure on the peel errors loudly via `?`; only a
+    // benign exit-1 absence falls back to the parentless seed (stay defensive).
+    let tree = match rev_parse(&format!("{REF}^{{tree}}"))? {
+        Some(t) => t,
+        None => return Ok(None),
+    };
+    Ok(Some(ImportParent { commit, tree }))
 }
 
 fn handle_export<R: std::io::Read, W: std::io::Write>(
@@ -852,5 +975,135 @@ mod import_teach_tests {
             detail.contains("connection refused (os error 111)"),
             "underlying connector error must be surfaced:\n{detail}"
         );
+    }
+}
+
+#[cfg(test)]
+mod resolve_import_parent_tests {
+    //! P122 W2 (DRAIN-08 / GTH-V15-05): `resolve_import_parent` must FAIL LOUD
+    //! (coded RPX-0508) on a NON-absence `git rev-parse` failure instead of
+    //! silently degrading to the parentless overlay — while still treating a
+    //! genuine ref-absent first fetch (exit 1, empty stdout) as `Ok(None)`. The
+    //! git runner is injected so these drive the tri-state logic with no real
+    //! `git` on `PATH`. These live in a bin-target `#[cfg(test)]` module → graded
+    //! by the BARE `cargo test -p reposix-remote` (a `--test <name>` scope would
+    //! miss bin-target unit tests, per crates/CLAUDE.md).
+
+    use super::{resolve_import_parent_with, RevParseRun};
+    use std::io;
+
+    const RPX: &str = "RPX-0508";
+
+    /// Test A: an injected NON-absence failure — a fake git that exits 128
+    /// (corrupt-repo / bad-revision) — makes `resolve_import_parent` return a LOUD
+    /// `Err` carrying the RPX-0508 coded teaching (tag + Fix + Recovery + Explain
+    /// nudge), NOT `Ok(None)` / a parentless overlay.
+    #[test]
+    fn non_absence_exit_128_errors_loud_with_rpx0508() {
+        let run = |_arg: &str| {
+            Ok(RevParseRun {
+                code: Some(128),
+                stdout: String::new(),
+            })
+        };
+        let err = resolve_import_parent_with(run)
+            .expect_err("a non-absence exit-128 git failure must error loud, not Ok(None)");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains(RPX),
+            "loud error must carry the {RPX} tag, got:\n{msg}"
+        );
+        assert!(
+            msg.contains("Fix:"),
+            "loud error must teach a Fix:, got:\n{msg}"
+        );
+        assert!(
+            msg.contains("Recovery:"),
+            "loud error must teach a Recovery:, got:\n{msg}"
+        );
+        assert!(
+            msg.contains("Explain: reposix explain RPX-0508"),
+            "loud error must carry the explain nudge, got:\n{msg}"
+        );
+    }
+
+    /// Test A': a SPAWN failure (git not on PATH / could not exec) is likewise a
+    /// non-absence failure → a loud RPX-0508 `Err`, never `Ok(None)`.
+    #[test]
+    fn spawn_failure_errors_loud_with_rpx0508() {
+        let run = |_arg: &str| {
+            Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "git: command not found",
+            ))
+        };
+        let err = resolve_import_parent_with(run)
+            .expect_err("a git spawn failure must error loud, not Ok(None)");
+        assert!(
+            format!("{err:#}").contains(RPX),
+            "a spawn failure must carry the {RPX} teaching, not silently degrade"
+        );
+    }
+
+    /// Test B: a GENUINE ref-absent first fetch — spawn-success + exit 1 + empty
+    /// stdout (the `--verify --quiet` contract) — still degrades to `Ok(None)` (the
+    /// parentless seed), so a fresh clone bootstraps. No regression to bootstrap.
+    #[test]
+    fn ref_absent_exit_1_returns_ok_none() {
+        let run = |_arg: &str| {
+            Ok(RevParseRun {
+                code: Some(1),
+                stdout: String::new(),
+            })
+        };
+        let out = resolve_import_parent_with(run);
+        assert!(
+            matches!(out, Ok(None)),
+            "a genuine ref-absent first fetch (exit 1, empty stdout) must be Ok(None), got {out:?}"
+        );
+    }
+
+    /// Test C: an ANOMALOUS success — exit 0 with EMPTY stdout — is a broken-git
+    /// signal (`--verify --quiet` always prints the oid on a success exit), so it
+    /// errors LOUD (RPX-0508) rather than silently degrading to the parentless
+    /// overlay. Locks the exit-0-empty-stdout branch so the row cannot grade GREEN
+    /// while that branch silently returns `Ok(None)`.
+    #[test]
+    fn anomalous_exit_0_empty_stdout_errors_loud_with_rpx0508() {
+        let run = |_arg: &str| {
+            Ok(RevParseRun {
+                code: Some(0),
+                stdout: String::new(),
+            })
+        };
+        let err = resolve_import_parent_with(run)
+            .expect_err("exit-0 + empty stdout is anomalous and must error loud, not Ok(None)");
+        assert!(
+            format!("{err:#}").contains(RPX),
+            "the anomalous exit-0-empty-stdout path must carry the {RPX} teaching, not Ok(None)"
+        );
+    }
+
+    /// The present-ref happy path: both `<ref>` and `<ref>^{{tree}}` resolve to a
+    /// real oid on a success exit → `Ok(Some(ImportParent{{commit, tree}}))`.
+    /// Confirms the loud path did not regress the present case.
+    #[test]
+    fn present_ref_returns_some_import_parent() {
+        let run = |arg: &str| {
+            let oid = if arg.contains("^{tree}") {
+                "1111111111111111111111111111111111111111"
+            } else {
+                "2222222222222222222222222222222222222222"
+            };
+            Ok(RevParseRun {
+                code: Some(0),
+                stdout: oid.to_owned(),
+            })
+        };
+        let parent = resolve_import_parent_with(run)
+            .expect("a present ref must resolve without error")
+            .expect("a present ref must be Some(ImportParent)");
+        assert_eq!(parent.commit, "2222222222222222222222222222222222222222");
+        assert_eq!(parent.tree, "1111111111111111111111111111111111111111");
     }
 }

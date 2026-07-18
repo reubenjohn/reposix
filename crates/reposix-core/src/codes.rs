@@ -127,6 +127,12 @@ pub mod ids {
     /// `RPX-0507` — fetch/import rejected: backend unreachable while listing records
     /// to import. The FETCH-path sibling of RPX-0504 (which is PUSH-specific).
     pub const HELPER_IMPORT_UNREACHABLE: &str = "RPX-0507";
+    /// `RPX-0508` — fetch/import could not resolve the client's `refs/reposix/origin/main`
+    /// tracking tip: a NON-absence `git rev-parse` failure (spawn failure, a non-1
+    /// non-zero exit such as 128, a signal, or an anomalous exit-0 with empty stdout).
+    /// DISTINCT from RPX-0507 (backend unreachable — a network fault) and from the
+    /// benign first-fetch ref-absence (exit 1 → the parentless seed, never an error).
+    pub const HELPER_IMPORT_PARENT_RESOLVE: &str = "RPX-0508";
     /// `RPX-0601` — malformed reposix bus URL (fails to PARSE — a syntax fault).
     pub const HELPER_MALFORMED_BUS_URL: &str = "RPX-0601";
     /// `RPX-0602` — the git remote helper was invoked with too few arguments.
@@ -674,6 +680,41 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::HELPER_IMPORT_PARENT_RESOLVE,
+        title: "fetch/import could not resolve the client's tracking tip",
+        cause: "On a fetch driven through the helper's `import` capability, \
+                `git-remote-reposix` resolves the client's current \
+                `refs/reposix/origin/main` tracking tip with `git rev-parse` and \
+                chains the synthesized tracking commit onto it, so the fetch is a \
+                fast-forward (RBF-LR-03). A genuine FIRST fetch has no such ref yet \
+                — that is a BENIGN absence (git exits 1), and reposix seeds a \
+                parentless root so a fresh clone still bootstraps. THIS failure is \
+                different: the `git rev-parse` subprocess failed for a NON-absence \
+                reason — git could not be spawned (not installed / not on PATH), the \
+                directory git invoked the helper in is not a valid git repository or \
+                is corrupt (a non-1 non-zero exit such as 128, or a signal), or git \
+                exited 0 without printing an object id (`git rev-parse --verify \
+                --quiet` always prints the resolved oid on a success exit, so an \
+                empty stdout on exit 0 is a broken-git / malformed-subprocess \
+                signal, not an absence). reposix errors LOUDLY here rather than \
+                silently degrading to the parentless overlay, because a silent \
+                degrade would hide a real environmental fault and could re-open the \
+                RBF-LR-03 non-descendant `does not contain` fast-import abort with no \
+                operator-facing error. This is a LOCAL git-subprocess fault, DISTINCT \
+                from RPX-0507 (the backend itself being unreachable while listing \
+                records to import).",
+        fix: "Make sure `git` is installed and on PATH and the directory git invoked \
+              the helper in is a valid git repository, then re-drive the fetch.",
+        alternative: "For a tree that was never bootstrapped by reposix, re-run \
+                      `reposix init` / `reposix attach` to lay down a valid \
+                      partial-clone tree instead of fetching into a hand-made one.",
+        recovery: &[
+            "git --version                          # confirm git is installed and on PATH",
+            "git rev-parse --is-inside-work-tree    # confirm the caller dir is a valid git repo",
+            "git fetch                              # re-drive once git + the repo are healthy",
+        ],
+    },
+    ExplainEntry {
         code: ids::HELPER_MALFORMED_BUS_URL,
         title: "malformed reposix bus URL",
         cause: "A `reposix::` remote URL is either `reposix::<sot-spec>` (single \
@@ -858,6 +899,7 @@ mod tests {
             ids::HELPER_PUSH_CONFLICT,
             ids::HELPER_UNFILTERED_FETCH,
             ids::HELPER_IMPORT_UNREACHABLE,
+            ids::HELPER_IMPORT_PARENT_RESOLVE,
             ids::HELPER_MALFORMED_BUS_URL,
             ids::HELPER_USAGE,
             ids::HELPER_MIRROR_UNREACHABLE,
