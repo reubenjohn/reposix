@@ -74,8 +74,8 @@ which part of reposix raised the error:
 | `RPX-01xx` | `0101`–`0102` | Missing real-backend credentials or tenant environment variables (the CLI and the git remote helper). |
 | `RPX-02xx` | `0201`–`0204` | Local cache and working-tree binding — cache build, no synced cache, not-a-reposix-tree, unparseable stored remote URL. |
 | `RPX-03xx` | `0301`–`0311` | Subcommand and flag preconditions — `log` / `spaces` / `refresh` mode gates, `--since` parsing and time-travel rewind, git-on-`PATH`, non-UTF-8 path. |
-| `RPX-04xx` | `0401`–`0405` | `init` / `attach` working-tree bootstrap — existing-repo refusal, initial fetch failure, and the `attach` reconciliation preconditions. |
-| `RPX-05xx` | `0501`–`0507` | Git remote helper transport — upload-pack, protocol EOF, blob limit, backend unreachable (push and fetch), push conflict, unfiltered fetch. |
+| `RPX-04xx` | `0401`–`0406` | `init` / `attach` working-tree bootstrap — existing-repo refusal, initial fetch failure, the `attach` reconciliation preconditions, and the `init` nested-in-worktree refusal (`0406`). |
+| `RPX-05xx` | `0501`–`0508` | Git remote helper transport — upload-pack, protocol EOF, blob limit, backend unreachable (push and fetch), push conflict, unfiltered fetch, import-parent resolve. |
 | `RPX-06xx` | `0601`–`0603` | DVCS bus / mirror and helper invocation — malformed bus URL, helper misuse, mirror unreachable. |
 | `RPX-09xx` | `0900`      | `reposix explain` itself — an unknown or unregistered code was looked up. |
 
@@ -108,6 +108,7 @@ for the extended explanation of any row.
 | `RPX-0403` | `reposix attach` needs an existing git working tree |
 | `RPX-0404` | duplicate record `id` across local files — attach aborted |
 | `RPX-0405` | this tree is already attached to a different system of record |
+| `RPX-0406` | refusing to `reposix init` a target nested inside another git repository |
 | `RPX-0501` | the reposix cache could not serve `git upload-pack` |
 | `RPX-0502` | unexpected EOF mid-request (protocol desync) |
 | `RPX-0503` | refusing to materialize more blobs than the configured limit |

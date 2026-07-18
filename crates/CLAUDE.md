@@ -171,6 +171,16 @@ loud non-absence `git rev-parse` fault (spawn failure / non-1 non-zero exit / si
 anomalous exit-0-empty-stdout → `Err` coded RPX-0508 via `import_parent_resolve_detail`,
 surfaced through `fail_push`), instead of silently degrading to the parentless overlay.
 
+**RPX-0406 (P122 W3 / DRAIN-09)** is the `reposix init` binary-side backstop for the D2
+shared-tree-corruption recurrence (the sibling of RPX-0401's existing-repo-root refusal).
+`init.rs` refuses a FRESH target that nests inside a non-/tmp git working tree
+(`refuse_nested_in_worktree`, canonicalized via `canonicalize_lexical_existing` with
+`realpath -m` semantics, mirroring `.claude/hooks/leaf-isolation-guard.sh::is_safe`'s /tmp
+safe zone) AND self-checks its git-dir after `git init` but before any `git config` write
+(`assert_own_git_dir`) — both emit RPX-0406, both run in `run_with_since`, init-only (never
+`attach`). Only a refusal INSIDE the binary cuts a subprocess/worktree bypass of the
+Bash-tool hook. Verifier: `quality/gates/agent-ux/init-refuses-nested-in-shared-tree.sh`.
+
 ### `errors.rs` shape helpers + scan scope
 
 `reposix-cli/src/errors.rs` wraps `teach()` in the ~4 recurring failure shapes shared

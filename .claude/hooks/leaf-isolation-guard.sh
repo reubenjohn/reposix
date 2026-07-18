@@ -51,9 +51,12 @@
 # .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md, that date). The
 # `.githooks/pre-commit` git-native backstop catches fixture-identity COMMITS in the shared
 # repo even on that bypass path, but NOT `reposix init` / `git config` / `git init`
-# non-commit writes. THE REAL CUT is a binary-side refusal in `reposix init` / sim-seed
-# itself (only that layer stops a non-Bash-tool subprocess) — scoped for v0.14.0 Wave 2,
-# NOT built here. This hook is the Bash-tool-layer defense-in-depth, not the whole fix.
+# non-commit writes. THE REAL CUT — a binary-side refusal in `reposix init` itself (only
+# that layer stops a non-Bash-tool subprocess) — NOW SHIPS as of P122 (RPX-0406): `reposix
+# init` refuses a fresh target nested inside a non-/tmp git working tree (canonicalized,
+# mirroring `is_safe` below) AND self-checks its git-dir before any `git config` write, so a
+# subprocess/worktree bypass of THIS hook is now caught at the binary layer too. This hook
+# remains the Bash-tool-layer defense-in-depth; the two layers agree on the /tmp safe zone.
 #
 # HARD CONSTRAINT (ROADMAP SC2 / T-102-04): this mechanism invokes `git worktree remove
 # --force` NOWHERE — that command is itself a corruption vector.

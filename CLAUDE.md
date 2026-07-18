@@ -46,8 +46,12 @@ your first mutating move (each expanded in its own section below):
   non-empty unparseable payload **fails closed** (exit 2).
   **Coverage boundary:** the PreToolUse hook fires only on the Claude Code Bash *tool* — a
   git/reposix write from a subprocess or script bypasses it; the pre-commit backstop catches
-  fixture *commits* on that path but not `reposix init` / `git config` writes. The prose
-  hard rule remains the human-readable contract for the uncovered surface.
+  fixture *commits* on that path but not `reposix init` / `git config` writes. **Binary-side
+  backstop (v0.15.0 P122, RPX-0406):** `reposix init` now refuses a fresh target nested
+  inside a non-/tmp git working tree (canonicalized, mirroring the hook's `is_safe`) AND
+  self-checks its git-dir before any `git config` write — closing the exact subprocess/
+  worktree-bypass residual for `reposix init` (`crates/reposix-cli/src/init.rs`). The prose
+  hard rule remains the human-readable contract for whatever surface neither layer covers.
 - **Verify against reality** — run it, hit the backend, render the page; a claim without
   an artifact isn't done.
 
