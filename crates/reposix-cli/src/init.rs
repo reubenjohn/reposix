@@ -143,9 +143,16 @@ fn refuse_existing_repo_root(path: &Path) -> Result<()> {
         // `git init` here creates a NEW tree — allowed.
         return Ok(());
     }
-    // teach-exempt: ok — bespoke 3-part refusal (names the corruption shape, points at `reposix attach`, prints /tmp-clone recovery); regression-guarded by `init_refuses_existing_repo_root`. Do NOT reroute.
+    // teach-exempt: ok — CODED (RPX-0401) but HAND-ROLLED. The `[RPX-0401]` tag rides
+    // the first headline line and an `Explain: reposix explain RPX-0401` nudge trails
+    // the body — the SAME render shape `teach_coded` produces — while the bespoke
+    // 3-part body is kept verbatim (names the corruption shape, points at `reposix
+    // attach`, prints the /tmp-clone recovery). `teach-exempt` here means "do NOT
+    // reroute through the teach()/teach_coded builder", NOT "withhold the code tag":
+    // the code IS present, hand-emitted. Regression-guarded by
+    // `init_refuses_existing_repo_root` + `init_at_existing_repo_root_teaches_attach_and_recovery`.
     bail!(
-        "reposix init: refusing to initialize `{path}` — it is already a git repository root.\n\
+        "reposix init: refusing to initialize `{path}` — it is already a git repository root. [RPX-0401]\n\
          `reposix init` CREATES a fresh partial-clone working tree; re-initializing an existing \
          checkout rewrites core.bare + remote.origin and corrupts the tree (the 2026-07-12 \
          shared-tree incident).\n\
@@ -153,7 +160,8 @@ fn refuse_existing_repo_root(path: &Path) -> Result<()> {
          reposix init <backend>::<project> {path}/reposix-clone\n\
          To adopt an EXISTING checkout into a reposix backend instead, use `reposix attach`.\n\
          For throwaway test setup, clone into /tmp first:\n  \
-         git clone <repo> /tmp/leaf && cd /tmp/leaf && reposix init sim::demo sub",
+         git clone <repo> /tmp/leaf && cd /tmp/leaf && reposix init sim::demo sub\n\
+         Explain: reposix explain RPX-0401",
         path = path.display(),
     )
 }
@@ -378,15 +386,36 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         }
         Ok(o) => {
             let stderr = String::from_utf8_lossy(&o.stderr);
-            // teach-exempt: ok — bespoke 3-part sync-failed teaching (own `Fix:` block names `reposix sim` + the in-place `git fetch` recovery); regression-guarded by `init_errors_nonzero_when_initial_fetch_fails`.
-            bail!(
-                "reposix init: could not sync `{path_str}` from backend `{url}`.\n\
-                 The repo was configured but nothing was fetched, so it has no commits yet.\n\
-                 git stderr:\n  {stderr}\n\
-                 Fix: confirm the backend is running and reachable — for the simulator, start it in \
-                 another terminal with `reposix sim` — then re-run `reposix init`, or sync in place \
-                 with `git -C {path_str} fetch --filter=blob:none origin`.",
+            // RPX-0402 (INIT_FETCH_FAILED): the remote was configured but the initial
+            // fetch brought nothing back. Routed through `teach_coded` so the
+            // `[RPX-0402]` tag + `Explain:` nudge render (matching every other coded
+            // site). git's own stderr is SURFACED, not swallowed — it carries no
+            // userinfo (a `reposix::` URL embeds no credentials, and the helper redacts
+            // at its own boundary). Regression-guarded by
+            // `init_errors_nonzero_when_initial_fetch_fails`.
+            let headline = format!(
+                "reposix init: could not sync `{path_str}` from backend `{url}` — the repo was \
+                 configured but nothing was fetched, so it has no commits yet.\n\
+                 git stderr:\n  {stderr}",
                 stderr = stderr.trim(),
+            );
+            let fetch_in_place = format!(
+                "git -C {path_str} fetch --filter=blob:none origin   # sync the configured tree in place"
+            );
+            bail!(
+                "{}",
+                teach_coded(
+                    ids::INIT_FETCH_FAILED,
+                    &headline,
+                    "confirm the backend is running and reachable — for the simulator, start it in \
+                     another terminal with `reposix sim` — then re-run `reposix init`.",
+                    "the remote is already configured, so you can fetch in place instead of \
+                     re-running init.",
+                    &[
+                        "reposix sim                                        # start the simulator, if you meant sim::…",
+                        fetch_in_place.as_str(),
+                    ],
+                )
             );
         }
         Err(e) => {
@@ -796,6 +825,13 @@ mod tests {
             msg.contains("could not sync") && msg.contains("Fix:"),
             "error must report the failed sync and teach recovery, got: {msg}"
         );
+        // SC1 (P121): the fetch-failure teaching carries the RPX-0402 code tag +
+        // the `reposix explain` nudge, so a dev who hits it can look up the extended
+        // cause/fix/recovery.
+        assert!(
+            msg.contains("[RPX-0402]") && msg.contains("reposix explain RPX-0402"),
+            "fetch-failure error must carry the [RPX-0402] tag + explain nudge, got: {msg}"
+        );
         // The tree was configured (git init + config ran) — the failure is at
         // the sync step — but `init` did NOT report success.
         assert!(
@@ -824,6 +860,12 @@ mod tests {
         assert!(
             msg.contains("already a git repository root") && msg.contains("reposix attach"),
             "refusal must explain the corruption shape and name `reposix attach`, got: {msg}"
+        );
+        // SC1 (P121): the exemplar refusal carries the RPX-0401 code tag + the
+        // `reposix explain` nudge (hand-emitted, matching the teach_coded render).
+        assert!(
+            msg.contains("[RPX-0401]") && msg.contains("reposix explain RPX-0401"),
+            "refusal must carry the [RPX-0401] tag + explain nudge, got: {msg}"
         );
         // Fail-closed: the refusal fired before `translate_spec_to_url` /
         // `git init`, so no `remote.origin.url` config was written into the
