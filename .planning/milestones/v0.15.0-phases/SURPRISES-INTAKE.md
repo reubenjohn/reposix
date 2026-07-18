@@ -968,3 +968,54 @@ state.advance-plan` is UNSAFE to call against this repo's narrative STATE.md sha
 response to mean "no side effect occurred."
 
 **STATUS:** OPEN
+
+## 2026-07-18 06:00 | discovered-by: 123-06 (SC4/DRAIN-06, structure/verifier-script-exists gate) | severity: MEDIUM
+
+**What:** The freshly-authored `quality/gates/structure/verifier-script-exists.sh` (scans every
+`quality/catalogs/*.json` row's `verifier.script` for existence + executable bit, per its
+`claim_vs_assertion_audit` committed in 123-01) finds 5 pre-existing violations that are NOT
+mechanically fixable in this plan's <1h eager-fix budget, all already tracked elsewhere:
+(1) `cross-platform/windows-2022-rehearsal` and `cross-platform/macos-14-rehearsal` — both rows
+in `cross-platform.json` are `status: WAIVED` (renewed P90 90-05, `until: 2026-09-15`) because the
+verifier scripts were never built (windows/macos GH Actions runners cost ~$0.08/min; tracked_in
+P97 launch-readiness); (2) `docs-build/animation-renders` — `status: NOT-VERIFIED`, its own
+`owner_hint` says "both the artifact and the verifier script are intentionally absent until
+[117-07] W5"; (3+4) `docs-repro/benchmark-claim/8ms-cached-read` and
+`.../89.1-percent-token-reduction` — both `status: NOT-VERIFIED`, `verifier.script: null` by
+design, mechanization routed to `GOOD-TO-HAVES-04` (v0.13.0-phases) targeting the launch-readiness
+milestone. None of the 5 rows are `PASS` today (2 WAIVED, 3 NOT-VERIFIED) — so none is actually
+the "unbacked PASS" hazard GTH-V15-03 names — but the new gate's committed contract scans EVERY
+non-docs-alignment row unconditionally (no status filter), so all 5 surface as violations
+regardless. The 123-06 executor fixed 32 OTHER violations directly (a mechanical missing-`chmod
++x` class across 13 real scripts) but did not fabricate stub verifier scripts for these 5 just to
+force the mechanical check green — that would be exactly the "silently waiving to force a false
+PASS" anti-pattern the plan explicitly forbade, and would misrepresent catalog-first placeholders
+that are deliberately not yet gradeable.
+
+**Why out-of-scope for the discovering session:** Building real verifiers for windows/macos GH
+Actions rehearsal, the playwright animation-capture pipeline, or the headline-number extraction
+scripts are each separate, already-scoped efforts (P97, 117-07 W5, GOOD-TO-HAVES-04) — building
+any of them inside this plan's mechanical-gate-authoring task would be scope surgery, not a <1h
+fix. As a direct consequence, `structure/verifier-script-exists` cannot reach a clean `exit 0`
+against the live catalog today; the plan's dispatcher explicitly instructed NOT to promote this
+row's `cadences` to include `pre-commit` while the catalog isn't clean (a dirty pre-commit-tagged
+row would self-block every future commit repo-wide), so 123-06 left the row's cadences unchanged
+at `["pre-push", "pre-pr"]` (as minted in 123-01) rather than adding `pre-commit` as the plan's
+Task 2 literally instructed.
+
+**Sketched resolution:** Two independent, non-exclusive paths for the row owner to choose between:
+(a) build out the 5 deferred verifiers on their already-tracked timelines (P97 cross-platform
+decision, 117-07 W5 animation artifact, GOOD-TO-HAVES-04 headline-number mechanization) — once all
+5 clear, `structure/verifier-script-exists` goes green for real and `pre-commit` can be safely
+added to its cadences; OR (b) revisit `verifier-script-exists.sh`'s scope to only flag rows whose
+CURRENT `status == "PASS"` (the literal GTH-V15-03 hazard — an unbacked PASS — rather than an
+honestly-WAIVED/NOT-VERIFIED row admitting its own incompleteness), which would exempt these 5
+catalog-first placeholders while still catching the real hazard (a stale PASS whose verifier later
+vanished). (b) is a design change to the row's committed `expected.asserts`/
+`claim_vs_assertion_audit` and needs the row owner's sign-off, not a silent implementation
+narrowing — 123-06 deliberately did not apply it unilaterally. Until either lands, this phase's
+verifier-subagent grading should treat `structure/verifier-script-exists`'s current FAIL (5
+violations, all cited above, all pre-existing and independently tracked) as a KNOWN, filed,
+non-regressing finding, not a new defect introduced by 123-06.
+
+**STATUS:** OPEN

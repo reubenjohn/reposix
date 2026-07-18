@@ -1338,7 +1338,7 @@
       "dimension": "structure",
       "kind": "mechanical",
       "minted_at": "2026-07-18T10:58:08Z",
-      "comment": "P123/SC4 (DRAIN-06, cites GTH-V15-03) — a row backed by a missing or non-executable verifier.script is a framework-integrity hole -- a false PASS could ride on a verifier that can't run. Scans every catalog row (excluding *-allowlist.json and the docs-alignment dimension, which has no per-row verifier.script field) and asserts every declared script exists AND is executable. NOT tagged pre-commit yet -- this row's own verifier script does not exist until 123-06 lands in wave 5; a P1 NOT-VERIFIED row tagged pre-commit here would self-block every commit through wave 5. 123-06 adds pre-commit to this row's cadences once its verifier script exists on disk.",
+      "comment": "P123/SC4 (DRAIN-06, cites GTH-V15-03) — a row backed by a missing or non-executable verifier.script is a framework-integrity hole -- a false PASS could ride on a verifier that can't run. Scans every catalog row (excluding *-allowlist.json and the docs-alignment dimension, which has no per-row verifier.script field) and asserts every declared script exists AND is executable. 123-06 authored quality/gates/structure/verifier-script-exists.sh (+ selftest) and ran it for real: fixed 32 pre-existing missing-chmod-+x violations directly, but 5 more (cross-platform/{windows-2022,macos-14}-rehearsal, docs-build/animation-renders, docs-repro/benchmark-claim/{8ms-cached-read,89.1-percent-token-reduction}) are pre-existing catalog-first stubs already tracked elsewhere (P90/P97/117-07-W5/GOOD-TO-HAVES-04) and out of this plan's eager-fix budget -- filed to SURPRISES-INTAKE 2026-07-18 rather than faking stub verifiers to force green. Because those 5 keep this row honestly FAIL (not PASS) today, 123-06 did NOT promote cadences to add pre-commit (a dirty pre-commit-tagged P1 row would self-block every future commit) -- still [pre-push, pre-pr] as minted. Promote to pre-commit once either the 5 deferred verifiers are built OR the row's scope is deliberately narrowed to status==PASS rows only (owner decision, see the filed entry).",
       "sources": [
         "quality/catalogs/*.json (every row's verifier.script field)",
         ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
@@ -1360,8 +1360,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/verifier-script-exists.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "FAIL",
+      "last_verified": "2026-07-18T12:53:39Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: the printed violation names the offending catalog+row id+path; missing file -> author quality/gates/<dim>/<name>.sh; non-executable -> chmod +x <path>; null/absent verifier.script (outside docs-alignment) -> add the field pointing at a real script.",
