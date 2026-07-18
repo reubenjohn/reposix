@@ -192,20 +192,29 @@ and nothing structurally caught it. It scans every `quality/catalogs/*.json` row
 (real `python3 -c` JSON parsing, not grep), EXCLUDING files named `*-allowlist.json`
 (a different, non-row schema) and any catalog whose wrapper `dimension ==
 "docs-alignment"` (that dimension's rows carry no `verifier.script` field at all — see
-"Docs-alignment dimension" below). Two violation classes, each printed on its own line
+"Docs-alignment dimension" below). Three violation classes, each printed on its own line
 with catalog + row id + path + a concrete fix: MISSING-FILE (the path doesn't resolve to
-a file), NON-EXECUTABLE (the file exists but lacks `+x`).
+a file), NON-EXECUTABLE (the file exists but lacks `+x`), and UNBACKED-PASS (a `status:
+PASS` row that declares NO `verifier.script` at all — a graded green with no verifier that
+could have produced it).
 
 **Scope = GRADED OUTCOMES only** (refined 2026-07-18, P123 close, coordinator design call
 per DP-5 — see `claim_vs_assertion_audit`). The check fires ONLY for a row whose `status`
 asserts a run result — `{PASS, FAIL, PARTIAL}` (the canonical graded-outcome triple,
-mirror of `run.py`'s real-grade set). A row that asserts **no** verifier-backed result is
-EXEMPT: status `WAIVED`/`NOT-VERIFIED` (the `STALE` display-flavor persists as
-`NOT-VERIFIED`), or `verifier.script: null`. **Why:** GTH-V15-03's hazard is an *unbacked
-graded claim* (a false-green riding on a verifier that can't run); a WAIVED/NOT-VERIFIED/
-null-script row makes no verified claim, so a missing verifier there is not a false-green
-(and a null-script graded row is separately flipped to `NOT-VERIFIED` by the runner's
-honesty machinery at grade time — this static gate does not double-police that path). This
+mirror of `run.py`'s real-grade set). A row that asserts **no green** is EXEMPT: status
+`WAIVED`/`NOT-VERIFIED` (the `STALE` display-flavor persists as `NOT-VERIFIED`), OR a
+`FAIL`/`PARTIAL` row with `verifier.script: null` (it asserts no green, so a missing
+verifier is not a false-green). **But a `status: PASS` with `verifier.script: null` is
+FLAGGED** (UNBACKED-PASS, refined 2026-07-18 P123-close code review): the row asserts a
+green with no verifier that could ever have produced it — exactly GTH-V15-03. This gate
+flags it DIRECTLY and cadence-agnostically; do **not** rely on the runner's NOT-VERIFIED
+flip as the backstop, because `run.py` only grades rows in-scope for the RUNNING cadence,
+so a `PASS`+null-script row scoped to (e.g.) `weekly` is never re-graded at pre/post-push
+and its unbacked PASS rides green. The runner flip is a SECONDARY, cadence-scoped defense,
+never a substitute for this static check. **Why:** GTH-V15-03's hazard is an *unbacked
+graded claim* (a false-green riding on a verifier that can't run); WAIVED/NOT-VERIFIED and
+FAIL/PARTIAL null-script rows make no green claim, so a missing verifier there is not a
+false-green. This
 refinement (path (b) of the filed intake) resolved the 5 pre-existing catalog-first stubs
 (2 WAIVED cross-platform rehearsals, `docs-build/animation-renders`, 2
 `docs-repro/benchmark-claim/*`) — all now EXEMPT because none claims a graded outcome — so
@@ -216,9 +225,10 @@ independently tracked (P97 / 117-07 W5 / GOOD-TO-HAVES-04); building them is now
 additive.
 
 Self-test (full truth table — PASS/FAIL/PARTIAL + missing/non-exec → violation, each
-individually named; WAIVED/NOT-VERIFIED + missing → exempt; null-script → exempt;
-all-good → pass): `bash quality/gates/structure/verifier-script-exists.selftest.sh`
-(throwaway `/tmp` fixture repo — never the shared repo, never the real catalogs).
+individually named; WAIVED/NOT-VERIFIED + missing → exempt; PASS + null-script → violation
+(UNBACKED-PASS); FAIL/PARTIAL + null-script → exempt; all-good → pass): `bash
+quality/gates/structure/verifier-script-exists.selftest.sh` (throwaway `/tmp` fixture repo
+— never the shared repo, never the real catalogs).
 
 ## Docs-alignment dimension
 

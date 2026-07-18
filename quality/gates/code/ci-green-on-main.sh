@@ -84,6 +84,20 @@ json_array() {
   python3 -c 'import json, sys; print(json.dumps(sys.argv[1:]))' "$@"
 }
 
+json_object() {
+  # json_object <k1> <v1> <k2> <v2> ... -> a JSON object {"k1":"v1", ...}, {} for
+  # zero args. Serialized via json.dumps (mirrors json_array) so a per-workflow
+  # verdict value derived from a TAINTED `gh` API byte (the run conclusion string)
+  # is properly ESCAPED, never hand-interpolated into a JSON string literal
+  # (tainted-by-default; a hand-built quote/backslash in that byte would otherwise
+  # produce malformed or injected JSON in the artifact).
+  if [ "$#" -eq 0 ]; then
+    printf '{}'
+    return
+  fi
+  python3 -c 'import json, sys; a = sys.argv[1:]; print(json.dumps(dict(zip(a[0::2], a[1::2]))))' "$@"
+}
+
 if ! command -v gh >/dev/null 2>&1; then
   emit 75 '[]' '["gh CLI not installed -- cannot determine main CI state (run: gh auth login on a machine with gh)"]' '{}'
   echo "NOT-VERIFIED: gh CLI not installed" >&2
@@ -132,21 +146,21 @@ done
 UNKNOWABLE=()
 RED=()
 GREEN_MSGS=()
-WF_JSON_PARTS=()
+WF_KV=()   # flat [wf1, verdict1, wf2, verdict2, ...] -> json_object serializes it
 for wf in "${WORKFLOWS[@]}"; do
   v="${VERDICTS[$wf]}"
   case "$v" in
     success)
       GREEN_MSGS+=("latest $wf run on $BRANCH concluded success")
-      WF_JSON_PARTS+=("\"$wf\": \"success\"")
+      WF_KV+=("$wf" "success")
       ;;
     gh-error)
       UNKNOWABLE+=("$wf (gh run list failed -- unauthenticated or network error)")
-      WF_JSON_PARTS+=("\"$wf\": \"gh-error\"")
+      WF_KV+=("$wf" "gh-error")
       ;;
     in-progress)
       UNKNOWABLE+=("$wf (latest run still in-progress -- CI not concluded yet)")
-      WF_JSON_PARTS+=("\"$wf\": \"in-progress\"")
+      WF_KV+=("$wf" "in-progress")
       ;;
     none)
       # "No run for this commit/branch" -- e.g. release-plz.yml has never
@@ -155,21 +169,26 @@ for wf in "${WORKFLOWS[@]}"; do
       # default) and must NOT hang (gh already returned; nothing to poll) --
       # it is an honest NOT-VERIFIED naming which workflow was unknowable.
       UNKNOWABLE+=("$wf (no run found on $BRANCH -- cannot determine CI state)")
-      WF_JSON_PARTS+=("\"$wf\": \"none\"")
+      WF_KV+=("$wf" "none")
       ;;
     failure:*)
       concl="${v#failure:}"
       RED+=("$wf (concluded '$concl' -- not success)")
-      WF_JSON_PARTS+=("\"$wf\": \"failure:$concl\"")
+      # `failure:$concl` embeds a TAINTED gh byte -- json_object escapes it.
+      WF_KV+=("$wf" "failure:$concl")
       ;;
     *)
       UNKNOWABLE+=("$wf (unexpected verdict parse: '$v')")
-      WF_JSON_PARTS+=("\"$wf\": \"unknown:$v\"")
+      # `unknown:$v` likewise embeds the tainted verdict byte -- serialized, not
+      # hand-interpolated.
+      WF_KV+=("$wf" "unknown:$v")
       ;;
   esac
 done
 
-WF_JSON="{$(IFS=,; echo "${WF_JSON_PARTS[*]}")}"
+# json_object serializes the per-workflow verdict map so any tainted gh-derived
+# conclusion byte is escaped, never hand-interpolated into a JSON literal.
+WF_JSON="$(json_object "${WF_KV[@]}")"
 
 if [ "${#UNKNOWABLE[@]}" -gt 0 ]; then
   FAILED_JSON="$(json_array "${UNKNOWABLE[@]}")"

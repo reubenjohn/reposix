@@ -16,18 +16,24 @@
 # integrity hazard GTH-V15-03 names (a false-green riding on a verifier that
 # cannot run).
 #
-# EXEMPT -- a row that asserts NO verifier-backed result, so a missing/absent
+# EXEMPT -- a row that asserts NO verifier-backed GREEN, so a missing/absent
 # verifier is NOT a false-green:
 #   - status WAIVED or NOT-VERIFIED (and the STALE display-flavor, which
 #     persists as NOT-VERIFIED) -- explicitly "waived / not run".
-#   - verifier.script null/absent -- declares no verifier at all. (A graded row
-#     that lacks a runnable verifier is separately flipped to NOT-VERIFIED by
-#     the runner's honesty machinery at grade time; this static gate does not
-#     double-police that path, and a null-script row asserts no result to back.)
-# This graded-outcome scope matches GTH-V15-03's intent exactly: it catches the
-# unbacked GRADED claim while exempting catalog-first placeholders that honestly
-# admit their own incompleteness (WAIVED cross-platform rehearsals, NOT-VERIFIED
-# animation/benchmark stubs).
+#   - verifier.script null/absent AND status FAIL or PARTIAL -- the row declares
+#     no verifier AND asserts no green, so there is no unbacked-PASS hazard.
+#
+# FLAGGED even with a null verifier.script (the residual hole this close plugs):
+#   - status PASS + verifier.script null/absent -- an UNBACKED PASS: a green with
+#     NO verifier that could ever have produced it, exactly the GTH-V15-03 hazard.
+#     Flagged DIRECTLY here, cadence-agnostically. The runner's NOT-VERIFIED flip
+#     is NOT a reliable backstop -- run.py grades only rows in-scope for the
+#     RUNNING cadence, so a PASS+null-script row scoped to (e.g.) `weekly` is never
+#     re-graded at pre/post-push and rides green; the flip is a SECONDARY defense.
+# This scope matches GTH-V15-03 exactly: it catches the unbacked GRADED claim
+# (incl. a PASS with no verifier) while exempting catalog-first placeholders that
+# honestly admit their incompleteness (WAIVED rehearsals, NOT-VERIFIED stubs, and
+# FAIL/PARTIAL null-script rows that assert no green).
 #
 # SKIPPED CATALOGS (independent of row status):
 #   - files whose name ends in `-allowlist.json` (a different, non-row schema
@@ -37,10 +43,12 @@
 #     uses a DIFFERENT per-row schema -- last_verdict/last_extracted, no
 #     verifier.script field at all; quality/catalogs/README.md documents this)
 #
-# For every IN-SCOPE row, two violation classes (each printed on its own line,
+# For every IN-SCOPE row, three violation classes (each printed on its own line,
 # catalog + row id + path + a concrete fix):
 #   1. MISSING-FILE   -- verifier.script does not resolve to a file on disk
 #   2. NON-EXECUTABLE -- the resolved file exists but lacks the +x bit
+#   3. UNBACKED-PASS  -- status PASS but verifier.script is null/absent (a graded
+#                        green with no verifier that could have produced it)
 #
 # Real JSON parsing (python3 -c), not grep -- catalog rows are structured
 # data and a regex scan over JSON risks both false positives (a "script"
@@ -75,8 +83,9 @@ GRADED_OUTCOME = ("PASS", "FAIL", "PARTIAL")
 
 violations = []       # list of pre-formatted "cat::row::path::reason::fix" lines
 rows_seen = 0
-rows_in_scope = 0     # graded-outcome rows WITH a declared verifier.script
-rows_exempt = 0       # non-graded status OR null verifier.script
+rows_in_scope = 0     # graded-outcome rows that are ENFORCED (declared script,
+                      # or PASS+null-script -- the unbacked-PASS violation)
+rows_exempt = 0       # non-graded status, OR FAIL/PARTIAL with a null verifier.script
 catalogs_checked = 0
 
 for cat_path in sorted(glob.glob("quality/catalogs/*.json")):
@@ -101,11 +110,23 @@ for cat_path in sorted(glob.glob("quality/catalogs/*.json")):
             rows_exempt += 1
             continue
 
-        # EXEMPTION 2: the row declares no verifier at all (null/absent script).
-        # It asserts no verifier-backed result; the runner separately flips a
-        # graded row lacking a runnable verifier to NOT-VERIFIED at grade time.
+        # NULL-SCRIPT split (the row declares no verifier at all):
+        #   - PASS + null script is an UNBACKED PASS (a green with no verifier that
+        #     could have produced it) -> VIOLATION, flagged directly here. The
+        #     runner's NOT-VERIFIED flip is cadence-scoped, so it is not a reliable
+        #     backstop (see header); this cadence-agnostic gate must catch it.
+        #   - FAIL/PARTIAL + null script asserts NO green -> EXEMPT.
         if not script:
-            rows_exempt += 1
+            if status == "PASS":
+                rows_in_scope += 1
+                violations.append(
+                    f"{cat_path}::{rid}::(null)::"
+                    "status:PASS but declares no verifier.script -- an unbacked PASS::"
+                    "set a real verifier.script that produces this PASS, or change "
+                    "status to WAIVED/NOT-VERIFIED with a justification"
+                )
+            else:
+                rows_exempt += 1
             continue
 
         # IN SCOPE: a graded-outcome row with a declared verifier.script -- that
@@ -130,12 +151,14 @@ asserts = [
     "non-null verifier.script, in every quality/catalogs/*.json (excluding "
     "*-allowlist.json and docs-alignment), resolves to a file that exists on disk",
     "every such in-scope verifier.script carries the executable bit (os.access(path, os.X_OK))",
-    "a row that asserts NO graded outcome is EXEMPT -- status WAIVED/NOT-VERIFIED "
-    "(the STALE flavor persists as NOT-VERIFIED), or verifier.script null/absent -- "
-    "because it makes no verifier-backed claim, so a missing/absent verifier there "
-    "is not a false-green",
+    "a PASS row with a null/absent verifier.script is FLAGGED as an unbacked PASS "
+    "(GTH-V15-03) -- there is no verifier that could have produced that green, and "
+    "the runner's cadence-scoped NOT-VERIFIED flip is not a reliable backstop",
+    "a row that asserts NO green is EXEMPT -- status WAIVED/NOT-VERIFIED (the STALE "
+    "flavor persists as NOT-VERIFIED), or a FAIL/PARTIAL row with a null verifier.script "
+    "(it asserts no green, so a missing verifier there is not a false-green)",
     "a violation prints the offending catalog + row id + path + a concrete fix "
-    "(chmod +x, or author/correct the path)",
+    "(chmod +x, author/correct the path, or set a real verifier.script / re-status)",
 ]
 
 ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -165,8 +188,8 @@ if violations:
 print(
     f"PASS: verifier-script-exists — {rows_in_scope} in-scope graded-outcome rows "
     f"across {catalogs_checked} catalogs ({rows_seen} rows seen, {rows_exempt} exempt: "
-    f"WAIVED/NOT-VERIFIED or null verifier.script), all in-scope verifier.script "
-    f"paths exist and are executable"
+    f"WAIVED/NOT-VERIFIED, or FAIL/PARTIAL with a null verifier.script), all in-scope "
+    f"rows carry a real +x verifier and no PASS is unbacked"
 )
 artifact = {
     "ts": ts,

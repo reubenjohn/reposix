@@ -3,29 +3,31 @@
 #
 # Self-test proving verifier-script-exists.sh's GRADED-OUTCOME scope (refined
 # 2026-07-18, P123 close) as a FULL truth table. Mirrors file-size-limits.
-# selftest.sh's shape: a throwaway /tmp git repo (never the shared repo --
-# leaf isolation), a fixture catalog seeded under quality/catalogs/, the gate
-# invoked via its real absolute path against the fixture repo's own toplevel.
-# The gate itself does `cd "$(git rev-parse --show-toplevel)"`, so pointing it
-# at a throwaway git repo scopes its `quality/catalogs/*.json` scan to ONLY
-# that repo's fixture catalog -- the real repo's catalogs are never touched.
+# selftest.sh's shape: a throwaway /tmp git repo (never the shared repo -- leaf
+# isolation), a fixture catalog under quality/catalogs/, the gate invoked via its
+# real absolute path against the fixture repo's toplevel. The gate does
+# `cd "$(git rev-parse --show-toplevel)"`, so pointing it at the throwaway repo
+# scopes its catalog scan to ONLY that fixture -- the real catalogs are untouched.
 #
 # TRUTH TABLE (every assertion runs):
-#   status  | verifier.script      | verdict
-#   --------+----------------------+-----------------------------------------
-#   PASS    | missing file         | VIOLATION (graded outcome, broken script)
-#   FAIL    | missing file         | VIOLATION (graded outcome, broken script)
-#   PARTIAL | missing file         | VIOLATION (graded outcome, broken script)
-#   PASS    | present, non-exec    | VIOLATION (graded outcome, no +x bit)
-#   WAIVED  | missing file         | EXEMPT    (asserts no graded outcome)
-#   NOT-VER | missing file         | EXEMPT    (asserts no graded outcome)
-#   PASS    | null                 | EXEMPT    (declares no verifier at all)
-#   PASS    | present, +x          | in-scope PASS (all-good)
+#   status  | verifier.script   | verdict
+#   --------+-------------------+--------------------------------------
+#   PASS    | missing file      | VIOLATION (broken script)
+#   FAIL    | missing file      | VIOLATION (broken script)
+#   PARTIAL | missing file      | VIOLATION (broken script)
+#   PASS    | present, non-exec | VIOLATION (no +x bit)
+#   PASS    | null              | VIOLATION (unbacked PASS -- no verifier)
+#   WAIVED  | missing file      | EXEMPT    (asserts no green)
+#   NOT-VER | missing file      | EXEMPT    (asserts no green)
+#   FAIL    | null              | EXEMPT    (asserts no green; no unbacked PASS)
+#   PASS    | present, +x       | in-scope PASS (all-good)
 #
-# Cases:
-#   (a) all-good fixture (single PASS row, real +x script) -> exit 0
-#   (b) combined fixture (the full table above) -> exit 1 with EXACTLY the 4
-#       graded-outcome broken-script rows named, and every exempt row absent.
+# PASS+null-script is the P123 residual-hole close (was EXEMPT, now VIOLATION --
+# an unbacked PASS; rationale in the gate header). FAIL/PARTIAL+null stay EXEMPT.
+#
+# Cases: (a) all-good fixture (single PASS +x row) -> exit 0; (b) combined
+# fixture (the full table above) -> exit 1 with EXACTLY the 5 violation rows named
+# (4 broken-script + 1 unbacked-PASS) and every exempt row absent.
 #
 # Run: bash quality/gates/structure/verifier-script-exists.selftest.sh
 # Exit 0 = all assertions pass; exit 1 = a regression.
@@ -119,7 +121,8 @@ EOF
 chmod -x "$WORK_COMBINED/quality/gates/structure/fixture-nonexec.sh"
 
 # All *-MISSING.sh scripts are deliberately never created (missing-file class).
-# The null-script row's verifier.script is explicitly null.
+# The null-script rows' verifier.script is explicitly null (PASS -> VIOLATION,
+# FAIL -> EXEMPT).
 
 cat > "$WORK_COMBINED/quality/catalogs/fixture.json" <<'EOF'
 {
@@ -174,6 +177,12 @@ cat > "$WORK_COMBINED/quality/catalogs/fixture.json" <<'EOF'
       "dimension": "structure",
       "status": "PASS",
       "verifier": {"script": null, "args": [], "timeout_s": 30, "container": null}
+    },
+    {
+      "id": "structure/fixture-fail-nullscript",
+      "dimension": "structure",
+      "status": "FAIL",
+      "verifier": {"script": null, "args": [], "timeout_s": 30, "container": null}
     }
   ]
 }
@@ -182,19 +191,21 @@ git -C "$WORK_COMBINED" add -A && git -C "$WORK_COMBINED" commit -qm b
 
 set +e; run "$WORK_COMBINED"; rc=$?; set -e
 check "exit code" rc "$rc" 1
-# --- graded-outcome rows with a broken script: MUST be named (violations) ---
+# --- broken-script rows: MUST be named (violations) ---
 check_contains "PASS+missing named"    "$WORK_COMBINED/.err" "structure/fixture-pass-missing::quality/gates/structure/fixture-pass-MISSING.sh::file does not exist"
 check_contains "FAIL+missing named"    "$WORK_COMBINED/.err" "structure/fixture-fail-missing::quality/gates/structure/fixture-fail-MISSING.sh::file does not exist"
 check_contains "PARTIAL+missing named" "$WORK_COMBINED/.err" "structure/fixture-partial-missing::quality/gates/structure/fixture-partial-MISSING.sh::file does not exist"
 check_contains "PASS+non-exec named"   "$WORK_COMBINED/.err" "structure/fixture-pass-nonexec::quality/gates/structure/fixture-nonexec.sh::not executable::chmod +x"
-# --- rows that assert no graded outcome: MUST be EXEMPT (never named) ---
+# --- PASS+null-script: residual-hole close -- MUST be FLAGGED (unbacked PASS) ---
+check_contains "PASS+null-script flagged" "$WORK_COMBINED/.err" "structure/fixture-pass-nullscript::(null)::status:PASS but declares no verifier.script -- an unbacked PASS"
+# --- rows that assert no green: MUST be EXEMPT (never named) ---
 check_not_contains "WAIVED+missing exempt"       "$WORK_COMBINED/.err" "structure/fixture-waived-missing::"
 check_not_contains "NOT-VERIFIED+missing exempt" "$WORK_COMBINED/.err" "structure/fixture-notverified-missing::"
-check_not_contains "PASS+null-script exempt"     "$WORK_COMBINED/.err" "structure/fixture-pass-nullscript::"
+check_not_contains "FAIL+null-script exempt"     "$WORK_COMBINED/.err" "structure/fixture-fail-nullscript::"
 check_not_contains "good row not named"          "$WORK_COMBINED/.err" "structure/fixture-pass-good::"
-# --- exactly 4 violations, 3 exempt, 8 rows seen ---
-check_contains "violation count header (4)" "$WORK_COMBINED/.err" "FAIL (structure/verifier-script-exists): 4 violation(s)"
-check_contains "exempt count in header (3)" "$WORK_COMBINED/.err" "8 rows seen, 3 exempt"
+# --- exactly 5 violations (4 broken-script + 1 unbacked-PASS), 3 exempt, 9 seen ---
+check_contains "violation count header (5)" "$WORK_COMBINED/.err" "FAIL (structure/verifier-script-exists): 5 violation(s)"
+check_contains "exempt count in header (3)" "$WORK_COMBINED/.err" "9 rows seen, 3 exempt"
 echo "  --- observed stderr ---"; sed 's/^/  /' "$WORK_COMBINED/.err"
 
 echo

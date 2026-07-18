@@ -180,6 +180,32 @@ class TestEnvSelfSourcing(unittest.TestCase):
                 self.assertEqual(os.environ.get("BAZ"), "qux",
                                  "a key after a comment/blank line was not loaded")
 
+    def test_export_prefixed_line_loads_bare_key(self):
+        # Test: a `.env` line written with shell export syntax
+        # (`export KEY=value`, as scripts/preflight-real-backends.sh honors when
+        # it source-includes .env) must load KEY, not "export KEY" — else run.py
+        # skips the row to NOT-VERIFIED while preflight sees the cred, the exact
+        # false-green-preflight divergence SC1/DRAIN-03 closes. A bare
+        # `KEY=value` line must still load too, and `exportFOO=x` (no whitespace
+        # after `export`) must be left as the literal key `exportFOO`.
+        body = "export GITHUB_TOKEN=ghp_x\nBARE_KEY=plain\nexportFOO=y\n"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".env").write_text(body, encoding="utf-8")
+            with mock.patch.dict(os.environ, {}, clear=True):
+                _env_load.load_dotenv_if_present(root)
+                self.assertEqual(os.environ.get("GITHUB_TOKEN"), "ghp_x",
+                                 "`export KEY=value` loaded the wrong key "
+                                 "(export prefix not stripped)")
+                self.assertNotIn("export GITHUB_TOKEN", os.environ,
+                                 "the literal 'export KEY' leaked in as a key")
+                self.assertEqual(os.environ.get("BARE_KEY"), "plain",
+                                 "a bare KEY=value line stopped loading after the "
+                                 "export-strip change")
+                self.assertEqual(os.environ.get("exportFOO"), "y",
+                                 "`exportFOO=` (no space) must stay key 'exportFOO' "
+                                 "— `export` is a whole-token prefix only")
+
     def test_already_set_env_wins(self):
         # Test 2: an explicitly-set var must NOT be clobbered by .env.
         with tempfile.TemporaryDirectory() as td:

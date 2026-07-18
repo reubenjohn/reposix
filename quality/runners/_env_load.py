@@ -11,11 +11,23 @@ preflight independently reported the backends reachable. The two together gave a
 false impression of full coverage.
 
 Precedence: EXISTING-ENV-WINS, per key (os.environ.setdefault). An operator- or
-CI-exported credential is NEVER overridden by a stale ./.env value. This is a
-strict per-key superset of scripts/preflight-real-backends.sh's file-level
-`[ -z "${CRED:-}" ]` guard (which only checks a few cred vars before sourcing at
-all); per-key setdefault is the safest reading of "explicit shell env always
-wins" and matches the backing row's expected asserts + the non-clobber unit test.
+CI-exported credential is NEVER overridden by a stale ./.env value. Its
+NON-CLOBBER GUARD is a strict per-key superset of
+scripts/preflight-real-backends.sh's file-level `[ -z "${CRED:-}" ]` guard (which
+protects only a few named cred vars before sourcing at all): per-key setdefault
+protects EVERY key, not just the cred handful. It is the safest reading of
+"explicit shell env always wins" and matches the backing row's expected asserts +
+the non-clobber unit test.
+
+Parsing scope (deliberately a MINIMAL subset of shell `source`, NOT a superset of
+it): `KEY=value` and `export KEY=value` lines (a leading `export ` token is
+stripped so a cred written with shell export syntax loads KEY, not "export KEY"),
+`#`-comments, blank lines, and surrounding matched single/double quotes on the
+value. It does NOT interpret shell variable expansion, command substitution, or
+multi-line values. For every credential line preflight can `source`, this loads
+the SAME key — so neither path silently loads a cred the other misses (closing the
+false-green-preflight divergence) — but it remains a subset of full shell-source
+semantics, never a superset of it.
 
 OP-1 fail-closed is UNCHANGED: sourcing .env only makes "creds in .env" effective
 — a real backend is still hit only when creds are present AND
@@ -59,6 +71,15 @@ def load_dotenv_if_present(repo_root: Path) -> None:
             continue  # malformed — skip, not fatal
         key, _, value = line.partition("=")
         key = key.strip()
+        # Strip a leading `export ` token so a line written with shell export
+        # syntax (`export KEY=value`) loads KEY, not "export KEY". Without this,
+        # scripts/preflight-real-backends.sh (which source-includes .env and so
+        # honors `export`) would see the cred while run.py loaded the wrong key
+        # and skipped the row to NOT-VERIFIED — the exact false-green-preflight
+        # divergence SC1/DRAIN-03 closes. `export` must be a whole token (the
+        # char after it is whitespace); `exportFOO=…` is left as key `exportFOO`.
+        if key.startswith("export") and key[6:7].isspace():
+            key = key[6:].strip()
         if not key:
             continue
         value = value.strip()
