@@ -33,6 +33,12 @@ Full doctrine: `.planning/ORCHESTRATION.md`. Project-specific rules:
   command from a fresh top-level session.
 - **Milestone-close 9th probe (RBF-FW-03) is non-skippable.** Any milestone-close missing
   `python3 quality/runners/run.py --cadence pre-release-real-backend` exit 0 grades RED.
+  As of P123/DRAIN-03, run.py **self-sources `./.env`** when present (present-only,
+  non-clobbering; via `quality/runners/_env_load.py`), so this cadence exercises
+  creds-in-`.env` without a manual `set -a; . ./.env; set +a` prefix — closing the
+  silent-skip false-green (preflight sourced `.env` but the runner did not). The OP-1
+  egress gate is unchanged: a real backend is still hit only when creds are present AND
+  `REPOSIX_ALLOWED_ORIGINS` is non-default.
   It runs the vision litmus against the sanctioned real backend (TokenWorld); the catalog
   row `agent-ux/milestone-close-vision-litmus-real-backend` carries `blast_radius: P0` and
   NEVER carries a `waiver`. Verifier: `quality/gates/agent-ux/milestone-close-vision-litmus.sh`;

@@ -268,6 +268,17 @@ cargo test -p reposix-jira --features live -- --ignored
 cargo test -p reposix-cli --test agent_flow_real -- --ignored
 ```
 
+> **Milestone-close cadence self-sources `.env`.** `python3 quality/runners/run.py
+> --cadence pre-release-real-backend` **self-sources `./.env`** when present
+> (present-only, non-clobbering; `quality/runners/_env_load.py`, P123/DRAIN-03), so a
+> manual `set -a; . ./.env; set +a` prefix is no longer required — the cadence exercises
+> creds-in-`.env` instead of silently skipping every real-backend row to NOT-VERIFIED
+> (the earlier false-green where `preflight-real-backends.sh` sourced `.env` but the
+> runner did not). OP-1 is unchanged: a real backend is still hit only when creds are
+> present AND `REPOSIX_ALLOWED_ORIGINS` is non-default. The `cargo test … --ignored`
+> blocks above do **not** go through the runner, so they still need their own `export`s
+> or a pre-sourced shell — only the `run.py` cadence self-sources.
+
 Phase 36 wires three CI integration jobs
 (`integration-contract-confluence-v09`, `-github-v09`, `-jira-v09`) that
 decrypt the relevant secret pack and run these test commands on every
