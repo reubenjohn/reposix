@@ -164,6 +164,13 @@ User-facing index: `docs/reference/error-codes.md`; always-current runtime
 enumerator: `reposix explain --list`. (`codes.rs` is a deliberate oversized single
 source of truth — see GOOD-TO-HAVES GTH-V15-68.)
 
+**RPX-0508 (P122 W2 / DRAIN-08)** covers the helper's NON-absence import-parent-resolve
+failure: `main.rs::resolve_import_parent` now returns `anyhow::Result<Option<ImportParent>>`
+and distinguishes a genuine ref-absent first fetch (`Ok(None)` → parentless seed) from a
+loud non-absence `git rev-parse` fault (spawn failure / non-1 non-zero exit / signal /
+anomalous exit-0-empty-stdout → `Err` coded RPX-0508 via `import_parent_resolve_detail`,
+surfaced through `fail_push`), instead of silently degrading to the parentless overlay.
+
 ### `errors.rs` shape helpers + scan scope
 
 `reposix-cli/src/errors.rs` wraps `teach()` in the ~4 recurring failure shapes shared

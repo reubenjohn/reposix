@@ -115,6 +115,7 @@ for the extended explanation of any row.
 | `RPX-0505` | push rejected — the record changed on the backend since your last fetch |
 | `RPX-0506` | the reposix cache cannot serve an unfiltered fetch |
 | `RPX-0507` | fetch rejected — the backend was unreachable while listing records to import |
+| `RPX-0508` | fetch/import could not resolve the client's tracking tip |
 | `RPX-0601` | malformed reposix bus URL |
 | `RPX-0602` | `git-remote-reposix` was invoked with too few arguments |
 | `RPX-0603` | the reposix bus mirror is unreachable or misconfigured |
