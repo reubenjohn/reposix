@@ -144,14 +144,14 @@ fn refuse_existing_repo_root(path: &Path) -> Result<()> {
         // `git init` here creates a NEW tree — allowed.
         return Ok(());
     }
-    // teach-exempt: ok — CODED (RPX-0401) but HAND-ROLLED. The `[RPX-0401]` tag rides
-    // the first headline line and an `Explain: reposix explain RPX-0401` nudge trails
-    // the body — the SAME render shape `teach_coded` produces — while the bespoke
-    // 3-part body is kept verbatim (names the corruption shape, points at `reposix
-    // attach`, prints the /tmp-clone recovery). `teach-exempt` here means "do NOT
-    // reroute through the teach()/teach_coded builder", NOT "withhold the code tag":
-    // the code IS present, hand-emitted. Regression-guarded by
-    // `init_refuses_existing_repo_root` + `init_at_existing_repo_root_teaches_attach_and_recovery`.
+    // CODED (RPX-0401) but HAND-ROLLED. The `[RPX-0401]` tag rides the first headline
+    // line and an `Explain: reposix explain RPX-0401` nudge trails the body — the SAME
+    // render shape `teach_coded` produces — while the bespoke 3-part body is kept
+    // verbatim (names the corruption shape, points at `reposix attach`, prints the
+    // /tmp-clone recovery). The RPX-0401 code IS present, hand-emitted. Regression-
+    // guarded by `init_refuses_existing_repo_root` +
+    // `init_at_existing_repo_root_teaches_attach_and_recovery`.
+    // teach-exempt: ok — hand-rolled RPX-0401; do NOT reroute through teach()/teach_coded (marker hugs the bail! for teach_scan's 2-line window; P122-W2-01 fix-twice).
     bail!(
         "reposix init: refusing to initialize `{path}` — it is already a git repository root. [RPX-0401]\n\
          `reposix init` CREATES a fresh partial-clone working tree; re-initializing an existing \

@@ -19,9 +19,13 @@ block — single- or multi-line — before judging it. This closes the "reverse
 hole" where a teaching-less bail! split across lines evaded a line-oriented grep.
 
 A block PASSES iff ANY of:
-  (i)   it mentions `teach(` / `Teach::new` / one of the named shared helpers
-        (spec_parse_error | missing_env_var_error | cache_build_error |
-         missing_cache_db_error | malformed_bus_url_error | missing_env_error);
+  (i)   it mentions `teach(` / `teach_coded(` / `Teach::new` / one of the named
+        shared helpers (spec_parse_error | missing_env_var_error |
+        cache_build_error | missing_cache_db_error | malformed_bus_url_error |
+        missing_env_error). `teach_coded(` is the P121 coded sibling of `teach(`
+        (a `RPX-xxxx` tag + `Explain:` nudge on the same 3-part body); it is a
+        first-class teaching call, MIRRORING how `rpx_registry_check.py` treats
+        `teach_coded(` as a valid teaching emission;
   (ii)  it contains BOTH literal anchors `Fix:` and `Recovery:` in its own text;
   (iii) it is preceded (its own line, or within 2 comment/blank lines above) by a
         `// teach-exempt: ok` marker.
@@ -97,8 +101,13 @@ HELPER_SCOPE = [
 ]
 
 # A block PASSES if it routes through the builder or a named shared helper.
+# `teach(` and its P121 coded sibling `teach_coded(` are BOTH recognized via the
+# optional `(?:_coded)?` group — mirroring `rpx_registry_check.py`'s
+# `\bteach_coded\s*\(` matcher so the two sibling gates agree that a `teach_coded(`
+# site is a teaching call (P121 wired ~30 CLI+helper error paths onto `teach_coded`;
+# without this the scanner reads every one as teaching-LESS — the P122-W2-01 gap).
 _PASS_CALL = re.compile(
-    r"\bteach\s*\(|Teach::new|"
+    r"\bteach(?:_coded)?\s*\(|Teach::new|"
     r"\b(?:spec_parse_error|missing_env_var_error|cache_build_error|"
     r"missing_cache_db_error|malformed_bus_url_error|missing_env_error)\b"
 )
@@ -358,12 +367,31 @@ fn c() -> anyhow::Result<()> {
 }
 '''
 
+# P122-W2-01 regression: a `teach_coded(...)` site is a teaching call and PASSES,
+# exactly like the `teach(...)` sibling — the scanner must not read the P121 coded
+# idiom as teaching-LESS.
+_FIX_TEACH_CODED = '''
+fn e() -> anyhow::Result<()> {
+    bail!(
+        "{}",
+        reposix_core::errmsg::teach_coded(
+            ids::INIT_NESTED_IN_REPO,
+            "headline",
+            "do the thing",
+            "or try the other thing",
+            &["copy-paste recovery"],
+        )
+    )
+}
+'''
+
 
 def self_test() -> int:
     cases = [
         ("teaching multi-line bail! PASSES", _FIX_TEACHING, 0),
         ("teaching-less multi-line bail! RAISES", _FIX_TEACHINGLESS, 1),
         ("marked bail! PASSES", _FIX_MARKED, 0),
+        ("teach_coded(...) bail! PASSES (P122-W2-01)", _FIX_TEACH_CODED, 0),
     ]
     failures = 0
     for name, fixture, expected_raises in cases:
