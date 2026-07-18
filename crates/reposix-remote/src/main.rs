@@ -577,16 +577,14 @@ where
         // teach-exempt: ok — this thin anyhow! only surfaces that helper's teaching (teach_scan can't resolve the helper indirection — a documented residual — so the bar is met there, not inline).
         Err(anyhow::anyhow!("{}", import_parent_resolve_detail(&what)))
     };
-    let commit = match rev_parse(REF)? {
-        Some(c) => c,
-        None => return Ok(None),
+    let Some(commit) = rev_parse(REF)? else {
+        return Ok(None);
     };
     // `<ref>^{tree}` peels the commit to its tree oid; if the commit resolved this
     // should too. A NON-absence failure on the peel errors loudly via `?`; only a
     // benign exit-1 absence falls back to the parentless seed (stay defensive).
-    let tree = match rev_parse(&format!("{REF}^{{tree}}"))? {
-        Some(t) => t,
-        None => return Ok(None),
+    let Some(tree) = rev_parse(&format!("{REF}^{{tree}}"))? else {
+        return Ok(None);
     };
     Ok(Some(ImportParent { commit, tree }))
 }
