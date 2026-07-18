@@ -211,14 +211,13 @@ fn canonicalize_lexical_existing(path: &Path) -> PathBuf {
     let mut result = canon_prefix;
     for comp in &comps[tail_start..] {
         match comp {
-            Component::CurDir => {}
             Component::ParentDir => {
                 result.pop();
             }
             Component::Normal(seg) => result.push(seg),
-            // An absolute reset mid-tail cannot occur for a tail peeled off an
-            // already-absolute path; ignore defensively.
-            Component::RootDir | Component::Prefix(_) => {}
+            // `.` is a no-op; a RootDir/Prefix absolute-reset cannot occur mid-tail
+            // for a tail peeled off an already-absolute path — ignore all defensively.
+            Component::CurDir | Component::RootDir | Component::Prefix(_) => {}
         }
     }
     result
@@ -292,6 +291,71 @@ fn refuse_nested_in_worktree(path: &Path) -> Result<()> {
         cur = dir.parent();
     }
     Ok(())
+}
+
+/// Latch 2 (P122 / RPX-0406, DRAIN-09): after `git init <path>`, assert the
+/// resulting git-dir is the target's OWN freshly-created `.git` — not a SHARED
+/// object store. `git -C <path> rev-parse --absolute-git-dir` must canonicalize to
+/// `<path>/.git`; if it resolves elsewhere (a `…/.git/worktrees/…` gitfile, or a
+/// `GIT_DIR`-injected shared store) the config writes that follow would land in the
+/// SHARED config and corrupt every concurrent checkout. Abort BEFORE any config
+/// write reaches it.
+///
+/// Belt-and-suspenders to the pre-mutation nesting refusal
+/// ([`refuse_nested_in_worktree`]): it catches the residual that refusal cannot —
+/// a subprocess/worktree bypass that sets `GIT_DIR` (or plants a `.git` gitfile) so
+/// `git init` binds a /tmp-SAFE target PATH to a shared git-dir. Exercised by test
+/// case (e).
+///
+/// # Errors
+/// Returns the RPX-0406 teaching error when the resolved git-dir is not the
+/// target's own `<path>/.git`.
+fn assert_own_git_dir(path: &Path) -> Result<()> {
+    let resolved = match run_git_in(path, &["rev-parse", "--absolute-git-dir"]) {
+        Ok(o) if o.status.success() => {
+            let raw = String::from_utf8_lossy(&o.stdout);
+            let trimmed = raw.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(canonicalize_lexical_existing(Path::new(trimmed)))
+            }
+        }
+        _ => None,
+    };
+    let expected = canonicalize_lexical_existing(&path.join(".git"));
+    if resolved.as_ref() == Some(&expected) {
+        return Ok(());
+    }
+    let observed = resolved.as_ref().map_or_else(
+        || "<could not resolve>".to_string(),
+        |p| p.display().to_string(),
+    );
+    let headline = format!(
+        "reposix init: refusing to configure `{target}` — after `git init` its git-dir \
+         resolves to `{observed}`, not its own `{expected}`. A shared git-dir (an \
+         injected GIT_DIR or a worktree gitfile) would route the partial-clone config \
+         writes into another repo's config.",
+        target = path.display(),
+        expected = expected.display(),
+    );
+    bail!(
+        "{}",
+        teach_coded(
+            ids::INIT_NESTED_IN_REPO,
+            &headline,
+            "run `reposix init` with no GIT_DIR/GIT_WORK_TREE set and a target that is \
+             NOT a git worktree — init must create and own its own `.git`; it aborted \
+             before writing any config, so nothing was corrupted.",
+            "to adopt an existing checkout or worktree into a reposix backend, use \
+             `reposix attach`; for a throwaway test tree, init under /tmp with a clean \
+             environment.",
+            &[
+                "unset GIT_DIR GIT_WORK_TREE",
+                "reposix init <backend>::<project> /tmp/reposix-demo   # a fresh tree that owns its .git",
+            ],
+        )
+    )
 }
 
 /// Run `git <args...>` and return a useful error on non-zero exit.
@@ -432,6 +496,11 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
 
     // 1. git init <path>
     run_git(&["init", path_str])?;
+    // Latch 2 (P122 / RPX-0406, DRAIN-09): the git-dir git just created must be the
+    // target's OWN `.git`, not a shared store (an injected GIT_DIR or worktree
+    // gitfile). Abort BEFORE the config writes below can reach a shared config —
+    // this is the residual the /tmp-safe pre-mutation nesting refusal cannot catch.
+    assert_own_git_dir(&path)?;
     // 2-5. configure partial clone + remote.
     run_git(&[
         "-C",
@@ -1028,7 +1097,14 @@ mod tests {
     // nested subdir and asserts the refusal does NOT fire (error is the fetch error,
     // not the refusal); proves the sanctioned /tmp-clone flow stays green.
     fn init_allows_fresh_subdir_inside_existing_repo() {
-        let tmp = tempfile::tempdir().expect("tempdir");
+        // Build explicitly under /tmp (NOT the OS tempdir, which may not be /tmp on
+        // every host): P122's nested-in-worktree refusal only ALLOWS a nested subdir
+        // when the canonical target is /tmp-safe, so this test must live under /tmp to
+        // stay green regardless of TMPDIR.
+        let tmp = tempfile::Builder::new()
+            .prefix("p122-fresh-subdir-")
+            .tempdir_in("/tmp")
+            .expect("tempdir under /tmp");
         // Make the tempdir itself a git repo root, mirroring a /tmp clone.
         std::fs::create_dir_all(tmp.path().join(".git")).expect("repo-root marker");
         let fresh = tmp.path().join("fresh-subdir");
@@ -1046,5 +1122,67 @@ mod tests {
             !msg.contains("already a git repository root"),
             "the existing-repo-root refusal must NOT fire on a fresh nested subdir, got: {msg}"
         );
+        // P122: the /tmp-safe branch of refuse_nested_in_worktree must ALSO have
+        // allowed us through — a /tmp clone's fresh subdir is the dark-factory flow.
+        assert!(
+            !msg.contains("RPX-0406"),
+            "the nested-in-worktree refusal must NOT fire under /tmp, got: {msg}"
+        );
+    }
+
+    /// T-122-02 (LOAD-BEARING): `..` segments in a NON-existent tail must collapse
+    /// against the canonicalized ancestor — across the WHOLE path — so a
+    /// `a/b/../../c` tail cannot climb OUT of the real ancestor (the classic
+    /// `..`-escape that would defeat the /tmp-safe check). `<real>/a/b/../../c`
+    /// resolves to `<real>/c` (the two `..` pop `b` then `a`).
+    #[test]
+    fn canonicalize_collapses_dotdot_across_whole_path() {
+        let tmp = tempfile::Builder::new()
+            .prefix("p122-canon-")
+            .tempdir_in("/tmp")
+            .expect("tempdir under /tmp");
+        let real = std::fs::canonicalize(tmp.path()).expect("canon base");
+        let got = canonicalize_lexical_existing(&tmp.path().join("a/b/../../c"));
+        assert_eq!(got, real.join("c"), "got: {}", got.display());
+        // And a tail that dives THROUGH a non-existent dir then `..`s back out lands
+        // back at the ancestor, not inside the phantom dir.
+        let got2 = canonicalize_lexical_existing(&tmp.path().join("phantom/.."));
+        assert_eq!(got2, real, "got2: {}", got2.display());
+    }
+
+    /// The /tmp safe zone mirrors leaf-isolation-guard.sh::is_safe's
+    /// `/tmp|/tmp/*|/private/tmp|/private/tmp/*` set — component-wise, so a
+    /// look-alike like `/tmpfoo` or `/var/tmp` does NOT read as the safe zone.
+    #[test]
+    fn is_tmp_safe_matches_tmp_zone_not_lookalikes() {
+        assert!(is_tmp_safe(Path::new("/tmp")));
+        assert!(is_tmp_safe(Path::new("/tmp/leaf/repo")));
+        assert!(is_tmp_safe(Path::new("/private/tmp")));
+        assert!(is_tmp_safe(Path::new("/private/tmp/x")));
+        assert!(
+            !is_tmp_safe(Path::new("/tmpfoo/repo")),
+            "/tmpfoo must NOT read as /tmp"
+        );
+        assert!(
+            !is_tmp_safe(Path::new("/var/tmp/repo")),
+            "/var/tmp is NOT the /tmp zone"
+        );
+        assert!(!is_tmp_safe(Path::new("/home/user/repo")));
+    }
+
+    /// The /tmp short-circuit: a fresh subdir nested inside a /tmp git working tree
+    /// is ALLOWED (returns Ok) — the sanctioned dark-factory flow. Unit-level proof
+    /// that the refusal does not fire under /tmp even with an enclosing `.git`.
+    #[test]
+    fn refuse_nested_allows_tmp_safe_even_when_nested() {
+        let tmp = tempfile::Builder::new()
+            .prefix("p122-nested-allow-")
+            .tempdir_in("/tmp")
+            .expect("tempdir under /tmp");
+        std::fs::create_dir_all(tmp.path().join(".git")).expect(".git marker");
+        // A fresh subdir nested directly inside the /tmp repo.
+        let target = tmp.path().join("fresh-subdir");
+        refuse_nested_in_worktree(&target)
+            .expect("a /tmp-safe nested target must be allowed (dark-factory flow)");
     }
 }

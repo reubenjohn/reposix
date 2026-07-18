@@ -528,3 +528,247 @@ fn gc_no_synced_cache_teaches_git_fetch_and_refresh() {
         assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
     }
 }
+
+// ─── P122 W3 (DRAIN-09 / GTH-V15-06): reposix init nested-in-worktree refusal ─
+//
+// Binary-side backstop (RPX-0406) for the D2 shared-tree-corruption recurrence: a
+// `reposix init` reaching an enclosing NON-/tmp git tree via a subprocess/worktree
+// bypasses the Bash-tool leaf-isolation hook, so only a refusal INSIDE the binary
+// cuts the vector. Two latches: (1) pre-mutation nested-in-worktree refusal
+// (canonicalized, mirrors leaf-isolation-guard.sh::is_safe), (2) a post-`git init`
+// worktree-shared-config self-check that aborts before any config write when the
+// git-dir is not the target's own `.git`. Cases (a)-(e) drive the real binary.
+//
+// Leaf isolation: the NON-/tmp trees are built under CARGO_TARGET_TMPDIR
+// (<workspace>/target/tmp — gitignored, a SEPARATE repo, never the shared .git);
+// the /tmp cases are built under /tmp explicitly (the OS tempdir is /tmp here but
+// this keeps the safe-zone branch exercised on any host).
+
+/// A unique throwaway dir under a NON-/tmp root (CARGO_TARGET_TMPDIR) so the
+/// nested-in-NON-/tmp refusal is genuinely exercised. Gitignored; TempDir cleans up.
+fn non_tmp_dir(tag: &str) -> tempfile::TempDir {
+    let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let d = tempfile::Builder::new()
+        .prefix(&format!("p122-{tag}-"))
+        .tempdir_in(root)
+        .expect("tempdir under CARGO_TARGET_TMPDIR");
+    // Guard: this test class REQUIRES a non-/tmp root to exercise the refusal. If
+    // CARGO_TARGET_DIR were somehow under /tmp, fail loudly rather than silently pass.
+    let canon = std::fs::canonicalize(d.path()).expect("canon non_tmp_dir");
+    assert!(
+        !canon.starts_with("/tmp") && !canon.starts_with("/private/tmp"),
+        "non_tmp_dir must be OUTSIDE /tmp to exercise the refusal; got {}",
+        canon.display()
+    );
+    d
+}
+
+/// A unique throwaway dir under /tmp — the sanctioned dark-factory zone.
+fn tmp_dir(tag: &str) -> tempfile::TempDir {
+    tempfile::Builder::new()
+        .prefix(&format!("p122-{tag}-"))
+        .tempdir_in("/tmp")
+        .expect("tempdir under /tmp")
+}
+
+/// (a) `reposix init` into a fresh subdir nested inside a NON-/tmp git working tree
+/// is REFUSED with the RPX-0406 coded teaching — it names `reposix attach`, teaches
+/// the fix, and prints copy-paste recovery. Fires pre-mutation, so fully hermetic.
+#[test]
+fn init_nested_in_non_tmp_repo_refuses_with_rpx0406() {
+    let base = non_tmp_dir("nested-a");
+    // A `.git` marker is enough for the ancestor walk to see a working tree.
+    std::fs::create_dir_all(base.path().join(".git")).expect("mkdir .git marker");
+    let target = base.path().join("fresh-subdir"); // non-existent, nested inside base
+
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["init", "sim::demo"])
+        .arg(&target)
+        .output()
+        .expect("run `reposix init`");
+    assert!(
+        !out.status.success(),
+        "init nested in a non-/tmp git tree MUST fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in [
+        "RPX-0406",
+        "reposix attach",
+        "Fix:",
+        "Recovery:",
+        "nested inside",
+        "reposix explain RPX-0406",
+    ] {
+        assert!(stderr.contains(needle), "missing {needle:?} in:\n{stderr}");
+    }
+}
+
+/// (b) A fresh subdir under a /tmp clone is NOT refused (the dark-factory flow is
+/// preserved) — init proceeds past BOTH latches to run `git init` (creating the
+/// target's own `.git`) and only then fails at the unreachable-sim fetch. Asserts
+/// the target's `.git` was created and NO RPX-0406 refusal fired.
+#[test]
+// test-name-honesty: ok — "not refused" asserts the ABSENCE of the RPX-0406 nesting
+// refusal AND that init reached `git init` (target/.git exists) under /tmp; it does
+// NOT assert a full backend round-trip (no sim) — the fetch fails afterward, which is
+// expected and not the subject of this test.
+fn init_fresh_subdir_under_tmp_clone_is_not_refused() {
+    let base = tmp_dir("nested-b");
+    std::fs::create_dir_all(base.path().join(".git")).expect("mkdir .git marker");
+    let target = base.path().join("fresh-subdir");
+
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["init", "sim::demo"])
+        .arg(&target)
+        // Unreachable sim so the fetch (if reached) fails fast rather than hanging.
+        .env("REPOSIX_SIM_ORIGIN", "http://127.0.0.1:59")
+        .output()
+        .expect("run `reposix init`");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        target.join(".git").exists(),
+        "init must reach `git init` under /tmp (both refusals allowed it); stderr:\n{stderr}"
+    );
+    assert!(
+        !stderr.contains("RPX-0406") && !stderr.contains("nested inside"),
+        "the /tmp nested init must NOT be refused; stderr:\n{stderr}"
+    );
+}
+
+/// (c) A symlink whose target lives under /tmp but resolves INTO a non-/tmp git
+/// tree must STILL be refused — canonicalization (realpath -m) resolves the symlink
+/// before the /tmp-safe decision, defeating path smuggling (T-122-02).
+#[test]
+fn init_via_symlink_into_non_tmp_repo_refuses_with_rpx0406() {
+    let repo = non_tmp_dir("nested-c");
+    std::fs::create_dir_all(repo.path().join(".git")).expect("mkdir .git marker");
+    let link_base = tmp_dir("nested-c-link");
+    let link = link_base.path().join("link"); // lives under /tmp
+    std::os::unix::fs::symlink(repo.path(), &link).expect("make symlink");
+    // /tmp/.../link/fresh-subdir  →  <non-/tmp repo>/fresh-subdir after canonicalization
+    let target = link.join("fresh-subdir");
+
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["init", "sim::demo"])
+        .arg(&target)
+        .output()
+        .expect("run `reposix init`");
+    assert!(
+        !out.status.success(),
+        "a symlink-smuggled non-/tmp nested target MUST fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    for needle in ["RPX-0406", "nested inside", "reposix attach"] {
+        assert!(
+            stderr.contains(needle),
+            "symlink smuggle not refused; missing {needle:?} in:\n{stderr}"
+        );
+    }
+}
+
+/// (d) `reposix attach` is NOT regressed by the init-only refusal: attach against a
+/// checkout nested inside a non-/tmp git tree proceeds to its OWN logic and never
+/// emits the RPX-0406 nesting refusal (attach.rs is untouched by P122 W3).
+#[test]
+// test-name-honesty: ok — asserts the init-only RPX-0406 refusal does NOT fire on
+// `reposix attach` (proves the refusal is init-scoped, attach adoption un-regressed).
+// A full attach-success round-trip needs a live sim and is covered by
+// quality/gates/agent-ux/reposix-attach.sh, not this hermetic test.
+fn attach_nested_checkout_is_not_blocked_by_init_refusal() {
+    let base = non_tmp_dir("attach-d");
+    std::fs::create_dir_all(base.path().join(".git")).expect("outer .git marker");
+    // A real git checkout nested INSIDE the non-/tmp outer tree (attach adopts one).
+    let inner = base.path().join("inner-checkout");
+    std::fs::create_dir_all(&inner).expect("mkdir inner");
+    let status = StdCommand::new("git")
+        .args(["init", "-q"])
+        .current_dir(&inner)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .status()
+        .expect("git init inner");
+    assert!(status.success(), "git init inner failed");
+
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["attach", "sim::demo"])
+        .arg(&inner)
+        .env("REPOSIX_SIM_ORIGIN", "http://127.0.0.1:59")
+        .output()
+        .expect("run `reposix attach`");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !stderr.contains("RPX-0406"),
+        "attach must NOT hit the init-only RPX-0406 refusal; stderr:\n{stderr}"
+    );
+    assert!(
+        !stderr.contains("nested inside an existing git working tree"),
+        "attach must not emit the init nesting refusal; stderr:\n{stderr}"
+    );
+}
+
+/// (e) Worktree-shared-config self-check: with GIT_DIR injected (child env) to a
+/// shared store, a /tmp-SAFE fresh target passes latch 1 but `git init` binds the
+/// target to the shared git-dir, so `git -C <path> rev-parse --absolute-git-dir` !=
+/// `<path>/.git`. init MUST abort with RPX-0406 BEFORE any config write, and the
+/// shared store's `config` MUST be byte-identical before/after.
+#[test]
+// test-name-honesty: ok — injects GIT_DIR on the assert_cmd CHILD (no process-global
+// set_var) to force a shared git-dir, then asserts (i) init exits non-zero with
+// RPX-0406 and (ii) the shared store's config is byte-unchanged (self-check aborted
+// pre-config); genuinely exercises latch 2, not merely its presence.
+fn init_worktree_shared_git_dir_aborts_before_config_write() {
+    // A real shared store under /tmp whose config we watch for corruption.
+    let shared_base = tmp_dir("selfcheck-e-shared");
+    let shared_repo = shared_base.path().join("shared-repo");
+    std::fs::create_dir_all(&shared_repo).expect("mkdir shared-repo");
+    let status = StdCommand::new("git")
+        .args(["init", "-q"])
+        .current_dir(&shared_repo)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .status()
+        .expect("git init shared");
+    assert!(status.success(), "git init shared failed");
+    let shared_git_dir = shared_repo.join(".git");
+    let shared_config = shared_git_dir.join("config");
+    let before = std::fs::read(&shared_config).expect("read shared config before");
+
+    // A FRESH /tmp-safe target (so latch 1 ALLOWS it) — but GIT_DIR binds git to the
+    // shared store, so the resulting git-dir will NOT be <target>/.git.
+    let target_base = tmp_dir("selfcheck-e-target");
+    let target = target_base.path().join("fresh");
+
+    let out = Command::cargo_bin("reposix")
+        .expect("reposix binary built")
+        .args(["init", "sim::demo"])
+        .arg(&target)
+        .env("GIT_DIR", &shared_git_dir) // child-env injection — no process-global set_var
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .expect("run `reposix init`");
+    assert!(
+        !out.status.success(),
+        "a shared git-dir MUST make init fail-closed"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("RPX-0406"),
+        "the shared git-dir self-check must emit RPX-0406; stderr:\n{stderr}"
+    );
+
+    // The self-check aborted BEFORE any config write — the shared store's config
+    // (extensions.partialClone / remote.origin.url would land here) is untouched.
+    let after = std::fs::read(&shared_config).expect("read shared config after");
+    assert_eq!(
+        before, after,
+        "the shared store's config MUST be byte-unchanged (self-check aborted before config writes)"
+    );
+    // Belt-and-suspenders: none of reposix init's config keys leaked into the store.
+    let after_str = String::from_utf8_lossy(&after);
+    assert!(
+        !after_str.contains("partialClone") && !after_str.contains("reposix::"),
+        "no reposix init config key may reach the shared store; got:\n{after_str}"
+    );
+}
