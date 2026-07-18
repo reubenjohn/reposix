@@ -74,7 +74,7 @@ which part of reposix raised the error:
 | `RPX-01xx` | `0101`–`0102` | Missing real-backend credentials or tenant environment variables (the CLI and the git remote helper). |
 | `RPX-02xx` | `0201`–`0204` | Local cache and working-tree binding — cache build, no synced cache, not-a-reposix-tree, unparseable stored remote URL. |
 | `RPX-03xx` | `0301`–`0311` | Subcommand and flag preconditions — `log` / `spaces` / `refresh` mode gates, `--since` parsing and time-travel rewind, git-on-`PATH`, non-UTF-8 path. |
-| `RPX-04xx` | `0401`–`0406` | `init` / `attach` working-tree bootstrap — existing-repo refusal, initial fetch failure, the `attach` reconciliation preconditions, and the `init` nested-in-worktree refusal (`0406`). |
+| `RPX-04xx` | `0401`–`0406` | `init` / `attach` working-tree bootstrap — existing-repo refusal, initial fetch failure, the `attach` reconciliation preconditions, and the `init` nested-in-worktree refusal (`0406` — a conservative pre-check plus a precise post-`git init` git-dir self-check; run `reposix explain RPX-0406` for the mechanism). |
 | `RPX-05xx` | `0501`–`0508` | Git remote helper transport — upload-pack, protocol EOF, blob limit, backend unreachable (push and fetch), push conflict, unfiltered fetch, import-parent resolve. |
 | `RPX-06xx` | `0601`–`0603` | DVCS bus / mirror and helper invocation — malformed bus URL, helper misuse, mirror unreachable. |
 | `RPX-09xx` | `0900`      | `reposix explain` itself — an unknown or unregistered code was looked up. |

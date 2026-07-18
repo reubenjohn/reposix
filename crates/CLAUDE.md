@@ -184,7 +184,12 @@ shared-tree-corruption recurrence (the sibling of RPX-0401's existing-repo-root 
 safe zone) AND self-checks its git-dir after `git init` but before any `git config` write
 (`assert_own_git_dir`) — both emit RPX-0406, both run in `run_with_since`, init-only (never
 `attach`). Only a refusal INSIDE the binary cuts a subprocess/worktree bypass of the
-Bash-tool hook. Verifier: `quality/gates/agent-ux/init-refuses-nested-in-shared-tree.sh`.
+Bash-tool hook. **The two latches are not peers (P122 code review WR-01):** a plain `git
+init` in a subdir does NOT by itself corrupt the enclosing repo in standard git, so latch 1
+is a CONSERVATIVE defense-in-depth heuristic that over-refuses benign nesting; latch 2 is
+the PRECISE cut — it catches the actual corrupting case, a git-dir binding (injected
+`GIT_DIR`/worktree gitfile) that routes config writes into a SHARED store. Verifier:
+`quality/gates/agent-ux/init-refuses-nested-in-shared-tree.sh`.
 
 ### `errors.rs` shape helpers + scan scope
 

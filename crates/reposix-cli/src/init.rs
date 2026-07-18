@@ -224,10 +224,16 @@ fn canonicalize_lexical_existing(path: &Path) -> PathBuf {
 }
 
 /// `true` iff `canon` (an already-canonicalized path) is inside the sanctioned
-/// throwaway zone — `/tmp` or `/private/tmp` (macOS). MIRRORS the
+/// throwaway zone — `/tmp`, or `/private/tmp` (the realpath macOS's `/tmp`
+/// symlink resolves to). MIRRORS the exact
 /// `/tmp|/tmp/*|/private/tmp|/private/tmp/*` safe-zone set in
-/// `.claude/hooks/leaf-isolation-guard.sh::is_safe`. Component-wise `starts_with`
-/// (not a string prefix) so `/tmpfoo` does NOT read as `/tmp`.
+/// `.claude/hooks/leaf-isolation-guard.sh::is_safe` — keep the two IN SYNC.
+/// This intentionally does NOT cover macOS's per-user ephemeral `$TMPDIR`
+/// (typically `/var/folders/...`), a DIFFERENT, non-`/tmp` zone that neither
+/// the binary nor the hook treats as safe (P122 code review WR-02) — the
+/// project is Linux-only today; extend BOTH sides together if macOS ever
+/// becomes a target. Component-wise `starts_with` (not a string prefix) so
+/// `/tmpfoo` does NOT read as `/tmp`.
 fn is_tmp_safe(canon: &Path) -> bool {
     canon.starts_with("/tmp") || canon.starts_with("/private/tmp")
 }
@@ -240,6 +246,18 @@ fn is_tmp_safe(canon: &Path) -> bool {
 /// TOOL, so a `reposix init` reaching the shared checkout via a subprocess/worktree
 /// bypasses it — the exact 2026-07-12 recurrence path. Only a refusal INSIDE the
 /// binary cuts that vector; it runs BEFORE any git/filesystem mutation.
+///
+/// This is LATCH 1 of two, and it is deliberately CONSERVATIVE (P122 code review
+/// WR-01): a plain `git init` in a subdir of an enclosing repo does NOT, by
+/// itself, corrupt that enclosing repo in standard git — it creates its own
+/// independent `.git`. Latch 1 refuses ALL non-/tmp nesting anyway as
+/// defense-in-depth against the corruption CLASS that latch 2
+/// ([`assert_own_git_dir`]) cuts precisely: a git-dir binding (an injected
+/// `GIT_DIR`, a worktree gitfile, or a subprocess/worktree bypass of the
+/// Bash-tool hook) that routes the resulting `core.bare`/`remote.origin` writes
+/// into a SHARED store instead of the target's own — the actual shape of the
+/// 2026-07-12 shared-tree incident. Over-refusing a benign nest here is cheap;
+/// missing an actual binding hijack is not.
 ///
 /// MIRRORS `leaf-isolation-guard.sh::is_safe`: canonicalize the effective target
 /// (realpath -m via [`canonicalize_lexical_existing`]); if it is under
@@ -276,9 +294,10 @@ fn refuse_nested_in_worktree(path: &Path) -> Result<()> {
                     ids::INIT_NESTED_IN_REPO,
                     &headline,
                     "point init at a FRESH path that is NOT inside another git repository \
-                     (a new directory of its own) — `reposix init` runs `git init` and \
-                     rewrites core.bare/remote.origin, and doing that inside an enclosing \
-                     repo can corrupt it (the 2026-07-12 shared-tree incident).",
+                     (a new directory of its own). This is a conservative safeguard — a \
+                     plain `git init` in a subdir does not itself corrupt the enclosing \
+                     repo — that refuses ALL non-/tmp nesting anyway to close off a \
+                     shared-git-dir binding hijacking the config writes that follow.",
                     "to adopt this existing/nested checkout into a reposix backend instead, \
                      use `reposix attach`; for a throwaway test tree, init under /tmp.",
                     &[

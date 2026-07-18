@@ -553,15 +553,26 @@ pub const REGISTRY: &[ExplainEntry] = &[
         code: ids::INIT_NESTED_IN_REPO,
         title: "refusing to `reposix init` a target nested inside another git repository",
         cause: "`reposix init` CREATES a fresh partial-clone working tree — it runs \
-                `git init` and writes `core.bare` + `remote.origin`. The target path \
-                canonicalizes to a location NESTED INSIDE an existing git working \
-                tree (outside the /tmp throwaway zone), and initializing a repo there \
-                risks corrupting the enclosing repository — the exact shape behind \
-                the 2026-07-12 shared-tree incident, where a `reposix init` reached \
-                the shared checkout through a subprocess/worktree that bypassed the \
-                Bash-tool leaf-isolation guard. Only a refusal INSIDE the binary cuts \
-                that subprocess/worktree vector, so reposix refuses fail-closed. The \
-                path is canonicalized first (realpath -m semantics, mirroring \
+                `git init` then writes `core.bare` + `remote.origin` into whatever \
+                git-dir results. RPX-0406 fires from either of two latches sharing \
+                this code. LATCH 1 (pre-mutation): the target canonicalizes to a \
+                location NESTED INSIDE an existing git working tree (outside /tmp) \
+                BEFORE `git init` runs. In standard git a plain `git init` in a \
+                subdir does NOT by itself corrupt the enclosing repo — it creates \
+                its own independent `.git` — so latch 1 is a CONSERVATIVE, \
+                defense-in-depth heuristic, not the precise cut. LATCH 2 \
+                (post-mutation, the PRECISE cut): after `git init` runs, reposix \
+                asserts the resulting git-dir is the target's OWN freshly created \
+                `.git`, not a SHARED store. If it resolves elsewhere — an injected \
+                `GIT_DIR`, a worktree gitfile, or a subprocess/worktree bypass of \
+                the Bash-tool leaf-isolation guard binding it to a shared git-dir — \
+                the subsequent core.bare/remote.origin writes would land in shared \
+                config, corrupting every concurrent checkout; THAT binding is the \
+                actual shape behind the 2026-07-12 shared-tree incident. Only a \
+                refusal INSIDE the binary (either latch) cuts the \
+                subprocess/worktree vector, so reposix refuses fail-closed before \
+                any config write reaches disk. The path is canonicalized first \
+                (realpath -m semantics, mirroring \
                 .claude/hooks/leaf-isolation-guard.sh), so a symlink or `..` \
                 traversal cannot smuggle the target back into an enclosing repo.",
         fix: "Point `init` at a FRESH path that is NOT inside another git \
