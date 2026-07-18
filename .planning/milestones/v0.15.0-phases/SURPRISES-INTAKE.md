@@ -899,3 +899,20 @@ on a tree with a credentialed `?mirror=` remote and asserts the token is absent 
 the redaction-regression exemplar list in `crates/CLAUDE.md`.
 
 **STATUS:** OPEN
+
+## From P121 W1 (2026-07-17, registry authoring)
+
+### P121-W1-01 — the `<code_allocation>` table UNDERCOUNTS the checker's flagged sites; W3/W4 must reconcile
+- **Source:** NOTICED during P121 W1 while authoring the `reposix-core::codes` registry against the AUTHORITATIVE flagged-site list from `rpx_registry_check.py` (30 M2-converse sites), not just the plan's ~26-row `<code_allocation>` table. · **Severity: MED (W3/W4 blocker if not reconciled — the gate stays red until every flagged site carries a code or an exempt marker)** · STATUS: OPEN — tag planning-accuracy / P121-W3 / P121-W4.
+- **What W1 AUTHORED (24 entries, all rustc-`--explain`-grade, committed `30c518da`):** RPX-0001 (spec-parse), 0101 (CLI missing-env), 0102 (helper missing-env), 0201 (cache-build), 0202 (no-synced-cache), 0203 (not-a-reposix-tree), 0301 (log needs --time-travel), 0302 (spaces confluence-only), 0303 (refresh --offline unimpl), 0305 (--since parse), 0306 (git-not-on-PATH), 0401 (refuse-existing-repo-root), 0402 (init fetch-failed), 0403 (attach not-git-tree), 0404 (attach dup-ids), 0405 (attach multi-SoT), 0501 (upload-pack), 0502 (EOF), 0503 (blob-limit), 0504 (push backend-unreachable), 0505 (push conflict/fetch-first), 0601 (malformed bus URL), 0602 (helper too-few-args), 0900 (explain-meta). Site→code mapping is in the entry doc-comments + the codes.rs module header.
+- **RPX-0304 has NO home:** the plan's `gc --strategy unimplemented` site no longer exists — `gc.rs` `strategy_arg` is a working clap `value_enum` and the checker did NOT flag it. RPX-0304 was deliberately NOT minted (a registered-but-unemitted code is pointless; the north star is real error paths). W3 should drop RPX-0304 from scope or re-target it.
+- **UNDERCOUNT — flagged sites with NO dedicated W1 code (W3/W4 must decide: map onto an existing code, or mint a new one):**
+  - `init.rs:277` — target path not valid UTF-8 (git needs a UTF-8 path). Candidate: fold into RPX-0306 (git-related) or mint RPX-0307.
+  - `init.rs:542 / :562 / :604 / :631` — the four `--since` rewind scenarios (no-cache-for-since / no-tag-before-timestamp / since-fetch-failed / since-update-ref-failed). NONE has a plan code. Candidate: a new RPX-03xx `--since` family, or fold the fetch/ref ones into RPX-0402/0201.
+  - `sync.rs:123` — the tree's `remote.*.url` could not be parsed (a bound-tree URL parse, distinct from RPX-0001's spec parse). Candidate: RPX-0001 vs a new code.
+  - `stateless_connect.rs` `UNFILTERED_FETCH_HINT` (const ~L61) — an unfiltered-fetch-can't-be-served hint, distinct from the RPX-0503 blob-LIMIT path. Candidate: fold into RPX-0503 or mint RPX-0506.
+  - `list.rs:276/:340` + `refresh.rs:294/:319` — confluence/jira missing-env variants; these map cleanly onto RPX-0101 (CLI missing-env) — W3 just wires `.code(ids::MISSING_ENV_CLI)`.
+  - `bus_handler.rs:461` — bad-mirror arm; maps onto RPX-0601 (malformed bus URL) per the plan.
+- **Fix-sketch:** W3 (CLI) + W4 (helper) each, per site, either `.code(ids::…)` an existing entry or append a new `ExplainEntry` to `codes.rs` for the genuinely-new scenarios above; the `agent-ux/rpx-codes-registry` gate stays red until every flagged site is coded or `// rpx-code-exempt: ok — <reason>`-marked. Effort: small per site (the render + registry machinery is done), but the reconciliation DECISIONS (merge vs mint) are the real content and belong to the wave that owns each file.
+
+**STATUS:** OPEN
