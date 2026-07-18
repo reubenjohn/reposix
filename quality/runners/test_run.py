@@ -43,6 +43,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run  # noqa: E402
+import _env_load  # noqa: E402  (P123 SC1 / DRAIN-03: ./.env self-sourcing)
 
 
 def _write_verifier(repo_root: Path, rel: str, exit_code: int) -> None:
@@ -146,6 +147,71 @@ class TestPersistGate(unittest.TestCase):
         self.assertFalse(parser.parse_args(["--cadence", "pre-push"]).persist)
         self.assertTrue(
             parser.parse_args(["--cadence", "pre-push", "--persist"]).persist)
+
+
+class TestEnvSelfSourcing(unittest.TestCase):
+    """P123 SC1 / DRAIN-03: run.py self-sources ./.env — present-only,
+    non-clobbering, no value leak. Backs catalog row
+    structure/quality-runner-sources-dotenv.
+
+    Closes the false-green-preflight / silent-skip gap: preflight sourced .env
+    but run.py did not, so a pre-release-real-backend cadence silently skipped
+    every real-backend row to NOT-VERIFIED unless the caller pre-sourced .env.
+
+    Hermetic: every fixture .env is rooted under tempfile.TemporaryDirectory
+    and os.environ is patched with clear=True so no real .env / real cred is
+    ever read or mutated (mirrors _drive()'s isolation style above).
+    """
+
+    _ENV_BODY = "FOO=bar\n# comment\n\nBAZ=qux\n"
+
+    def test_unset_keys_are_loaded(self):
+        # Test 1: unset keys from .env land in os.environ.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".env").write_text(self._ENV_BODY, encoding="utf-8")
+            with mock.patch.dict(os.environ, {}, clear=True):
+                _env_load.load_dotenv_if_present(root)
+                self.assertEqual(os.environ.get("FOO"), "bar",
+                                 "an unset key from .env was not loaded")
+                self.assertEqual(os.environ.get("BAZ"), "qux",
+                                 "a key after a comment/blank line was not loaded")
+
+    def test_already_set_env_wins(self):
+        # Test 2: an explicitly-set var must NOT be clobbered by .env.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".env").write_text(self._ENV_BODY, encoding="utf-8")
+            with mock.patch.dict(os.environ, {"FOO": "keep-me"}, clear=True):
+                _env_load.load_dotenv_if_present(root)
+                self.assertEqual(os.environ.get("FOO"), "keep-me",
+                                 ".env clobbered an already-exported env var")
+                self.assertEqual(os.environ.get("BAZ"), "qux",
+                                 "an unset key from .env should still load")
+
+    def test_missing_env_is_silent_noop(self):
+        # Test 3: no .env present -> silent no-op (no exception, env unchanged).
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)  # deliberately no .env written
+            with mock.patch.dict(os.environ, {"ONLY": "me"}, clear=True):
+                _env_load.load_dotenv_if_present(root)  # must not raise
+                self.assertEqual(dict(os.environ), {"ONLY": "me"},
+                                 "a missing .env changed os.environ")
+
+    def test_no_secret_value_reaches_stderr(self):
+        # Test 4: the diagnostic names loaded KEY names but NEVER their values.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".env").write_text(self._ENV_BODY, encoding="utf-8")
+            buf = io.StringIO()
+            with mock.patch.dict(os.environ, {}, clear=True), \
+                 contextlib.redirect_stderr(buf):
+                _env_load.load_dotenv_if_present(root)
+            captured = buf.getvalue()
+            self.assertIn("FOO", captured, "loaded KEY name not reported")
+            self.assertIn("BAZ", captured, "loaded KEY name not reported")
+            self.assertNotIn("bar", captured, "secret VALUE 'bar' leaked to stderr")
+            self.assertNotIn("qux", captured, "secret VALUE 'qux' leaked to stderr")
 
 
 if __name__ == "__main__":
