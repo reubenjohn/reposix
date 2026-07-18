@@ -3,19 +3,38 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-18T09:04:00.000Z"
-last_activity: 2026-07-18 -- P122 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p122/VERDICT.md, verdict commit 00ab1579): reposix-remote + init hardening — 3/3 SC verified against reality (GTH-V15-04 RBF-LR-03 modern-git ref-lock; GTH-V15-05 resolve_import_parent loud-fail RPX-0508; GTH-V15-06 init self-safety refusal RPX-0406). 9/15 v0.15.0 "Floor" phases complete (P114–P122); next = P123.
+last_updated: "2026-07-18T14:00:00.000Z"
+last_activity: 2026-07-18 -- P123 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p123/VERDICT.md, verdict commit 2f6d62ff): quality-runner & catalog integrity hardening — SC1-SC5 all PASS (SC4/GTH-V15-03 graded-outcome scope ruling SOUND; SC5b real-backend leg NOT-VERIFIED by-design). 10/15 v0.15.0 "Floor" phases complete (P114–P123); next = P124.
 progress:
   total_phases: 15
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 3
   completed_plans: 2
-  percent: 60
+  percent: 67
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P123 (Quality-runner & catalog integrity hardening, v0.15.0 DRAIN-01/03/04/05/06/10) — CLOSED GREEN 2026-07-18.**
+gsd-verifier verdict GREEN (`quality/reports/verdicts/p123/VERDICT.md`, verdict commit
+`2f6d62ff`); 5/5 success criteria verified against reality: SC1 (`run.py` self-sources
+`./.env` present-only/non-clobbering, DRAIN-03), SC2 (`--persist` refuses a committed-GREEN
+downgrade without `--allow-downgrade`, DRAIN-04), SC3 (advisory `flock` serializes
+concurrent `--persist`, real two-process no-lost-update proof, DRAIN-05), SC4
+(`structure/verifier-script-exists.sh` framework-integrity gate — full truth-table
+selftest + live 155-row sweep, 0 violations; GTH-V15-03 graded-outcome scope ruling
+**SOUND** via an orthogonal second-independent scan), SC5 (`code/ci-green-on-main` now
+watches a required-workflow LIST `(ci.yml, release-plz.yml)` + `t4-real-backend-flow.sh`
+surfaces real git-checkout stderr instead of a misleading git-version fallback; SC5b
+real-backend leg NOT-VERIFIED by-design, DRAIN-01/10). HEAD == origin/main == `e9df5d7c`
+at verdict time, CI GREEN (`ci.yml` run `29647943849`, `release-plz.yml` run `29647943945`,
+both `success`). Verifier filed one P127 gh-auth-audit cross-ref (SC1 NOTICED) plus 3
+NOTICED items (`.env` real-creds-in-every-process sign-off owed at milestone-close; SC4
+latent-not-eager WAIVED-row detection by design; `ci-green-on-main` `none`-verdict branch
+unexercised live) — none BLOCKER, none WARNING, no gaps. **10/15 v0.15.0 "Floor" phases
+complete** (P114–P123); next = **P124**.
 
 Phase: **P122 (reposix-remote + init hardening, v0.15.0 GTH-V15-04/05/06) — CLOSED GREEN 2026-07-18.**
 gsd-verifier verdict GREEN (`quality/reports/verdicts/p122/VERDICT.md`, verdict commit
@@ -165,7 +184,7 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 123`. Carried
+Next step: `/gsd-plan-phase 124`. Carried
 owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
@@ -207,7 +226,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P122 CLOSED GREEN (verdict GREEN); 9/15 phases complete (P114–P122). Next: `/gsd-plan-phase 123`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P123 CLOSED GREEN (verdict GREEN); 10/15 phases complete (P114–P123). Next: `/gsd-plan-phase 124`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
