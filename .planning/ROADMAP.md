@@ -70,8 +70,8 @@
 - [x] **Phase 117: Doc-truth launch-blocker purge** - The 6 identified doc-truth defects no longer mislead a first-time reader or agent. (completed 2026-07-17)
 - [x] **Phase 118: Post-bench honesty corrections** - The disputed token-count figure and the stale tag-cut premise are corrected. (completed 2026-07-17)
 - [x] **Phase 119: Docs/planning simplification (the "P112 RAISE")** - Stale legacy planning/doc content is deleted outright; git history is the archive. (completed 2026-07-17 — intention-preserving pivot: SC-1/SC-2 literal deletions deferred after targets found live/filed to intake; SC-3/SC-4 landed)
-- [ ] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery.
-- [ ] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up.
+- [x] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery. (completed 2026-07-17)
+- [x] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up. (completed 2026-07-17)
 - [x] **Phase 122: `reposix-remote` + `init` hardening** - Two HIGH-severity carry-forward robustness gaps close (modern-git rebase-recovery verification; binary-side self-safety refusal). (completed 2026-07-18)
 - [ ] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors.
 - [ ] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence.
@@ -231,7 +231,14 @@
   3. Concurrent `--persist` runners cannot race-corrupt the shared catalog JSON (advisory `flock` or a single locked persist lane).
   4. A catalog row with a missing or non-executable `verifier.script` is caught by a dedicated `quality/gates/structure/verifier-script-exists.sh` gate.
   5. `code/ci-green-on-main`'s phase-close probe watches a required-workflow list (not a hardcoded `ci.yml` only), and the t4 gate surfaces the real oid-drift stderr instead of a misleading git-version fallback.
-**Plans**: TBD
+**Plans**: 7 plans (6 waves: Wave 1 catalog-first · Wave 2 two parallel plans · Waves 3-5 sequential — SC1/SC2/SC3 all touch `run.py` + the shared `structure` catalog file, so they serialize by file-conflict wave-bumping even though they are logically independent · Wave 6 close)
+- [ ] 123-01-PLAN.md — catalog-first: 4 new structure rows (SC1-SC4) + SC5a/SC5b existing-row contract updates
+- [ ] 123-02-PLAN.md — SC1/DRAIN-03: `run.py` self-sources `./.env` (new `_env_load.py` sibling module)
+- [ ] 123-03-PLAN.md — SC5a/DRAIN-10 + SC5b/DRAIN-01: `ci-green-on-main` required-workflow list + t4 real-stderr surfacing
+- [ ] 123-04-PLAN.md — SC2/DRAIN-04: `--allow-downgrade` persist-refuses-downgrade guard (new `_persist_guard.py`)
+- [ ] 123-05-PLAN.md — SC3/DRAIN-05: advisory `flock` around the `--persist` write (extends `_persist_guard.py`)
+- [ ] 123-06-PLAN.md — SC4/DRAIN-06: `structure/verifier-script-exists` gate + selftest
+- [ ] 123-07-PLAN.md — close wave: SURPRISES-INTAKE/GOOD-TO-HAVES resolution + fix-twice (quality/CLAUDE.md, PROTOCOL.md) + ROADMAP/STATE/REQUIREMENTS advance + push + post-push cadence
 
 ### Phase 124: Container-rehearse harness hardening
 **Goal**: `container-rehearse.sh`'s docs-repro rows are provenance-guaranteed and immune to SIGKILL orphaning, exit-code disagreement, and tautological assertion-congruence.
@@ -300,9 +307,9 @@
 | 118. Post-bench honesty corrections | 1/1 | Complete | 2026-07-17 |
 | 119. Docs/planning simplification | 4/4 | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
 | 120. CLI + helper error hardening | 1/1 | Complete | 2026-07-17 |
-| 121. RPX error-code namespace + explain | 0/1 | Not started | - |
+| 121. RPX error-code namespace + explain | 1/1 | Complete | 2026-07-17 |
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
-| 123. Quality-runner & catalog integrity | 0/TBD | Not started | - |
+| 123. Quality-runner & catalog integrity | 0/7 | Not started | - |
 | 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
 | 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
