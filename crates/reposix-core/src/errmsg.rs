@@ -22,12 +22,13 @@
 //! # Rendered shape
 //!
 //! ```text
-//! <headline>
-//! Fix: <fix>
+//! <headline> [RPX-xxxx]          // ` [RPX-xxxx]` appended to the FIRST headline
+//! Fix: <fix>                     //   line only when a code is set (FLAG 2)
 //! Alternative: <alternative>      // OMITTED when the alternative is unset/empty (FLAG 1)
 //! Recovery:                       // OMITTED when the recovery slice is empty
 //!   <recovery[0]>
 //!   <recovery[1]>
+//! Explain: reposix explain RPX-xxxx  // trailing limb, only when a code is set (FLAG 2)
 //! ```
 //!
 //! # Two baked resolutions
@@ -35,11 +36,15 @@
 //! - **FLAG 1 — empty alternative suppresses its line.** An error with no genuine
 //!   alternative (e.g. an unexpected-EOF protocol desync) passes `""` and no hollow
 //!   `Alternative:` line is emitted. The recovery slice is likewise suppressible.
-//! - **FLAG 2 — a forward-compat `.code()` slot.** [`Teach::code`] is wired NOW and
-//!   renders NOTHING this phase. P121 will own the `RPX-xxxx` render format and add
-//!   `.code(...)` only to the individual sites that need a code — the other ~40 call
-//!   sites are untouched by that change. [`tests::code_slot_renders_nothing`] pins the
-//!   current byte-output so P121's addition is a visible, reviewed diff.
+//! - **FLAG 2 — the `.code()` render (P121).** [`Teach::code`] attaches a stable
+//!   `RPX-xxxx` error code. When set, the code renders as a ` [RPX-xxxx]` tag on the
+//!   headline's FIRST line and an `Explain: reposix explain RPX-xxxx` nudge trailing
+//!   the body — the codified half of the Rust-compiler-grade UX north star. When
+//!   UNSET the output is byte-identical to the no-code shape, so the ~40 call sites
+//!   that never carry a code are untouched. Only the static code id is interpolated
+//!   into these limbs — never a headline-derived or remote byte (OP-2). The extended
+//!   explanation for each code lives once in [`crate::codes`]; this render carries
+//!   only the id + the `explain` nudge, not the extended prose.
 
 /// Return `s` only when it is `Some` and non-empty; used to suppress the
 /// `Fix:` / `Alternative:` lines for empty inputs (FLAG 1).
@@ -72,7 +77,8 @@ pub struct Teach<'a> {
     /// `None` (or an empty `.alternative("")`) omits the `Alternative:` line (FLAG 1).
     alternative: Option<&'a str>,
     recovery: &'a [&'a str],
-    /// P121 error-code slot (FLAG 2): wired now, renders nothing this phase.
+    /// P121 error-code slot (FLAG 2): renders a ` [RPX-xxxx]` headline tag + an
+    /// `Explain:` nudge when `Some`; `None` is byte-identical to no code.
     code: Option<&'a str>,
 }
 
@@ -115,9 +121,12 @@ impl<'a> Teach<'a> {
         self
     }
 
-    /// Attach a forward-compat error code (FLAG 2 / P121 slot). Wired now, renders
-    /// NOTHING this phase: a `.code("RPX-0001")` body is byte-identical to no code.
-    /// P121 owns the render format and changes only [`Display`](std::fmt::Display).
+    /// Attach a stable `RPX-xxxx` error code (FLAG 2 / P121). When set, the code
+    /// renders as a ` [RPX-xxxx]` tag on the headline's first line plus a trailing
+    /// `Explain: reposix explain RPX-xxxx` limb; an UNSET code is byte-identical to
+    /// no code. Prefer a `reposix_core::codes::ids` const (typo-proof) over a raw
+    /// literal — the `agent-ux/rpx-codes-registry` gate cross-checks every emitted
+    /// code against the [`crate::codes`] registry.
     #[must_use]
     pub fn code(mut self, code: &'a str) -> Self {
         self.code = Some(code);
@@ -127,7 +136,18 @@ impl<'a> Teach<'a> {
 
 impl std::fmt::Display for Teach<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.headline)?;
+        // Headline. When a code is set, the ` [RPX-xxxx]` tag rides the FIRST line
+        // of the headline (never dangling on the last line of a multi-line headline
+        // such as cache_build_error's `…\n(underlying: …)`). Only the static
+        // `self.code` id is interpolated — never a headline-derived or remote byte
+        // (OP-2 / T-121-01: the code + explain paths are static-only).
+        match self.code {
+            Some(code) => match self.headline.split_once('\n') {
+                Some((first, rest)) => write!(f, "{first} [{code}]\n{rest}")?,
+                None => write!(f, "{} [{code}]", self.headline)?,
+            },
+            None => f.write_str(self.headline)?,
+        }
         if let Some(fix) = non_empty(self.fix) {
             write!(f, "\nFix: {fix}")?;
         }
@@ -140,13 +160,14 @@ impl std::fmt::Display for Teach<'_> {
                 write!(f, "\n  {cmd}")?;
             }
         }
-        // FLAG 2 / P121 forward-compat: the error-code slot (`self.code`) is WIRED
-        // but renders NOTHING this phase — a `.code("RPX-0001")` body is
-        // byte-identical to no code (pinned by `tests::code_slot_renders_nothing`).
-        // P121 owns the `RPX-xxxx` render format and adds its render HERE, e.g.
-        // `if let Some(code) = self.code { write!(f, " [{code}]")?; }`, leaving the
-        // ~40 call sites untouched. The field stays live (no dead_code) via the
-        // derived `Debug` impl, which reads every field.
+        // FLAG 2 / P121: the `Explain: reposix explain <code>` nudge — the codified
+        // half of the north star, mirroring `rustc`'s pointer to `--explain`. It is
+        // appended AFTER the recovery block, and only when a code is set; an unset
+        // code leaves the output byte-identical to P120 (the tag above is likewise
+        // gated on `self.code`). Static-only interpolation (OP-2).
+        if let Some(code) = self.code {
+            write!(f, "\nExplain: reposix explain {code}")?;
+        }
         Ok(())
     }
 }
@@ -182,9 +203,45 @@ pub fn teach(headline: &str, fix: &str, alternative: &str, recovery: &[&str]) ->
         .to_string()
 }
 
+/// Convenience wrapper for a CODED teaching error — the P121 sibling of [`teach`]
+/// with a leading `RPX-xxxx` code. Renders identically to
+/// `Teach::new(headline).fix(fix).alternative(alternative).recovery(recovery).code(code)`:
+/// the ` [code]` tag rides the headline's first line and an
+/// `Explain: reposix explain <code>` limb trails the body. Most coded call sites
+/// use this for minimal churn over the P120 `teach(...)` shape. Prefer a
+/// [`crate::codes::ids`] const for `code` (typo-proof) over a raw literal.
+///
+/// ```
+/// use reposix_core::errmsg::teach_coded;
+/// let msg = teach_coded(
+///     "RPX-0001",
+///     "invalid backend spec `foo`",
+///     "a spec is `<backend>::<project>`",
+///     "start with the simulator: sim::demo",
+///     &["reposix init sim::demo /tmp/demo"],
+/// );
+/// assert!(msg.starts_with("invalid backend spec `foo` [RPX-0001]\n"));
+/// assert!(msg.ends_with("Explain: reposix explain RPX-0001"));
+/// ```
+#[must_use]
+pub fn teach_coded(
+    code: &str,
+    headline: &str,
+    fix: &str,
+    alternative: &str,
+    recovery: &[&str],
+) -> String {
+    Teach::new(headline)
+        .fix(fix)
+        .alternative(alternative)
+        .recovery(recovery)
+        .code(code)
+        .to_string()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{teach, Teach};
+    use super::{teach, teach_coded, Teach};
 
     #[test]
     fn full_three_part_render_is_byte_exact() {
@@ -243,24 +300,43 @@ mod tests {
     }
 
     #[test]
-    fn code_slot_renders_nothing() {
-        // FLAG 2 / P121: the `.code(...)` slot is wired but renders NOTHING this
-        // phase — byte-identical to no code. This pins the baseline so P121's
-        // render is a visible, reviewed diff (not a silent behavior change).
-        let with_code = Teach::new("hd")
+    fn code_renders_tag_and_nudge() {
+        // FLAG 2 / P121 (replaces the P120 `code_slot_renders_nothing` pin, now
+        // false): a set code appends ` [RPX-xxxx]` to the headline's FIRST line and
+        // a trailing `Explain:` limb — the codified north-star touch.
+        let coded = Teach::new("hd")
             .fix("f")
             .recovery(&["r"])
             .code("RPX-0001")
             .to_string();
-        let without = Teach::new("hd").fix("f").recovery(&["r"]).to_string();
         assert_eq!(
-            with_code, without,
-            "code slot must render nothing this phase"
+            coded,
+            "hd [RPX-0001]\nFix: f\nRecovery:\n  r\nExplain: reposix explain RPX-0001"
         );
+
+        // The tag rides the FIRST line of a MULTI-LINE headline (never dangling on
+        // the last line), e.g. cache_build_error's `<headline>\n(underlying: …)`.
+        let multiline = Teach::new("could not sync\n(underlying: boom)")
+            .fix("f")
+            .code("RPX-0201")
+            .to_string();
+        assert_eq!(
+            multiline,
+            "could not sync [RPX-0201]\n(underlying: boom)\nFix: f\nExplain: reposix explain RPX-0201"
+        );
+
+        // An UNSET code still renders byte-identical to no code — the surviving half
+        // of the old pinning invariant (backward-compat for the ~40 uncoded sites).
+        let uncoded = Teach::new("hd").fix("f").recovery(&["r"]).to_string();
+        assert_eq!(uncoded, "hd\nFix: f\nRecovery:\n  r");
+        assert!(!uncoded.contains("RPX-"), "no code → no tag: {uncoded}");
         assert!(
-            !with_code.contains("RPX-0001"),
-            "code must not leak into output yet: {with_code}"
+            !uncoded.contains("Explain:"),
+            "no code → no nudge: {uncoded}"
         );
+
+        // `teach_coded` renders identically to the builder with `.code(...)`.
+        assert_eq!(teach_coded("RPX-0001", "hd", "f", "", &["r"]), coded);
     }
 
     #[test]

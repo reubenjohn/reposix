@@ -10,6 +10,7 @@
 
 pub mod audit;
 pub mod backend;
+pub mod codes;
 pub mod errmsg;
 mod error;
 pub mod http;
@@ -23,7 +24,8 @@ pub use backend::{
     BackendCapabilities, BackendConnector, BackendFeature, CommentSupport, DeleteReason, Listing,
     VersioningModel,
 };
-pub use errmsg::{teach, Teach};
+pub use codes::{explain, ExplainEntry};
+pub use errmsg::{teach, teach_coded, Teach};
 pub use error::{Error, Result};
 pub use path::{
     dedupe_siblings, sanitize_project_for_cache, slug_or_fallback, slugify_title, SLUG_MAX_BYTES,
