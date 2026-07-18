@@ -36,6 +36,10 @@ git checkout -q -B main refs/reposix/origin/main
 git -c user.email=example@reposix.dev -c user.name='reposix-example' \
     commit --allow-empty -m 'baseline' >/dev/null 2>&1 || true
 
+# Earned-congruence marker (harvested by container-rehearse.sh; DRAIN-22): the
+# partial-clone working tree now exists and main is checked out.
+echo "ASSERT-PASS: partial-clone working tree left at $WORK (bootstrapped by reposix init sim::demo)"
+
 # 3. Triage: pick the first open issue. Substitute any `grep -r` predicate
 #    here -- this is the loop an agent runs over a full backlog.
 issue="$(grep -lr '^status: open' . --include='*.md' | sort | head -1)"
@@ -57,6 +61,12 @@ git add "$issue"
 git -c user.email=example@reposix.dev -c user.name='reposix-example' \
     commit -m "review: $(basename "$issue")"
 git push origin main
+
+# Earned-congruence markers (harvested by container-rehearse.sh; DRAIN-22).
+# Reaching here under `set -euo pipefail` means the push exited 0 through the
+# helper, which records a helper_push audit row in the simulator cache.
+echo "ASSERT-PASS: example pushed a commit; the helper's push writes a helper_push audit row to the simulator cache"
+echo "ASSERT-PASS: bash examples/01-shell-loop/run.sh completed and exits 0"
 
 echo
 echo 'Done. Inspect the audit log with:'

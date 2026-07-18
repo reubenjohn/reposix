@@ -74,6 +74,12 @@ if [[ $push_rc -eq 0 ]]; then
     echo "FAIL: expected B's push to be rejected with 'fetch first'" >&2
     exit 1
 fi
+# The rejection must actually name the recovery path -- otherwise "observes
+# 'fetch first'" would be a hollow claim (DRAIN-22: the assert rides a real check).
+if ! grep -qiE 'fetch first|pull --rebase' <<<"$push_out"; then
+    echo "FAIL: B's push was rejected but its stderr did not name the 'fetch first' recovery" >&2
+    exit 1
+fi
 echo "  (push exited non-zero; agent reads the stderr)"
 
 echo
@@ -94,6 +100,21 @@ REPOSIX_CACHE_DIR="$CACHE_B" git -C "$WORK_B" rebase --onto refs/reposix/origin/
 echo
 echo '[5/5] agent B retries the push'
 REPOSIX_CACHE_DIR="$CACHE_B" git -C "$WORK_B" push origin main
+
+# Earned-congruence marker (harvested by container-rehearse.sh; DRAIN-22):
+# reaching here means B observed the 'fetch first' rejection (asserted above)
+# and recovered via rebase + retry-push (both under `set -euo pipefail`).
+echo "ASSERT-PASS: the second agent observed 'fetch first' from helper stderr and recovered via rebase"
+
+# After the rebase, B's tree must carry BOTH edits: A's appended note (from the
+# rebased-onto tip) and B's title tag. Verify before asserting "both merged".
+if grep -q 'note from agent-A' "$WORK_B/$target_name" && grep -q '\[B\]' "$WORK_B/$target_name"; then
+    echo "ASSERT-PASS: after recovery, both edits (agent-A's note and agent-B's title tag) are merged"
+else
+    echo "FAIL: after recovery, agent-B's tree is missing one of the two edits" >&2
+    exit 1
+fi
+echo "ASSERT-PASS: bash examples/04-conflict-resolve/run.sh completed and exits 0"
 
 echo
 echo 'Done. Inspect the rejection + accept rows in agent-B'\''s cache:'

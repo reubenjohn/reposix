@@ -124,6 +124,15 @@ def main() -> int:
         print("nothing to commit")
         return 0
 
+    # Earned-congruence marker (harvested by container-rehearse.sh; DRAIN-22):
+    # the agent matched >=1 'database' issue (fail-loud guard above) AND applied
+    # a severity label to at least one of them.
+    print(
+        "ASSERT-PASS: agent found 'database' in an issue body and applied a "
+        "severity: medium label",
+        flush=True,
+    )
+
     # 5. Stage, commit, push. Stage by the issues/<id>.md-relative path.
     run("git", "add", *(str(p.relative_to(WORK)) for p in changed), cwd=WORK)
     run(
@@ -139,7 +148,17 @@ def main() -> int:
     )
     print(push.stdout, end="")
     print(push.stderr, end="", file=sys.stderr)
-    return push.returncode
+    if push.returncode != 0:
+        return push.returncode
+
+    # Earned-congruence markers (harvested by container-rehearse.sh; DRAIN-22):
+    # the push exited 0 and, having reached here, the whole run succeeds.
+    print("ASSERT-PASS: git push origin main reported success (push returncode 0)", flush=True)
+    print(
+        "ASSERT-PASS: python3 examples/02-python-agent/run.py completed and exits 0",
+        flush=True,
+    )
+    return 0
 
 
 if __name__ == "__main__":

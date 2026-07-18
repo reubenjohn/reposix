@@ -3,7 +3,8 @@
 #
 # DOCS-REPRO-02. Reads quality/catalogs/docs-reproducible.json by row id; runs
 # row.command in row.verifier.container; writes artifact to row.artifact.
-# <=150 lines. Stdlib bash + python3 (catalog parsing).
+# Stdlib bash + python3 (catalog parsing); byte-ceiling governed by
+# structure/file-size-limits (10000 for .sh), not a line cap.
 #
 # Usage:
 #   quality/gates/docs-repro/container-rehearse.sh <catalog-row-id>
@@ -93,18 +94,16 @@ fi
 
 COMMAND=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(r.get('command','') or '')")
 CONTAINER=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print((r.get('verifier') or {}).get('container') or 'ubuntu:24.04')")
-# F-K4b (quality/runners/_audit_field.py::asserts_congruent): each row's
-# claim_vs_assertion_audit declares a clean container exit as the falsifier
-# for every expected.assert, so on exit 0 we emit them as asserts_passed too.
-#
-# HONESTY CAVEAT (filed v0.15.0, SURPRISES-INTAKE): emitting expected.asserts
-# verbatim makes F-K4b a TAUTOLOGY for container rows (a no-op `exit 0` script
-# would pass) -- honesty rests entirely on each example script being FAIL-LOUD
-# (set -euo pipefail + one real end-to-end assert per catalog assert, so exit 0
-# genuinely <=> the asserts hold) AND on each catalog assert describing only what
-# exit 0 load-bearingly establishes. A per-step-earned emission (cf.
-# tutorial-replay.sh) OR a fail-loud meta-check is the filed redesign.
-EXPECTED_ASSERTS=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(json.dumps((r.get('expected') or {}).get('asserts') or []))")
+# DRAIN-22 / F-K4b (P124 Wave 1a): congruence is EARNED, never emitted. This
+# harness NO LONGER resolves row.expected.asserts to copy them verbatim into
+# asserts_passed on a bare `exit 0` -- that made _audit_field.py::asserts_congruent
+# a TAUTOLOGY (a no-op `exit 0` script passed identically to a real one). Instead
+# each container example prints a machine-parseable `ASSERT-PASS: <text>` line
+# AFTER the load-bearing step that establishes that specific assert, and we HARVEST
+# those lines from the container's own stdout below (mirrors tutorial-replay.sh's
+# per-step-earned pattern, adapted to the stdout-line protocol an isolated container
+# requires). The `docs-repro/container-congruence-earned` meta-check gate proves a
+# no-op fixture FAILS earned congruence while a real one passes.
 
 if [[ -z "$COMMAND" ]]; then
     write_skip_artifact "row has no command (manual kind?); use manual-spec-check.sh instead"
@@ -123,7 +122,8 @@ SIM_BIN="$REPO_ROOT/target/debug/reposix"
 SIM_PID=""
 STDOUT_TMP=$(mktemp)
 STDERR_TMP=$(mktemp)
-trap 'rm -f "$STDOUT_TMP" "$STDERR_TMP"; [[ -n "$SIM_PID" ]] && kill "$SIM_PID" 2>/dev/null; wait "$SIM_PID" 2>/dev/null' EXIT
+HARVEST_TMP=$(mktemp)
+trap 'rm -f "$STDOUT_TMP" "$STDERR_TMP" "$HARVEST_TMP"; [[ -n "$SIM_PID" ]] && kill "$SIM_PID" 2>/dev/null; wait "$SIM_PID" 2>/dev/null' EXIT
 
 if [[ ! -x "$SIM_BIN" ]]; then
     write_skip_artifact "target/debug/reposix not built; cannot start sim for rehearsal (NOT-VERIFIED) -- run 'cargo build -p reposix-cli' first"
@@ -167,12 +167,31 @@ EXIT_CODE=$?
 STDOUT_TAIL=$(tail -c 4096 "$STDOUT_TMP")
 STDERR_TAIL=$(tail -c 4096 "$STDERR_TMP")
 
-# Status is exit_code-driven; F-K4b per-expected-assert congruence requires
-# every expected.assert to token-map to an asserts_passed entry, so on a clean
-# exit we emit the row's expected.asserts verbatim alongside the generic line.
-python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" "$EXPECTED_ASSERTS" <<'PY'
+# 4b. EARN congruence (DRAIN-22): harvest the container's own `ASSERT-PASS: <text>`
+# lines from STDOUT ONLY. Each example emits one such line AFTER the load-bearing
+# step under `set -euo pipefail`, so a harvested line is proof the step ran. STDERR
+# is excluded so the [RPX-xxxx] teaching strings can never masquerade as an earned
+# assert. Tempfile-then-grep (P56 SIGPIPE lesson), never copied from expected.asserts.
+grep '^ASSERT-PASS: ' "$STDOUT_TMP" > "$HARVEST_TMP" 2>/dev/null || true
+
+# Status is exit_code-driven; asserts_passed is the HARVESTED set (never the row's
+# expected.asserts verbatim). The generic run line is emitted as DIAGNOSTIC context
+# only -- deliberately NOT a congruence source (closes the F-K4b tautology).
+python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" "$HARVEST_TMP" <<'PY'
 import json, sys
-artifact, rid, container, command, exit_code, stdout, stderr, ts, expected_asserts_json = sys.argv[1:10]
+artifact, rid, container, command, exit_code, stdout, stderr, ts, harvest_path = sys.argv[1:10]
+PREFIX = "ASSERT-PASS: "
+harvested = []
+try:
+    with open(harvest_path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            line = line.rstrip("\n")
+            if line.startswith(PREFIX):
+                text = line[len(PREFIX):].strip()
+                if text:
+                    harvested.append(text)
+except FileNotFoundError:
+    pass
 data = {
     "ts": ts,
     "row_id": rid,
@@ -181,17 +200,17 @@ data = {
     "command": command,
     "stdout": stdout,
     "stderr": stderr,
-    "asserts_passed": [],
+    # DRAIN-22: asserts_passed is HARVESTED from the container's ASSERT-PASS lines,
+    # NEVER copied from row.expected.asserts. asserts_congruent() (grade time) now
+    # falsifies a row whose example stopped emitting a covering line for some
+    # expected.assert -- a no-op `exit 0` that emits nothing earns no congruence.
+    "asserts_passed": list(harvested),
     "asserts_failed": [],
+    # Diagnostic context only -- NOT a congruence source (see comment above).
+    "diagnostic": f"container {container} ran command and exited {exit_code}",
+    "harvested_assert_pass_count": len(harvested),
 }
-if int(exit_code) == 0:
-    data["asserts_passed"].append(f"container {container} ran command and exited 0")
-    try:
-        expected_asserts = json.loads(expected_asserts_json) or []
-    except Exception:
-        expected_asserts = []
-    data["asserts_passed"].extend(str(a) for a in expected_asserts)
-else:
+if int(exit_code) != 0:
     data["asserts_failed"].append(f"container {container} exited with code {exit_code}")
 open(artifact, "w").write(json.dumps(data, indent=2) + "\n")
 PY
