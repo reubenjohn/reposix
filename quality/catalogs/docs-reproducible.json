@@ -364,8 +364,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-repro/container-congruence-earned.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T19:49:52Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: container-rehearse.sh still copies row.expected.asserts into asserts_passed (delete the verbatim-copy path and HARVEST `^ASSERT-PASS: ` lines from container stdout instead -- see quality/gates/docs-repro/tutorial-replay.sh for the per-step-earned pattern), OR a container example stopped emitting one ASSERT-PASS line per expected.assert. The named verifier ships in P124 Wave 1a; NOT-VERIFIED until then (catalog-first).",
@@ -403,8 +403,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-repro/container-rehearse-sigkill-safe.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T19:50:03Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: container-rehearse.sh teardown leaked a sim on 127.0.0.1:7878 or silently reused a stale orphan -- start the sim in its own process group and `kill -TERM -- -$PGID` the group, wrap `docker run` in `timeout <timeout_s - margin>`, and add a pre-run port-7878-free fail-loud gate (`kill $(lsof -ti:7878)` recovery named in the error). The named verifier ships in P124 Wave 2; NOT-VERIFIED until then (catalog-first).",
@@ -441,8 +441,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-repro/container-rehearse-exit-from-artifact.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T19:50:05Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: container-rehearse.sh exits on the docker rc instead of the persisted artifact exit_code (a rc=0 can mask an artifact exit_code=1) -- write the artifact first, re-read its exit_code, and `exit` with that; also make the pre-run readiness gate require sim reachability, not just a bound port. The named verifier ships in P124 Wave 4; NOT-VERIFIED until then (catalog-first).",

@@ -1401,8 +1401,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/container-rehearse-binary-provenance.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-18T19:50:19Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: .github/workflows/quality-post-release.yml lacks an explicit `cargo build -p reposix-cli` (or artifact-download) step before the `run.py --cadence post-release` step -- add one with an inline comment naming why (container docs-repro rows host-mount target/debug/reposix; without it they degrade to NOT-VERIFIED on a cold runner, DRAIN-24). The named verifier ships in P124 Wave 3; NOT-VERIFIED until then (catalog-first).",
