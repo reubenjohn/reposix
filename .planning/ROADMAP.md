@@ -213,7 +213,7 @@
 **Requirements**: DRAIN-07, DRAIN-08, DRAIN-09
 **Success Criteria** (what must be TRUE):
   1. `quality/gates/agent-ux/rebase-recovery-reconciles.sh` exits 0 on a modern-git (≥2.34) CI runner, or the `stateless-connect` divergence from the 2.25.1 `import`-path behavior is documented + gated.
-  2. `resolve_import_parent()` (`crates/reposix-remote/src/main.rs:400-419`) errors loudly — not silently degrading to the parentless path — on a non-ref-absence git failure, proven by a regression test.
+  2. `resolve_import_parent()` (`crates/reposix-remote/src/main.rs:450-469`) errors loudly — not silently degrading to the parentless path — on a non-ref-absence git failure, proven by a regression test.
   3. A subprocess/worktree `reposix init` targeting the shared source tree is refused with a Rust-compiler-grade error, while the sanctioned `/tmp` dark-factory flow and legitimate `attach` adoption still succeed.
 **Plans**: 4 plans (Wave 1: 122-01 catalog-first · Wave 2: 122-02 · Wave 3: 122-03 · Wave 4: 122-04)
 - [ ] 122-01-PLAN.md — catalog-first: SC1 stateless-connect asserts + SC2/SC3 rows (agent-ux)

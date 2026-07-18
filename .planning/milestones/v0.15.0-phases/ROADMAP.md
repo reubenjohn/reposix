@@ -97,7 +97,7 @@ only. Exercise `quality/gates/agent-ux/rebase-recovery-reconciles.sh` on a moder
 (**≥ 2.34**) CI runner and resolve PLAN §5 — does `stateless-connect` on ≥ 2.34 exhibit the
 same or a different fetch-ref-lock behavior than the 2.25.1 import path? This is a coverage
 extension, not an unfixed push-correctness defect. Fold in the sibling helper-hardening row
-GTH-V15-05 (`resolve_import_parent()` at `crates/reposix-remote/src/main.rs:400-419` degrades
+GTH-V15-05 (`resolve_import_parent()` at `crates/reposix-remote/src/main.rs:450-469` degrades
 to the parentless path on ANY git error, not just ref-absence — distinguish ref-absent from
 spawn/other rev-parse failure and error loudly; add an injected-non-absence-failure unit test).
 
