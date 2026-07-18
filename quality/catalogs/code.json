@@ -294,14 +294,14 @@
       "id": "code/ci-green-on-main",
       "dimension": "code",
       "kind": "mechanical",
-      "comment": "D-CONV-4 (2026-07-12): closes the systemic hole where 8 GREEN phases shipped over a RED main because phase-close verified the push LANDED but never that CI went GREEN on main afterward. This row runs at the NEW `post-push` cadence -- AFTER `git push origin main` lands, orchestrator/verifier-side. That timing is load-bearing and NON-CIRCULAR: it is the opposite of D-CONV-1's concern, which demoted `code/cargo-*` / `ci-job-status` out of the pre-* path because a CI-green check running INSIDE (or BEFORE) the CI run for the very commit under test is circular (CI has not concluded yet). A post-push check reads the conclusion of the run that CI has ALREADY started for the just-landed commit -- there is nothing circular about asking 'did main's latest CI go green?' once the push is on main. Crucially this asserts the LATEST run on main, NOT `gh run list --status=success` (which finds the newest GREEN run even when the latest run is RED, masking a red HEAD -- see ci-job-status.sh's deliberately-different query). If the latest ci.yml run on main is red/cancelled, this row FAILs (blast_radius P0) and verdict.py --phase rolls the phase RED. Do NOT re-demote this to pre-push 'because ci-job-status was demoted' -- ci-job-status was demoted for circularity that does NOT apply to a post-push orchestrator-side read. P123/SC5a (GTH-V15-07, DRAIN-01): extends this row from a single hardcoded WORKFLOW=ci.yml to a required-workflow LIST `[ci.yml, release-plz.yml]`. Both trigger unconditionally on `push: branches: [main]` with no path filter (confirmed by reading both workflow files); `audit.yml` is excluded (path-filtered to Cargo.toml/lock, doesn't fire on every push); `docs.yml`/`quality-post-release.yml` are excluded (trigger via `workflow_run`, not `push`). Catalog-first: this comment/asserts describe the post-P123 target contract; `sources`/`command` still describe the pre-P123 single-workflow probe until plan 123-03 lands the actual script change alongside them.",
+      "comment": "D-CONV-4 (2026-07-12): closes the systemic hole where 8 GREEN phases shipped over a RED main because phase-close verified the push LANDED but never that CI went GREEN on main afterward. This row runs at the NEW `post-push` cadence -- AFTER `git push origin main` lands, orchestrator/verifier-side. That timing is load-bearing and NON-CIRCULAR: it is the opposite of D-CONV-1's concern, which demoted `code/cargo-*` / `ci-job-status` out of the pre-* path because a CI-green check running INSIDE (or BEFORE) the CI run for the very commit under test is circular (CI has not concluded yet). A post-push check reads the conclusion of the run that CI has ALREADY started for the just-landed commit -- there is nothing circular about asking 'did main's latest CI go green?' once the push is on main. Crucially this asserts the LATEST run on main, NOT `gh run list --status=success` (which finds the newest GREEN run even when the latest run is RED, masking a red HEAD -- see ci-job-status.sh's deliberately-different query). If the latest ci.yml run on main is red/cancelled, this row FAILs (blast_radius P0) and verdict.py --phase rolls the phase RED. Do NOT re-demote this to pre-push 'because ci-job-status was demoted' -- ci-job-status was demoted for circularity that does NOT apply to a post-push orchestrator-side read. P123/SC5a (GTH-V15-07, DRAIN-01): extends this row from a single hardcoded WORKFLOW=ci.yml to a required-workflow LIST `[ci.yml, release-plz.yml]`. Both trigger unconditionally on `push: branches: [main]` with no path filter (confirmed by reading both workflow files); `audit.yml` is excluded (path-filtered to Cargo.toml/lock, doesn't fire on every push); `docs.yml`/`quality-post-release.yml` are excluded (trigger via `workflow_run`, not `push`). Plan 123-03 landed the script change alongside this row: `sources`/`command` now describe the post-P123 required-workflow-list probe (they LAGGED by one wave when this comment/`expected.asserts` were first written in 123-01 -- fixed in the same commit that shipped the script, per the ownership charter's fix-twice discipline).",
       "sources": [
-        "quality/gates/code/ci-green-on-main.sh (gh run list --workflow=ci.yml --branch=main --limit=1, single latest run, no --status filter)",
-        ".github/workflows/ci.yml:name (workflow 'CI')",
+        "quality/gates/code/ci-green-on-main.sh (loops WORKFLOWS=(ci.yml release-plz.yml); per workflow: gh run list --workflow=<wf> --branch=main --limit=1, single latest run, no --status filter; NOT-VERIFIED takes priority over FAIL when aggregating)",
+        ".github/workflows/ci.yml:name (workflow 'CI'), .github/workflows/release-plz.yml (both `on: push: branches: [main]`, no path filter, identical trigger shape)",
         "quality/PROTOCOL.md Step 6 (post-push runner invocation, AFTER the push)",
         "CLAUDE.md 'Push cadence' (push-landed AND CI-green-on-main-after)"
       ],
-      "command": "gh run list --workflow=ci.yml --branch=main --limit=1 --json databaseId,conclusion,status",
+      "command": "for wf in ci.yml release-plz.yml; do gh run list --workflow=\"$wf\" --branch=main --limit=1 --json databaseId,conclusion,status; done",
       "expected": {
         "asserts": [
           "the LATEST run of EVERY workflow in `[ci.yml, release-plz.yml]` concluded success -- not merely ci.yml",
@@ -317,9 +317,9 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/ci-green-on-main.json",
-      "status": "NOT-VERIFIED",
+      "status": "PASS",
       "minted_at": "2026-07-12T15:39:06Z",
-      "last_verified": "2026-07-17T09:14:00Z",
+      "last_verified": "2026-07-18T11:41:37Z",
       "coverage_kind": "mechanical",
       "freshness_ttl": null,
       "blast_radius": "P0",
