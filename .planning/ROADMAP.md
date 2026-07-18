@@ -236,8 +236,8 @@
 - [x] 123-02-PLAN.md — SC1/DRAIN-03: `run.py` self-sources `./.env` (new `_env_load.py` sibling module)
 - [x] 123-03-PLAN.md — SC5a/DRAIN-10 + SC5b/DRAIN-01: `ci-green-on-main` required-workflow list + t4 real-stderr surfacing
 - [ ] 123-04-PLAN.md — SC2/DRAIN-04: `--allow-downgrade` persist-refuses-downgrade guard (new `_persist_guard.py`)
-- [ ] 123-05-PLAN.md — SC3/DRAIN-05: advisory `flock` around the `--persist` write (extends `_persist_guard.py`)
-- [ ] 123-06-PLAN.md — SC4/DRAIN-06: `structure/verifier-script-exists` gate + selftest
+- [x] 123-05-PLAN.md — SC3/DRAIN-05: advisory `flock` around the `--persist` write (extends `_persist_guard.py`)
+- [x] 123-06-PLAN.md — SC4/DRAIN-06: `structure/verifier-script-exists` gate + selftest
 - [ ] 123-07-PLAN.md — close wave: SURPRISES-INTAKE/GOOD-TO-HAVES resolution + fix-twice (quality/CLAUDE.md, PROTOCOL.md) + ROADMAP/STATE/REQUIREMENTS advance + push + post-push cadence
 
 ### Phase 124: Container-rehearse harness hardening
@@ -309,7 +309,7 @@
 | 120. CLI + helper error hardening | 1/1 | Complete | 2026-07-17 |
 | 121. RPX error-code namespace + explain | 1/1 | Complete | 2026-07-17 |
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
-| 123. Quality-runner & catalog integrity | 3/7 | In Progress|  |
+| 123. Quality-runner & catalog integrity | 5/7 | In Progress|  |
 | 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
 | 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |

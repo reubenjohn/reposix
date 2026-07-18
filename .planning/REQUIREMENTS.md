@@ -217,7 +217,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 - [ ] **DRAIN-05** *(MED, GTH-V15-01)*: Concurrent `--persist` runners can race-corrupt the
   shared catalog JSON — advisory `flock` around catalog persist in `run.py`, or serialize
   all persist ops through a single locked lane.
-- [ ] **DRAIN-06** *(MED, GTH-V15-03)*: No gate checks a catalog row's `verifier.script`
+- [x] **DRAIN-06** *(MED, GTH-V15-03)*: No gate checks a catalog row's `verifier.script`
   exists + is executable — add `quality/gates/structure/verifier-script-exists.sh`.
 - [x] **DRAIN-07** *(HIGH, GTH-V15-04)*: RBF-LR-03's rebase-recovery fix (`bd5b9cb`) is
   proven GREEN only on git 2.25.1 via the `import` path — exercise
@@ -323,7 +323,7 @@ goals, and success criteria).
 | DRAIN-03 | Phase 123 | Pending |
 | DRAIN-04 | Phase 123 | Pending |
 | DRAIN-05 | Phase 123 | Pending |
-| DRAIN-06 | Phase 123 | Pending |
+| DRAIN-06 | Phase 123 | Complete |
 | DRAIN-07 | Phase 122 | Complete |
 | DRAIN-08 | Phase 122 | Complete |
 | DRAIN-09 | Phase 122 | Complete |
