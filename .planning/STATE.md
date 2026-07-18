@@ -3,19 +3,46 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-18T14:00:00.000Z"
-last_activity: 2026-07-18 -- P123 CLOSED GREEN (gsd-verifier verdict GREEN at quality/reports/verdicts/p123/VERDICT.md, verdict commit 2f6d62ff): quality-runner & catalog integrity hardening — SC1-SC5 all PASS (SC4/GTH-V15-03 graded-outcome scope ruling SOUND; SC5b real-backend leg NOT-VERIFIED by-design). 10/15 v0.15.0 "Floor" phases complete (P114–P123); next = P124.
+last_updated: "2026-07-18T20:30:00.000Z"
+last_activity: 2026-07-18 -- P124 CLOSED GREEN (gsd-verifier independent phase-close verdict GREEN): container-rehearse harness hardening — SC1-SC4 all PASS (example-05 P1 post-release leg re-grades in the post-release container job, NOT-VERIFIED by-design at pre-push). 11/15 v0.15.0 "Floor" phases complete (P114–P124); next = P125.
 progress:
   total_phases: 15
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 3
   completed_plans: 2
-  percent: 67
+  percent: 73
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P124 (Container-rehearse harness hardening, v0.15.0 DRAIN-13/14/22/23/24) — CLOSED GREEN 2026-07-18.**
+gsd-verifier independent phase-close verdict GREEN; 4/4 success criteria verified against
+reality: SC1 (DRAIN-22 — container-row congruence is now EARNED via per-step `ASSERT-PASS:`
+stdout harvesting instead of copied verbatim from `expected.asserts`; the F-K4b zero-line
+tautology is closed by a non-empty-harvest guard, and example-05 drives the REAL runtime
+`BLOB_LIMIT_EXCEEDED_FMT` refusal + `git sparse-checkout` recovery cycle), SC2 (DRAIN-23 —
+SIGKILL-proof ephemeral-sim teardown via a `setsid` process-group kill + an internal
+`timeout` shorter than the row's `timeout_s`, plus a fail-loud pre-run stale-orphan gate on
+port 7878), SC3 (DRAIN-24 — an explicit `cargo build -p reposix-cli` provenance step precedes
+the post-release gates in `quality-post-release.yml`), SC4 (DRAIN-13+14 — harness exit derived
+strictly from the persisted artifact `exit_code` so a docker rc=0 cannot mask exit_code=1,
+plus a `.sim-*.log` `.gitignore` pattern). Catalog-first held: 5 rows minted NOT-VERIFIED at
+W0 (`ac632c5d`) strictly before impl; the 4 mechanical rows (`container-congruence-earned` P0,
+`container-rehearse-sigkill-safe` / `container-rehearse-exit-from-artifact` /
+`container-rehearse-binary-provenance` P1) grade PASS when run and were minted PASS at close
+(`8d9a269a`); `example-05-blob-limit-recovery` (P1, `post-release` cadence) re-grades in the
+post-release container job — NOT-VERIFIED by-design at pre-push (mirroring P123's SC5b). Pushed
+tip `790aa73c`, CI GREEN (`ci.yml` run `29657431393` = success); the phase-close SUMMARY
+(`3b1a61ce`) + catalog mint (`8d9a269a`) + this close-bookkeeping lane's STATE/ROADMAP advance
++ 2 SURPRISES / 3 GTH (GTH-V15-86..88) intake filings ride LOCAL, banked on P125's phase-close
+push per the close plan. **Bare-session verdict trap (filed to SURPRISES-INTAKE):** the
+gitignored roll-up `quality/reports/verdicts/p124/2026-07-18T20-05-49Z.md` reads RED, but that
+is a full-catalog collation artifact (411 NOT-VERIFIED un-run rows + 8 pre-existing standing P2
+FAILs — v0.13.0/v0.14.0 drain/tag/changelog/hygiene rows), NOT a P124 regression; phase truth
+is the per-phase gates + `code/ci-green-on-main`. **11/15 v0.15.0 "Floor" phases complete**
+(P114–P124); next = **P125**.
 
 Phase: **P123 (Quality-runner & catalog integrity hardening, v0.15.0 DRAIN-01/03/04/05/06/10) — CLOSED GREEN 2026-07-18.**
 gsd-verifier verdict GREEN (`quality/reports/verdicts/p123/VERDICT.md`, verdict commit

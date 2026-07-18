@@ -74,7 +74,7 @@
 - [x] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up. (completed 2026-07-17)
 - [x] **Phase 122: `reposix-remote` + `init` hardening** - Two HIGH-severity carry-forward robustness gaps close (modern-git rebase-recovery verification; binary-side self-safety refusal). (completed 2026-07-18)
 - [x] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors.
-- [ ] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence.
+- [x] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence. (completed 2026-07-18)
 - [ ] **Phase 125: Real-backend cadence & mirror-drift resilience** - The `pre-release-real-backend` cadence and milestone-close litmus survive GitHub-mirror drift.
 - [ ] **Phase 126: Docs-alignment tooling polish** - The doc-alignment skill/tooling surface is more reliable and less confusing.
 - [ ] **Phase 127: Surprises absorption (OP-8 Slot 1)** - Every surprise surfaced during P114–P126's own execution has a terminal STATUS.
