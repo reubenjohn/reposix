@@ -1,15 +1,35 @@
-//! Top-level `reposix` CLI: orchestrates the simulator, partial-clone
-//! init, and refresh flows.
+//! Top-level `reposix` CLI: bootstraps partial-clone trees, runs the
+//! simulator, and drives the cache/time-travel/token-economy tooling.
 //!
-//! Subcommands (v0.9.0):
+//! Subcommands (keep in sync with the `Cmd` enum below):
+//!
+//! Bootstrap & sync:
+//! - `reposix init <backend>::<project> <path>` — initialize a fresh
+//!   partial-clone working tree backed by reposix.
+//! - `reposix attach <backend>::<project> [path]` — bind an existing checkout
+//!   to a `SoT` backend (DVCS-ATTACH).
+//! - `reposix sync [--reconcile]` — on-demand cache reconciliation (L1 escape hatch).
+//! - `reposix refresh` — re-fetch all records into a working tree + commit.
+//!
+//! Backend queries:
 //! - `reposix sim` — run the REST simulator in-process (no child process; the
 //!   sim is linked in via the `reposix-sim` library dependency, so the single
 //!   shipped `reposix` binary is self-sufficient).
-//! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
-//!   working tree backed by reposix.
 //! - `reposix list` — query the backend's `list_records` and dump JSON/table.
-//! - `reposix refresh` — re-fetch all issues into a working tree + commit.
 //! - `reposix spaces` — list readable Confluence spaces.
+//!
+//! Time-travel & cache:
+//! - `reposix history` — print observed sync-tag history for a working tree.
+//! - `reposix log --time-travel` — enumerate cache sync points, newest first.
+//! - `reposix at <timestamp>` — the closest sync tag at-or-before a timestamp.
+//! - `reposix gc` — evict materialized cache blobs (LRU/TTL/orphans).
+//!
+//! Token economy & diagnostics:
+//! - `reposix tokens` — token-economy ledger from the cache audit log.
+//! - `reposix cost` — per-op cost table over the token-cost audit log.
+//! - `reposix doctor [--fix]` — diagnose a working tree, print copy-pastable fixes.
+//! - `reposix explain <RPX-xxxx>` — extended cause/fix/recovery for an error code
+//!   (`--list` enumerates every registered code), like `rustc --explain`.
 //! - `reposix version` — print the version.
 
 #![forbid(unsafe_code)]
