@@ -198,6 +198,80 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
         stderr.contains("git pull --rebase"),
         "stderr missing git-pull recovery hint: {stderr}"
     );
+    // P121 W3.5: the human-facing conflict diag carries its stable RPX-0505 tag
+    // (on STDERR), while the git-parsed `fetch first` status on STDOUT stays
+    // untagged — tagging the protocol line would break the helper.
+    assert!(
+        stderr.contains("[RPX-0505]"),
+        "stderr conflict diag missing RPX-0505 tag: {stderr}"
+    );
+    assert!(
+        stderr.contains("reposix explain RPX-0505"),
+        "stderr conflict diag missing `reposix explain RPX-0505` nudge: {stderr}"
+    );
+    assert!(
+        !stdout.contains("RPX-0505"),
+        "the git-parsed `fetch first` protocol line on STDOUT must NOT carry an \
+         RPX code (it would corrupt the push status git parses): {stdout}"
+    );
+}
+
+/// P121 W3.5: a single-backend push whose L1 precheck cannot reach the `SoT`
+/// (here a dead loopback port → connection refused) rejects with the git-parsed
+/// `error refs/heads/main backend-unreachable` status on STDOUT and a human-facing
+/// diag carrying the stable RPX-0504 tag on STDERR. Reality-first: drives the REAL
+/// helper against an unreachable backend, no mock. Hermetic — loopback:9 refuses
+/// instantly, isolated cache, no shared repo.
+#[tokio::test]
+// test-name-honesty: ok — drives the real helper export against an unreachable loopback SoT and asserts the RPX-0504 tag on the stderr diag + the untagged protocol status on stdout
+async fn backend_unreachable_push_tags_diag_rpx_0504_not_protocol_line() {
+    let blob = render_with_overrides(1, "issue 1", "edited body\n", 1, 1);
+    let stream = one_file_export("issues/1.md", &blob, "edit issue 1\n");
+    // Nothing listening on loopback:9 → the precheck's REST call is refused.
+    let url = "reposix::http://127.0.0.1:9/projects/demo".to_string();
+    let stdin_data = {
+        let mut buf = Vec::new();
+        writeln!(&mut buf, "export").unwrap();
+        buf.extend_from_slice(&stream);
+        buf
+    };
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
+    let assert = tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("git-remote-reposix")
+            .expect("binary built")
+            .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
+            .write_stdin(stdin_data)
+            .timeout(std::time::Duration::from_secs(15))
+            .assert()
+    })
+    .await
+    .unwrap();
+    drop(cache_dir);
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !out.status.success(),
+        "unreachable-backend push must fail; stderr: {stderr}"
+    );
+    assert!(
+        stdout.contains("error refs/heads/main backend-unreachable"),
+        "stdout missing the git-parsed backend-unreachable status: {stdout}"
+    );
+    assert!(
+        stderr.contains("[RPX-0504]"),
+        "stderr precheck diag missing RPX-0504 tag: {stderr}"
+    );
+    assert!(
+        stderr.contains("reposix explain RPX-0504"),
+        "stderr precheck diag missing `reposix explain RPX-0504` nudge: {stderr}"
+    );
+    assert!(
+        !stdout.contains("RPX-0504"),
+        "the git-parsed protocol status on STDOUT must NOT carry an RPX code: {stdout}"
+    );
 }
 
 /// Happy-path regression: local base matches backend, body change goes

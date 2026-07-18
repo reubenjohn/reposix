@@ -169,7 +169,16 @@ where
                 // `.context("backend-unreachable: ...")`, so the rendered
                 // message preserves the same diagnostic the prior code
                 // emitted via `fail_push`.
-                crate::diag(&format!("error: L1 precheck failed: {e:#}"));
+                //
+                // P121 W3.5: the `[RPX-0504]` tag rides the human-facing STDERR
+                // diag ONLY. The `error refs/heads/main backend-unreachable`
+                // PROTOCOL line below stays verbatim — git parses it as a push
+                // status, so a bracketed code there would break the helper
+                // (registry cause for RPX-0504 documents this split).
+                crate::diag(&format!(
+                    "error: L1 precheck failed [RPX-0504]: {e:#} \
+                     (run `reposix explain RPX-0504` for the full cause + recovery)"
+                ));
                 proto.send_line("error refs/heads/main backend-unreachable")?;
                 proto.send_blank()?;
                 proto.flush()?;
@@ -180,8 +189,13 @@ where
     if !conflicts.is_empty() {
         conflicts.sort_by_key(|c| c.0 .0);
         let (first_id, local_v, backend_v, backend_ts) = &conflicts[0];
+        // P121 W3.5: the `[RPX-0505]` tag rides this human-facing STDERR diag
+        // ONLY. The `error refs/heads/main fetch first` PROTOCOL line emitted
+        // below (git's standard conflict status) stays verbatim — tagging it
+        // would corrupt the push status git parses (registry cause for RPX-0505
+        // documents this split).
         crate::diag(&format!(
-            "issue {} modified on backend at {} since last fetch (local base version: {}, backend version: {}). Run: git pull --rebase",
+            "issue {} modified on backend at {} since last fetch (local base version: {}, backend version: {}) [RPX-0505]. Run: git pull --rebase (run `reposix explain RPX-0505` for the full cause + recovery)",
             first_id.0, backend_ts, local_v, backend_v,
         ));
         if let Some(c) = cache {

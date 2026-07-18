@@ -192,6 +192,17 @@ async fn stateless_connect_blob_limit_refuses_excess_wants() {
         stderr.contains("git sparse-checkout"),
         "stderr must contain `git sparse-checkout` recovery teaching string; stderr={stderr}"
     );
+    // P121 W3.5: the REAL helper's blob-limit refusal on stderr carries its stable
+    // RPX-0503 tag + `reposix explain` nudge — reality-first pin (not just a const
+    // unit test) that the tag renders through a live protocol-v2 fetch turn.
+    assert!(
+        stderr.contains("[RPX-0503]"),
+        "real blob-limit refusal must carry the RPX-0503 tag; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("reposix explain RPX-0503"),
+        "real blob-limit refusal must nudge `reposix explain RPX-0503`; stderr={stderr}"
+    );
 }
 
 /// Scenario 3 — non-upload-pack service answered with the `fallback`

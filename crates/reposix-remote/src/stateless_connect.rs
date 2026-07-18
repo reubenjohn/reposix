@@ -51,15 +51,24 @@ pub(crate) const DEFAULT_BLOB_LIMIT: u32 = 200;
 /// dark-factory teaching mechanism (REQUIREMENTS.md ARCH-09): an
 /// unprompted agent reads the error, runs the named command, and
 /// self-corrects with no in-context system-prompt instructions.
+///
+/// The `[RPX-0503]` tag (P121 W3.5) is safe here because this string is
+/// ONLY ever written to STDERR (`eprintln!` in `proxy_one_rpc`) — never to
+/// the protocol-v2 stdout stream git parses. NEVER route this const to
+/// stdout: the bracketed code would corrupt the pkt-line framing.
 pub(crate) const BLOB_LIMIT_EXCEEDED_FMT: &str =
-    "error: refusing to fetch {N} blobs (limit: {M}). Narrow your scope with `git sparse-checkout set <pathspec>` and retry.";
+    "error: refusing to fetch {N} blobs (limit: {M}). Narrow your scope with `git sparse-checkout set <pathspec>` and retry. [RPX-0503] (run `reposix explain RPX-0503` for the full cause + recovery)";
 
 /// Verbatim teaching hint printed when an UNFILTERED fetch dies inside
 /// upload-pack because the lazy cache has no blob objects for the full
 /// reachable closure. The literal `--filter=blob:none` is the recovery
 /// move (same dark-factory contract as [`BLOB_LIMIT_EXCEEDED_FMT`]).
+///
+/// Like [`BLOB_LIMIT_EXCEEDED_FMT`], the `[RPX-0506]` tag (P121 W3.5) is
+/// STDERR-only (`eprintln!` in `proxy_one_rpc`) — never write this const to
+/// the protocol-v2 stdout stream, which git parses as pkt-lines.
 pub(crate) const UNFILTERED_FETCH_HINT: &str =
-    "error: this reposix cache materializes blobs lazily and cannot serve an unfiltered fetch (upload-pack tried to pack blobs that were never materialized). Re-run with `--filter=blob:none` — `reposix init` sets this automatically; a manual `git fetch` must pass it.";
+    "error: this reposix cache materializes blobs lazily and cannot serve an unfiltered fetch (upload-pack tried to pack blobs that were never materialized). Re-run with `--filter=blob:none` — `reposix init` sets this automatically; a manual `git fetch` must pass it. [RPX-0506] (run `reposix explain RPX-0506` for the full cause + recovery)";
 
 /// True when upload-pack's stderr carries the signature of a fetch that
 /// walked into unmaterialized blobs (the misleading "corruption" death).
@@ -629,6 +638,17 @@ mod tests {
             msg.contains("`git sparse-checkout set <pathspec>`"),
             "backticks-and-pathspec-template preserved verbatim: {msg}"
         );
+        // P121 W3.5: the human-facing (stderr) blob-limit refusal carries its
+        // stable RPX-0503 tag + the `reposix explain` nudge, so an agent hitting
+        // it can look up the extended cause/recovery.
+        assert!(
+            msg.contains("[RPX-0503]"),
+            "blob-limit refusal MUST carry the RPX-0503 tag: {msg}"
+        );
+        assert!(
+            msg.contains("reposix explain RPX-0503"),
+            "blob-limit refusal MUST nudge `reposix explain RPX-0503`: {msg}"
+        );
     }
 
     #[test]
@@ -737,6 +757,15 @@ mod tests {
         assert!(
             UNFILTERED_FETCH_HINT.contains("--filter=blob:none"),
             "teaching hint MUST name `--filter=blob:none`; got: {UNFILTERED_FETCH_HINT}"
+        );
+        // P121 W3.5: the stderr hint carries its stable RPX-0506 tag + explain nudge.
+        assert!(
+            UNFILTERED_FETCH_HINT.contains("[RPX-0506]"),
+            "unfiltered-fetch hint MUST carry the RPX-0506 tag; got: {UNFILTERED_FETCH_HINT}"
+        );
+        assert!(
+            UNFILTERED_FETCH_HINT.contains("reposix explain RPX-0506"),
+            "unfiltered-fetch hint MUST nudge `reposix explain RPX-0506`; got: {UNFILTERED_FETCH_HINT}"
         );
     }
 
