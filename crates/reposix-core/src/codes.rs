@@ -80,6 +80,8 @@ pub mod ids {
     pub const NO_SYNCED_CACHE: &str = "RPX-0202";
     /// `RPX-0203` — the directory is not a reposix working tree (no remote).
     pub const NOT_A_REPOSIX_TREE: &str = "RPX-0203";
+    /// `RPX-0204` — the tree's stored `reposix::` remote URL could not be parsed.
+    pub const BOUND_TREE_URL_PARSE: &str = "RPX-0204";
     /// `RPX-0301` — `reposix log` currently requires `--time-travel`.
     pub const LOG_NEEDS_TIME_TRAVEL: &str = "RPX-0301";
     /// `RPX-0302` — `reposix spaces` supports only the Confluence backend.
@@ -90,6 +92,16 @@ pub mod ids {
     pub const SINCE_PARSE: &str = "RPX-0305";
     /// `RPX-0306` — reposix could not invoke `git` (missing / not on PATH).
     pub const GIT_NOT_ON_PATH: &str = "RPX-0306";
+    /// `RPX-0307` — the `reposix init` target path is not valid UTF-8.
+    pub const INIT_PATH_NOT_UTF8: &str = "RPX-0307";
+    /// `RPX-0308` — `reposix init --since` has no populated cache to rewind into.
+    pub const SINCE_NO_CACHE: &str = "RPX-0308";
+    /// `RPX-0309` — no sync tag exists at-or-before the `--since` timestamp.
+    pub const SINCE_NO_TAG: &str = "RPX-0309";
+    /// `RPX-0310` — the `--since` sync tag resolved but its commit could not be fetched.
+    pub const SINCE_FETCH_FAILED: &str = "RPX-0310";
+    /// `RPX-0311` — `git update-ref` failed while rewinding to the `--since` snapshot.
+    pub const SINCE_UPDATE_REF_FAILED: &str = "RPX-0311";
     /// `RPX-0401` — refusing to `reposix init` over an existing repository.
     pub const INIT_EXISTING_REPO_ROOT: &str = "RPX-0401";
     /// `RPX-0402` — init configured the tree but the initial fetch failed.
@@ -110,6 +122,8 @@ pub mod ids {
     pub const HELPER_BACKEND_UNREACHABLE: &str = "RPX-0504";
     /// `RPX-0505` — push rejected: the record changed on the backend (fetch first).
     pub const HELPER_PUSH_CONFLICT: &str = "RPX-0505";
+    /// `RPX-0506` — the lazy cache cannot serve an UNFILTERED fetch (needs `--filter=blob:none`).
+    pub const HELPER_UNFILTERED_FETCH: &str = "RPX-0506";
     /// `RPX-0601` — malformed reposix bus URL.
     pub const HELPER_MALFORMED_BUS_URL: &str = "RPX-0601";
     /// `RPX-0602` — the git remote helper was invoked with too few arguments.
@@ -246,6 +260,27 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::BOUND_TREE_URL_PARSE,
+        title: "this tree's stored reposix remote URL could not be parsed",
+        cause: "This working tree IS bound to a backend — it has a `reposix::` git \
+                remote — but the URL stored in its `remote.<name>.url` is not a \
+                valid `reposix::<backend>::<project>` URL (nor the \
+                `?mirror=<url>` bus form). The binding was probably hand-edited or \
+                written by an incompatible reposix version. This is DISTINCT from \
+                RPX-0001, which parses a `<backend>::<project>` spec you typed on \
+                the command line; here the unparseable URL already lives in the \
+                tree's git config. Any embedded credential is redacted before the \
+                URL is echoed.",
+        fix: "Re-create the binding from scratch: `reposix init` for a fresh tree, \
+              or `reposix attach` to rebind this existing checkout.",
+        alternative: "Inspect the current remote first with `git remote -v` to see \
+                      the malformed URL before you rebind.",
+        recovery: &[
+            "git remote -v                             # inspect the current remote URL",
+            "reposix attach <backend>::<project> .     # rebind THIS checkout",
+        ],
+    },
+    ExplainEntry {
         code: ids::LOG_NEEDS_TIME_TRAVEL,
         title: "`reposix log` currently requires the `--time-travel` flag",
         cause: "`reposix log` today lists the `refs/reposix/sync/<timestamp>` sync \
@@ -321,6 +356,91 @@ pub const REGISTRY: &[ExplainEntry] = &[
         recovery: &[
             "git --version                              # confirm git is installed and on PATH",
             "reposix init <backend>::<project> <path>   # then retry",
+        ],
+    },
+    ExplainEntry {
+        code: ids::INIT_PATH_NOT_UTF8,
+        title: "the `reposix init` target path is not valid UTF-8",
+        cause: "`reposix init` drives `git` as a subprocess and passes it the \
+                target `<path>`. git needs a UTF-8 path, and the path you gave \
+                contains bytes that are not valid UTF-8 (an unusual locale \
+                encoding, a stray byte from a shell glob, or a filename copied \
+                from another system). reposix refuses fail-closed before touching \
+                the filesystem rather than hand git a path it cannot use.",
+        fix: "Point `init` at a plain UTF-8 path — rename the directory to ASCII \
+              (safest) or a valid UTF-8 name, then re-run.",
+        alternative: "",
+        recovery: &[
+            "reposix init <backend>::<project> /tmp/reposix-demo   # a plain-ASCII path",
+        ],
+    },
+    ExplainEntry {
+        code: ids::SINCE_NO_CACHE,
+        title: "`reposix init --since` has no cache to rewind into",
+        cause: "`--since` rewinds a fresh tree to a HISTORICAL sync tag recorded \
+                in reposix's local cache for this backend. That cache has never \
+                been populated, so there is no sync history to rewind through. \
+                This is expected the very first time you touch a backend: the \
+                history `--since` reads is built up by ordinary (non-`--since`) \
+                syncs.",
+        fix: "Run a normal `reposix init` (no `--since`) first to populate the \
+              cache and record a sync tag, then re-run with `--since`.",
+        alternative: "Only want the latest state, not a historical snapshot? Drop \
+                      `--since` entirely.",
+        recovery: &[
+            "reposix init <backend>::<project> <path>            # populate the cache first",
+            "reposix init <backend>::<project> <path> --since 7d # then rewind",
+        ],
+    },
+    ExplainEntry {
+        code: ids::SINCE_NO_TAG,
+        title: "no sync tag at-or-before the `--since` timestamp",
+        cause: "`--since` selects the NEWEST sync tag recorded at-or-before your \
+                timestamp. The cache holds sync tags, but none is that early — \
+                your timestamp (or the start of your duration window) predates the \
+                first recorded sync for this backend. There is simply no snapshot \
+                from that far back to rewind to.",
+        fix: "Pass a later `--since` timestamp, or a shorter duration shortcut \
+              (`7d` rather than `1y`). `reposix log --time-travel` lists the sync \
+              tags that DO exist with their timestamps.",
+        alternative: "Want the latest state? Omit `--since` and `reposix init` \
+                      takes the most recent sync.",
+        recovery: &[
+            "reposix log --time-travel                            # list available sync tags + timestamps",
+            "reposix init <backend>::<project> <path> --since 7d  # pick a window a tag falls inside",
+        ],
+    },
+    ExplainEntry {
+        code: ids::SINCE_FETCH_FAILED,
+        title: "the `--since` sync tag resolved but its commit could not be fetched",
+        cause: "`--since` matched a historical sync tag, but bringing that tag's \
+                commit into the working tree from the local cache failed. The \
+                cache is incomplete or was garbage-collected after the tag was \
+                recorded, so the commit the tag names is no longer present. git's \
+                own stderr is preserved on the inline message — read it for the \
+                exact fault.",
+        fix: "Repopulate the cache with a plain `reposix init` (no `--since`), \
+              which re-fetches from the backend, then retry `--since`.",
+        alternative: "Want the latest state instead of a historical snapshot? \
+                      Re-run `reposix init` without `--since`.",
+        recovery: &[
+            "reposix init <backend>::<project> <path>             # (no --since) repopulates the cache",
+            "reposix init <backend>::<project> <path> --since <ts># then retry the rewind",
+        ],
+    },
+    ExplainEntry {
+        code: ids::SINCE_UPDATE_REF_FAILED,
+        title: "could not move the working tree's refs to the `--since` snapshot",
+        cause: "The historical commit fetched successfully, but `git update-ref` \
+                failed while pointing `main` / `origin/main` at it — so the tree \
+                could not be rewound. The usual cause is a concurrent git process \
+                holding a ref lock (another `git` running against the same tree). \
+                git's own stderr is preserved on the inline message.",
+        fix: "Make sure no other git process is operating on this tree (wait for \
+              it to finish or stop it), then re-run.",
+        alternative: "",
+        recovery: &[
+            "reposix init <backend>::<project> <path>             # (no --since) for the latest state, then retry",
         ],
     },
     ExplainEntry {
@@ -496,6 +616,27 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::HELPER_UNFILTERED_FETCH,
+        title: "the reposix cache cannot serve an unfiltered fetch",
+        cause: "The reposix cache materializes blobs LAZILY — it holds only the \
+                blob objects that were explicitly fetched, never the full backend. \
+                An UNFILTERED `git fetch` asked `upload-pack` to pack the entire \
+                reachable blob closure, which the cache does not hold, so \
+                upload-pack died (often with a misleading `possible repository \
+                corruption` message). This is DISTINCT from RPX-0503, which \
+                refuses a FILTERED fetch that would exceed the blob LIMIT — here \
+                the fetch carries no `--filter` at all, which the lazy cache can \
+                never satisfy.",
+        fix: "Re-run the fetch with `--filter=blob:none`. `reposix init` sets this \
+              on the remote automatically; a hand-run `git fetch` must pass it \
+              explicitly.",
+        alternative: "",
+        recovery: &[
+            "git fetch --filter=blob:none origin        # the partial-clone fetch the cache serves",
+            "reposix init <backend>::<project> <path>   # bootstraps a tree with the filter preset",
+        ],
+    },
+    ExplainEntry {
         code: ids::HELPER_MALFORMED_BUS_URL,
         title: "malformed reposix bus URL",
         cause: "A `reposix::` remote URL is either `reposix::<sot-spec>` (single \
@@ -632,11 +773,17 @@ mod tests {
             ids::CACHE_BUILD,
             ids::NO_SYNCED_CACHE,
             ids::NOT_A_REPOSIX_TREE,
+            ids::BOUND_TREE_URL_PARSE,
             ids::LOG_NEEDS_TIME_TRAVEL,
             ids::SPACES_CONFLUENCE_ONLY,
             ids::REFRESH_OFFLINE_UNIMPL,
             ids::SINCE_PARSE,
             ids::GIT_NOT_ON_PATH,
+            ids::INIT_PATH_NOT_UTF8,
+            ids::SINCE_NO_CACHE,
+            ids::SINCE_NO_TAG,
+            ids::SINCE_FETCH_FAILED,
+            ids::SINCE_UPDATE_REF_FAILED,
             ids::INIT_EXISTING_REPO_ROOT,
             ids::INIT_FETCH_FAILED,
             ids::ATTACH_NOT_GIT_TREE,
@@ -647,6 +794,7 @@ mod tests {
             ids::HELPER_BLOB_LIMIT,
             ids::HELPER_BACKEND_UNREACHABLE,
             ids::HELPER_PUSH_CONFLICT,
+            ids::HELPER_UNFILTERED_FETCH,
             ids::HELPER_MALFORMED_BUS_URL,
             ids::HELPER_USAGE,
             ids::EXPLAIN_UNKNOWN_CODE,
