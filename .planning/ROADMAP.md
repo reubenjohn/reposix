@@ -215,7 +215,11 @@
   1. `quality/gates/agent-ux/rebase-recovery-reconciles.sh` exits 0 on a modern-git (≥2.34) CI runner, or the `stateless-connect` divergence from the 2.25.1 `import`-path behavior is documented + gated.
   2. `resolve_import_parent()` (`crates/reposix-remote/src/main.rs:400-419`) errors loudly — not silently degrading to the parentless path — on a non-ref-absence git failure, proven by a regression test.
   3. A subprocess/worktree `reposix init` targeting the shared source tree is refused with a Rust-compiler-grade error, while the sanctioned `/tmp` dark-factory flow and legitimate `attach` adoption still succeed.
-**Plans**: TBD
+**Plans**: 4 plans (Wave 1: 122-01 catalog-first · Wave 2: 122-02 · Wave 3: 122-03 · Wave 4: 122-04)
+- [ ] 122-01-PLAN.md — catalog-first: SC1 stateless-connect asserts + SC2/SC3 rows (agent-ux)
+- [ ] 122-02-PLAN.md — SC2/DRAIN-08: resolve_import_parent fails loud on non-absence (RPX-0508) + regression test + verifier
+- [ ] 122-03-PLAN.md — SC3/DRAIN-09: reposix init refuses nested-in-shared-tree (RPX-0406) + worktree-config self-check + tests + verifier
+- [ ] 122-04-PLAN.md — SC1/DRAIN-07: rebase-recovery gate exercises stateless-connect on git ≥2.34; resolve P105 §5
 
 ### Phase 123: Quality-runner & catalog integrity hardening
 **Goal**: `quality/runners/run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors.
@@ -297,7 +301,7 @@
 | 119. Docs/planning simplification | 4/4 | Complete (DP-4 pivot — SC-1/SC-2 literal deletions deferred, targets found live, filed to SURPRISES-INTAKE; SC-3/SC-4 landed, SC-5 held-by-design) | 2026-07-17 |
 | 120. CLI + helper error hardening | 1/1 | Complete | 2026-07-17 |
 | 121. RPX error-code namespace + explain | 0/1 | Not started | - |
-| 122. reposix-remote + init hardening | 0/TBD | Not started | - |
+| 122. reposix-remote + init hardening | 0/4 | Not started | - |
 | 123. Quality-runner & catalog integrity | 0/TBD | Not started | - |
 | 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
 | 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
