@@ -23,3 +23,19 @@ the current task; pre-existing/unrelated failures are logged, not fixed).
   never written back to the committed catalog.
 - **Not fixed** (SCOPE BOUNDARY). If it recurs in CI (not just locally), retune
   `scripts/shell_coverage.py`'s coverable-line counter for `transcript.sh`.
+
+## Wave 2 (SC2 / DRAIN-23)
+
+### D-124-W2-1 — `code/shell-coverage` FAIL recurs identically (same D-124-W1a-1 root cause)
+
+- **Observed:** Wave 2 `run.py --cadence pre-push` grades `code/shell-coverage`
+  **FAIL (P2, 62.10s)** — the SAME anti-gaming counter-validation flip: `quality/gates/
+  agent-ux/lib/transcript.sh` `counter=34 vs kcov=27 = 25.9%` (>15%). Aggregate is
+  17.52% ≥ 13.0% floor (that assert still PASSES).
+- **Not a Wave 2 regression.** Wave 2 touched only `quality/gates/docs-repro/*`
+  (harness + `lib/sim-lifecycle.sh` + `container-rehearse-sigkill-safe.sh`); none is in
+  the `shell-coverage-tests/*.sh` harness set, so none is counter-validated — the new
+  scripts only enter the aggregate denominator (which stays above floor). `transcript.sh`
+  is unchanged (last touched 2026-07-13, pre-P124). Same case (c) local-vs-CI kcov drift
+  as D-124-W1a-1; committed HEAD status is PASS; P2 does not gate the pre-push P0/P1 exit;
+  validate-only run so never persisted. Same fix path if it recurs in CI.
