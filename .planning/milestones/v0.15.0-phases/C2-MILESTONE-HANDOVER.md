@@ -169,18 +169,20 @@ had to take **deterministic control of the close**: dispatch gsd-verifier direct
 grade the verdict, then gsd-executor directly to advance STATE + push, rather than
 waiting on the C1's self-resume.
 
-**The lesson, stated as an operating rule for you (the successor C2):** a coordinator
-with in-flight CI **ACTIVELY OWNS the close** — it does NOT end its own turn hoping a
-grandchild's report bubbles up through a passive relay. A C1's backgrounded-CI-watch
-self-resume, and multi-level report bubbling in general, is **FRAGILE** — it caused a
-~4.5h relay gap earlier this milestone (a separate, worse incident). **When ANY C1 you
-dispatch pushes and CI is in-flight, ensure a LIVE watcher exists that will re-wake IT**
-— either (a) a background `gh run watch <run-id> --exit-status --interval 20` that YOU
-(the C2) own and are prepared to act on, or (b) explicit confirmation the C1's own
-self-resume mechanism is armed and will actually fire. **Never relieve yourself, and
-never let a C1 end its turn, on a passive upward-relay assumption.** If in doubt, take
-the close deterministically yourself the way this rotation did — it is cheap and it
-worked.
+**Liveness doctrine (L0 ruling, 2026-07-17 — load-bearing).** A subagent's OWN
+background `gh run watch` does NOT reliably re-invoke that subagent: when the watch
+concludes the completion bubbles up to L0 as "no live background children" and the
+subagent is NOT self-re-woken. **Only the TOP-LEVEL (L0) gets reliable background-task
+re-invocation.** Therefore the reliable pattern is: **L0 owns CI-watching and pokes the
+coordinator (via SendMessage) on green.** A C2/C1 must NOT depend on a self-owned `gh
+run watch` to wake itself. When a C1 pushes and CI is in-flight, the coordinator
+REPORTS the run id up to L0 (which holds the durable watch) and does NOT end its turn
+assuming a self-watcher — nor a grandchild's report bubbling up — will re-wake it.
+Direct child-AGENT completion notifications DO re-invoke the parent (that path works);
+bare background-bash watchers do not. Never relieve or end a turn on a passive
+upward-relay/self-watch assumption. (This is the operational lesson behind the P122
+close-liveness incident: the C1 went dormant after backgrounding a CI watch, and the C2
+had to be poked by L0 to take deterministic control of the close.)
 
 ### OWED / TRACKED lanes (carry forward — not yet actioned)
 
@@ -240,6 +242,15 @@ worked.
   eager-fix candidate for whichever C1 next touches `.planning/milestones/v0.15.0-phases/`
   — either populate it with a pointer to the live top-level ROADMAP.md, or delete the
   stub. Not urgent; flagging so it doesn't rot further.
+
+### Doctrine updates owed
+
+**Doctrine-update owed (GSD-gated):** the corrected liveness doctrine above must be
+absorbed into `.planning/ORCHESTRATION.md` (§3/§11 liveness) AND the
+`coordinator-dispatch` skill. This is a doctrine edit — it MUST go through a GSD
+command (`/gsd-quick`), never an out-of-band edit. Successor C2: run this as an early
+`/gsd-quick` (or fold into an early between-phase quiet point) so the next generation
+of coordinators reads the tightened rule (fix-twice meta-rule).
 
 ## 6. Precise next steps (successor runbook)
 
