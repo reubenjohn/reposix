@@ -274,6 +274,63 @@ async fn backend_unreachable_push_tags_diag_rpx_0504_not_protocol_line() {
     );
 }
 
+/// P121 W3.6 (FIX 4, P121-review): the FETCH/import sibling of the RPX-0504
+/// push test above. An `import` batch whose `list_records` cannot reach the `SoT`
+/// (here a dead loopback port → connection refused) rejects with the git-parsed
+/// `error refs/heads/main backend-unreachable` status on STDOUT and a human-facing
+/// diag carrying the stable RPX-0507 tag on STDERR. Closes the gap the committed
+/// `import_unreachable_detail_renders_rpx0507_...` string-builder unit test left:
+/// this drives the REAL helper `import` command end-to-end, verifying the live
+/// path actually emits the tag (not just that the string builder can). Reality-
+/// first: no mock — loopback:9 refuses instantly. Hermetic, isolated cache.
+#[tokio::test]
+// test-name-honesty: ok — drives the real helper import command against an unreachable loopback SoT and asserts the RPX-0507 tag on the stderr diag + the untagged backend-unreachable protocol status on stdout
+async fn backend_unreachable_import_tags_diag_rpx_0507_not_protocol_line() {
+    // Nothing listening on loopback:9 → the import's list_records is refused.
+    let url = "reposix::http://127.0.0.1:9/projects/demo".to_string();
+    // `import refs/heads/main` then a blank line terminates the import batch;
+    // handle_import_batch then calls list_records, which fails → RPX-0507.
+    let stdin_data = "import refs/heads/main\n\n".to_owned();
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
+    let assert = tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("git-remote-reposix")
+            .expect("binary built")
+            .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
+            .write_stdin(stdin_data)
+            .timeout(std::time::Duration::from_secs(15))
+            .assert()
+    })
+    .await
+    .unwrap();
+    drop(cache_dir);
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !out.status.success(),
+        "unreachable-backend import must fail; stderr: {stderr}"
+    );
+    assert!(
+        stdout.contains("error refs/heads/main backend-unreachable"),
+        "stdout missing the git-parsed backend-unreachable status: {stdout}"
+    );
+    assert!(
+        stderr.contains("[RPX-0507]"),
+        "stderr import diag missing RPX-0507 tag: {stderr}"
+    );
+    assert!(
+        stderr.contains("reposix explain RPX-0507"),
+        "stderr import diag missing `reposix explain RPX-0507` nudge: {stderr}"
+    );
+    assert!(
+        !stdout.contains("RPX-0507"),
+        "the git-parsed protocol status on STDOUT must NOT carry an RPX code \
+         (it would corrupt the status git parses): {stdout}"
+    );
+}
+
 /// Happy-path regression: local base matches backend, body change goes
 /// through. Helper emits `ok refs/heads/main`; backend sees one PATCH.
 #[tokio::test]
