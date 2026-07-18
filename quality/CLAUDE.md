@@ -186,33 +186,38 @@ never the shared repo).
 
 `structure/verifier-script-exists.sh` (row `structure/verifier-script-exists` in
 `freshness-invariants.json`, P123/SC4, DRAIN-06, closes GTH-V15-03) is the
-framework-integrity gate: a catalog row could otherwise mint `status: PASS` with a
+framework-integrity gate: a catalog row could otherwise mint a graded verdict backed by a
 `verifier.script` that doesn't exist on disk (or exists but lacks the executable bit),
 and nothing structurally caught it. It scans every `quality/catalogs/*.json` row
 (real `python3 -c` JSON parsing, not grep), EXCLUDING files named `*-allowlist.json`
 (a different, non-row schema) and any catalog whose wrapper `dimension ==
 "docs-alignment"` (that dimension's rows carry no `verifier.script` field at all — see
-"Docs-alignment dimension" below). Three violation classes, each printed on its own
-line with catalog + row id + path + a concrete fix: MISSING-FIELD (`verifier.script`
-null/absent), MISSING-FILE (the path doesn't resolve to a file), NON-EXECUTABLE (the
-file exists but lacks `+x`).
+"Docs-alignment dimension" below). Two violation classes, each printed on its own line
+with catalog + row id + path + a concrete fix: MISSING-FILE (the path doesn't resolve to
+a file), NON-EXECUTABLE (the file exists but lacks `+x`).
 
-**The check is unconditional across every row regardless of that row's own `status`**
-(no PASS-only scoping) — this is a deliberate, committed design choice (see the row's
-`claim_vs_assertion_audit`), not an oversight; a status-scoped narrowing would need the
-row owner's sign-off, not a silent implementation change. As of 2026-07-18 this means
-the row grades FAIL against 5 pre-existing, already-tracked-elsewhere catalog-first
-stub rows (2 WAIVED cross-platform rehearsal rows, `docs-build/animation-renders`, 2
-`docs-repro/benchmark-claim/*` rows) whose verifiers are intentionally not yet built —
-filed to `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` (2026-07-18 entry)
-rather than faked to force a green. **Not yet tagged `pre-commit`** for exactly this
-reason — a P1 row that can't reach clean `exit 0` must not join the pre-commit cadence
-(would self-block every future commit repo-wide); still `[pre-push, pre-pr]`. Promote
-once the 5 deferred verifiers land or the row's scope is deliberately narrowed (owner
-decision, both paths sketched in the filed entry).
+**Scope = GRADED OUTCOMES only** (refined 2026-07-18, P123 close, coordinator design call
+per DP-5 — see `claim_vs_assertion_audit`). The check fires ONLY for a row whose `status`
+asserts a run result — `{PASS, FAIL, PARTIAL}` (the canonical graded-outcome triple,
+mirror of `run.py`'s real-grade set). A row that asserts **no** verifier-backed result is
+EXEMPT: status `WAIVED`/`NOT-VERIFIED` (the `STALE` display-flavor persists as
+`NOT-VERIFIED`), or `verifier.script: null`. **Why:** GTH-V15-03's hazard is an *unbacked
+graded claim* (a false-green riding on a verifier that can't run); a WAIVED/NOT-VERIFIED/
+null-script row makes no verified claim, so a missing verifier there is not a false-green
+(and a null-script graded row is separately flipped to `NOT-VERIFIED` by the runner's
+honesty machinery at grade time — this static gate does not double-police that path). This
+refinement (path (b) of the filed intake) resolved the 5 pre-existing catalog-first stubs
+(2 WAIVED cross-platform rehearsals, `docs-build/animation-renders`, 2
+`docs-repro/benchmark-claim/*`) — all now EXEMPT because none claims a graded outcome — so
+the row grades **PASS for real** (155 in-scope graded rows, 0 violations, 17 exempt) and is
+now tagged **`[pre-commit, pre-push, pre-pr]`** (a clean P1 row is safe repo-wide). The 32
+chmod-+x fixes on graded rows remain in-scope and enforced. The 5 deferred verifiers stay
+independently tracked (P97 / 117-07 W5 / GOOD-TO-HAVES-04); building them is now purely
+additive.
 
-Self-test (missing-file + non-executable + missing-field, each individually named, plus
-the all-good pass path): `bash quality/gates/structure/verifier-script-exists.selftest.sh`
+Self-test (full truth table — PASS/FAIL/PARTIAL + missing/non-exec → violation, each
+individually named; WAIVED/NOT-VERIFIED + missing → exempt; null-script → exempt;
+all-good → pass): `bash quality/gates/structure/verifier-script-exists.selftest.sh`
 (throwaway `/tmp` fixture repo — never the shared repo, never the real catalogs).
 
 ## Docs-alignment dimension

@@ -1338,7 +1338,7 @@
       "dimension": "structure",
       "kind": "mechanical",
       "minted_at": "2026-07-18T10:58:08Z",
-      "comment": "P123/SC4 (DRAIN-06, cites GTH-V15-03) — a row backed by a missing or non-executable verifier.script is a framework-integrity hole -- a false PASS could ride on a verifier that can't run. Scans every catalog row (excluding *-allowlist.json and the docs-alignment dimension, which has no per-row verifier.script field) and asserts every declared script exists AND is executable. 123-06 authored quality/gates/structure/verifier-script-exists.sh (+ selftest) and ran it for real: fixed 32 pre-existing missing-chmod-+x violations directly, but 5 more (cross-platform/{windows-2022,macos-14}-rehearsal, docs-build/animation-renders, docs-repro/benchmark-claim/{8ms-cached-read,89.1-percent-token-reduction}) are pre-existing catalog-first stubs already tracked elsewhere (P90/P97/117-07-W5/GOOD-TO-HAVES-04) and out of this plan's eager-fix budget -- filed to SURPRISES-INTAKE 2026-07-18 rather than faking stub verifiers to force green. Because those 5 keep this row honestly FAIL (not PASS) today, 123-06 did NOT promote cadences to add pre-commit (a dirty pre-commit-tagged P1 row would self-block every future commit) -- still [pre-push, pre-pr] as minted. Promote to pre-commit once either the 5 deferred verifiers are built OR the row's scope is deliberately narrowed to status==PASS rows only (owner decision, see the filed entry).",
+      "comment": "P123/SC4 (DRAIN-06, cites GTH-V15-03) — a GRADED-OUTCOME row (status in {PASS, FAIL, PARTIAL}) backed by a missing or non-executable verifier.script is a framework-integrity hole: a graded verdict could ride on a verifier that can't run. Scans every catalog row (excluding *-allowlist.json and the docs-alignment dimension, which has no per-row verifier.script field). REFINED 2026-07-18 (P123 close, coordinator design call per DP-5 in-charter, cites GTH-V15-03 intent) from an unconditional scan to a GRADED-OUTCOME scope: it flags a missing/non-executable verifier.script ONLY for rows whose status asserts a run result (PASS/FAIL/PARTIAL). Rows that assert NO verifier-backed result are EXEMPT — status WAIVED or NOT-VERIFIED (the STALE display-flavor persists as NOT-VERIFIED), or verifier.script null/absent — because a missing verifier there is not a false-green (a null-script graded row is separately flipped to NOT-VERIFIED by the runner's honesty machinery at grade time). This matches GTH-V15-03's intent exactly: catch the unbacked GRADED claim while exempting catalog-first placeholders that honestly admit their own incompleteness. Under the refined scope the 5 pre-existing deferred stubs (cross-platform/{windows-2022,macos-14}-rehearsal WAIVED per P90/P97; docs-build/animation-renders + docs-repro/benchmark-claim/{8ms-cached-read,89.1-percent-token-reduction} NOT-VERIFIED per 117-07-W5/GOOD-TO-HAVES-04) are exempt and the row grades PASS for real against the live catalog (155 in-scope graded rows, 0 violations, 17 exempt) — so cadences now include pre-commit (a clean P1 row is safe repo-wide). The 32 chmod-+x fixes 123-06 applied to graded rows remain in-scope and still enforced.",
       "sources": [
         "quality/catalogs/*.json (every row's verifier.script field)",
         ".planning/phases/123-quality-runner-catalog-integrity-hardening/123-01-PLAN.md",
@@ -1347,9 +1347,9 @@
       "command": "bash quality/gates/structure/verifier-script-exists.sh",
       "expected": {
         "asserts": [
-          "every row with a non-null verifier.script in every quality/catalogs/*.json (excluding *-allowlist.json and docs-alignment) resolves to a file that exists on disk",
-          "every resolved verifier.script carries the executable bit (os.access(path, os.X_OK))",
-          "a row whose verifier.script is null/absent (outside docs-alignment) is ALSO a violation",
+          "every GRADED-OUTCOME row (status in {PASS, FAIL, PARTIAL}) that declares a non-null verifier.script, in every quality/catalogs/*.json (excluding *-allowlist.json and docs-alignment), resolves to a file that exists on disk",
+          "every such in-scope verifier.script carries the executable bit (os.access(path, os.X_OK))",
+          "a row that asserts NO graded outcome is EXEMPT -- status WAIVED/NOT-VERIFIED (the STALE flavor persists as NOT-VERIFIED), or verifier.script null/absent -- because it makes no verifier-backed claim, so a missing/absent verifier there is not a false-green",
           "a violation prints the offending catalog + row id + path + a concrete fix (chmod +x, or author/correct the path)"
         ]
       },
@@ -1360,15 +1360,16 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/verifier-script-exists.json",
-      "status": "FAIL",
-      "last_verified": "2026-07-18T12:53:39Z",
+      "status": "PASS",
+      "last_verified": "2026-07-18T13:21:11Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: the printed violation names the offending catalog+row id+path; missing file -> author quality/gates/<dim>/<name>.sh; non-executable -> chmod +x <path>; null/absent verifier.script (outside docs-alignment) -> add the field pointing at a real script.",
-      "claim_vs_assertion_audit": "If any catalog row declared a verifier.script that does not exist on disk, or exists but lacks the executable bit, or omitted verifier.script entirely (outside docs-alignment, which has no such field), the verifier would iterate every quality/catalogs/*.json (excluding *-allowlist.json and doc-alignment.json), resolve each row's verifier.script path, and assert os.path.isfile() AND os.access(path, os.X_OK) both hold -- a missing file fails isfile(), a non-executable file fails access(), and a null/absent script fails an explicit not-null assertion. Any one of these failure modes would surface as a printed catalog+row id+path+concrete fix (chmod +x or author the path), directly falsifying the claim that every row's verifier is real and runnable.",
+      "owner_hint": "if RED: the printed violation names the offending catalog+row id+path of a GRADED-OUTCOME row (status PASS/FAIL/PARTIAL); missing file -> author quality/gates/<dim>/<name>.sh; non-executable -> chmod +x <path>. A WAIVED/NOT-VERIFIED row or a null verifier.script is EXEMPT (asserts no verifier-backed result) -- if such a row must be policed, first give it a real graded status.",
+      "claim_vs_assertion_audit": "If any GRADED-OUTCOME row (status in {PASS, FAIL, PARTIAL}) declared a verifier.script that does not exist on disk, or exists but lacks the executable bit, the verifier would iterate every quality/catalogs/*.json (excluding *-allowlist.json and doc-alignment.json), skip every row that asserts no graded outcome (status WAIVED/NOT-VERIFIED, or verifier.script null/absent), resolve each in-scope row's verifier.script path, and assert os.path.isfile() AND os.access(path, os.X_OK) both hold -- a missing file fails isfile(), a non-executable file fails access(). Either failure surfaces as a printed catalog+row id+path+concrete fix (chmod +x or author the path), directly falsifying the claim that every GRADED row's verifier is real and runnable. An exempt row (WAIVED/NOT-VERIFIED/null-script) asserts no verifier-backed result, so a missing verifier there is not a false-green and is intentionally not flagged -- the graded-outcome scope is the exact GTH-V15-03 hazard boundary (an unbacked GRADED claim), not a bookkeeping check over placeholders that admit their own incompleteness.",
       "waiver": null,
       "transport_claim": false,
       "cadences": [
+        "pre-commit",
         "pre-push",
         "pre-pr"
       ]

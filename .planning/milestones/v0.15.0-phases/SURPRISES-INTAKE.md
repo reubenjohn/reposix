@@ -1018,4 +1018,27 @@ verifier-subagent grading should treat `structure/verifier-script-exists`'s curr
 violations, all cited above, all pre-existing and independently tracked) as a KNOWN, filed,
 non-regressing finding, not a new defect introduced by 123-06.
 
-**STATUS:** OPEN
+**RESOLUTION (2026-07-18, P123 close):** Path **(b)** taken — the gate's violation definition
+was refined from an unconditional scan to a **graded-outcome scope**: it flags a missing OR
+non-executable `verifier.script` ONLY for rows whose `status` asserts a run result
+(`{PASS, FAIL, PARTIAL}`), and EXEMPTS rows that assert no verifier-backed result (status
+`WAIVED`/`NOT-VERIFIED` — the `STALE` display-flavor persists as `NOT-VERIFIED` — or
+`verifier.script: null`). This matches GTH-V15-03's intent exactly: the hazard is an unbacked
+**graded** claim (a false-green riding on a verifier that can't run), NOT a catalog-first
+placeholder that honestly admits its own incompleteness. Under the refined scope all 5 deferrals
+above are exempt (2 WAIVED via status; 3 NOT-VERIFIED via status, 2 of those also via null-script)
+and `structure/verifier-script-exists` grades **PASS for real** against the live catalog (155
+in-scope graded rows, 0 violations, 17 exempt) — so its cadences were promoted to include
+`pre-commit`. The 32 chmod-+x fixes 123-06 applied to graded rows stay in-scope and still enforced.
+This was a **coordinator design call (DP-5 in-charter, coordinator-resolvable — NOT owner
+escalation)**, not the "silent implementation narrowing" 123-06 correctly declined to make
+unilaterally; the row's committed `expected.asserts` + `claim_vs_assertion_audit` + `comment` were
+updated in the SAME commit so the GREEN contract matches the refined gate, and the selftest now
+proves the full truth table (PASS/FAIL/PARTIAL + missing/non-exec → violation; WAIVED/NOT-VERIFIED
++ missing → exempt; null-script → exempt; all-good → pass). Cross-ref: this P123-close refinement
+commit (gate `quality/gates/structure/verifier-script-exists.sh` + `.selftest.sh` + the
+`freshness-invariants.json` row + `quality/CLAUDE.md`). The 5 deferred verifiers themselves remain
+independently tracked (P97 cross-platform, 117-07 W5 animation, GOOD-TO-HAVES-04 headline numbers)
+— path (a) is still available to build them out on their own timelines, now purely additive.
+
+**STATUS:** RESOLVED

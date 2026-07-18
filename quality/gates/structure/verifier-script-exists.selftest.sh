@@ -1,20 +1,31 @@
 #!/usr/bin/env bash
 # quality/gates/structure/verifier-script-exists.selftest.sh
 #
-# Self-test proving verifier-script-exists.sh's three violation classes plus
-# the all-good pass path. Mirrors file-size-limits.selftest.sh's shape: a
-# throwaway /tmp git repo (never the shared repo -- leaf isolation), a
-# fixture catalog seeded under quality/catalogs/, the gate invoked via its
-# real absolute path against the fixture repo's own toplevel. The gate
-# itself does `cd "$(git rev-parse --show-toplevel)"`, so pointing it at a
-# throwaway git repo scopes its `quality/catalogs/*.json` scan to ONLY that
-# repo's fixture catalog -- the real repo's catalogs are never touched.
+# Self-test proving verifier-script-exists.sh's GRADED-OUTCOME scope (refined
+# 2026-07-18, P123 close) as a FULL truth table. Mirrors file-size-limits.
+# selftest.sh's shape: a throwaway /tmp git repo (never the shared repo --
+# leaf isolation), a fixture catalog seeded under quality/catalogs/, the gate
+# invoked via its real absolute path against the fixture repo's own toplevel.
+# The gate itself does `cd "$(git rev-parse --show-toplevel)"`, so pointing it
+# at a throwaway git repo scopes its `quality/catalogs/*.json` scan to ONLY
+# that repo's fixture catalog -- the real repo's catalogs are never touched.
+#
+# TRUTH TABLE (every assertion runs):
+#   status  | verifier.script      | verdict
+#   --------+----------------------+-----------------------------------------
+#   PASS    | missing file         | VIOLATION (graded outcome, broken script)
+#   FAIL    | missing file         | VIOLATION (graded outcome, broken script)
+#   PARTIAL | missing file         | VIOLATION (graded outcome, broken script)
+#   PASS    | present, non-exec    | VIOLATION (graded outcome, no +x bit)
+#   WAIVED  | missing file         | EXEMPT    (asserts no graded outcome)
+#   NOT-VER | missing file         | EXEMPT    (asserts no graded outcome)
+#   PASS    | null                 | EXEMPT    (declares no verifier at all)
+#   PASS    | present, +x          | in-scope PASS (all-good)
 #
 # Cases:
-#   (a) all-good fixture (single row, real +x script) -> exit 0
-#   (b) combined fixture (good + 3 violation rows) -> exit 1, AND each of
-#       the missing-file / non-executable / missing-field rows is named
-#       individually in the violation output (not just a generic count)
+#   (a) all-good fixture (single PASS row, real +x script) -> exit 0
+#   (b) combined fixture (the full table above) -> exit 1 with EXACTLY the 4
+#       graded-outcome broken-script rows named, and every exempt row absent.
 #
 # Run: bash quality/gates/structure/verifier-script-exists.selftest.sh
 # Exit 0 = all assertions pass; exit 1 = a regression.
@@ -53,7 +64,7 @@ run() { # run <dir> -- invokes the real gate scoped to <dir>'s toplevel
 }
 
 # ---------------------------------------------------------------------------
-echo "== Case (a): all-good fixture (single row, real +x script) -> exit 0 =="
+echo "== Case (a): all-good fixture (single PASS row, real +x script) -> exit 0 =="
 WORK_GOOD="$(mktemp -d "${TMPDIR:-/tmp}/verifier-script-exists-selftest-good.XXXXXX")"
 trap 'rm -rf "$WORK_GOOD" "${WORK_COMBINED:-}"' EXIT
 
@@ -71,8 +82,9 @@ cat > "$WORK_GOOD/quality/catalogs/fixture.json" <<'EOF'
   "dimension": "structure",
   "rows": [
     {
-      "id": "structure/fixture-good",
+      "id": "structure/fixture-pass-good",
       "dimension": "structure",
+      "status": "PASS",
       "verifier": {"script": "quality/gates/structure/fixture-good.sh", "args": [], "timeout_s": 30, "container": null}
     }
   ]
@@ -82,57 +94,85 @@ git -C "$WORK_GOOD" add -A && git -C "$WORK_GOOD" commit -qm a
 
 set +e; run "$WORK_GOOD"; rc=$?; set -e
 check "exit code" rc "$rc" 0
-check_contains "PASS summary line present" "$WORK_GOOD/.out" "PASS: verifier-script-exists — 1 rows across 1 catalogs"
-check_not_contains "no violation line for the good row" "$WORK_GOOD/.err" "structure/fixture-good::"
+check_contains "PASS summary line present" "$WORK_GOOD/.out" "PASS: verifier-script-exists — 1 in-scope graded-outcome rows across 1 catalogs"
+check_not_contains "no violation line for the good row" "$WORK_GOOD/.err" "structure/fixture-pass-good::"
 echo "  --- observed stdout ---"; sed 's/^/  /' "$WORK_GOOD/.out"
 
 # ---------------------------------------------------------------------------
-echo "== Case (b): combined fixture (good + missing-file + non-exec + missing-field) -> exit 1, each named =="
+echo "== Case (b): combined fixture (full truth table) -> exit 1, EXACTLY the 4 graded broken-script rows named =="
 WORK_COMBINED="$(mktemp -d "${TMPDIR:-/tmp}/verifier-script-exists-selftest-combined.XXXXXX")"
 
 init_fixture_repo "$WORK_COMBINED"
 
-# (a) GOOD -- real, executable.
+# GOOD -- real, executable (PASS + present +x).
 cat > "$WORK_COMBINED/quality/gates/structure/fixture-good.sh" <<'EOF'
 #!/usr/bin/env bash
 exit 0
 EOF
 chmod +x "$WORK_COMBINED/quality/gates/structure/fixture-good.sh"
 
-# (c) NON-EXECUTABLE -- real file, +x bit deliberately unset.
+# NON-EXECUTABLE -- real file, +x bit deliberately unset (PASS + non-exec).
 cat > "$WORK_COMBINED/quality/gates/structure/fixture-nonexec.sh" <<'EOF'
 #!/usr/bin/env bash
 exit 0
 EOF
 chmod -x "$WORK_COMBINED/quality/gates/structure/fixture-nonexec.sh"
 
-# (b) MISSING FILE -- fixture-missing.sh is deliberately never created.
-# (d) MISSING/NULL FIELD -- verifier.script explicitly null.
+# All *-MISSING.sh scripts are deliberately never created (missing-file class).
+# The null-script row's verifier.script is explicitly null.
 
 cat > "$WORK_COMBINED/quality/catalogs/fixture.json" <<'EOF'
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
-  "comment": "selftest fixture -- combined violation case",
+  "comment": "selftest fixture -- full graded-outcome truth table",
   "dimension": "structure",
   "rows": [
     {
-      "id": "structure/fixture-good",
+      "id": "structure/fixture-pass-good",
       "dimension": "structure",
+      "status": "PASS",
       "verifier": {"script": "quality/gates/structure/fixture-good.sh", "args": [], "timeout_s": 30, "container": null}
     },
     {
-      "id": "structure/fixture-missing",
+      "id": "structure/fixture-pass-missing",
       "dimension": "structure",
-      "verifier": {"script": "quality/gates/structure/fixture-missing-DOES-NOT-EXIST.sh", "args": [], "timeout_s": 30, "container": null}
+      "status": "PASS",
+      "verifier": {"script": "quality/gates/structure/fixture-pass-MISSING.sh", "args": [], "timeout_s": 30, "container": null}
     },
     {
-      "id": "structure/fixture-nonexec",
+      "id": "structure/fixture-fail-missing",
       "dimension": "structure",
+      "status": "FAIL",
+      "verifier": {"script": "quality/gates/structure/fixture-fail-MISSING.sh", "args": [], "timeout_s": 30, "container": null}
+    },
+    {
+      "id": "structure/fixture-partial-missing",
+      "dimension": "structure",
+      "status": "PARTIAL",
+      "verifier": {"script": "quality/gates/structure/fixture-partial-MISSING.sh", "args": [], "timeout_s": 30, "container": null}
+    },
+    {
+      "id": "structure/fixture-pass-nonexec",
+      "dimension": "structure",
+      "status": "PASS",
       "verifier": {"script": "quality/gates/structure/fixture-nonexec.sh", "args": [], "timeout_s": 30, "container": null}
     },
     {
-      "id": "structure/fixture-nullscript",
+      "id": "structure/fixture-waived-missing",
       "dimension": "structure",
+      "status": "WAIVED",
+      "verifier": {"script": "quality/gates/structure/fixture-waived-MISSING.sh", "args": [], "timeout_s": 30, "container": null}
+    },
+    {
+      "id": "structure/fixture-notverified-missing",
+      "dimension": "structure",
+      "status": "NOT-VERIFIED",
+      "verifier": {"script": "quality/gates/structure/fixture-notverified-MISSING.sh", "args": [], "timeout_s": 30, "container": null}
+    },
+    {
+      "id": "structure/fixture-pass-nullscript",
+      "dimension": "structure",
+      "status": "PASS",
       "verifier": {"script": null, "args": [], "timeout_s": 30, "container": null}
     }
   ]
@@ -142,11 +182,19 @@ git -C "$WORK_COMBINED" add -A && git -C "$WORK_COMBINED" commit -qm b
 
 set +e; run "$WORK_COMBINED"; rc=$?; set -e
 check "exit code" rc "$rc" 1
-check_not_contains "no violation line for the good row" "$WORK_COMBINED/.err" "structure/fixture-good::"
-check_contains "(b) missing-file row named" "$WORK_COMBINED/.err" "structure/fixture-missing::quality/gates/structure/fixture-missing-DOES-NOT-EXIST.sh::file does not exist"
-check_contains "(c) non-executable row named" "$WORK_COMBINED/.err" "structure/fixture-nonexec::quality/gates/structure/fixture-nonexec.sh::not executable::chmod +x"
-check_contains "(d) missing/null-field row named" "$WORK_COMBINED/.err" "structure/fixture-nullscript::(no verifier.script field)"
-check_contains "violation count header" "$WORK_COMBINED/.err" "FAIL (structure/verifier-script-exists): 3 violation(s)"
+# --- graded-outcome rows with a broken script: MUST be named (violations) ---
+check_contains "PASS+missing named"    "$WORK_COMBINED/.err" "structure/fixture-pass-missing::quality/gates/structure/fixture-pass-MISSING.sh::file does not exist"
+check_contains "FAIL+missing named"    "$WORK_COMBINED/.err" "structure/fixture-fail-missing::quality/gates/structure/fixture-fail-MISSING.sh::file does not exist"
+check_contains "PARTIAL+missing named" "$WORK_COMBINED/.err" "structure/fixture-partial-missing::quality/gates/structure/fixture-partial-MISSING.sh::file does not exist"
+check_contains "PASS+non-exec named"   "$WORK_COMBINED/.err" "structure/fixture-pass-nonexec::quality/gates/structure/fixture-nonexec.sh::not executable::chmod +x"
+# --- rows that assert no graded outcome: MUST be EXEMPT (never named) ---
+check_not_contains "WAIVED+missing exempt"       "$WORK_COMBINED/.err" "structure/fixture-waived-missing::"
+check_not_contains "NOT-VERIFIED+missing exempt" "$WORK_COMBINED/.err" "structure/fixture-notverified-missing::"
+check_not_contains "PASS+null-script exempt"     "$WORK_COMBINED/.err" "structure/fixture-pass-nullscript::"
+check_not_contains "good row not named"          "$WORK_COMBINED/.err" "structure/fixture-pass-good::"
+# --- exactly 4 violations, 3 exempt, 8 rows seen ---
+check_contains "violation count header (4)" "$WORK_COMBINED/.err" "FAIL (structure/verifier-script-exists): 4 violation(s)"
+check_contains "exempt count in header (3)" "$WORK_COMBINED/.err" "8 rows seen, 3 exempt"
 echo "  --- observed stderr ---"; sed 's/^/  /' "$WORK_COMBINED/.err"
 
 echo
