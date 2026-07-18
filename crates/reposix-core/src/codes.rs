@@ -124,10 +124,14 @@ pub mod ids {
     pub const HELPER_PUSH_CONFLICT: &str = "RPX-0505";
     /// `RPX-0506` — the lazy cache cannot serve an UNFILTERED fetch (needs `--filter=blob:none`).
     pub const HELPER_UNFILTERED_FETCH: &str = "RPX-0506";
-    /// `RPX-0601` — malformed reposix bus URL.
+    /// `RPX-0601` — malformed reposix bus URL (fails to PARSE — a syntax fault).
     pub const HELPER_MALFORMED_BUS_URL: &str = "RPX-0601";
     /// `RPX-0602` — the git remote helper was invoked with too few arguments.
     pub const HELPER_USAGE: &str = "RPX-0602";
+    /// `RPX-0603` — the DVCS bus mirror is unreachable/misconfigured (PRECHECK A
+    /// `git ls-remote` failed). DISTINCT from RPX-0601: the URL parsed, the mirror
+    /// it names does not answer.
+    pub const HELPER_MIRROR_UNREACHABLE: &str = "RPX-0603";
     /// `RPX-0900` — the explain-meta code (`reposix explain <unknown>`).
     pub const EXPLAIN_UNKNOWN_CODE: &str = "RPX-0900";
 }
@@ -674,6 +678,31 @@ pub const REGISTRY: &[ExplainEntry] = &[
         ],
     },
     ExplainEntry {
+        code: ids::HELPER_MIRROR_UNREACHABLE,
+        title: "the reposix bus mirror is unreachable or misconfigured",
+        cause: "A `reposix::<sot-spec>?mirror=<mirror-url>` bus remote fans each \
+                push out to a DVCS mirror after the system-of-record write. Before \
+                pushing, `git-remote-reposix` runs PRECHECK A — a `git ls-remote` \
+                against the mirror URL to detect drift — and that `git ls-remote` \
+                failed: the mirror host could not be reached, the URL is wrong, or \
+                the mirror repository does not exist. This is DISTINCT from RPX-0601 \
+                (a MALFORMED bus URL that fails to PARSE); here the URL parsed fine \
+                but the mirror it names does not answer. Any credentials embedded in \
+                the mirror URL are redacted before it is echoed.",
+        fix: "Confirm the mirror URL is correct and its host is reachable, then \
+              re-drive the push. `git ls-remote <mirror-remote-name>` reproduces the \
+              exact PRECHECK A probe against the configured remote (creds-free and \
+              runnable — never the redacted URL).",
+        alternative: "Push to the system of record alone by dropping `?mirror=<url>` \
+                      from the remote URL — the mirror fan-out is best-effort, so \
+                      the SoT write still lands without it.",
+        recovery: &[
+            "git ls-remote <mirror-remote-name>                    # reproduce the PRECHECK A probe",
+            "git remote set-url origin 'reposix::<sot-spec>'       # drop the mirror fan-out",
+            "# mirror recovery playbook: docs/guides/dvcs-mirror-setup.md",
+        ],
+    },
+    ExplainEntry {
         code: ids::EXPLAIN_UNKNOWN_CODE,
         title: "no such reposix error code",
         cause: "`reposix explain` looks up an `RPX-xxxx` error code in the \
@@ -797,6 +826,7 @@ mod tests {
             ids::HELPER_UNFILTERED_FETCH,
             ids::HELPER_MALFORMED_BUS_URL,
             ids::HELPER_USAGE,
+            ids::HELPER_MIRROR_UNREACHABLE,
             ids::EXPLAIN_UNKNOWN_CODE,
         ] {
             assert!(

@@ -461,7 +461,11 @@ fn precheck_mirror_drift(mirror_url: &str, mirror_remote_name: &str) -> Result<M
         return Err(anyhow!(
             "{}",
             reposix_core::errmsg::teach_coded(
-                reposix_core::codes::ids::HELPER_MALFORMED_BUS_URL,
+                // RPX-0603 (mirror UNREACHABLE), NOT RPX-0601 (malformed bus URL):
+                // PRECHECK A's `git ls-remote` failed because the mirror does not
+                // answer — a reachability fault, not a URL syntax fault. RPX-0601
+                // stays reserved for the genuine parse-failure site in bus_url.rs.
+                reposix_core::codes::ids::HELPER_MIRROR_UNREACHABLE,
                 &headline,
                 "the mirror is unreachable or misconfigured — confirm the mirror \
                  URL is correct and the host is reachable",
@@ -679,6 +683,21 @@ mod tests {
             msg.contains("git ls-remote mirror"),
             "recovery must reference the creds-free remote NAME (runnable), not the \
              redacted URL; got:\n{msg}"
+        );
+        // P121 W3.5: a mirror UNREACHABLE fault carries RPX-0603 (reachability),
+        // NOT RPX-0601 (malformed-URL syntax). The `[RPX-0603]` tag rides the
+        // headline's first line and an `Explain:` nudge trails the body.
+        assert!(
+            msg.contains("[RPX-0603]"),
+            "mirror-unreachable teaching must carry the RPX-0603 tag; got:\n{msg}"
+        );
+        assert!(
+            !msg.contains("RPX-0601"),
+            "a reachability fault must NOT reuse the malformed-URL code RPX-0601; got:\n{msg}"
+        );
+        assert!(
+            msg.contains("reposix explain RPX-0603"),
+            "must nudge `reposix explain RPX-0603`; got:\n{msg}"
         );
     }
 
