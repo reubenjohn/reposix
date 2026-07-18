@@ -15,7 +15,7 @@
 
 ## Split index (OP-8 file-size drain)
 
-This ledger exceeded the *.md 20k budget and was split into 9 per-part child files under `good-to-haves/`. Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here.
+This ledger exceeded the *.md 20k budget and was split into 10 per-part child files under `good-to-haves/`. Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here.
 
 - [`good-to-haves/part-01.md`](good-to-haves/part-01.md) — 2 entries:
   - Carried-forward from the v0.14.0 surprises-intake (7 entries)
@@ -65,3 +65,5 @@ This ledger exceeded the *.md 20k budget and was split into 9 per-part child fil
   - From Phase 123 close (REQUIREMENTS.md coverage-table staleness noticing)
   - From Phase 123 close (Lane 1 code-review noticing, file-size early-warning)
   - From Phase 124 close (container-rehearse harness hardening, 2026-07-18)
+- [`good-to-haves/part-10.md`](good-to-haves/part-10.md) — 3 entries:
+  - From Phase 124 close-bookkeeping lane (STATE/ROADMAP advance + intake filing, 2026-07-18) — GTH-V15-86 (shell-coverage headroom), GTH-V15-87 (zsh 1-indexed pipestatus), GTH-V15-88 (SC2 sigkill control-leg flake)

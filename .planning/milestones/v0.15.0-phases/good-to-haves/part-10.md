@@ -1,0 +1,23 @@
+# v0.15.0 Good-to-haves / carried-forward hardening — Part 10 of 10
+
+> Split from `GOOD-TO-HAVES.md` for the file-size gate (OP-8 drain). Index: `../GOOD-TO-HAVES.md`. Entries preserved verbatim.
+
+## From Phase 124 close-bookkeeping lane (STATE/ROADMAP advance + intake filing, 2026-07-18)
+
+### GTH-V15-86 — shell-coverage aggregate headroom thinned to ~3.7pts after P124's 4 container harness scripts
+- **Source:** NOTICED at P124 phase-close (close-bookkeeping lane) — the new container/harness scripts enter the kcov aggregate denominator at ~0% covered. · **Severity: LOW (health / maintenance — non-blocking today)** · STATUS: OPEN — tag quality / coverage.
+- **What:** P124 added ~4 container-rehearse harness scripts (`container-congruence-earned.sh` + selftest, `container-rehearse-sigkill-safe.sh`, `container-rehearse-exit-from-artifact.sh`, `lib/sim-lifecycle.sh`, ~270 lines total) that run under docker/SIGKILL substrate the local kcov harness cannot instrument, so they land in the aggregate denominator at ~0% covered. Aggregate shell coverage is now **16.70%** against the **13%** floor — headroom **~3.7pts**, down from the pre-P124 margin. A few more uninstrumented harness scripts (or the GTH-V15-84 `lib/` extraction adding more sourced files) will breach the floor.
+- **Fix-sketch:** add targeted shell tests for the container-rehearse harness — the `--selftest-*` docker-free modes are already host-runnable and kcov-instrumentable, so exercising them under kcov (or adding a small shell/bats test that drives the harvest + exit-from-artifact logic host-side) reclaims coverage without needing docker in CI. Do it BEFORE the floor is breached, else the floor either blocks or must be lowered.
+- **Effort:** small-medium (~1h) — a few host-side selftest invocations wired into the kcov harness set.
+
+### GTH-V15-87 — zsh `${PIPESTATUS[0]}` is 1-indexed — a pipeline-exit-code grounding gotcha that bit a P124 leaf
+- **Source:** NOTICED at P124 phase-close — a P124 leaf mis-read a pipeline exit code once via `${PIPESTATUS[0]}` in this project's zsh. · **Severity: LOW (grounding / footgun — no shipped defect, but a repeatable trap)** · STATUS: OPEN — tag docs / grounding.
+- **What:** in bash, `${PIPESTATUS[0]}` is the FIRST pipeline element's exit (0-indexed); in this project's zsh the equivalent array (`pipestatus`) is **1-indexed**, so `${PIPESTATUS[0]}` mis-reads (empty / wrong element) and a guard like `[ "${PIPESTATUS[0]}" -ne 0 ]` silently mis-fires. A P124 leaf hit this once. Correct zsh forms: `${pipestatus[1]}` for the first element, or avoid the array entirely and verify via a non-piped `$?`.
+- **Fix-sketch:** add a one-line shell-convention note to a grounding doc (e.g. `crates/CLAUDE.md` build-discipline section or a `scripts/` conventions note) — "zsh `pipestatus` is 1-indexed; use `${pipestatus[1]}` or a non-piped `$?`, never `${PIPESTATUS[0]}` for the first pipe stage in this repo's zsh" — so future leaves don't re-trip it. Fix-twice candidate (document the gotcha where the next agent reads it).
+- **Effort:** trivial (<15min) — one doc line.
+
+### GTH-V15-88 — `container-rehearse-sigkill-safe.sh` CONTROL leg can degrade to NOT-VERIFIED on a loaded VM (flake window, never false-green)
+- **Source:** NOTICED at P124 phase-close — the SC2 selftest's self-falsifiability CONTROL leg occasionally read NOT-VERIFIED on a loaded VM, then PASS on re-run. · **Severity: LOW-MED (flake — safe-by-construction, but a momentary stall risk)** · STATUS: OPEN — tag quality / flake.
+- **What:** the `container-rehearse-sigkill-safe.sh` self-falsifiability CONTROL leg (which proves the check CAN fail, so a PASS is meaningful) can degrade to NOT-VERIFIED on a loaded VM when the sim has not yet bound port 7878 by the time the SIGKILL timer arms — then PASSes on a re-run. It is **never false-green** (the degradation is toward NOT-VERIFIED, not a spurious PASS), but a momentary NOT-VERIFIED on the control leg could stall a phase-close push that treats NOT-VERIFIED as blocking.
+- **Fix-sketch:** harden the control leg to poll until the sim is actually port-bound (e.g. `ss`/`lsof` on 7878, or the sim's readiness line) BEFORE arming the SIGKILL timer, closing the race window so the leg is deterministic. Reuses the readiness-poll pattern the harness's own stale-orphan gate already has.
+- **Effort:** small (~30min) — add a bounded readiness poll before the timer in the selftest.

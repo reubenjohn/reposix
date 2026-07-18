@@ -1,4 +1,4 @@
-# v0.15.0 Good-to-haves / carried-forward hardening — Part 9 of 9
+# v0.15.0 Good-to-haves / carried-forward hardening — Part 9 of 10
 
 > Split from `GOOD-TO-HAVES.md` for the file-size gate (OP-8 drain). Index: `../GOOD-TO-HAVES.md`. Entries preserved verbatim.
 

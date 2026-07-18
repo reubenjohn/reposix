@@ -183,3 +183,73 @@ scripts under N coverable lines from the relative-drift assert. Do NOT lower the
 floor — that assert is healthy.
 
 **STATUS:** OPEN
+
+## 2026-07-18 | discovered-by: P124 close-bookkeeping lane (distinct downgrade-guard-interaction angle) | severity: MEDIUM
+
+> **Augments — does NOT duplicate — the two existing `code/shell-coverage` counter-drift
+> entries above (`2026-07-18 | gsd-verifier P123 phase-close verdict | LOW-MEDIUM` and
+> `2026-07-18 | P124 W1a + W2 | LOW-MEDIUM`) and the `SESSION-HANDOVER.md` ID `L1166`.**
+> Those diagnose *why* the two counters drift (transcript.sh=34 vs kcov=27, 25.9% > 15%) and
+> note P2 does not gate the exit code on a validate-only run. This entry adds the NEW
+> consequence on the `--persist` MINT path, left unaddressed by L1166's documentation-only
+> P124 resolution (`124-SUMMARY.md:128` clarified the two honesty layers in `quality/CLAUDE.md`
+> but did not remove the FAIL-grade friction itself).
+
+**What:** `code/shell-coverage` (P2) grades FAIL from the `transcript.sh` counter-vs-kcov
+drift (counter=34 vs kcov=27, 25.9% > the 15% threshold), tripping BOTH the P2 counter assert
+AND the F-K4b congruence gate. `quality/CLAUDE.md` documents this as a "non-blocking expected
+divergence" and the committed on-disk status stays PASS because P123's SC2 `--persist`
+downgrade-guard REFUSES to write the FAIL over a committed-GREEN row without
+`--allow-downgrade`. The NEW observation: that refusal means EVERY future pre-push `--persist`
+MINT (i.e. every phase-close catalog-row mint) trips a `REFUSED to persist code/shell-coverage`
+line + a process exit=1 — standing phase-close friction, not a one-off. L1166's prior
+"resolution" was documentation-only (the two-honesty-layers note), so the FAIL-grade friction
+persists into every subsequent phase-close mint.
+
+**Why out-of-scope for the discovering session:** The close-bookkeeping lane's charter was
+STATE/ROADMAP advance + intake filing, not reconciling a pre-existing P2 gate's counting logic
+or re-architecting the downgrade-guard / F-K4b interaction. The remediation needs an owner/L0
+call between three trade-offs (below), which is broader than a bookkeeping lane.
+
+**Sketched resolution (needs owner/L0 decision — P127 surprises Slot 1 candidate):** Three
+options. (a) **Fix the drift** — retune `scripts/shell_coverage.py`'s `coverable_line_count`
+bash-aware skip rules so the transcript counter converges under 15% of kcov (converges the
+root cause; preserves the anti-gaming signal). (b) **Accept-FAIL** — re-baseline the row's
+committed status to FAIL so the mint is congruent and stops tripping the downgrade-guard
+(loses the anti-gaming signal — a genuine future regression would then read identically). (c)
+**Decouple a documented-legit counter drift from a row-level FAIL** — teach F-K4b (or the P2
+counter assert) a WARN/WAIVED disposition for a tracked-legit divergence so the row stays
+non-FAIL without silencing real regressions. Cross-ref the two drift entries above + `L1166`
+(`SESSION-HANDOVER.md`) — drain jointly, do not re-diagnose the drift a fourth time.
+
+**STATUS:** OPEN
+
+## 2026-07-18 | discovered-by: P124 close-bookkeeping lane (bare-session verdict.py collation trap, observed live on the P124 roll-up) | severity: MEDIUM
+
+**What:** Run in a bare verifier session — which runs only a handful of targeted gates, not a
+full pre-push sweep — `verdict.py --phase N` auto-writes a gitignored roll-up (e.g.
+`quality/reports/verdicts/p124/2026-07-18T20-05-49Z.md`) that reads **RED**, purely because
+~411 rows are NOT-VERIFIED (un-run this session), not because of any phase regression. The 7
+not-green P0/P1 rows are pre-existing STANDING rows (real-git-push-e2e,
+t4-conflict-rebase-ancestry ×2, p92-mid-stream / lost-update-cursor, dvcs-cold-reader STALE)
+plus the legit example-05 post-release deferral; the 8 P2 FAILs are v0.13.0/v0.14.0
+drain/tag/changelog/hygiene standing rows. Observed LIVE this phase: the P124 roll-up read RED
+while the independent verifier correctly graded P124 GREEN. A naive verifier trusting that file
+would WRONGLY grade the phase RED. Phase-close truth = the per-phase SC gates run for real +
+`code/ci-green-on-main` (P0), NOT the full-catalog collation.
+
+**Why out-of-scope for the discovering session:** The close-bookkeeping lane's charter was
+STATE/ROADMAP advance + intake filing, not authoring the segregation logic in `verdict.py` or a
+PROTOCOL.md verifier-reading section. This is a tooling/docs hardening item spanning the runner
++ the verifier-dispatch protocol, best owned by a docs/tooling-polish phase.
+
+**Sketched resolution (P126 docs/tooling polish or P127 candidate):** Clarify/segregate the
+bare-session signal — either (a) `verdict.py` emits a loud WARN header when invoked without
+full-sweep provenance (e.g. NOT-VERIFIED count > N), or (b) `--phase N` scopes the collation to
+the phase's OWN catalog rows + the P0 `code/ci-green-on-main` probe rather than the whole
+400+-row catalog. Fix-twice: document in `quality/PROTOCOL.md` (or `quality/CLAUDE.md`) how a
+verifier MUST read `verdict.py --phase` — a bare-session RED is NOT the phase verdict; the phase
+verdict is the per-phase SC gates run for real + CI-green-on-main. This trap has now bitten once
+observably (P124); document it so the next verifier does not re-trip it.
+
+**STATUS:** OPEN
