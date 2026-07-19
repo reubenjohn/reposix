@@ -102,8 +102,11 @@ arcs; the arrows flow from what is done, through what we are doing now, into the
 - **Gold — Public launch.** The end state: a live terminal demo, honest headline numbers,
   a one-command install, and a Show-HN launch kit.
 
-Because the map is drawn by capability, it names no phase numbers and no dates. For live
-phase status and the current milestone in detail, follow the source-of-truth link above.
+Because this capability map is drawn by capability rather than by schedule, the map itself
+names no phase numbers and no dates — phase-level sequence and (on the *Landed recently*
+side) close dates live in the "Progress right now" three-block strip near the top of this
+page, not in the diagram. For live phase status and the current milestone in detail, follow
+the source-of-truth link above.
 
 **Two refresh cadences.** The **"Progress right now" section** near the top ticks forward
 at **every phase close** — a phase moves from *In flight now* into *Landed recently* (with
