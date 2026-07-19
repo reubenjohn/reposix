@@ -57,6 +57,41 @@
 > built) — see `quality/PROTOCOL.md` § "Verifier exit-code conventions" and
 > the OD-2 block under Step 6 for the full distinction.
 
+### DRAIN-02 second-run mirror-drift regression (P125)
+
+The P125 litmus self-heal (`quality/gates/agent-ux/lib/litmus-self-heal.sh`, wired into
+`lib/litmus-flow.sh`) folds backend-drift and mirror-drift self-healing into probe 9. The
+verifier MUST execute these three checks against the sanctioned real backend (TokenWorld +
+the GitHub mirror): there is no scripted way to induce a trashed-fixture state or to fully
+automate a "run twice" real-backend gate, so this is a documented MANUAL verification, not
+new CI wiring. Wording is kept consistent with `125-VALIDATION.md`'s Manual-Only table.
+
+1. **Run-twice proof (DRAIN-02).** Run `python3 quality/runners/run.py --cadence
+   pre-release-real-backend` TWICE in immediate succession (creds + a non-default
+   `REPOSIX_ALLOWED_ORIGINS` present). BOTH runs must exit 0. The SECOND run is the actual
+   DRAIN-02 regression proof: the first run's own bus push re-stales the GitHub mirror, and
+   the mirror pre-reconcile self-heal (`_litmus_mirror_reconcile` — a BUS-remote
+   `git fetch reposix main` → `git checkout FETCH_HEAD -- pages/` overlay of the LOCAL tree
+   before the marker edit, NOT `reposix sync --reconcile`, which converges only the local
+   cache and leaves the external mirror head byte-identical) must prevent the second run
+   from false-negativing on a stale-base rebase conflict. The external mirror head is
+   refreshed by the run's own SoT-changing marker PUSH via the bus fan-out, not by this
+   local overlay.
+
+2. **Backend-drift proof (manual, non-destructive; DRAIN-12).** Confirm current fixture
+   state with `python3 scripts/confluence_tokenworld.py list`; the fixture pre-flight
+   (`_litmus_fixture_preflight`) restores/reparents the three known ids (2818063 / 7766017 /
+   7798785) idempotently. Do NOT destructively trash the protected pair (7766017 / 7798785)
+   to force the condition — the tooling refuses to delete them by design. If a genuine drift
+   is observed in the wild, re-run the litmus and confirm it self-heals before the marker
+   push without a manual `restore` intervention.
+
+3. **Cold-read of the teaching string (SC3 cross-check).** Confirm the corrected mirror-lag
+   helper hint (Plan 125-01) points a stale-mirror operator at `reposix sync --reconcile`
+   for the cache + a remote-explicit `git pull --rebase <bus-remote> main` for the tree,
+   rather than a bare `git pull --rebase` that conflicts on divergent (server-normalized)
+   body content on a Pattern-C `attach` tree.
+
 ## Verifier subagent grading
 
 <verbatim verifier subagent prompt — see quality/PROTOCOL.md § "Verifier subagent prompt template">
