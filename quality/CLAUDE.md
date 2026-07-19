@@ -223,6 +223,44 @@ Self-test (both tiers + `--warn-only` independence + overflow): `bash
 quality/gates/structure/file-size-limits.selftest.sh` (builds a throwaway `/tmp` repo —
 never the shared repo).
 
+### Hermetic test convention
+
+**Any test that reaches a live network resource — directly, or transitively via a
+subprocess it drives — must pass deterministically OFFLINE.** Mock, stub, or
+short-circuit the probe before it fires; a test that depends on a real socket succeeding
+is a flake generator, not a regression test. This was codified 2026-07-19 (Cycle-2 task
+(d)) after `quality/runners/test_freshness_synth.py` — which exercises the runner
+end-to-end by invoking `run.py --cadence weekly` as a subprocess — turned out to
+transitively fan out into 20+ live HTTP calls (crates.io API, GitHub API) via unrelated
+weekly-cadence `release-assets.json` rows, plus a deterministic `verifier not found at
+None` leakage from two null-script `docs-reproducible.json` stub rows. A flaky/offline
+network turned a P1 crates.io row FAIL and nondeterministically broke the test's exit-code
+assertion (the "stale-P2 flake," PR#77 family) — invisible in code review because the test
+itself contains no literal network call; the dependency was entirely transitive through
+`--cadence weekly`'s catalog fan-out.
+
+**The fix pattern (reusable for any test that subprocess-invokes `run.py`, not just this
+one):** before the subprocess call, give every catalog row that could reach a live network
+call (or any other non-hermetic side effect) OTHER than the row genuinely under test a
+temporary near-future `waiver` — the runner's own WAIVED short-circuit in
+`run_row` returns BEFORE the network-call branch and BEFORE the verifier-missing branch
+(see `run.py::run_row`, `waiver_active` check order). Back up every catalog file touched
+before mutating, restore all of them after (pass or fail) — see
+`test_freshness_synth.py`'s `backup_catalogs` fixture + `_neutralize_other_weekly_rows`
+for the reference implementation.
+
+**Regression lock:** `structure/hermetic-test-network-isolation`
+(`quality/gates/structure/hermetic-test-network-isolation.sh`,
+`freshness-invariants.json`) re-runs `test_freshness_synth.py` under a poisoned
+HTTP(S)/HTTPS proxy (`http_proxy=http://127.0.0.1:1 https_proxy=http://127.0.0.1:1
+no_proxy=`) — any unmocked/un-neutralized `urllib.request` call routes through the
+unreachable proxy and fails fast with `ECONNREFUSED` instead of reaching the real
+network. Poisoned-proxy denial was chosen over `unshare -rn`/`firejail --net=none` for
+the COMMITTED gate specifically because it needs no `CAP_SYS_ADMIN` / unprivileged user
+namespace (some CI sandboxes restrict those); both mechanisms were manually verified to
+deny the network and both pass the test deterministically — see the gate's header
+comment for the manual `unshare -rn` cross-check.
+
 ### Verifier-script existence
 
 `structure/verifier-script-exists.sh` (row `structure/verifier-script-exists` in

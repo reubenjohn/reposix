@@ -1413,6 +1413,43 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/hermetic-test-network-isolation",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-19T08:08:30Z",
+      "comment": "Cycle-2 task (d) (2026-07-19) -- quality/runners/test_freshness_synth.py used to invoke `run.py --cadence weekly` as a subprocess, which fanned out into 20+ live HTTP calls (crates.io API, GitHub API) via unrelated weekly-cadence release-assets.json rows, plus a deterministic `verifier not found at None` leakage from two null-script docs-reproducible.json stub rows. A flaky/offline network turned a P1 crates.io row FAIL and nondeterministically broke the test's exit-code assertion (the stale-P2 flake, PR#77 family). The fix neutralized every OTHER weekly-cadence row via a temporary in-memory waiver before the subprocess call, making the test fully offline. This row is the regression lock: it re-runs that same test under a poisoned-proxy network denial and asserts pytest still exits 0, so this class of non-hermetic test regression cannot silently return. Catalog-first: verifier ships in this SAME commit (quality/gates/structure/hermetic-test-network-isolation.sh), already manually confirmed PASS; shipped NOT-VERIFIED per the catalog-first convention pending the next --persist mint.",
+      "sources": [
+        "quality/runners/test_freshness_synth.py",
+        "quality/CLAUDE.md#hermetic-test-convention"
+      ],
+      "command": "bash quality/gates/structure/hermetic-test-network-isolation.sh",
+      "expected": {
+        "asserts": [
+          "quality/runners/test_freshness_synth.py::test_stale_label_appears_in_runner_output passes (pytest exit 0) with http_proxy/https_proxy pointed at an unreachable local port (127.0.0.1:1), denying every live network call the subprocess-under-test could attempt",
+          "no assertion in the test depends on crates.io, the GitHub API, or any other live network endpoint actually responding"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/hermetic-test-network-isolation.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/hermetic-test-network-isolation.json",
+      "status": "PASS",
+      "last_verified": "2026-07-19T08:12:32Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: either test_freshness_synth.py started depending on a live network call again (regression of the Cycle-2 task (d) fix), or a NEW weekly-cadence catalog row was added without _neutralize_other_weekly_rows's blanket per-catalog waiver sweep picking it up (it iterates every quality/catalogs/*.json row with 'weekly' in cadences, so a genuinely new file/row is auto-covered -- more likely cause is a live network call added OUTSIDE the weekly-cadence rows this sweep targets, e.g. inside run.py itself). See quality/CLAUDE.md Hermetic test convention. Mint to PASS via `python3 quality/runners/run.py --cadence pre-push --persist` once graded.",
+      "claim_vs_assertion_audit": "If test_freshness_synth.py actually reached crates.io, the GitHub API, or any other live network endpoint (unmocked, un-neutralized), the poisoned HTTP(S) proxy would force that socket to fail fast with ECONNREFUSED (verified manually: a bare urllib.request.urlopen call under the same proxy env raises URLError), which would propagate into a non-zero pytest exit code and falsify both asserts above -- assert 1 fails directly on the non-zero exit, assert 2's claim of zero live-network dependence is falsified by the very fact that denying the network broke the run.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

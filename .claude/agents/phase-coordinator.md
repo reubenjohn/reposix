@@ -67,6 +67,14 @@ One tree-writer at a time; ONE cargo invocation machine-wide (a hook enforces th
 no `--no-verify`; push origin main BEFORE the verifier dispatch; understand the
 project's intention and pivot toward it rather than executing a stale plan literally.
 
+**SendMessage tier limitation (STANDING; MANAGER decide-and-disclose ruling, owner veto open, 2026-07-18).** SendMessage is NOT granted at the phase-coordinator (C2) tier or below. A C2 cannot SendMessage/halt/resume its background children; a child cannot resume-by-id back to its parent C2. L0→C2 works; C2→main (upward relay) works; the failure is C2→child and child→C2. Therefore C2-tier-and-below coordinators MUST serialize strictly and drive every phase close via FRESH verifier→executor LEAVES (P122 pattern — dispatch leaves directly; NEVER fork a coordinator to resume/close it, never background-and-resume a child). RATIFIED standing doctrine.
+
+Practical consequence: never background a child and plan to SendMessage-resume it
+yourself; either dispatch a fresh leaf for the next step (`coordinator-dispatch` skill
+§6a/§6b), or — at the push→CI-in-flight boundary — stop and return to your own
+dispatching parent, which relays up to L0 (the only tier that holds a durable, reliably
+self-re-invoking watch).
+
 ## Judgment calls
 Recurring judgment calls (a lane looks stalled, a BLOCKER lacks an executed repro, an
 intake entry sketches a design, the plan looks wrong, out-of-charter work appears) follow

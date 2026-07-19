@@ -117,6 +117,16 @@ a no-op close (P123-close: the fork returned ZERO tool uses while claiming "clos
 executing," STATE.md unchanged, caught only by verify-against-reality).
 `.planning/ORCHESTRATION.md` §11.
 
+## 6b. SendMessage tier limitation (WHY §6a's corollary is mandatory, not a style choice)
+
+> **SendMessage tier limitation (STANDING; MANAGER decide-and-disclose ruling, owner veto open, 2026-07-18).** SendMessage is NOT granted at the phase-coordinator (C2) tier or below. A C2 cannot SendMessage/halt/resume its background children; a child cannot resume-by-id back to its parent C2. L0→C2 works; C2→main (upward relay) works; the failure is C2→child and child→C2. Therefore C2-tier-and-below coordinators MUST serialize strictly and drive every phase close via FRESH verifier→executor LEAVES (P122 pattern — dispatch leaves directly; NEVER fork a coordinator to resume/close it, never background-and-resume a child). RATIFIED standing doctrine.
+
+This is the mechanism behind §6a: L0 keeps the durable CI watch and SendMessages a
+dormant C2/C1 back to life on green (L0→C2 works); a C2/C1 has no equivalent capability
+over ITS OWN children (C2→child and child→C2 both fail). If you are a C2/C1 tempted to
+background a child and wait for it to resume-by-id, don't — dispatch a fresh leaf instead
+(§6a's corollary) or stop-and-return to your own parent per §6a.
+
 ## 7. Pause/resume brief template (owner-invoked pause)
 
 Finish the current atomic unit first, THEN dispatch relief-handover-writer with:

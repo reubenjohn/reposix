@@ -100,3 +100,6 @@ This ledger exceeded the *.md 20k budget and was split into 7 per-part child fil
   - 2026-07-19 | discovered-by: P125 planning + C1 ground-truth (tokenworld-mirror doc-truth, verified against reality) | severity: MEDIUM
   - 2026-07-19 | discovered-by: P125 verifier NOTICED (VERDICT #4 — weak OR-assert push_conflict.rs:352-354) | severity: LOW-MEDIUM
   - 2026-07-19 | discovered-by: P125 verifier NOTICED (VERDICT #5 — refresh/litmus env-var divergence) | severity: LOW-MEDIUM
+- [`surprises-intake/part-08.md`](surprises-intake/part-08.md) — 2 entries:
+  - 2026-07-19 | discovered-by: Cycle-2 bundled `/gsd-quick` task (d) executor | severity: MEDIUM | RESOLVED same commit
+  - 2026-07-19 | discovered-by: Cycle-2 task (d) executor (own `--persist` verification pass) | severity: HIGH | OPEN — agent-ux/real-git-push-e2e missing minted_at will crash run.py on next real --persist grade (git >= 2.34 boxes)
