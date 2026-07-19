@@ -256,3 +256,45 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Status:** COMPLETE — T5/T3/T2 committed; T4 reconcile in this commit. **Reversibility:**
   fully reversible (local commits, `git revert`); coordinator controls the push.
 
+---
+
+## 2026-07-19 [SELF gsd-executor P127 T1 dispose + substantive-push lane] DP-2 T1 fix landed; per-row DRAIN verdicts (DP-3); noticing filed
+
+- **T1 — DP-2 prove-before-fix: CONFIRMED then FIXED.** The P126-observed
+  `container-rehearse-sigkill-safe` "process-group blast-radius" was root-caused to a
+  narrower, more precise bug: an **ownership-BLIND `sweep_7878()` port kill** (`kill -KILL`
+  every pid on 7878 via `lsof`/`ss`, fired unconditionally even on the refuse-to-collide
+  path). Chain: committed RED repro `b3b1b407` (proved a FOREIGN unregistered listener was
+  killed) → ownership-scoped fix `413886e1` (`register_owned`/`SWEEP_OWNED_*`; no port lookup
+  remains) → fresh gsd-code-reviewer PASS (mechanism-not-symptom; ran the gate GREEN 3/3;
+  F-K4b congruent). Regression locked by the promoted gate
+  `docs-repro/sweep-7878-ownership-scoped` (catalogued NOT-VERIFIED, cadence pre-pr). Disposed
+  intake #1 (part-08) OPEN → RESOLVED with the full mechanism narrative + index bullet flip.
+- **DP-3 per-row DRAIN verdicts (fresh verdict per row, never bulk-flip):**
+  - **DRAIN-23 → FLIPPED to Complete.** Its sole entangling blocker (the OPEN SIGKILL
+    blast-radius / intake #1) is now closed by `413886e1` + code-review; SC2's SIGKILL-proof
+    teardown + `assert_port_7878_free` pre-run gate + the ownership-scoped sweep together
+    close the class. Cited `413886e1`/`b3b1b407`/the review/the regression gate.
+  - **DRAIN-13 → HELD (fresh verdict, not laundered).** Reality check: BOTH halves already
+    exist (exit-from-artifact verified T4 SC4 `d83bbe32`; the `assert_port_7878_free` +
+    sim-reachability curl readiness gate is present at `container-rehearse.sh:196-223`) — a
+    strong flip candidate. But the T1 fix touched a DIFFERENT file
+    (`container-rehearse-sigkill-safe.sh`) and does not itself cover DRAIN-13's assertion; and
+    the very readiness gate carries an ownership-blind `kill $(lsof -ti:7878)` operator-hint
+    residual (filed part-09 (e)). Held for a holistic P128 verdict rather than assume.
+  - **DRAIN-22 / DRAIN-24 / DRAIN-11 → stay HELD (unchanged reasons).** T1 does not touch
+    the F-K4b-container-tautology class (DRAIN-22, part-01/T3), the binary-provenance question
+    (DRAIN-24, part-01), or the ORCHESTRATION.md re-growth (DRAIN-11, filed to P128).
+- **Noticing (OD-3.2) filed to part-09 (NOT fixed here — out of scope for a docs/intake
+  lane):** (a) ORCHESTRATION.md re-grown to 24119B > 20000B ceiling (DRAIN-11's concrete
+  false-Complete; re-split before the 2026-08-08 waiver lapse; MED/P128); (b)
+  `zero-shot-onboarding.sh:55` ownership-blind `pkill -f` fallback (same class as T1;
+  MED/P128); (c) pid-recycle residual in the new gate's `SWEEP_OWNED_*` arrays (strictly
+  narrower than the T1 bug; LOW/P128); (d) `container-rehearse-sigkill-safe.sh` 16972B = 170%
+  of the 10000B `.sh` ceiling (LOW/P128); (e) ownership-blind `kill $(lsof -ti:7878)`
+  operator-recovery hints (LOW/P128).
+- **Status:** COMPLETE — one intake commit (T1 dispose + DRAIN-23 flip + DRAIN-13 re-eval +
+  5 filed surprises + this entry), then the P127 substantive push. **Reversibility:** all
+  docs/markdown + local commits, fully `git revert`-able; the fix commits (`b3b1b407`/
+  `413886e1`) predate this lane.
+

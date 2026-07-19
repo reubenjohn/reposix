@@ -142,7 +142,7 @@ its own HIGH INFRA-BUG entry immediately below; THIS entry only records the flak
 
 **STATUS:** RESOLVED (confirmed flake; clean rerun GREEN).
 
-## 2026-07-19 | discovered-by: P126 close-bookkeeping lane (coordinator, observed at the SIGKILL flake above) | severity: HIGH
+## 2026-07-19 | discovered-by: P126 close-bookkeeping lane (coordinator, observed at the SIGKILL flake above) | severity: HIGH | **RESOLVED (P127 T1, DP-2)**
 
 **What:** When the `docs-repro/container-rehearse-sigkill-safe` flake (entry above) fired,
 it did NOT kill only its own docker/sim child — it SIGKILLed the **ENTIRE `run.py`
@@ -171,7 +171,19 @@ run (fold in a fail-loud pre-run stale-orphan gate on 7878 if not already presen
 DRAIN-23 added one for its own harness; verify coverage here). Slot into P127 (Surprises
 absorption, OP-8 Slot 1).
 
-**STATUS:** OPEN — tag code / CI infra (runner kill-scoping); P127 Slot 1 candidate.
+**P127 T1 DISPOSITION (2026-07-19, DP-2):** RESOLVED. Root cause was narrower than the
+"process-group blast-radius" framing: an **ownership-BLIND port sweep** in
+`sweep_7878()` `kill -KILL`'d EVERY pid on 7878 (`lsof`/`ss`) with no ownership check, even
+on the "refuse to collide" path. Fixed mechanism-not-symptom: `sweep_7878()` now kills ONLY
+pids/pgroups the gate registered (`register_owned`/`SWEEP_OWNED_*`). Chain: RED repro
+`b3b1b407` → fix `413886e1` → fresh gsd-code-reviewer PASS (gate GREEN 3/3; F-K4b
+congruent). Regression locked by gate `docs-repro/sweep-7878-ownership-scoped`. The same
+ownership-blind-kill CLASS survives in siblings — FILED as part-09 (b)/(e) + a narrower
+pid-recycle residual (c).
+
+**STATUS:** RESOLVED (P127 T1, DP-2) — ownership-scoped fix `413886e1` on RED repro
+`b3b1b407`, fresh code-review PASS, regression locked by gate
+`docs-repro/sweep-7878-ownership-scoped`. Tag code / CI infra (runner kill-scoping).
 
 ## 2026-07-19 | discovered-by: P126 gsd-verifier (WARN-1, phase-close grade) | severity: MEDIUM
 

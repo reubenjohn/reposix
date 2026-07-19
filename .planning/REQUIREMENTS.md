@@ -191,7 +191,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   *(HELD Pending — P127 T4: Phase 124 SC1 claims the tautology EARNED via ASSERT-PASS
   harvesting, but this is the SAME F-K4b-container-tautology class as still-OPEN intake
   (part-01) / P127 T3; held to avoid laundering an open bug. Reconcile in P128.)*
-- [ ] **DRAIN-23** *(MED)*: SIGKILL sim-leak / EXIT-trap orphan in
+- [x] **DRAIN-23** *(MED)*: SIGKILL sim-leak / EXIT-trap orphan in
   `quality/gates/docs-repro/container-rehearse.sh` — the harness backgrounds the ephemeral sim
   and tears it down via a bash `EXIT` trap, which never fires when the runner's
   `subprocess.run(timeout=...)` SIGKILLs the harness (reproduced in the b773c04 CI failure,
@@ -201,10 +201,16 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   group (`setsid`/`set -m`) and kill the group on teardown; add a pre-`docker run`
   port-7878-free readiness check so a stale orphaned sim is detected fail-loud instead of
   silently reused.
-  *(HELD Pending — P127 T4: Phase 124 SC2 claims SIGKILL-proof teardown, but P126
-  re-discovered the SIGKILL blast-radius takes down the WHOLE `run.py` process group +
-  leaks an orphan `reposix sim` (surprises-intake/part-08.md intake #1, OPEN, under DP-2 /
-  P127 T1) — the class is NOT closed; held. Reconcile in P128 once T1 drains.)*
+  *(Complete — P127 T1 (2026-07-19): the entangling residual is CLOSED. Phase 124 SC2
+  landed the SIGKILL-proof teardown (`container-rehearse-sigkill-safe.sh` + `setsid` own-pgroup
+  sim via `lib/sim-lifecycle.sh::start_sim_in_own_pgroup` + the pre-run `assert_port_7878_free`
+  fail-loud gate); the P126-re-discovered blast-radius (surprises-intake #1) was root-caused
+  to an ownership-BLIND `sweep_7878()` port kill and fixed mechanism-not-symptom at `413886e1`
+  (ownership-scoped `register_owned`/`SWEEP_OWNED_*`) on RED repro `b3b1b407`, with a fresh
+  gsd-code-reviewer PASS (gate GREEN 3/3, F-K4b congruent) and a regression-lock gate
+  `docs-repro/sweep-7878-ownership-scoped`. The SIGKILL class is now closed. Narrower residuals
+  of the same ownership-blind CLASS survive in siblings and are FILED, not part of this row:
+  surprises-intake/part-09.md (b)/(c)/(e). Intake #1 RESOLVED.)*
 - [ ] **DRAIN-24** *(MED, verify)*: Confirm `target/debug/reposix`'s provenance on the
   `quality-post-release.yml` runner that `container-rehearse.sh` needs host-mounted — trace
   whether it reaches the runner via an explicit `cargo build -p reposix-cli` step, an
@@ -266,10 +272,17 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   sim-readiness race between rapid sequential runs produces transient "sim not reachable"
   flakes — derive the harness exit strictly from the persisted `exit_code`; add a
   pre-`docker run` port-7878-free + sim-reachability readiness gate.
-  *(HELD Pending — P127 T4: exit-from-artifact half verified (Phase 124 SC4 `d83bbe32`),
-  but the port-7878-free + sim-reachability readiness-gate half shares the 7878-orphan
-  surface with the OPEN SIGKILL blast-radius (surprises-intake/part-08.md intake #1 / P127
-  T1) — reasonable doubt → held. Reconcile in P128 once the SIGKILL item drains.)*
+  *(HELD Pending — P127 T1 re-eval (2026-07-19): the entangling SIGKILL item (intake #1) is
+  now RESOLVED (`413886e1`), but DRAIN-13 stays HELD after a fresh per-row verdict (DP-3,
+  not a bulk flip). Reason: the T1 fix ownership-scopes `sweep_7878()` in
+  `container-rehearse-sigkill-safe.sh` — a DIFFERENT file — and does not itself cover
+  DRAIN-13's assertion, which is about `container-rehearse.sh`. Both DRAIN-13 halves DO
+  exist against reality (exit-from-artifact verified P127 T4 SC4 `d83bbe32`; the
+  `assert_port_7878_free` + sim-reachability curl readiness gate is present at
+  `container-rehearse.sh:196-223`), so this is a strong flip CANDIDATE — but held for a
+  holistic P128 verdict that (1) confirms the readiness gate is actually exercised green in
+  CI and (2) resolves the ownership-blind `kill $(lsof -ti:7878)` operator-hint residual in
+  that very gate (FILED surprises-intake/part-09.md (e)). Conservative: do not launder.)*
 - [x] **DRAIN-14** *(LOW, GTH-V15-11)*: Add a `.sim-*.log` pattern to `.gitignore` scoped
   to `quality/reports/verifications/docs-repro/`.
   *(Complete — verified P127 T4: `.gitignore:95` `quality/reports/verifications/docs-repro/.sim-*.log`
@@ -354,7 +367,7 @@ goals, and success criteria).
 | DRAIN-10 | Phase 123 | Complete |
 | DRAIN-11 | Phase 119 | Pending (P127 T4 HOLD — SC-3 split landed but re-grew to 24119B > 20000B ceiling; re-split before 2026-08-08; P128) |
 | DRAIN-12 | Phase 125 | Complete |
-| DRAIN-13 | Phase 124 | Pending (P127 T4 HOLD — readiness-gate half entangled w/ OPEN SIGKILL #1; P128) |
+| DRAIN-13 | Phase 124 | Pending (P127 T1 HOLD — entangling SIGKILL #1 now RESOLVED, but T1 touched a different file; both halves exist (readiness gate `container-rehearse.sh:196-223`) — held for holistic P128 verdict + part-09 (e) hint residual) |
 | DRAIN-14 | Phase 124 | Complete (P127 T4 — .gitignore:95 verified; SC4 d83bbe32) |
 | DRAIN-15 | Phase 126 | Complete |
 | DRAIN-16 | Phase 126 | Complete |
@@ -364,7 +377,7 @@ goals, and success criteria).
 | DRAIN-20 | Phase 126 | Complete |
 | DRAIN-21 | Phase 126 | Complete |
 | DRAIN-22 | Phase 124 | Pending (P127 T4 HOLD — F-K4b container-tautology class, OPEN intake part-01 / T3; P128) |
-| DRAIN-23 | Phase 124 | Pending (P127 T4 HOLD — SIGKILL blast-radius OPEN, intake #1 / T1; P128) |
+| DRAIN-23 | Phase 124 | Complete (P127 T1 — SIGKILL-proof teardown SC2 + ownership-scoped sweep fix `413886e1` on RED repro `b3b1b407`, code-review PASS, gate `docs-repro/sweep-7878-ownership-scoped`; intake #1 RESOLVED) |
 | DRAIN-24 | Phase 124 | Pending (P127 T4 HOLD — binary provenance unconfirmed, OPEN intake part-01; P128) |
 | DRAIN-25 | Phase 119 | Complete (P127 T4 — six P79-P84 links resolve to dir/index.md; SC-4) |
 
