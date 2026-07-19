@@ -65,8 +65,9 @@ This ledger exceeded the *.md 20k budget and was split into 10 per-part child fi
   - From Phase 123 close (REQUIREMENTS.md coverage-table staleness noticing)
   - From Phase 123 close (Lane 1 code-review noticing, file-size early-warning)
   - From Phase 124 close (container-rehearse harness hardening, 2026-07-18)
-- [`good-to-haves/part-10.md`](good-to-haves/part-10.md) — 6 entries:
+- [`good-to-haves/part-10.md`](good-to-haves/part-10.md) — 7 entries:
   - From Phase 124 close-bookkeeping lane (STATE/ROADMAP advance + intake filing, 2026-07-18) — GTH-V15-86 (shell-coverage headroom), GTH-V15-87 (zsh 1-indexed pipestatus), GTH-V15-88 (SC2 sigkill control-leg flake)
   - From gsd-quick roadmap-strip lane (docs/roadmap.md Progress-right-now strip + phase-close doctrine, 2026-07-18) — GTH-V15-89 (structure-dimension machine gate that cross-checks the strip against STATE.md)
   - From Phase 125 W1 plan 125-01 (SC3/DRAIN-12 mirror-drift hint fix, 2026-07-18) — GTH-V15-90 (two `structure/file-size-limits` residual files grew further over ceiling)
   - From Phase 125 close (SC2 self-heal test-coverage gap, gsd-verifier VERDICT #2, 2026-07-19) — GTH-V15-91 (local git-fixture harness for the litmus self-heal reconcile-ordering, runnable without a real backend)
+  - From owner-directed session-analyzer expansion via /gsd-capture (global skill, 2026-07-19) — GTH-V15-92 (milestone-close session-retrospective ceremony step using the expanded session-analyzer U6)
