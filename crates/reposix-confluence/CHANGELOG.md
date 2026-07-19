@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.14.0...reposix-confluence-v0.14.1) - 2026-07-19
+
+### Added
+
+- *(115-T6)* 6b — cold-init reconcile to canonical 278ms + un-waive loop/perf rows (FINAL T6 lane)
+- *(115-T6)* headline-numbers cross-check gate + reconcile 8ms hero prose to canonical 6/7ms
+
+### Fixed
+
+- *(114-01)* request body-format=atlas_doc_format on Confluence list path
+
+### Other
+
+- *(126-01)* W4 clarity+caveat drains — MCP first-use, plan-refresh cold, doc-clarity subscription
+- *(planning)* encode P116 ADR-010 manager rulings + cold-reader pass outcomes (README dead-link fix, 2 intake filings, GTH-V15-38, GTH-V15-35 addenda)
+- *(115-06)* reframe hero surfaces to live GitHub-capture token economy
+- *(114-01)* lock cursor re-append carries body-format on >100-page follow
+- *(114-01)* add list_and_get_render_parity RED for Confluence oid-drift
+- *(hero)* add interim/synthetic-baseline qualifiers to hero numbers
+
 ## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.13.1...reposix-confluence-v0.14.0) - 2026-07-14
 
 ### Fixed

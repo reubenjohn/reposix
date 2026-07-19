@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.14.0...reposix-cli-v0.14.1) - 2026-07-19
+
+### Added
+
+- *(122-03)* worktree-shared-config self-check (latch 2) + tests + gate
+- *(122-03)* RPX-0406 + reposix init nested-in-worktree refusal (latch 1)
+- *(121-w3)* wire RPX codes onto all 24 CLI error sites
+- *(121-w2)* reposix explain subcommand + --list + registry-driven tests
+- *(121-w0)* catalog-first RPX registry gate (row NOT-VERIFIED + rpx_registry_check.py, M2/M3 legs)
+- *(P120-W3)* gc/history/tokens/cost/worktree 3-part error hardening — CLI surface complete
+- *(P120-W2)* list/refresh/spaces/sync 3-part error hardening + errors.rs scan-scope fix
+- *(P120-W1)* shared errmsg::teach primitive + init/attach 3-part error hardening
+- *(P120-W0)* catalog-first agent-ux error-hardening contract + gate + scanner + test scaffolds
+- *(115-T6)* 6b — cold-init reconcile to canonical 278ms + un-waive loop/perf rows (FINAL T6 lane)
+- *(115-T6)* headline-numbers cross-check gate + reconcile 8ms hero prose to canonical 6/7ms
+
+### Fixed
+
+- *(122-close)* correct RPX-0406 latch-1 corruption narrative (WR-01/WR-02/IN-03)
+- *(122-03)* teach_scan.py recognizes teach_coded( as a teaching call
+- *(121-review)* redact raw git stderr in init RPX-0402/since error headlines
+- *(121-w3.6)* tag RPX-0401 exemplar + wire RPX-0402 in reposix-cli init (SC1)
+- *(121-w3)* drop redundant .trim() before split_whitespace in explain test
+- *(120-close)* test-name-honesty markers for 3 P120-W3 no-synced-cache tests
+- *(120-close)* backtick SoT in worktree_helpers doc comment for clippy doc_markdown
+- *(120-close)* redact credentials in 3 error/audit exfil legs (WR-01/02/03)
+- *(117-01)* test-name-honesty marker on multi-SoT recovery test
+- *(117-01)* teach-fix sim connection-refused errors + drop phantom detach ref
+- *(114-01)* request body-format=atlas_doc_format on Confluence list path
+
+### Other
+
+- *(126-01)* W4 clarity+caveat drains — MCP first-use, plan-refresh cold, doc-clarity subscription
+- *(121-review)* refresh stale reposix CLI module doc to full subcommand surface
+- *(121-w4)* document reposix explain in cli.md; ground+rebind subcommand surface
+- *(planning)* encode P116 ADR-010 manager rulings + cold-reader pass outcomes (README dead-link fix, 2 intake filings, GTH-V15-38, GTH-V15-35 addenda)
+- *(115-06)* reframe hero surfaces to live GitHub-capture token economy
+- *(114-02)* scope --reconcile's oid-drift recovery to what it heals (FIX-02)
+- *(hero)* add interim/synthetic-baseline qualifiers to hero numbers
+
 ## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.13.1...reposix-cli-v0.14.0) - 2026-07-14
 
 ### Fixed

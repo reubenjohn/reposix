@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.14.0...reposix-remote-v0.14.1) - 2026-07-19
+
+### Added
+
+- *(122-02)* resolve_import_parent fails loud (RPX-0508) on non-absence git failure
+- *(121-w3.6)* mint RPX-0507 for the fetch/import backend-unreachable teach (SC1)
+- *(121-w3)* wire RPX codes onto all 6 helper error sites
+- *(P120-W5)* reposix-remote transport/fan-out 3-part errors + bus_handler credential-leak fix — helper surface complete (SC2)
+- *(P120-W4)* reposix-remote entry/URL/credential 3-part error hardening
+- *(P120-W0)* catalog-first agent-ux error-hardening contract + gate + scanner + test scaffolds
+- *(115-T6)* 6b — cold-init reconcile to canonical 278ms + un-waive loop/perf rows (FINAL T6 lane)
+- *(115-T6)* headline-numbers cross-check gate + reconcile 8ms hero prose to canonical 6/7ms
+
+### Fixed
+
+- *(125-01)* teach --reconcile + Pattern-C remote-explicit rebase in mirror-lag hint
+- *(code)* manual_let_else clippy lint in resolve_import_parent (pre-push RED)
+- *(121-w3.5)* tag human-facing helper errors RPX-0503/0504/0505/0506
+- *(121-w3.5)* mint RPX-0603 for mirror-unreachable; re-point bus_handler off RPX-0601
+- *(120-close)* non-ghp_ WR-01 fixture token clears cred-hygiene P0 pre-push gate
+- *(120-close)* redact credentials in 3 error/audit exfil legs (WR-01/02/03)
+
+### Other
+
+- *(126-01)* W4 clarity+caveat drains — MCP first-use, plan-refresh cold, doc-clarity subscription
+- *(125-01)* add failing mirror-lag augmented-hint regression
+- *(121-review)* live RPX-0507 import-to-dead-backend e2e test
+- *(planning)* encode P116 ADR-010 manager rulings + cold-reader pass outcomes (README dead-link fix, 2 intake filings, GTH-V15-38, GTH-V15-35 addenda)
+- *(115-06)* reframe hero surfaces to live GitHub-capture token economy
+- *(hero)* add interim/synthetic-baseline qualifiers to hero numbers
+
 ## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.13.1...reposix-remote-v0.14.0) - 2026-07-14
 
 ### Fixed
