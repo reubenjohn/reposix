@@ -98,7 +98,7 @@ sha2 = "0.11"
 hex = "0.4"
 
 # Rust source parsing (used by reposix-quality docs-alignment hash binary)
-syn = { version = "2", features = ["full", "visit"] }
+syn = { version = "3", features = ["full", "visit"] }
 quote = "1"
 
 # Test harness deps
