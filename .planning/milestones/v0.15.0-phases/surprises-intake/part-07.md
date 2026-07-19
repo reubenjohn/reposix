@@ -357,3 +357,54 @@ external location so the "authoritative" claim is traceable. If absent/dead, **d
 mechanism, and file a follow-up to re-establish (or intentionally retire) the external cron.
 
 **STATUS:** OPEN
+
+## 2026-07-19 | discovered-by: P125 verifier NOTICED (gsd-verifier phase-close verdict, `quality/reports/verdicts/p125/VERDICT.md` NOTICED #4) | severity: LOW-MEDIUM
+
+**What:** The SC3 remote-explicit rebase-hint assertion in the `git-remote-reposix` helper
+reject-hint test — `crates/reposix-remote/tests/push_conflict.rs:352-354` — is an OR:
+`stderr.contains("git pull --rebase <reposix-remote-name> main") || stderr.contains("reposix attach")`.
+The `|| "reposix attach"` fallback means a future regression that dropped the actual
+remote-explicit COMMAND while keeping the "reposix attach" prose preamble would still pass —
+looser than the test name (`..._remote_explicit_rebase`) promises. Today the primary clause
+matches (both strings are emitted at `write_loop.rs:233-235`), so it is NOT a live failure. The
+dedicated regression test `mirror_lag_reject_hint_recommends_reconcile_and_remote_explicit_rebase`
+(same file, `:237`) is the real primary guard and PASSES against reality (verifier re-ran it green).
+
+**Why out-of-scope for the discovering session:** The verifier's charter was grading P125's 3 SCs
+against reality, not tightening a passing test's assertion strength; the close-bookkeeping lane's
+charter is STATE/ROADMAP advance + intake filing, not editing `push_conflict.rs` (an over-budget
+`.rs` file — GTH-V15-90). Not a live SC gap (the assert passes on its primary clause), so it is a
+hardening item, not a defect.
+
+**Sketched resolution:** Tighten the assert to require the exact remote-explicit command substring
+(`git pull --rebase <reposix-remote-name> main`) and drop the `|| "reposix attach"` OR-fallback, so
+a regression that drops the command but keeps the prose can no longer ride green under a name that
+promises `remote_explicit_rebase` coverage. Trivial (~10min) edit, best paired with the GTH-V15-90
+`push_conflict.rs` file-size split.
+
+**STATUS:** OPEN
+
+## 2026-07-19 | discovered-by: P125 verifier NOTICED (gsd-verifier phase-close verdict, `quality/reports/verdicts/p125/VERDICT.md` NOTICED #5) | severity: LOW-MEDIUM
+
+**What:** Env-var name divergence between the mirror-refresh pre-step script and the
+milestone-close litmus for the SAME Confluence space. `scripts/refresh-tokenworld-mirror.sh:65`
+reads `REPOSIX_CONFLUENCE_SPACE_OVERRIDE` (default `REPOSIX`), while
+`quality/gates/agent-ux/milestone-close-vision-litmus.sh:53` reads `REPOSIX_CONFLUENCE_SPACE`
+(default `TokenWorld`). Comments assert both defaults resolve to space `360450`, so DEFAULT
+behavior is consistent — but the two are NOT co-steerable: an operator overriding
+`REPOSIX_CONFLUENCE_SPACE` to point the litmus at a non-default TokenWorld space would NOT retarget
+the refresh script (different var name), so the refresh could target a DIFFERENT space than the
+litmus it is meant to feed — a latent foot-gun.
+
+**Why out-of-scope for the discovering session:** The verifier graded this cosmetic/latent (both
+defaults resolve to the same space, so no live SC failure); reconciling the two env-var names is a
+small cross-file consistency edit to a script + a gate outside P125's SC file-set, and the
+close-bookkeeping lane's charter is STATE/ROADMAP advance + intake filing, not env-var plumbing.
+
+**Sketched resolution:** Unify on ONE env var across both surfaces (prefer the litmus's
+`REPOSIX_CONFLUENCE_SPACE`), OR have `refresh-tokenworld-mirror.sh` fall back to
+`REPOSIX_CONFLUENCE_SPACE` when `REPOSIX_CONFLUENCE_SPACE_OVERRIDE` is unset, so overriding either
+one re-targets both together, plus a one-line comment naming the paired var. Small (~15min) edit;
+drain jointly with the SC2 self-heal test GOOD-TO-HAVE (same litmus surface).
+
+**STATUS:** OPEN

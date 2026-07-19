@@ -28,13 +28,15 @@ _Updated 2026-07-19 · Milestone: Floor_
   that the CI-green signal can be trusted.
 - **P124** (2026-07-18) — The containerized test harness now proves its pass/fail claims
   for real instead of copying expected results, and survives being killed mid-run.
+- **P125** (2026-07-18) — closed GREEN: the pre-release real-backend check and the
+  milestone-close litmus now self-heal a stale mirror before they run, the recovery hints
+  shown on a mirror-drift error name the right remote to rebase against, and a documented
+  refresh step keeps the check from false-negativing on its own prior push.
 
 ### In flight now
 
-- **P125** — Real-backend cadence & mirror-drift resilience. When it closes: the
-  pre-release real-backend check self-heals a stale mirror before it runs, the recovery
-  instructions shown on a mirror-drift error are corrected, and a documented refresh step
-  keeps the check from false-negatives on its own prior work.
+- _Nothing in flight right now — P125 just closed GREEN (see above); **P126** is next up
+  (see below) and has not started yet._
 
 ### Up next, in order
 

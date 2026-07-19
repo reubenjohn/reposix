@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-19T03:21:55.000Z"
-last_activity: 2026-07-19 -- P125 CLOSING (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — phase-close bookkeeping + push lane. All 3 success criteria delivered across 3 plans (Wave 1: 125-01 SC3 helper teaching-string, 125-02 SC2 litmus self-heal; Wave 2: 125-03 SC1 pre-step doc + PART 2 SC3/DRAIN-12 v0.14.0 blockquote remote-explicit reword): SC1 (mandatory mirror-refresh pre-step `scripts/refresh-tokenworld-mirror.sh` documented for the `pre-release-real-backend` cadence, DRAIN-02), SC2 (milestone-close vision-litmus fixture self-heals for BOTH backend drift AND GitHub mirror drift, reconciling the mirror through the reposix bus remote before the marker push, DRAIN-12), SC3 (helper `git pull --rebase` teaching string corrected for the mirror-drift case + v0.14.0 attach-tree recovery blockquote made remote-explicit). Verifier NOT yet dispatched (runs after this phase-close push per cadence — CLOSING, not verdict-GREEN). 12/15 v0.15.0 "Floor" phases complete (P114–P125); next = P126.
+last_updated: "2026-07-19T04:40:19.000Z"
+last_activity: 2026-07-19 -- P125 CLOSED GREEN (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — verifier verdict GREEN on all 3 SCs, phase-close bookkeeping + push lane. All 3 success criteria delivered across 3 plans (Wave 1: 125-01 SC3 helper teaching-string, 125-02 SC2 litmus self-heal; Wave 2: 125-03 SC1 pre-step doc + PART 2 SC3/DRAIN-12 v0.14.0 blockquote remote-explicit reword): SC1 (mandatory mirror-refresh pre-step `scripts/refresh-tokenworld-mirror.sh` documented for the `pre-release-real-backend` cadence, DRAIN-02), SC2 (milestone-close vision-litmus fixture self-heals for BOTH backend drift AND GitHub mirror drift, reconciling the mirror through the reposix bus remote before the marker push, DRAIN-12), SC3 (helper `git pull --rebase` teaching string corrected for the mirror-drift case + v0.14.0 attach-tree recovery blockquote made remote-explicit). gsd-verifier verdict GREEN on all 3 SCs (`quality/reports/verdicts/p125/VERDICT.md`, verdict commit `55d66378`) — the 12/15 count is now verifier-confirmed, not optimistic. 12/15 v0.15.0 "Floor" phases complete (P114–P125); next = P126.
 progress:
   total_phases: 15
   completed_phases: 12
@@ -17,7 +17,7 @@ progress:
 
 ## Current Position
 
-Phase: **P125 (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — CLOSING 2026-07-19 (phase-close bookkeeping + push lane; verifier not yet dispatched).**
+Phase: **P125 (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — CLOSED GREEN 2026-07-19.**
 All 3 success criteria delivered against reality across 3 plans (2 waves): **SC1/DRAIN-02** —
 a mandatory mirror-refresh pre-step (`scripts/refresh-tokenworld-mirror.sh`) is documented for
 the `pre-release-real-backend` cadence so a second-run vision-litmus does not false-negative on
@@ -29,12 +29,13 @@ bus remote before the marker push (plan 125-02); **SC3/DRAIN-12** — the helper
 v0.14.0 attach-tree recovery blockquote in `docs/guides/troubleshooting.md` is made
 remote-explicit so a cold attach-tree reader is not shown the stale-`origin`-mirror-reading
 bare form first (plan 125-03 PART 2, coordinator-absorbed). Wave 1 (125-01 ∥ 125-02) + Wave 2
-(125-03) all landed; the 125-01/125-02 execution + SUMMARYs are already on origin/main, the
-three 125-03 docs commits (`cdaee30a`, `0808d48f`, `8604f087`) + this close-bookkeeping commit
-ride this phase-close push. **Push cadence:** per doctrine the phase-close `git push origin
-main` lands BEFORE the gsd-verifier subagent is dispatched — so P125 is **CLOSING**, not yet
-verdict-GREEN. **12/15 v0.15.0 "Floor" phases complete** (P114–P125); next = **P126**
-(Docs-alignment tooling polish, DRAIN-15..21).
+(125-03) all landed and sit on origin/main through the relief commit; the gsd-verifier VERDICT
+commit (`55d66378`) + this final close-bookkeeping commit ride this phase-close push.
+**Verdict:** gsd-verifier graded P125 **GREEN on all 3 success criteria**
+(`quality/reports/verdicts/p125/VERDICT.md`), verified against committed artifacts (SC3's
+`mirror_lag_reject_hint_recommends_reconcile_and_remote_explicit_rebase` test re-run green) —
+so the 12/15 count is verifier-confirmed, not optimistic. **12/15 v0.15.0 "Floor" phases
+complete** (P114–P125); next = **P126** (Docs-alignment tooling polish, DRAIN-15..21).
 
 Phase: **P124 (Container-rehearse harness hardening, v0.15.0 DRAIN-13/14/22/23/24) — CLOSED GREEN 2026-07-18.**
 gsd-verifier independent phase-close verdict GREEN; 4/4 success criteria verified against
@@ -272,7 +273,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P125 CLOSING (phase-close bookkeeping + push landed; gsd-verifier subagent dispatch pending per push-before-verify cadence); 12/15 phases complete (P114–P125). Next: `/gsd-plan-phase 126`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P125 CLOSED GREEN (gsd-verifier verdict GREEN on all 3 SCs, `quality/reports/verdicts/p125/VERDICT.md` @ `55d66378`); 12/15 phases complete (P114–P125), verifier-confirmed. Next: `/gsd-plan-phase 126`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
