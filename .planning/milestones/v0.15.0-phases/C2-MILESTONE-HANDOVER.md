@@ -11,6 +11,16 @@ P124/P125-adjacent boundary (`47c1f9d3` P122/P123, `d4ea76cb` P123/P124,
 is the milestone-scoped C2 continuity doc, analogous to `.planning/SESSION-HANDOVER.md`,
 not a phase-scoped `<N>-HANDOVER.md`.
 
+> **SUPERSEDED for P125-onward state, 2026-07-19.** This file's content is current only
+> through `c267f0e8` (the P124/P125 boundary). The next rotation switched to the
+> `RELIEF-HANDOVER-C2-wave-N.md` naming convention (precedent: v0.13.1/v0.14.0) instead of
+> a further in-place edit, because this file was already near its own previously-flagged
+> ~35-40KB growth ceiling (see §5 "Handover-doc growth NOTICED" below). **Read
+> `RELIEF-HANDOVER-C2-wave-1.md` in this same directory FIRST for everything P125-onward**
+> (the live P125 close-drive state, the SendMessage-disabled-at-C2-tier finding, the
+> current raise-list, and the roadmap-strip open content question). This file remains
+> useful for P114–P124 background/doctrine but is NOT current state.
+
 **Unconfirmed vs. prior rotations, STILL true this rotation:** `.planning/
 SESSION-HANDOVER.md`'s last touch is still `57bf9376` ("#62→#63 relief") — no newer
 commit against that path, confirmed by direct `git log` this rotation. There is still
@@ -256,6 +266,10 @@ keeps growing past ~35–40KB, consider whether it has crossed from "continuity 
 "needs its own split-ledger treatment" (the `f654cfc3` precedent) — not yet warranted,
 but worth a look at the next relief if growth continues unabated.
 
+**2026-07-19 UPDATE: that split-ledger treatment happened.** The next rotation switched
+to `RELIEF-HANDOVER-C2-wave-1.md` (and future `-wave-N.md` siblings) instead of continuing
+to grow this file — see the SUPERSEDED note at the top of this document.
+
 ## HELD / ESCALATE-FIRST (NEVER self-authorize — carry forward to L0/owner)
 
 - **91-file file-size global-waiver umbrella** (`structure/file-size-limits` single row,
@@ -416,14 +430,19 @@ BEFORE the implementation the verifier reads). No `--no-verify`.
 - Drive every close with **verifier→executor LEAVES dispatched directly**; NEVER
   `fork`-to-resume a warm coordinator (confabulates a no-op — confirmed anti-pattern,
   fully landed in doctrine at `88168478`). Resume a warm agent via SendMessage-to-its-id.
+  **2026-07-19 caveat (see `RELIEF-HANDOVER-C2-wave-1.md` §2):** SendMessage was found
+  DISABLED at the C2 tier in that rotation — treat "resume via SendMessage" as unverified
+  at this tier until confirmed otherwise; drive closes via fresh leaves regardless (that
+  path needs no SendMessage).
 - Absorb C1 rotations below the top: when a C1 relieves (writes a handover under
   `.planning/phases/12X-*/`), the C2 re-dispatches a FRESH successor C1 pointed at that
   handover — do NOT bubble C1 rotations to L0.
 - Relieve YOURSELF past ~100k tokens of OWN context (hard stop ~150k; absolute, not %)
   at a PHASE boundary (never mid-phase): dispatch relief-handover-writer → report SHA to
-  L0 → stop. Compress now-superseded prior-rotation prose in this file rather than
-  pure-appending (see §5 growth note) — this file is on the file-size waiver umbrella and
-  should not grow unboundedly just because it is currently covered.
+  L0 → stop. **As of 2026-07-19, prefer a fresh `RELIEF-HANDOVER-C2-wave-N.md` sibling
+  over further in-place edits of this file** (it is on the file-size waiver umbrella and
+  should not grow unboundedly just because it is currently covered — see the growth note
+  in §5, now acted on).
 - Report to L0 only: (a) own relief, (b) owner-decision escalation, (c)
   milestone-close-ready, (d) a 2–3-phase checkpoint, (e) each push→CI-in-flight handoff
   (L0 holds the durable watch). Otherwise route and integrate.
