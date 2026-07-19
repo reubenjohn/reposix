@@ -311,7 +311,7 @@
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
 | 123. Quality-runner & catalog integrity | 7/7 | Complete | 2026-07-18 |
 | 124. Container-rehearse harness hardening | 1/1 | Complete | 2026-07-18 |
-| 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
+| 125. Real-backend cadence & mirror-drift resilience | 0/3 | Planned (plan-checker VERIFICATION PASSED) | - |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
 | 127. Surprises absorption (OP-8 Slot 1) | 0/TBD | Not started | - |
 | 128. Good-to-haves polish + milestone close (OP-9 Slot 2) | 0/TBD | Not started | - |
