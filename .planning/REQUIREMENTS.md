@@ -251,23 +251,23 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   pre-`docker run` port-7878-free + sim-reachability readiness gate.
 - [ ] **DRAIN-14** *(LOW, GTH-V15-11)*: Add a `.sim-*.log` pattern to `.gitignore` scoped
   to `quality/reports/verifications/docs-repro/`.
-- [ ] **DRAIN-15** *(LOW-MED, GTH-V15-12)*: The user-global `doc-clarity-review` skill's
+- [x] **DRAIN-15** *(LOW-MED, GTH-V15-12)*: The user-global `doc-clarity-review` skill's
   nested `claude -p` returns a confusing non-error (not a hard fail) when it can't see file
   content — add a canary-probe hard-fail or the subscription-caveat note the doc-alignment
   skill already carries (`~/.claude/skills/doc-clarity-review/SKILL.md`, outside this repo).
-- [ ] **DRAIN-16** *(LOW, GTH-V15-13)*: Expand "MCP" to "Model Context Protocol (MCP)" on
+- [x] **DRAIN-16** *(LOW, GTH-V15-13)*: Expand "MCP" to "Model Context Protocol (MCP)" on
   first use in `README.md`.
-- [ ] **DRAIN-17** *(LOW-MED, GTH-V15-14)*: Pre-push docs-alignment block message names the
+- [x] **DRAIN-17** *(LOW-MED, GTH-V15-14)*: Pre-push docs-alignment block message names the
   ratio, not the real blocking row-STATE(s) — fix `walk.sh` to name the blocking state(s).
-- [ ] **DRAIN-18** *(MED, GTH-V15-15)*: Doc-alignment grader compute-vs-assert reliability
+- [x] **DRAIN-18** *(MED, GTH-V15-15)*: Doc-alignment grader compute-vs-assert reliability
   gap — harden `.claude/skills/reposix-quality-doc-alignment/prompts/grader.md` to only
   bind a row if the test fails when the number drifts, and to grep `src/` unit tests
   rather than just the currently-cited test.
-- [ ] **DRAIN-19** *(LOW, GTH-V15-16)*: `plan-refresh <doc>` under-reports drift when
+- [x] **DRAIN-19** *(LOW, GTH-V15-16)*: `plan-refresh <doc>` under-reports drift when
   invoked cold (before a `walk`) — add a one-line note to the playbook/prompt.
-- [ ] **DRAIN-20** *(LOW, GTH-V15-17)*: doc-alignment `status` hides that MISSING_TEST rows
+- [x] **DRAIN-20** *(LOW, GTH-V15-17)*: doc-alignment `status` hides that MISSING_TEST rows
   are waived — add a `waived_active` counter to the `status` block.
-- [ ] **DRAIN-21** *(LOW, GTH-V15-18)*: Audit the 17 pre-existing "cites
+- [x] **DRAIN-21** *(LOW, GTH-V15-18)*: Audit the 17 pre-existing "cites
   out-of-eligible-file" coverage warnings (the real count — the earlier "16" estimate was
   audit-corrected to 17 in P126 W3) — decide whether the eligible-file allowlist
   should include them or the rows should re-cite eligible files.

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-19T13:00:00.000Z"
-last_activity: 2026-07-19 -- P126 CLOSED pending verifier (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — phase-close bookkeeping + push lane. Six strictly-serial waves landed: W1 defused a HIGH `agent-ux/real-git-push-e2e` load-crash landmine repro-first (RED `44783ebe` → GREEN `65e8c497` add `minted_at` + read-only `save_catalog(persist=)` write-boundary guard → fix-twice `d0753ef6`; DP-2 review PASS `5d097937`); W2 walk BLOCK now names blocking row-STATE(s) `d093bc7f` [DRAIN-17] + grader binds only on drift-fails-test `e693deeb` [DRAIN-18]; W3 `status` waived_active counter `0270f91c` [DRAIN-20] + out-of-eligible warnings 17→2 via narrow eligible-file includes `e8823049` [DRAIN-21]; W4 README MCP first-use + plan-refresh cold caveat + doc-clarity subscription caveat `1ef508bf` [DRAIN-16/19/15] + git-version prose refresh `639ff67f`; W5 RAISE-3 fixed the stale `docs/development/roadmap.md` active-milestone lie IN-PLACE + re-cited 5 rows in-commit `588c1546` (NOT deleted — deletion would strand human-gated confirm-retire). Phase-completion counter optimistically advanced 12/15 → 13/15 (doctrine-sanctioned: `docs/roadmap.md` keeps P126 "In flight now" until the fresh verifier grades GREEN). Push landed this bookkeeping lane; CI in-flight (watch handed to L0/coordinator); fresh gsd-verifier NOT yet dispatched. next = P127 (Surprises absorption, OP-8 Slot 1).
+last_updated: "2026-07-19T18:30:00.000Z"
+last_activity: 2026-07-19 -- P126 CLOSED GREEN (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — unbiased gsd-verifier graded GREEN, verdict committed `7c9cc153` (VERIFICATION.md in `.planning/phases/126-docs-alignment-tooling-polish/`). This close-bookkeeping commit moves `docs/roadmap.md` P126 In-flight→Landed (2026-07-19), advances STATE, flips the DRAIN-15..21 definition-list checkboxes to match the already-Complete traceability rows, and folds the P126-close intake (SURPRISES: SIGKILL resolved-flake note + `container-rehearse-sigkill-safe` leaked-process-group-kill INFRA BUG HIGH incl. orphan `reposix sim` PID-11014 symptom + `structure/hermetic-test-network-isolation` stale-PASS-mint WARN-1 MEDIUM; GOOD-TO-HAVES part-11: GTH-V15-99 minted_at/F-K4b coupling footgun + GTH-V15-100 badge-P2 ~127s pre-pr cost). Six strictly-serial waves landed: W1 defused a HIGH `agent-ux/real-git-push-e2e` load-crash landmine repro-first (RED `44783ebe` → GREEN `65e8c497` add `minted_at` + read-only `save_catalog(persist=)` write-boundary guard → fix-twice `d0753ef6`; DP-2 review PASS `5d097937`) + fixed the F-K4b grade-time-demote CI regression `ba13553f`; W2 walk BLOCK names blocking row-STATE(s) `d093bc7f` [DRAIN-17] + grader binds only on drift-fails-test `e693deeb` [DRAIN-18]; W3 `status` waived_active counter `0270f91c` [DRAIN-20] + out-of-eligible warnings 17→2 `e8823049` [DRAIN-21]; W4 README MCP first-use + plan-refresh cold caveat + doc-clarity subscription caveat `1ef508bf` [DRAIN-16/19/15] + git-version prose refresh `639ff67f`; W5 RAISE-3 fixed the stale `docs/development/roadmap.md` active-milestone lie IN-PLACE + re-cited 5 rows in-commit `588c1546`. completed_phases 13/15 — verifier-confirmed, NOT optimistic. next = P127 (Surprises absorption, OP-8 Slot 1).
 progress:
   total_phases: 15
   completed_phases: 13
@@ -17,7 +17,7 @@ progress:
 
 ## Current Position
 
-Phase: **P126 (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — CLOSED pending verifier 2026-07-19.**
+Phase: **P126 (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — CLOSED GREEN 2026-07-19.**
 Six strictly-serial executor waves (W1..W6) landed; the doc-alignment skill/tooling surface is
 more reliable and less confusing, one EARLY HIGH landmine is defused, and RAISE-3 removed the
 stale-roadmap active-milestone lie. **W1 landmine (HIGH, DP-2 prove-before-fix):** a committed
@@ -37,12 +37,17 @@ subscription/canary caveat; `639ff67f` git-version prose refresh. **W5 (RAISE-3)
 fixed the stale `docs/development/roadmap.md` active-milestone lie IN-PLACE + re-cited all 5
 doc-alignment rows in-commit (NOT deleted — deletion would strand the human-gated
 confirm-retire; the active-milestone claim kept test-accurate to avoid a false BOUND).
-**Counter advanced 12/15 → 13/15 optimistically** — per `.planning/CLAUDE.md` phase-close
-doctrine, `docs/roadmap.md` keeps P126 in "In flight now" (pushed 2026-07-19, CI in-flight,
-verifier pending) until a FRESH gsd-verifier grades it GREEN. **Verdict:** PENDING — the
-close-bookkeeping lane pushed + handed the CI watch to L0; the unbiased gsd-verifier is
-dispatched by the coordinator AFTER main's newest `ci.yml` run concludes GREEN. next = **P127**
-(Surprises absorption, OP-8 Slot 1).
+**Counter advanced 12/15 → 13/15 — now verifier-confirmed, not optimistic.** The fresh
+unbiased gsd-verifier graded P126 **GREEN** (P0 rows live-green; the sole surfaced hermetic
+P2 CI-portability bug is PRE-EXISTING, non-blocking, and filed — see below); **verdict
+committed `7c9cc153`** (`VERIFICATION.md` in `.planning/phases/126-docs-alignment-tooling-polish/`).
+This close-bookkeeping commit moves `docs/roadmap.md` P126 In-flight→Landed (2026-07-19),
+flips the DRAIN-15..21 definition-list checkboxes to match their already-Complete traceability
+rows, and folds the P126-close intake (SURPRISES: SIGKILL resolved-flake + a HIGH
+`container-rehearse-sigkill-safe` leaked-process-group-kill INFRA BUG + a MEDIUM
+`structure/hermetic-test-network-isolation` stale-PASS-mint WARN-1; GOOD-TO-HAVES part-11:
+GTH-V15-99 minted_at/F-K4b coupling footgun + GTH-V15-100 badge-P2 pre-pr cost). **Verdict:**
+GREEN. next = **P127** (Surprises absorption, OP-8 Slot 1).
 
 Phase: **P125 (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — CLOSED GREEN 2026-07-19.**
 All 3 success criteria delivered against reality across 3 plans (2 waves): **SC1/DRAIN-02** —
@@ -258,8 +263,8 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 127` (Surprises absorption, OP-8 Slot 1) — after the P126
-fresh-verifier grade lands GREEN. Carried
+Next step: `/gsd-plan-phase 127` (Surprises absorption, OP-8 Slot 1) — the P126 fresh-verifier
+grade has landed GREEN (verdict `7c9cc153`), so P127 planning is unblocked. Carried
 owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
@@ -301,7 +306,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P126 CLOSED pending verifier (DRAIN-15..21 + HIGH minted_at load-crash landmine defused repro-first + RAISE-3 stale-roadmap fixed in-place; pushed 2026-07-19, CI in-flight, fresh gsd-verifier owed by the coordinator once main goes GREEN); counter optimistically 13/15 (P114–P126), `docs/roadmap.md` keeps P126 in-flight until verifier-GREEN. Next: `/gsd-plan-phase 127`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P126 CLOSED GREEN (DRAIN-15..21 + HIGH minted_at load-crash landmine defused repro-first + F-K4b grade-time-demote regression fixed `ba13553f` + RAISE-3 stale-roadmap fixed in-place; verifier-GREEN verdict `7c9cc153`); counter 13/15 (P114–P126) verifier-confirmed, `docs/roadmap.md` P126 moved In-flight→Landed. Next: `/gsd-plan-phase 127`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 

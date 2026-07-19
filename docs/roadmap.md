@@ -32,14 +32,14 @@ _Updated 2026-07-19 · Milestone: Floor_
   milestone-close litmus now self-heal a stale mirror before they run, the recovery hints
   shown on a mirror-drift error name the right remote to rebase against, and a documented
   refresh step keeps the check from false-negativing on its own prior push.
+- **P126** (2026-07-19) — docs-alignment tooling polish: the tool that keeps the docs
+  honest got more reliable and easier to understand — clearer block messages that name
+  what to fix, a counter that stops waived checks from hiding, a defused crash in the
+  quality runner, and a corrected stale line that had claimed the wrong active milestone.
 
 ### In flight now
 
-- **P126** — Docs-alignment tooling polish: the tool that keeps the docs honest got more
-  reliable and easier to understand — clearer block messages that name what to fix, a
-  counter that stops waived checks from hiding, and a defused crash in the quality runner.
-  _Pushed 2026-07-19; CI in-flight, final verifier grade pending — moves to "Landed
-  recently" once graded GREEN._
+- _Nothing actively in flight — P126 just landed; next up is planning P127 (see below)._
 
 ### Up next, in order
 

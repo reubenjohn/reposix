@@ -123,3 +123,81 @@ Whole-corpus regression lock: `test_run.py::TestNoArmedMintedAtLandmine` (FAILs 
 row carries `last_verified` >= the P90 cutoff without `minted_at`) +
 `TestSaveCatalogPersistGuard` + `TestValidateOnlyMultiCatalogByteIdentical`. Fresh DP-2
 review confirmed mechanism-vs-symptom (`5d097937`).
+
+## 2026-07-19 | discovered-by: P126 close-bookkeeping lane (coordinator, phase-close gate sweep) | severity: LOW | **RESOLVED (confirmed flake)**
+
+**What:** During the P126 close-bookkeeping gate sweep, the
+`docs-repro/container-rehearse-sigkill-safe` gate SIGKILLed mid-run once. A clean rerun of
+the SAME cadence passed GREEN with no change — the SIGKILL was a **confirmed flake**, not a
+regression (consistent with the P124-review de-flake that widened the SIGKILL control-leg
+budget; the row is deliberately excluded from the pre-push battery and is P1 cargo/sim-
+dependent, so a loaded VM can nondeterministically trip its control leg).
+
+**Why out-of-scope for the discovering session:** N/A — resolved by the documented
+rerun-first recovery; no code change needed for the flake itself.
+
+**Sketched resolution:** RESOLVED — the documented recovery is rerun-first; a clean rerun
+passed. (The DEEPER structural bug the flake exposed — the kill blast radius — is filed as
+its own HIGH INFRA-BUG entry immediately below; THIS entry only records the flake outcome.)
+
+**STATUS:** RESOLVED (confirmed flake; clean rerun GREEN).
+
+## 2026-07-19 | discovered-by: P126 close-bookkeeping lane (coordinator, observed at the SIGKILL flake above) | severity: HIGH
+
+**What:** When the `docs-repro/container-rehearse-sigkill-safe` flake (entry above) fired,
+it did NOT kill only its own docker/sim child — it SIGKILLed the **ENTIRE `run.py`
+process**, taking down all ~83 gates in the cadence run, not just the one flaky row. The
+kill logic is process-group/parent-scoped rather than child-PID/subtree-scoped, so a signal
+meant for the gate's own ephemeral child propagates up to the shared runner process. This is
+the **same failure class** as the fd-inheritance deadlock fixed at `cef3a2ea` (a
+backgrounded grandchild holding a shared resource — there a capture pipe, here a process
+group — that the runner also depends on). A **leaked orphan `reposix sim` process (PID
+11014, ~18MB RSS)** was observed still alive at kill time — a symptom of the same
+under-reaping family: the gate's ephemeral sim was not torn down cleanly when the group kill
+landed, leaving an orphan bound to (or racing for) port 7878 for the next run.
+
+**Why out-of-scope for the discovering session:** This is a runner/gate CODE change
+(process-group → child-subtree kill scoping) plus validation (a selftest proving a killed
+gate child does not take down the parent `run.py`, and that the ephemeral sim is reaped),
+which does not belong in an atomic docs/planning-only phase-close commit. FILED per OP-8.
+
+**Sketched resolution:** Scope the kill logic in `container-rehearse-sigkill-safe.sh` (and
+any sibling gate that `setsid`/process-group-kills an ephemeral child) to target ONLY its
+own child PID / subtree — never the shared process group that `run.py` lives in. Cross-
+reference `cef3a2ea` (the fd-inheritance sibling fix) for the reaping+isolation pattern.
+Add a selftest that (1) drives the gate's child to the kill path and asserts the parent
+`run.py` survives, and (2) asserts no orphan `reposix sim` / port-7878 binding survives the
+run (fold in a fail-loud pre-run stale-orphan gate on 7878 if not already present — P124's
+DRAIN-23 added one for its own harness; verify coverage here). Slot into P127 (Surprises
+absorption, OP-8 Slot 1).
+
+**STATUS:** OPEN — tag code / CI infra (runner kill-scoping); P127 Slot 1 candidate.
+
+## 2026-07-19 | discovered-by: P126 gsd-verifier (WARN-1, phase-close grade) | severity: MEDIUM
+
+**What:** The `structure/hermetic-test-network-isolation` row carries a **STALE local PASS
+mint** in `quality/catalogs/*.json`, but the gate **FAILS DETERMINISTICALLY at ~0.02s** on
+the newest `main` CI run AND on `dc60cc21` — a CI-portability fast-fail: it passes locally
+(poisoned-proxy denial available) but fast-fails in the CI sandbox (the sandbox restricts
+whatever the gate needs to deny the network deterministically). It is **P2 non-blocking**
+(pre-pr exit=0) and **PRE-EXISTING** — the gate + its test were created by `f1959373`, an
+ancestor of P126's first commit `44783ebe` — so it did NOT roll P126 RED. But a committed
+`PASS` riding green on a gate that deterministically FAILs in CI is a **lying catalog row**
+(honesty dimension): the local mint asserts a green the CI environment cannot reproduce.
+
+**Why out-of-scope for the discovering session:** Pre-existing (created by `f1959373`,
+before P126) and requires either a re-mint (honest WARN/known-fail) or a real
+CI-sandbox-portability fix to the gate + a re-grade — neither belongs in an atomic
+docs/planning-only close commit. FILED per OP-8 / scope-boundary.
+
+**Sketched resolution:** Either (a) re-mint the row honestly — `NOT-VERIFIED` /
+`WAIVED + until_date` with a `skip_reason` naming the CI-sandbox restriction, so the catalog
+stops asserting an unreproducible green — or (b) fix the CI-sandbox portability of
+`hermetic-test-network-isolation.sh` (the gate already documents a poisoned-proxy-vs-
+`unshare -rn` tradeoff in its header for exactly this CAP_SYS_ADMIN/namespace-restriction
+reason; the ~0.02s fast-fail suggests the chosen mechanism is unavailable in the CI sandbox,
+not that the test itself is wrong). Slot into P127 alongside the `code/shell-coverage`
+stale-mint work if the two share the `minted_at`→F-K4b activation family (they may not —
+verify: this one is a mint-vs-CI-reality gap, not an F-K4b congruence demote).
+
+**STATUS:** OPEN — tag structure / honesty (catalog-mint-vs-CI-reality); P127 Slot 1 candidate.
