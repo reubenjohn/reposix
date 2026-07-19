@@ -259,7 +259,7 @@
   1. A documented mandatory mirror-refresh pre-step (`scripts/refresh-tokenworld-mirror.sh`) — or a self-reconciling litmus — prevents a second-run false-negative caused by the litmus's own prior push re-staling the GitHub mirror.
   2. The milestone-close vision-litmus fixture self-heals for BOTH backend drift (trashed protected pages) and GitHub mirror drift, reconciling the mirror to backend-current through the reposix bus remote before the marker push.
   3. The helper's `git pull --rebase` teaching string is corrected for the mirror-drift case specifically (not just the backend-drift case).
-**Plans**: TBD
+**Plans**: 3 plans (Wave 1: 125-01 SC3 helper teaching-string [cargo] · 125-02 SC2 litmus self-heal — parallel, zero file overlap · Wave 2: 125-03 SC1 pre-step doc + doc-alignment bind)
 
 ### Phase 126: Docs-alignment tooling polish
 **Goal**: The doc-alignment skill/tooling surface (grader, walk, status, plan-refresh, README) is more reliable and less confusing.

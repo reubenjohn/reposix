@@ -1,20 +1,22 @@
 ---
 phase: 125
 slug: real-backend-cadence-mirror-drift-resilience
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-18
+finalized: 2026-07-18
 ---
 
 # Phase 125 — Validation Strategy
 
 > Per-phase validation contract for feedback sampling during execution.
-> **Skeleton, per RESEARCH.md § Validation Architecture** — the Per-Task Verification Map
-> below uses placeholder task IDs; the planner finalizes it with concrete `125-NN-TT` task
-> IDs (mirroring the P116 precedent — `116-VALIDATION.md` skeleton → planner fills in real
-> task IDs when writing PLAN.md) and flips `status: ready` / `nyquist_compliant: true` once
-> Wave 0 gaps below are scheduled as real tasks.
+> **Finalized by the planner** — the Per-Task Verification Map below now carries concrete
+> `125-NN-TT` task IDs (mirroring the P116 precedent). Wave 0 gaps are scheduled as real
+> tasks: the augmented-hint Rust test is the catalog-first RED first commit of Plan 01
+> (task 125-01-01, committed BEFORE the write_loop.rs impl at 125-01-02); the DRAIN-02
+> run-twice + backend-drift manual-verification procedures are documented in Plan 02
+> (task 125-02-02) and the Manual-Only table below.
 
 ---
 
@@ -34,9 +36,10 @@ created: 2026-07-18
 ## Sampling Rate
 
 - **After every task commit:** `cargo test -p reposix-remote` for any Rust teaching-string
-  edit (`write_loop.rs` / `bus_handler.rs`); `bash -n <script>` syntax check for any bash
-  edit (`quality/gates/agent-ux/lib/litmus-flow.sh`, `scripts/refresh-tokenworld-mirror.sh`)
-  — a full litmus run needs real creds and is NOT a per-commit gate.
+  edit (`write_loop.rs`, `push_conflict.rs`); `bash -n <script>` syntax check for any bash
+  edit (`quality/gates/agent-ux/lib/litmus-flow.sh`, `.../lib/litmus-self-heal.sh`);
+  `bash quality/gates/docs-alignment/walk.sh` + `bash quality/gates/docs-build/mkdocs-strict.sh`
+  for any docs edit — a full litmus run needs real creds and is NOT a per-commit gate.
 - **After every plan wave:** `bash scripts/preflight-real-backends.sh` (read-only
   reachability check, safe/cheap) before attempting a real litmus run; a real litmus run
   itself only at a wave boundary where real-backend budget is available.
@@ -44,43 +47,52 @@ created: 2026-07-18
   pre-release-real-backend` exit 0, run **TWICE in immediate succession** — the second run
   is the actual DRAIN-02 regression proof (a stale mirror from the first run's own push
   must NOT false-negative the second run).
-- **Max feedback latency:** ~30s for the Rust/bash quick checks; real-backend litmus runs
-  are wave-boundary-only, not per-commit.
+- **Max feedback latency:** ~30s for the Rust/bash/docs quick checks; real-backend litmus
+  runs are wave-boundary-only, not per-commit.
 
 ---
 
 ## Per-Task Verification Map
 
-*Skeleton — planner assigns concrete `125-NN-TT` task IDs when PLAN.md is written.*
-
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | DRAIN-02 | T-125-01 | mirror-refresh pre-step documented/enforced OR litmus self-reconciles; second back-to-back litmus run PASSES (no false-negative from the first run's own push re-staling the mirror) | shell-subprocess (real backend) | `bash quality/gates/agent-ux/milestone-close-vision-litmus.sh` run twice; 2nd run exit 0 | ✅ litmus script exists; "run twice" proof procedure is Wave 0 new | ⬜ pending |
-| TBD | TBD | TBD | DRAIN-02 | — | pre-step referenced in `docs/reference/testing-targets.md` (if SC1 goes the doc route) | docs-alignment / manual | `bash quality/gates/docs-alignment/walk.sh`; manual read of `docs/reference/testing-targets.md` for `refresh-tokenworld-mirror.sh` mention | ❌ Wave 0 — no existing binding for this claim | ⬜ pending |
-| TBD | TBD | TBD | DRAIN-12 | T-125-02 | litmus self-heals a trashed protected page (backend drift) | shell-subprocess (real backend) / manual | no scripted way to induce trashed-fixture state repeatably — likely a documented manual verification step, not an automated regression test (see Wave 0 gap) | ❌ Wave 0 gap — flag, do not fabricate a synthetic test | ⬜ pending |
-| TBD | TBD | TBD | DRAIN-12 | T-125-02 | litmus self-heals GitHub mirror drift, reconciling through the reposix bus remote before the marker push | shell-subprocess (real backend) | run litmus twice back-to-back (same proof as DRAIN-02 row above) | ✅ once self-heal lands | ⬜ pending |
-| TBD | TBD | TBD | DRAIN-12 | T-125-03 | corrected mirror-drift teaching string present (augmenting, never removing/replacing the pinned `"git pull --rebase"` substring — ≥12 existing regression tests + doc-alignment rows pin it verbatim) | unit (Rust) | `cargo test -p reposix-remote` (existing pinned-substring tests) + a NEW test asserting the augmented hint content | ❌ Wave 0 — no existing test asserts the augmented hint text | ⬜ pending |
-| TBD | TBD | TBD | DRAIN-12 (security) | — | any newly-interpolated remote/URL string in a corrected hint is redacted via `reposix_core::http::strip_url_userinfo` or `reposix_remote::backend_dispatch::redact_userinfo` — never echo raw credentials | unit (Rust) | `cargo test -p reposix-remote` (redaction test, pattern per existing `precheck_mirror_drift_redacts_credentials_and_teaches_on_ls_remote_failure`) | ❌ Wave 0 — write alongside the teaching-string edit | ⬜ pending |
-| PHASE-G1 | all | close | DRAIN-02+DRAIN-12 (constraint) | — | manager ruling honored: no product-code rewrite of the bus push's mirror fan-out (`GTH-V15-38` Option C) — this phase stays in the test-harness/teaching-string/doc layer | gate | `git diff --stat -- crates/reposix-remote/src/bus_handler.rs crates/reposix-remote/src/mirror_egress.rs` reviewed manually for scope (fan-out algorithm untouched; only precheck teaching-string / litmus-flow changes) | n/a | ⬜ pending |
-| PHASE-G2 | all | close | DRAIN-02+DRAIN-12 | — | no regression in existing pinned `"git pull --rebase"` substring tests/doc-alignment rows (≥12 hits) | gate | `cargo test -p reposix-remote` full pass + `bash quality/gates/docs-alignment/walk.sh` | n/a | ⬜ pending |
+| 125-01-01 | 01 | 1 | DRAIN-12 | T-125-01 | Catalog-first RED: a new Rust test drives the mirror-lag-ref-populated branch (via `write_mirror_synced_at`) and asserts the augmented hint content (`reposix sync --reconcile` + Pattern-C remote-explicit line); committed BEFORE the impl | unit (Rust) | `cargo test -p reposix-remote mirror_lag_reject_hint_recommends_reconcile_and_remote_explicit_rebase -- --exact` (RED first, GREEN after 125-01-02) | ❌→✅ new test in `push_conflict.rs` | ⬜ pending |
+| 125-01-02 | 01 | 1 | DRAIN-12 | T-125-01 | `write_loop.rs` recommends `reposix sync --reconcile` (not the no-op bare form) + ADDS the Pattern-C remote-explicit line; pinned `git pull --rebase` substring survives verbatim; no dynamic URL/remote interpolated (no credential can reach stderr) | unit (Rust) | `cargo test -p reposix-remote` full pass + `grep -c "reposix sync --reconcile" crates/reposix-remote/src/write_loop.rs` == 1 | ✅ `write_loop.rs` exists | ⬜ pending |
+| 125-01-03 | 01 | 1 | DRAIN-12 | — | Fix-twice: additive Pattern-C clarification in `troubleshooting.md`; existing bare `git pull --rebase` recovery lines unchanged; any doc-alignment rebind minted (not hand-edited) in same commit | docs-alignment | `bash quality/gates/docs-alignment/walk.sh` exit 0 + `grep -q "Pattern-C" docs/guides/troubleshooting.md` | ✅ `troubleshooting.md` exists | ⬜ pending |
+| 125-02-01 | 02 | 1 | DRAIN-12, DRAIN-02 | T-125-02 | Litmus self-heals BOTH backend drift (idempotent fixture restore/reparent pre-flight) AND mirror drift (bus-remote fetch + `git rm` + `checkout FETCH_HEAD` overlay before the marker edit); bounded backstop preserved; mirror reconcile does NOT use `reposix sync --reconcile` | shell-subprocess (real backend at phase close) / syntax per-commit | Per-commit: `bash -n quality/gates/agent-ux/lib/litmus-self-heal.sh && bash -n quality/gates/agent-ux/lib/litmus-flow.sh`. Phase close: `python3 quality/runners/run.py --cadence pre-release-real-backend` run twice, both exit 0 | ✅ `litmus-flow.sh` exists; `litmus-self-heal.sh` new | ⬜ pending |
+| 125-02-02 | 02 | 1 | DRAIN-02, DRAIN-12 | — | DRAIN-02 run-twice regression proof + non-destructive backend-drift manual verification documented for the phase-close/milestone-close verifier | manual (documented procedure) | `grep -q "DRAIN-02 second-run mirror-drift regression" quality/dispatch/milestone-close-verdict.md` | ❌→✅ dispatch template | ⬜ pending |
+| 125-03-01 | 03 | 2 | DRAIN-02 | T-125-03 | `testing-targets.md` names `scripts/refresh-tokenworld-mirror.sh` as the mirror-refresh pre-step (previously zero mentions) + cross-references the self-reconciling litmus; documented command carries no credential args | docs / docs-build | `grep -q "bash scripts/refresh-tokenworld-mirror.sh" docs/reference/testing-targets.md` + `bash quality/gates/docs-build/mkdocs-strict.sh` + `bash quality/gates/structure/banned-words.sh` | ✅ `testing-targets.md` exists | ⬜ pending |
+| 125-03-02 | 03 | 2 | DRAIN-02 | T-125-03b | doc-alignment walk gate passes; any new binding minted via the tool, never hand-edited into `doc-alignment.json` | docs-alignment | `bash quality/gates/docs-alignment/walk.sh` exit 0 | ✅ `doc-alignment.json` exists | ⬜ pending |
+| PHASE-G1 | all | close | DRAIN-02+DRAIN-12 (constraint) | — | Owner ruling honored: no product-code rewrite of the bus push's mirror fan-out (`GTH-V15-38` Option C) — phase stays in the test-harness/teaching-string/doc layer | gate | `git diff --stat main -- crates/reposix-remote/src/bus_handler.rs` reviewed: mirror fan-out / mirror-egress algorithm untouched (only precheck teaching-string in `write_loop.rs` changed) | n/a | ⬜ pending |
+| PHASE-G2 | all | close | DRAIN-02+DRAIN-12 | — | No regression in existing pinned `git pull --rebase` substring tests / doc-alignment rows (≥12 hits, live grep 19) | gate | `cargo test -p reposix-remote` full pass + `bash quality/gates/docs-alignment/walk.sh` exit 0 | n/a | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+
+*Nyquist continuity: no 3 consecutive tasks lack an automated `<verify>` — every 125-NN-TT
+task carries a per-commit automated check (cargo test / `bash -n` / grep / walk / mkdocs);
+the two real-backend behaviors (run-twice second-run PASS; live backend-drift self-heal) are
+wave-boundary/phase-close manual verifications by design (no scripted way to induce a trashed
+fixture; matches the P124 `example-05` real-backend-only precedent), captured in Manual-Only
+below rather than fabricated as synthetic automated tests.*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] **"Run litmus twice back-to-back" proof procedure** — the core DRAIN-02 regression
-  test does not exist as a scripted artifact yet. Likely a documented manual verification
-  step for the verifier subagent to execute against real TokenWorld (cost/complexity of a
-  fully automated "run twice" gate on top of the existing `shell-subprocess` kind), rather
-  than new CI wiring. First Wave 0 item the planner should schedule.
-- [ ] **New Rust unit test asserting the augmented mirror-lag hint content** (not just the
-  pinned base substring) — sibling to the existing `bus_precheck_b.rs` / `write_loop.rs`
-  test pattern (`stderr.contains(...)`).
-- [ ] **No scripted way to induce a trashed-fixture state** for repeatable backend-drift
-  testing — DRAIN-12's backend-drift half may need to stay a manual/documented
-  verification step. Flag explicitly; do not fabricate a synthetic automated test.
+- [x] **"Run litmus twice back-to-back" proof procedure** — scheduled as task 125-02-02
+  (documented manual verification in `quality/dispatch/milestone-close-verdict.md` +
+  Manual-Only below), executed by the phase-close/milestone-close verifier against real
+  TokenWorld. Not new CI wiring (cost/complexity of a fully automated "run twice" gate on
+  top of the `shell-subprocess` kind).
+- [x] **New Rust unit test asserting the augmented mirror-lag hint content** (not just the
+  pinned base substring) — scheduled as the catalog-first RED first commit of Plan 01
+  (task 125-01-01, sibling to `push_conflict.rs`'s existing
+  `stale_base_push_emits_fetch_first_and_writes_no_rest`), committed before the impl at
+  125-01-02.
+- [x] **No scripted way to induce a trashed-fixture state** — acknowledged, NOT fabricated
+  as a synthetic automated test. DRAIN-12's backend-drift half stays a documented
+  manual/non-destructive verification (task 125-02-02 / Manual-Only), consistent with the
+  fixture-restore pre-flight (125-02-01) being idempotent.
 
 *Existing infrastructure (cargo test harness, quality/runners/run.py catalog machinery,
 scripts/refresh-tokenworld-mirror.sh, scripts/confluence_tokenworld.py) covers composition
@@ -90,21 +102,22 @@ of the fix — no new test framework needed.*
 
 ## Manual-Only Verifications
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| Litmus self-heals a trashed protected page (backend drift) | DRAIN-12 | No scripted way to reliably induce the trashed-fixture precondition against the real TokenWorld backend; inducing it destructively risks the protected fixture pair (7766017/7798785) that the tooling explicitly refuses to delete | Coordinate with `scripts/confluence_tokenworld.py list` to confirm current fixture state; if a genuine drift is observed (or can be safely simulated via `restore`/`reparent` round-trip), run the litmus and confirm it self-heals before the marker push, without manual `confluence_tokenworld.py restore` intervention |
-| Second back-to-back litmus run does not false-negative on mirror drift | DRAIN-02 | Requires two sequential real-backend runs with actual network/git round-trips; not a per-commit gate | Run `python3 quality/runners/run.py --cadence pre-release-real-backend` twice in immediate succession; confirm both exit 0 |
-| Corrected teaching string reads as a coherent, non-misleading fix (not just literally distinct from the pinned substring) | DRAIN-12 | Teaching-string clarity/UX quality is a Rust-compiler-grade-UX judgment call, not grep-verifiable | Read the corrected hint cold: does it correctly point a stale-mirror-clone user at `git fetch <bus-remote> && git rebase && git push` (or `scripts/refresh-tokenworld-mirror.sh`) rather than a bare `git pull --rebase` that will conflict on divergent body content? |
+| Behavior | Requirement | Task | Why Manual | Test Instructions |
+|----------|-------------|------|------------|-------------------|
+| Litmus self-heals a trashed protected page (backend drift) | DRAIN-12 | 125-02-01 | No scripted way to reliably induce the trashed-fixture precondition against real TokenWorld; inducing it destructively risks the protected pair (7766017/7798785) the tooling refuses to delete | Confirm fixture state via `python3 scripts/confluence_tokenworld.py list`; the `_litmus_fixture_preflight` restore/reparent sweep is idempotent — if a genuine drift is observed, run the litmus and confirm it self-heals before the marker push without a manual `restore` intervention |
+| Second back-to-back litmus run does not false-negative on mirror drift | DRAIN-02 | 125-02-01 | Requires two sequential real-backend runs with real network/git round-trips; not a per-commit gate | Run `python3 quality/runners/run.py --cadence pre-release-real-backend` twice in immediate succession; confirm BOTH exit 0 (the second run is the regression proof — the first run's own push re-stales the mirror, and `_litmus_mirror_reconcile` must prevent a stale-base rebase conflict) |
+| Corrected teaching string reads as a coherent, non-misleading fix | DRAIN-12 | 125-01-02 | Teaching-string clarity/UX quality is a Rust-compiler-grade-UX judgment call, not grep-verifiable | Read the corrected hint cold: does it point a stale-mirror operator at `reposix sync --reconcile` for the cache + a remote-explicit `git pull --rebase <bus-remote> main` for the tree, rather than a bare `git pull --rebase` that conflicts on divergent body content? |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies (pending planner task assignment)
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (3 gaps listed above)
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s (quick checks); real-backend litmus is wave-boundary-only
-- [ ] `nyquist_compliant: true` set in frontmatter (pending — flips once planner finalizes Per-Task map)
+- [x] All tasks have `<automated>` verify or a documented Wave 0 / Manual-Only dependency
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (3 gaps scheduled as real tasks / manual procedures)
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s (quick checks); real-backend litmus is wave-boundary-only
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending — planner finalizes Per-Task Verification Map with concrete task IDs.
+**Approval:** finalized — Per-Task Verification Map carries concrete `125-NN-TT` task IDs;
+`status: ready`, `nyquist_compliant: true`, `wave_0_complete: true`.
