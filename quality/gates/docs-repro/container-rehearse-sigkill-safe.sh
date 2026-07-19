@@ -37,6 +37,17 @@ PASSED=()
 FAILED=()
 SKIPPED=()
 
+# ---- ownership tracking (P127 T1 fix, DP-2): sweep_7878 kills ONLY the sims THIS gate
+# started -- the pids/process-groups registered here as we spawn each. A foreign sim on
+# 7878 is NEVER swept. Regression: sweep-7878-ownership-scoped.sh.
+SWEEP_OWNED_PIDS=()
+SWEEP_OWNED_PGIDS=()
+register_owned() {  # register_owned <pid> <pgid>  (either may be empty)
+    [[ -n "${1:-}" ]] && SWEEP_OWNED_PIDS+=("$1")
+    [[ -n "${2:-}" ]] && SWEEP_OWNED_PGIDS+=("$2")
+    return 0
+}
+
 # ---- port helpers (independent of the harness so a harness bug can't hide here).
 port_bound() {
     if command -v lsof >/dev/null 2>&1; then
@@ -48,22 +59,35 @@ port_bound() {
     (exec 3<>/dev/tcp/127.0.0.1/7878) 2>/dev/null && { exec 3>&- 3<&-; return 0; }
     return 1
 }
-# Listener pids on 7878. Mirror the lib's lsof|ss fallback (sim-lifecycle.sh
-# find_port_pids) so sweep_7878 is NOT a silent no-op on an ss-only host (which
-# would leak the listener on 7878 -- LOW-2, P124 review).
+# LISTENer pids on 7878 -- DIAGNOSTIC ONLY (named in the refuse-to-collide message).
+# `-sTCP:LISTEN` mirrors port_bound (defense-in-depth, P127 T1). NOT used by sweep_7878
+# anymore -- the sweep kills by tracked ownership (register_owned), not a port lookup.
 port_pids() {
     if command -v lsof >/dev/null 2>&1; then
-        lsof -ti:7878 2>/dev/null | tr '\n' ' '
+        lsof -ti:7878 -sTCP:LISTEN 2>/dev/null | tr '\n' ' '
     elif command -v ss >/dev/null 2>&1; then
         ss -H -ltnp 'sport = :7878' 2>/dev/null | grep -oE 'pid=[0-9]+' | grep -oE '[0-9]+' | tr '\n' ' '
     fi
 }
-# Sweep any listener WE started off 7878 (safe: STATIC precondition asserts 7878 was
-# free at entry, so anything here is ours). Also runs on EXIT so the port never leaks.
+# Sweep ONLY the sims THIS gate started (registered via register_owned as we spawned
+# each). NO ownership-blind port lookup, and NO precondition that 7878 was free at entry:
+# a foreign sim on 7878 is NEVER killed. Runs on EXIT + the refuse-to-collide path too,
+# where the owned arrays are empty -> a safe no-op. (P127 T1, DP-2; corrects the prior
+# comment that FALSELY claimed a free-port precondition made everything here "ours".)
 sweep_7878() {
-    local p
-    for p in $(port_pids); do kill -KILL "$p" 2>/dev/null || true; done
-    # give the socket a moment to release
+    local p killed=0
+    for p in "${SWEEP_OWNED_PGIDS[@]:-}"; do
+        [[ -n "$p" ]] || continue
+        kill -KILL -- "-${p}" 2>/dev/null && killed=1 || true
+    done
+    for p in "${SWEEP_OWNED_PIDS[@]:-}"; do
+        [[ -n "$p" ]] || continue
+        kill -KILL "$p" 2>/dev/null && killed=1 || true
+    done
+    # Nothing of OURS was signalled -> nothing of ours to wait on; don't spin (and
+    # never wait on a foreign listener we deliberately left alone).
+    [[ "$killed" -eq 1 ]] || return 0
+    # give our own sockets a moment to release
     local i; for i in 1 2 3 4 5; do port_bound || return 0; sleep 0.2; done
 }
 trap 'sweep_7878' EXIT
@@ -165,6 +189,7 @@ else
     setsid "$SIM_BIN" sim --bind 127.0.0.1:7878 --ephemeral >/tmp/crss-planted-sim.$$.log 2>&1 &
     PLANT_PID=$!
     PLANT_PGID="$(ps -o pgid= -p "$PLANT_PID" 2>/dev/null | tr -d ' ')"
+    register_owned "$PLANT_PID" "$PLANT_PGID"   # this sim is OURS -> sweepable
     if wait_port_bound 10; then
         GATE_ERR="$(bash "$HARNESS" --selftest-port-gate 2>&1 >/dev/null)"
         GATE_RC=$?
@@ -190,6 +215,11 @@ else
         # timeout fires, the EXIT trap group-reaps the sim -> 7878 free. subprocess never
         # reaches its outer SIGKILL.
         FIX_OUT="$(run_under_outer_sigkill 8 --selftest-sigkill-lifecycle 2 30)"
+        # Register the sim the harness (transitively OURS) started -> the defensive sweep
+        # below reaps it if the harness ever fails to, by identity not by port lookup.
+        register_owned \
+            "$(grep -oE 'SIM_PID=[0-9]+'  <<<"$FIX_OUT" | head -1 | cut -d= -f2)" \
+            "$(grep -oE 'SIM_PGID=[0-9]+' <<<"$FIX_OUT" | head -1 | cut -d= -f2)"
         if grep -q 'HARNESS_EXIT=[0-9]' <<<"$FIX_OUT" && wait_port_free 8; then
             PASSED+=("the selftest ran the harness under a run.py-equivalent outer SIGKILL (subprocess.run timeout); the internal timeout fired first, the harness self-terminated and its group teardown left no listener on 127.0.0.1:7878 afterward")
         else
@@ -211,6 +241,10 @@ else
         if wait_port_free 4; then
             CTL_OUT="$(run_under_outer_sigkill 8 --selftest-sigkill-lifecycle 30 30)"
             CTL_PGID="$(grep -oE 'SIM_PGID=[0-9]+' <<<"$CTL_OUT" | head -1 | cut -d= -f2)"
+            CTL_PID="$(grep -oE 'SIM_PID=[0-9]+' <<<"$CTL_OUT" | head -1 | cut -d= -f2)"
+            # The orphaned sim was (transitively) started by US -> track it as owned so
+            # the group-kill + defensive sweep below reap it by identity, not by port.
+            register_owned "$CTL_PID" "$CTL_PGID"
             if grep -q 'HARNESS_EXIT=TIMEOUT_SIGKILLED' <<<"$CTL_OUT" && wait_port_bound 10; then
                 # The bug is reproducible (orphan present) -> the FIX-case "free" is meaningful.
                 # Now group-kill the orphan and assert 7878 frees (the literal process-group SIGKILL).

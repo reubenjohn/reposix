@@ -452,6 +452,43 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "docs-repro/sweep-7878-ownership-scoped",
+      "dimension": "docs-repro",
+      "kind": "mechanical",
+      "minted_at": "2026-07-19T16:13:24Z",
+      "comment": "P127 T1 (DP-2, surprises-intake #1 HIGH). Regression lock promoting the b3b1b407 RED repro (sweep-7878-blast-radius-repro.sh, inert) to a catalogued gate. container-rehearse-sigkill-safe.sh's sweep_7878() USED to free 7878 with an ownership-BLIND `kill -KILL $(port_pids)` fired UNCONDITIONALLY (EXIT trap + a final `sweep_7878 || true`) even on the refuse-to-collide path -- SIGKILLing a foreign sim it never started. The fix scopes the sweep to pids/pgids registered via register_owned() (SWEEP_OWNED_*). This gate sources the SHIPPING functions (awk-sliced, port-swapped -- tracks edits, not a paraphrase) and proves BOTH directions: (a) a foreign/unregistered listener SURVIVES the sweep, (b) an owned/registered listener is REAPED (cleanup preserved, not neutered -- the mechanism-not-symptom half). Sub-second, cargo/sim-free; cadence pre-pr NOT pre-push (the 122s pre-push battery is already over budget). Minted NOT-VERIFIED (catalog-first, OP-7); the unbiased phase-close verifier grades it.",
+      "sources": [
+        "quality/gates/docs-repro/container-rehearse-sigkill-safe.sh",
+        "quality/gates/docs-repro/sweep-7878-ownership-scoped.sh",
+        ".planning/milestones/v0.15.0-phases/surprises-intake/part-08.md"
+      ],
+      "command": "bash quality/gates/docs-repro/sweep-7878-ownership-scoped.sh",
+      "expected": {
+        "asserts": [
+          "the shipping sweep_7878 kills only processes tracked as owned (register_owned / SWEEP_OWNED_*) and the ownership-blind port-lookup kill (kill -KILL of port_pids output) is absent from container-rehearse-sigkill-safe.sh",
+          "a foreign listener the gate never started (its own process group, on a private port, never registered as owned) SURVIVES sweep_7878 -- the sweep never kills a process it did not register",
+          "a listener the gate registered as owned via register_owned is REAPED by sweep_7878 -- legitimate orphan cleanup is preserved, not neutered"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/sweep-7878-ownership-scoped.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/sweep-7878-ownership-scoped.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": "2026-07-19T16:13:24Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: container-rehearse-sigkill-safe.sh's sweep_7878 regressed to an ownership-blind port kill (`for p in $(port_pids); do kill -KILL \"$p\"`) OR stopped registering the sims it starts via register_owned -- restore the SWEEP_OWNED_* tracking so the sweep only kills pids/pgids the gate itself spawned. Direction (a) FAIL = a foreign sim was SIGKILLed (blast radius back); direction (b) FAIL = the fix over-corrected and now leaks the gate's own orphan. Minted NOT-VERIFIED (catalog-first); the phase-close verifier grades it PASS.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If sweep_7878 regressed to the ownership-blind port kill this row exists to forbid, the three asserts falsify the claim: assert 1 greps container-rehearse-sigkill-safe.sh and FAILS if the `kill -KILL $(port_pids)` port-lookup sweep returned or the SWEEP_OWNED_* ownership tracking vanished; assert 2 plants a FOREIGN sentinel (its own process group, a private port, never register_owned'd) on the swept port and FAILS unless it SURVIVES the real sourced sweep_7878 -- exactly the b3b1b407 escape where an ownership-blind sweep SIGKILLed it; assert 3 plants an OWNED sentinel (registered via register_owned) and FAILS unless the real sweep_7878 REAPS it, proving the fix did not neuter legitimate orphan cleanup. The gate sources the SHIPPING functions (awk slice, port-swapped) so a paraphrase cannot drift from what ships; substrate-absent degrades to NOT-VERIFIED (exit 75), never a false PASS (OP-2).",
+      "cadences": [
+        "pre-pr"
+      ]
     }
   ]
 }
