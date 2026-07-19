@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.14.0...reposix-cache-v0.14.1) - 2026-07-19
+
+### Added
+
+- *(115-T6)* 6b — cold-init reconcile to canonical 278ms + un-waive loop/perf rows (FINAL T6 lane)
+- *(115-T6)* headline-numbers cross-check gate + reconcile 8ms hero prose to canonical 6/7ms
+
+### Other
+
+- *(126-01)* W4 clarity+caveat drains — MCP first-use, plan-refresh cold, doc-clarity subscription
+- *(planning)* encode P116 ADR-010 manager rulings + cold-reader pass outcomes (README dead-link fix, 2 intake filings, GTH-V15-38, GTH-V15-35 addenda)
+- *(115-06)* reframe hero surfaces to live GitHub-capture token economy
+- *(114-02)* align read_blob # Errors OidDrift framing with FIX-02 (code-review nit)
+- *(114-02)* scope --reconcile's oid-drift recovery to what it heals (FIX-02)
+- *(114-02)* reproduction-backed oid-drift + reconcile-non-recovery
+- *(planning)* archive 21 shipped-milestone phase dirs to milestones/v{X.Y}-phases/
+- *(hero)* add interim/synthetic-baseline qualifiers to hero numbers
+
 ## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.13.1...reposix-cache-v0.14.0) - 2026-07-14
 
 ### Fixed

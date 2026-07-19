@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.14.0...reposix-jira-v0.14.1) - 2026-07-19
+
+### Added
+
+- *(115-T6)* 6b — cold-init reconcile to canonical 278ms + un-waive loop/perf rows (FINAL T6 lane)
+- *(115-T6)* headline-numbers cross-check gate + reconcile 8ms hero prose to canonical 6/7ms
+
+### Other
+
+- *(126-01)* W4 clarity+caveat drains — MCP first-use, plan-refresh cold, doc-clarity subscription
+- *(planning)* encode P116 ADR-010 manager rulings + cold-reader pass outcomes (README dead-link fix, 2 intake filings, GTH-V15-38, GTH-V15-35 addenda)
+- *(115-06)* reframe hero surfaces to live GitHub-capture token economy
+- *(hero)* add interim/synthetic-baseline qualifiers to hero numbers
+
 ## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.13.0...reposix-jira-v0.13.1) - 2026-07-08
 
 ### Fixed
