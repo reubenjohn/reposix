@@ -267,8 +267,9 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   invoked cold (before a `walk`) — add a one-line note to the playbook/prompt.
 - [ ] **DRAIN-20** *(LOW, GTH-V15-17)*: doc-alignment `status` hides that MISSING_TEST rows
   are waived — add a `waived_active` counter to the `status` block.
-- [ ] **DRAIN-21** *(LOW, GTH-V15-18)*: Audit the 16 pre-existing "cites
-  out-of-eligible-file" coverage warnings — decide whether the eligible-file allowlist
+- [ ] **DRAIN-21** *(LOW, GTH-V15-18)*: Audit the 17 pre-existing "cites
+  out-of-eligible-file" coverage warnings (the real count — the earlier "16" estimate was
+  audit-corrected to 17 in P126 W3) — decide whether the eligible-file allowlist
   should include them or the rows should re-cite eligible files.
 
 ## Future Requirements (deferred beyond v0.15.0)
@@ -332,13 +333,13 @@ goals, and success criteria).
 | DRAIN-12 | Phase 125 | Complete |
 | DRAIN-13 | Phase 124 | Pending |
 | DRAIN-14 | Phase 124 | Pending |
-| DRAIN-15 | Phase 126 | Pending |
-| DRAIN-16 | Phase 126 | Pending |
-| DRAIN-17 | Phase 126 | Pending |
-| DRAIN-18 | Phase 126 | Pending |
-| DRAIN-19 | Phase 126 | Pending |
-| DRAIN-20 | Phase 126 | Pending |
-| DRAIN-21 | Phase 126 | Pending |
+| DRAIN-15 | Phase 126 | Complete |
+| DRAIN-16 | Phase 126 | Complete |
+| DRAIN-17 | Phase 126 | Complete |
+| DRAIN-18 | Phase 126 | Complete |
+| DRAIN-19 | Phase 126 | Complete |
+| DRAIN-20 | Phase 126 | Complete |
+| DRAIN-21 | Phase 126 | Complete |
 | DRAIN-22 | Phase 124 | Pending |
 | DRAIN-23 | Phase 124 | Pending |
 | DRAIN-24 | Phase 124 | Pending |

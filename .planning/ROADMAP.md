@@ -76,7 +76,7 @@
 - [x] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors. (completed 2026-07-18)
 - [x] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence. (completed 2026-07-18)
 - [x] **Phase 125: Real-backend cadence & mirror-drift resilience** - The `pre-release-real-backend` cadence and milestone-close litmus survive GitHub-mirror drift. (completed 2026-07-19)
-- [ ] **Phase 126: Docs-alignment tooling polish** - The doc-alignment skill/tooling surface is more reliable and less confusing.
+- [x] **Phase 126: Docs-alignment tooling polish** - The doc-alignment skill/tooling surface is more reliable and less confusing. (completed 2026-07-19 — DRAIN-15..21 + HIGH minted_at load-crash landmine defused repro-first + RAISE-3 stale-roadmap fixed in-place; verifier grade pending, CI in-flight)
 - [ ] **Phase 127: Surprises absorption (OP-8 Slot 1)** - Every surprise surfaced during P114–P126's own execution has a terminal STATUS.
 - [ ] **Phase 128: Good-to-haves polish + milestone close (OP-9 Slot 2)** - GOOD-TO-HAVES drained, RETROSPECTIVE.md distilled, milestone-close ritual complete, tag script authored.
 

@@ -69,7 +69,7 @@ update: `quality/CLAUDE.md` § "Hermetic test convention" (new subsection, same 
 **STATUS:** RESOLVED (same commit that introduces this entry — see
 `quality/runners/test_freshness_synth.py` diff).
 
-## 2026-07-19 | discovered-by: Cycle-2 task (d) executor (own `--persist` verification pass) | severity: HIGH | STATUS: OPEN
+## 2026-07-19 | discovered-by: Cycle-2 task (d) executor (own `--persist` verification pass) | severity: HIGH | **STATUS: CLOSED (P126 W1)**
 
 **What:** Minting the new `structure/hermetic-test-network-isolation` row's PASS status
 (via `python3 quality/runners/run.py --cadence pre-pr --persist`, run once to verify the
@@ -110,4 +110,16 @@ will crash `run.py` entirely** (not just this row) the first time it re-grades t
 for real; the next agent who hits this should not re-diagnose from scratch — this entry
 has the root cause and the fix.
 
-**STATUS:** OPEN.
+**STATUS:** CLOSED — resolved in P126 W1 exactly as sketched. `65e8c497` added the
+write-once `minted_at` anchor to `agent-ux/real-git-push-e2e` (+ refreshed its stale
+"git 2.25.1" comment to the box's real 2.50.1; `claim_vs_assertion_audit` was already
+present) so `validate_row` takes the `minted is not None` branch and the lv-based crash
+raise is unreachable forever; the SAME commit hardened the write path
+(`run.py::save_catalog` now takes a required `persist=` keyword and raises `RuntimeError`
+on a `persist=False` write, so a non-persist cadence cannot round-trip any catalog — the
+class that staled/un-waived `subjective-rubrics.json`'s `headline-numbers-sanity` row in
+entry 1's family). `d0753ef6` recorded the fix-twice doctrine in `quality/CLAUDE.md`.
+Whole-corpus regression lock: `test_run.py::TestNoArmedMintedAtLandmine` (FAILs if any
+row carries `last_verified` >= the P90 cutoff without `minted_at`) +
+`TestSaveCatalogPersistGuard` + `TestValidateOnlyMultiCatalogByteIdentical`. Fresh DP-2
+review confirmed mechanism-vs-symptom (`5d097937`).

@@ -35,24 +35,25 @@ _Updated 2026-07-19 · Milestone: Floor_
 
 ### In flight now
 
-- _Nothing in flight right now — P125 just closed GREEN (see above); **P126** is next up
-  (see below) and has not started yet._
+- **P126** — Docs-alignment tooling polish: the tool that keeps the docs honest got more
+  reliable and easier to understand — clearer block messages that name what to fix, a
+  counter that stops waived checks from hiding, and a defused crash in the quality runner.
+  _Pushed 2026-07-19; CI in-flight, final verifier grade pending — moves to "Landed
+  recently" once graded GREEN._
 
 ### Up next, in order
 
-1. **P126** — Docs-alignment tooling polish: the tool that keeps the docs honest gets
-   more reliable and easier to understand.
-2. **P127** — Surprises absorption: every loose end found while building this milestone
+1. **P127** — Surprises absorption: every loose end found while building this milestone
    gets closed out.
-3. **P128** — Good-to-haves polish + milestone close: remaining polish lands, the
+2. **P128** — Good-to-haves polish + milestone close: remaining polish lands, the
    milestone retrospective is written, and the v0.15.0 tag script is prepared for the
    owner to run.
-4. **v0.17** — a meta-milestone that builds the five quality-gate shapes that would have
+3. **v0.17** — a meta-milestone that builds the five quality-gate shapes that would have
    caught this milestone's own findings earlier.
-5. **v0.19** — a truth-purge and information-architecture rebuild across the docs site.
-6. **v0.21** — a benchmark-honesty pass: headline numbers re-measured and re-verified.
-7. **v0.23** — end-to-end journey slices: real workflows, start to finish.
-8. **v0.25** — a launch kit: live demo, install path, and public launch.
+4. **v0.19** — a truth-purge and information-architecture rebuild across the docs site.
+5. **v0.21** — a benchmark-honesty pass: headline numbers re-measured and re-verified.
+6. **v0.23** — end-to-end journey slices: real workflows, start to finish.
+7. **v0.25** — a launch kit: live demo, install path, and public launch.
 
 Small stub milestones land between these as needed, draining new surprises and
 good-to-haves as they surface.

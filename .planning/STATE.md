@@ -3,19 +3,46 @@ gsd_state_version: 1.0
 milestone: v0.15.0
 milestone_name: Floor
 status: executing
-last_updated: "2026-07-19T04:40:19.000Z"
-last_activity: 2026-07-19 -- P125 CLOSED GREEN (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — verifier verdict GREEN on all 3 SCs, phase-close bookkeeping + push lane. All 3 success criteria delivered across 3 plans (Wave 1: 125-01 SC3 helper teaching-string, 125-02 SC2 litmus self-heal; Wave 2: 125-03 SC1 pre-step doc + PART 2 SC3/DRAIN-12 v0.14.0 blockquote remote-explicit reword): SC1 (mandatory mirror-refresh pre-step `scripts/refresh-tokenworld-mirror.sh` documented for the `pre-release-real-backend` cadence, DRAIN-02), SC2 (milestone-close vision-litmus fixture self-heals for BOTH backend drift AND GitHub mirror drift, reconciling the mirror through the reposix bus remote before the marker push, DRAIN-12), SC3 (helper `git pull --rebase` teaching string corrected for the mirror-drift case + v0.14.0 attach-tree recovery blockquote made remote-explicit). gsd-verifier verdict GREEN on all 3 SCs (`quality/reports/verdicts/p125/VERDICT.md`, verdict commit `55d66378`) — the 12/15 count is now verifier-confirmed, not optimistic. 12/15 v0.15.0 "Floor" phases complete (P114–P125); next = P126.
+last_updated: "2026-07-19T13:00:00.000Z"
+last_activity: 2026-07-19 -- P126 CLOSED pending verifier (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — phase-close bookkeeping + push lane. Six strictly-serial waves landed: W1 defused a HIGH `agent-ux/real-git-push-e2e` load-crash landmine repro-first (RED `44783ebe` → GREEN `65e8c497` add `minted_at` + read-only `save_catalog(persist=)` write-boundary guard → fix-twice `d0753ef6`; DP-2 review PASS `5d097937`); W2 walk BLOCK now names blocking row-STATE(s) `d093bc7f` [DRAIN-17] + grader binds only on drift-fails-test `e693deeb` [DRAIN-18]; W3 `status` waived_active counter `0270f91c` [DRAIN-20] + out-of-eligible warnings 17→2 via narrow eligible-file includes `e8823049` [DRAIN-21]; W4 README MCP first-use + plan-refresh cold caveat + doc-clarity subscription caveat `1ef508bf` [DRAIN-16/19/15] + git-version prose refresh `639ff67f`; W5 RAISE-3 fixed the stale `docs/development/roadmap.md` active-milestone lie IN-PLACE + re-cited 5 rows in-commit `588c1546` (NOT deleted — deletion would strand human-gated confirm-retire). Phase-completion counter optimistically advanced 12/15 → 13/15 (doctrine-sanctioned: `docs/roadmap.md` keeps P126 "In flight now" until the fresh verifier grades GREEN). Push landed this bookkeeping lane; CI in-flight (watch handed to L0/coordinator); fresh gsd-verifier NOT yet dispatched. next = P127 (Surprises absorption, OP-8 Slot 1).
 progress:
   total_phases: 15
-  completed_phases: 12
-  total_plans: 3
-  completed_plans: 3
-  percent: 80
+  completed_phases: 13
+  total_plans: 1
+  completed_plans: 1
+  percent: 87
 ---
 
 # Project State
 
 ## Current Position
+
+Phase: **P126 (Docs-alignment tooling polish, v0.15.0 DRAIN-15..21) — CLOSED pending verifier 2026-07-19.**
+Six strictly-serial executor waves (W1..W6) landed; the doc-alignment skill/tooling surface is
+more reliable and less confusing, one EARLY HIGH landmine is defused, and RAISE-3 removed the
+stale-roadmap active-milestone lie. **W1 landmine (HIGH, DP-2 prove-before-fix):** a committed
+pytest RED repro (`44783ebe`) aged `last_verified` past the P90 cutoff and asserted
+`load_catalog`/`validate_row` crashes BEFORE the fix; `65e8c497` added a write-once `minted_at`
+anchor to `agent-ux/real-git-push-e2e` (defusing the git>=2.34 load-crash that would take down
+`run.py` for every cadence loading `agent-ux.json`, incl. the P128 milestone-close 9th probe) +
+a read-only write-boundary guard (`run.py::save_catalog` takes a required `persist=` keyword,
+raises `RuntimeError` on a `persist=False` write); `d0753ef6` recorded the fix-twice doctrine;
+fresh DP-2 review PASS `5d097937`. **W2 (Lane B):** `d093bc7f` [DRAIN-17] walk BLOCK LEADS with
+a per-row-STATE summary; `e693deeb` [DRAIN-18] grader binds only when the cited test FAILS on
+drift + after grep'ing `src/`. **W3 (Lane C):** `0270f91c` [DRAIN-20] `status` `waived_active`
+counter recomputed vs `now`; `e8823049` [DRAIN-21] out-of-eligible warnings 17→2 via narrow
+eligible-file includes (coverage_ratio 0.165→0.180, floor PASS). **W4 (micro-batch):**
+`1ef508bf` [DRAIN-16/19/15] README MCP first-use + plan-refresh cold caveat + doc-clarity
+subscription/canary caveat; `639ff67f` git-version prose refresh. **W5 (RAISE-3):** `588c1546`
+fixed the stale `docs/development/roadmap.md` active-milestone lie IN-PLACE + re-cited all 5
+doc-alignment rows in-commit (NOT deleted — deletion would strand the human-gated
+confirm-retire; the active-milestone claim kept test-accurate to avoid a false BOUND).
+**Counter advanced 12/15 → 13/15 optimistically** — per `.planning/CLAUDE.md` phase-close
+doctrine, `docs/roadmap.md` keeps P126 in "In flight now" (pushed 2026-07-19, CI in-flight,
+verifier pending) until a FRESH gsd-verifier grades it GREEN. **Verdict:** PENDING — the
+close-bookkeeping lane pushed + handed the CI watch to L0; the unbiased gsd-verifier is
+dispatched by the coordinator AFTER main's newest `ci.yml` run concludes GREEN. next = **P127**
+(Surprises absorption, OP-8 Slot 1).
 
 Phase: **P125 (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — CLOSED GREEN 2026-07-19.**
 All 3 success criteria delivered against reality across 3 plans (2 waves): **SC1/DRAIN-02** —
@@ -231,7 +258,8 @@ The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 
 
 **Active milestone: v0.15.0 Floor — ROADMAP scoped 2026-07-15 (15 phases, P114–P128).**
 Arc D ratified at `6aa734a`; this is the first PLANNED milestone of the ratchet-first arc.
-Next step: `/gsd-plan-phase 124`. Carried
+Next step: `/gsd-plan-phase 127` (Surprises absorption, OP-8 Slot 1) — after the P126
+fresh-verifier grade lands GREEN. Carried
 owner-gate still OPEN (NOT a P119/P120 blocker): the
 P117 launch-animation publish (`gh release upload` mp4 + live `animation-renders` verify,
 GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tracked in
@@ -273,7 +301,7 @@ GTH-V15-37 / E1 ask) remains manager-deferred with owner approval PENDING — tr
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P125 CLOSED GREEN (gsd-verifier verdict GREEN on all 3 SCs, `quality/reports/verdicts/p125/VERDICT.md` @ `55d66378`); 12/15 phases complete (P114–P125), verifier-confirmed. Next: `/gsd-plan-phase 126`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**v0.15.0 Floor — P126 CLOSED pending verifier (DRAIN-15..21 + HIGH minted_at load-crash landmine defused repro-first + RAISE-3 stale-roadmap fixed in-place; pushed 2026-07-19, CI in-flight, fresh gsd-verifier owed by the coordinator once main goes GREEN); counter optimistically 13/15 (P114–P126), `docs/roadmap.md` keeps P126 in-flight until verifier-GREEN. Next: `/gsd-plan-phase 127`.**" (see § Current Position / Current Focus above). Workstream A (v0.13.0-extension) and Workstream C (v0.14.0) are CLOSED/SHIPPED historically (tags landed). Workstream B (v0.13.2) stays queued behind v0.15.0 per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
