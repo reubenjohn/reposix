@@ -87,7 +87,8 @@ def _drive(td: Path, *, committed_status: str, verifier_exit: int, persist: bool
     cat_path = cat_dir / "synthetic.json"
     # Byte-for-byte snapshot BEFORE (matches the save_catalog serialization so a
     # no-op run is provably byte-identical, not merely semantically equal).
-    run.save_catalog(cat_path, catalog)
+    # persist=True: this setup write is an intentional mint (P126 W1 guard).
+    run.save_catalog(cat_path, catalog, persist=True)
     before = cat_path.read_bytes()
 
     argv = ["--cadence", "pre-push"] + (["--persist"] if persist else [])
@@ -288,7 +289,8 @@ class TestPersistDowngradeGuard(unittest.TestCase):
         _write_verifier(td, "quality/gates/synthetic-verifier.sh", verifier_exit)
 
         # 1) Commit the HEAD baseline (what `git show HEAD:` will return).
-        run.save_catalog(cat_path, {"dimension": "structure", "rows": head_rows})
+        run.save_catalog(cat_path, {"dimension": "structure", "rows": head_rows},
+                         persist=True)
         self._git(td, "init", "-q")
         self._git(td, "config", "user.email", "gate@test.invalid")
         self._git(td, "config", "user.name", "downgrade-guard-test")
@@ -300,7 +302,8 @@ class TestPersistDowngradeGuard(unittest.TestCase):
         #    run.py loads + re-grades). The guard still reads HEAD, not this.
         run.save_catalog(cat_path, {"dimension": "structure",
                                     "rows": [_synthetic_row(status=working_status,
-                                                            blast=working_blast)]})
+                                                            blast=working_blast)]},
+                         persist=True)
         return cat_path
 
     def _run_persist(self, td: Path, cat_path: Path, *, allow_downgrade: bool
@@ -492,7 +495,8 @@ class TestPersistDowngradeGuard(unittest.TestCase):
             cat_dir = td / "quality" / "catalogs"
             cat_dir.mkdir(parents=True)
             cat_path = cat_dir / "synthetic.json"
-            run.save_catalog(cat_path, {"dimension": "structure", "rows": []})
+            run.save_catalog(cat_path, {"dimension": "structure", "rows": []},
+                             persist=True)
             # td is NOT a git repo -> git show fails -> None.
             self.assertIsNone(
                 _persist_guard.committed_head_statuses(td, cat_path),
@@ -593,7 +597,8 @@ class TestPersistCatalogLock(unittest.TestCase):
             _write_verifier(td, "quality/gates/synthetic-verifier.sh", 0)
             run.save_catalog(cat_dir / "synthetic.json",
                              {"dimension": "structure",
-                              "rows": [_synthetic_row(status="NOT-VERIFIED")]})
+                              "rows": [_synthetic_row(status="NOT-VERIFIED")]},
+                             persist=True)
             holder = self._spawn_holder(td, hold=8.0)
             try:
                 t0 = time.monotonic()
@@ -673,7 +678,7 @@ class TestPersistCatalogLock(unittest.TestCase):
             run.save_catalog(cat_path, {"dimension": "structure", "rows": [
                 self._lock_test_row("test/lock-row-a", "pre-push", "quality/gates/slow-a.sh"),
                 self._lock_test_row("test/lock-row-b", "pre-pr", "quality/gates/slow-b.sh"),
-            ]})
+            ]}, persist=True)
             # Two writers on the SAME catalog: A flips only row-a (pre-push), B
             # flips only row-b (pre-pr). Each writes the WHOLE file. With the
             # full-RMW lock, whichever runs second reads the first's committed
@@ -804,6 +809,96 @@ def _audit_field_cutoff() -> str:
     single source of truth rather than a hardcoded copy."""
     import _audit_field
     return _audit_field.P90_MINT_CUTOFF
+
+
+class TestSaveCatalogPersistGuard(unittest.TestCase):
+    """P126 W1 deliverable 2: the STRUCTURAL read-only guard at the write
+    boundary. save_catalog REFUSES a write unless persist=True, so a
+    validate-only cadence cannot round-trip a catalog even if a future code path
+    reaches the write call OUTSIDE the caller's `if args.persist:` nesting -- the
+    class that staled + un-waived subjective-rubrics.json's headline-numbers-sanity
+    row during a validate-only commit-hook run."""
+
+    def test_save_catalog_refuses_without_persist(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "c.json"
+            with self.assertRaises(RuntimeError) as ctx:
+                run.save_catalog(p, {"dimension": "structure", "rows": []},
+                                 persist=False)
+            msg = str(ctx.exception)
+            self.assertIn("read-only", msg, "the guard did not teach the read-only rule")
+            self.assertIn("--persist", msg, "the guard did not teach the recovery")
+            self.assertFalse(p.exists(),
+                             "a refused save_catalog still created/wrote the file")
+
+    def test_save_catalog_writes_with_persist(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "c.json"
+            run.save_catalog(p, {"dimension": "structure", "rows": []},
+                             persist=True)  # no raise
+            self.assertEqual(json.loads(p.read_text())["dimension"], "structure")
+
+    def test_persist_is_a_required_keyword(self):
+        # No default: a caller who forgets to declare intent gets a TypeError,
+        # NOT a silent default write. Forcing explicit intent is the guard's teeth.
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "c.json"
+            with self.assertRaises(TypeError):
+                run.save_catalog(p, {"dimension": "structure", "rows": []})
+
+
+class TestValidateOnlyMultiCatalogByteIdentical(unittest.TestCase):
+    """P126 W1 deliverable 2: a validate-only (non-`--persist`) run.main() over a
+    MULTI-catalog set leaves EVERY catalog file byte-for-byte identical --
+    including (a) a catalog whose live grade DIFFERS from its committed status
+    (the flip that would be persisted if the read-only contract broke) and (b) a
+    catalog carrying non-ASCII em-dash content (the exact ensure_ascii round-trip
+    vector that reformatted subjective-rubrics.json). Strengthens the existing
+    single-synthetic-row TestPersistGate to the real multi-file / Unicode shape."""
+
+    def _build(self, cat_dir: Path, repo: Path) -> None:
+        _write_verifier(repo, "quality/gates/synthetic-verifier.sh", 0)
+        # Catalog A: a would-flip row (committed NOT-VERIFIED, verifier exits 0
+        # -> live grade PASS). A broken read-only contract would persist the flip.
+        run.save_catalog(cat_dir / "flip.json",
+                         {"dimension": "structure",
+                          "rows": [_synthetic_row(status="NOT-VERIFIED")]},
+                         persist=True)
+        # Catalog B: non-ASCII content -- a raw json.dumps round-trip WITHOUT
+        # ensure_ascii=False would \u-escape these glyphs and change the bytes.
+        row = _synthetic_row(status="PASS")
+        row["id"] = "test/unicode-row"
+        row["comment"] = "em dash — en dash – curly quotes “ ” bind the bytes"
+        row["cadences"] = ["weekly"]  # out of pre-push scope: never re-graded
+        run.save_catalog(cat_dir / "unicode.json",
+                         {"dimension": "structure", "rows": [row]}, persist=True)
+
+    def test_validate_only_leaves_every_catalog_byte_identical(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            cat_dir = td / "quality" / "catalogs"
+            cat_dir.mkdir(parents=True)
+            self._build(cat_dir, td)
+            before = {p.name: p.read_bytes() for p in cat_dir.glob("*.json")}
+            with mock.patch.object(run, "REPO_ROOT", td), \
+                 mock.patch.object(run, "CATALOG_DIR", cat_dir), \
+                 mock.patch.object(run, "REPORTS_DIR", td / "quality" / "reports"), \
+                 mock.patch.dict(os.environ, {}, clear=True), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                run.main(["--cadence", "pre-push"])  # NO --persist
+            after = {p.name: p.read_bytes() for p in cat_dir.glob("*.json")}
+            self.assertEqual(
+                before, after,
+                "a validate-only run mutated at least one catalog file "
+                "(read-only contract broken)")
+            # Prove the flip WAS observable (so byte-identity is meaningful, not
+            # vacuous): the committed row is still NOT-VERIFIED on disk though its
+            # live grade is PASS.
+            flip = json.loads((cat_dir / "flip.json").read_text())["rows"][0]
+            self.assertEqual(
+                flip["status"], "NOT-VERIFIED",
+                "the would-flip row's committed status was overwritten by a "
+                "validate-only run")
 
 
 if __name__ == "__main__":

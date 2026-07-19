@@ -125,12 +125,31 @@ def load_catalog(path: Path) -> dict:
     return data
 
 
-def save_catalog(path: Path, data: dict) -> None:
+def save_catalog(path: Path, data: dict, *, persist: bool) -> None:
     """Write catalog back; preserve wrapper field order ($schema, comment, dimension, rows).
 
     Uses ensure_ascii=False so em-dashes and other Unicode survive round-trips.
     Caller decides whether to invoke save_catalog() — see catalog_dirty().
+
+    STRUCTURAL read-only guard (P126 W1). `persist` is a REQUIRED keyword so the
+    read-only contract lives at the WRITE BOUNDARY, not merely at each caller's
+    `if args.persist:` nesting. A validate-only cadence must be byte-for-byte
+    read-only (structure/catalog-immutable-on-read); this makes that a property
+    of the function itself. A future refactor that moves/adds a save_catalog
+    call into a non-persist path raises HERE instead of silently round-tripping
+    a catalog file — the same class that staled + un-waived
+    subjective-rubrics.json's headline-numbers-sanity row during a validate-only
+    commit-hook run (.planning/SESSION-HANDOVER.md HIGH-INFRA noticing).
     """
+    if not persist:
+        raise RuntimeError(
+            f"refusing to write {path}: save_catalog was called with persist=False "
+            f"— a validate-only (non-`--persist`) cadence must be byte-for-byte "
+            f"read-only. Only the explicit `python3 quality/runners/run.py "
+            f"--cadence <c> --persist` MINT path may mutate quality/catalogs/. "
+            f"If you are minting, pass persist=True; if you are grading, do not "
+            f"call save_catalog at all (the grade lives in the per-row artifact)."
+        )
     ordered: dict[str, Any] = {}
     for key in ("$schema", "comment", "dimension", "rows"):
         if key in data:
@@ -594,7 +613,7 @@ def main(argv: list[str] | None = None) -> int:
                                     f"{row_id} {old} -> {new}",
                                     file=sys.stderr,
                                 )
-                        save_catalog(cat_path, data)
+                        save_catalog(cat_path, data, persist=args.persist)
                 else:
                     pending_mint.append(cat_path.name)
 
