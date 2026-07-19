@@ -150,6 +150,22 @@ watchers do not — the parent relays the run id up to L0 (which holds the durab
 watch) and SendMessages the coordinator to resume the phase close on green. Never relieve
 or end a turn on a passive self-watch/upward-relay assumption.
 
+**SendMessage tier limitation (STANDING, owner-ratified 2026-07-18) — WHY the durable CI
+watch lives at L0.** SendMessage is a tool-grant limitation of the `phase-coordinator`
+registry entry: it is NOT granted at the phase-coordinator (C2) tier or below. So a C2
+cannot SendMessage / halt / resume its own background children, and a child cannot
+resume-by-id back to its parent C2 — the failure is specifically **C2→child and
+child→C2**. **L0→C2 SendMessage DOES work** (an L0 top-level session resumes a C2 by
+session id — confirmed repeatedly), which is exactly why the durable CI watch and the
+resume-on-green SendMessage sit at L0, not at the coordinator. Because a C2 cannot
+background-and-resume a child, coordinators at the C2 tier and below MUST **serialize
+strictly** and drive every phase close via **FRESH verifier→executor LEAVES** (the
+P122-blessed deterministic pattern — dispatch the leaves directly; never `fork` a
+coordinator to resume/close it, never background-and-resume a child at the C2 tier).
+This is **RATIFIED standing doctrine, not a temporary workaround** — embed the caveat
+verbatim in every C2/C1 charter. Ledger: `.planning/CONSULT-DECISIONS.md`
+(2026-07-18 [OWNER]).
+
 A relieved coordinator must be **told in advance** it is being relieved, so it writes a
 deliberate, complete handover (persistence is solicited, not automatic). Dispatch
 `relief-handover-writer` with the ORCHESTRATION handover template:
@@ -295,6 +311,20 @@ verifier→executor LEAVES directly (the P122-blessed deterministic pattern), NE
 coordinator to "resume/close" it, since a fork clones the parent's context and can
 confabulate a no-op close (P123-close incident: the fork returned ZERO tool uses while
 claiming "close executing," STATE.md unchanged — caught only by verify-against-reality).
+
+**SendMessage tier limitation (STANDING, owner-ratified 2026-07-18).** The reason the
+phase-close pattern above dispatches FRESH verifier→executor LEAVES rather than resuming
+a warm coordinator is a hard tool-grant limitation: SendMessage is NOT granted at the
+phase-coordinator (C2) tier or below (it is absent from the `phase-coordinator` registry
+entry's grant). A C2 therefore cannot SendMessage / halt / resume its own background
+children, and a child cannot resume-by-id back to its parent C2 — the failure is
+specifically **C2→child and child→C2**. **L0→C2 SendMessage DOES work** (an L0 session
+resumes a C2 by session id — confirmed repeatedly). Consequence: coordinators at C2 and
+below MUST **serialize strictly** and drive every phase close via fresh verifier→executor
+LEAVES — never `fork` a coordinator to resume/close it, never background-and-resume a
+child at the C2 tier. This is **RATIFIED standing doctrine, not a temporary workaround**;
+embed the caveat verbatim in every C2/C1 charter. Ledger:
+`.planning/CONSULT-DECISIONS.md` (2026-07-18 [OWNER]).
 
 ## 12. Honest corrective iteration (HCI)
 

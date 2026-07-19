@@ -193,3 +193,29 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   recently` via the normal per-phase-close strip refresh — that is expected, not a
   conflict with this entry.
 
+---
+
+## 2026-07-18 [OWNER] SendMessage C2-tier tool-grant limitation ratified as STANDING doctrine
+
+- **Finding:** `SendMessage` is unavailable at the phase-coordinator (C2) tier and below
+  — a C2 cannot SendMessage / halt / resume its own background children, and a child
+  cannot resume-by-id back to its parent C2. The failure is specifically **C2→child and
+  child→C2**; **L0→C2 SendMessage DOES work** (an L0 top-level session resumes a C2 by
+  session id — confirmed repeatedly). Root cause: the tool is simply not in the
+  `phase-coordinator` registry entry's tool grant.
+- **Re-discovery count:** independently re-discovered across the #63→#64→#65 handover
+  chain (the 2nd/3rd re-discovery this milestone) before this ratification — that
+  recurrence is WHY it is now formalized rather than re-diagnosed each rotation.
+- **Ruling (owner/manager, 2026-07-18):** ratified as a **STANDING tool-grant limitation
+  of the `phase-coordinator` registry grant** — NOT a session/config fluke to chase or
+  "fix." It is a property of the registry entry, permanent until the grant itself changes.
+- **Standing mitigation:** coordinators at C2 and below **serialize strictly** and drive
+  every phase close via **FRESH verifier→executor LEAVES** only; **never `fork`-to-resume**
+  a coordinator, **never background-and-resume a child at C2**; **embed this caveat
+  verbatim in every C2/C1 charter**. This is doctrine, not a workaround.
+- **Cross-reference (fix-it-twice):** mirrored into `.planning/ORCHESTRATION.md` §3 (WHY
+  the durable CI watch lives at L0) and §11 (beside the fresh-LEAVES phase-close pattern)
+  in the same change.
+- **Status:** RATIFIED — standing doctrine. **Reversibility:** doc/ledger-only, reversible
+  via `git revert`. **Commit:** this quick's ratification commit.
+
