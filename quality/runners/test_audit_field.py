@@ -619,6 +619,95 @@ class TestFK4bMutuallyExclusiveBranch(unittest.TestCase):
             f"quality/CLAUDE.md F-K4b note). Uncovered: {unmatched}")
 
 
+class TestShellCoverageWarnOnlyAssertDefused(unittest.TestCase):
+    """P127 T3 (F-K4b defusal, mirrors ba13553f / TestFK4bMutuallyExclusiveBranch
+    for a DIFFERENT root cause: a WARN-ONLY diagnostic, not a mutually-exclusive
+    env branch). The code/shell-coverage row carries minted_at, so F-K4b requires
+    every expected.asserts entry to map to an asserts_passed entry on the PASS
+    path. But the 'coverable-line counter validated within 15%' entry is a
+    WARN-ONLY anti-gaming diagnostic: scripts/shell_coverage.py appends it to
+    asserts_failed on a >15% drift (e.g. transcript.sh counter=34 vs kcov=27 =
+    25.9%) yet STILL exits 0 -- the gate PASSes. So the verifier emits that assert
+    in asserts_failed, NOT asserts_passed, and F-K4b silently demoted the real
+    PASS to FAIL (the dc60cc21-class hazard). Fix: expected.asserts is the
+    PASS-path claim set ONLY (kcov available + aggregate >= floor); the WARN-only
+    counter contract lives in the row's comment/owner_hint/claim_vs_assertion_audit
+    and the driver still emits the WARN live. These tests lock BOTH the mechanism
+    (RED) and the fixed live-row shape (GREEN) at pre-push
+    (structure/asserts-congruence-grade-time)."""
+
+    # The two PASS-path asserts_passed strings the real verifier
+    # (quality/gates/code/shell-coverage.sh) emits on an exit-0 PASS run.
+    REAL_PASS_ASSERTS = [
+        "kcov is available",
+        "aggregate shell line-coverage >= floor (quality/shell-coverage-floor.txt)",
+    ]
+    # The former WARN-only counter assert that a drift-y PASS run reports in
+    # asserts_failed (never asserts_passed) -- removed from the live row by T3.
+    WARN_ONLY_ASSERT = (
+        "coverable-line counter validated within 15% of kcov on all executed scripts"
+    )
+
+    def _grade(self, expected_asserts):
+        row = {
+            "id": "code/shell-coverage",
+            "dimension": "code",
+            "kind": "mechanical",
+            "minted_at": "2026-07-05T00:00:00Z",
+            "status": "PASS",  # verifier exited 0 (WARN-only drift does not block)
+            "expected": {"asserts": expected_asserts},
+        }
+        # A drift-y PASS run: the WARN-only assert lands in asserts_failed while
+        # the gate still exits 0 -- so it is NOT in asserts_passed.
+        artifact = {"asserts_passed": list(self.REAL_PASS_ASSERTS),
+                    "asserts_failed": [self.WARN_ONLY_ASSERT]}
+        _audit_field.apply_pass_gates(row, artifact, ".")
+        return row["status"], artifact["asserts_failed"]
+
+    def test_warn_only_assert_in_expected_demotes(self):
+        # RED repro: the pre-T3 row shape demotes the real PASS to FAIL.
+        status, failed = self._grade(
+            self.REAL_PASS_ASSERTS + [self.WARN_ONLY_ASSERT])
+        self.assertEqual(
+            status, "FAIL",
+            "F-K4b must demote a PASS whose expected.asserts lists the WARN-only "
+            "counter assert (the pre-T3 shell-coverage row shape)")
+        self.assertTrue(any("F-K4b" in f for f in failed))
+
+    def test_pass_path_only_asserts_stay_pass(self):
+        # GREEN lock: the fixed row shape (PASS-path claims only) stays PASS.
+        status, failed = self._grade(self.REAL_PASS_ASSERTS)
+        self.assertEqual(status, "PASS",
+                         "fixed shell-coverage expected.asserts must stay PASS")
+
+    def test_live_row_expected_asserts_are_pass_path_coverable(self):
+        # Fix-twice guard at LOCAL pre-push: the REAL committed
+        # code/shell-coverage expected.asserts must ALL be coverable by the
+        # verifier's PASS-path asserts_passed, or F-K4b demotes on CI. A future
+        # re-add of the WARN-only counter assert RED-flags HERE, locally.
+        import json as _json
+        cat = Path(__file__).resolve().parents[1] / "catalogs" / "code.json"
+        rows = _json.loads(cat.read_text())["rows"]
+        row = next(r for r in rows if r["id"] == "code/shell-coverage")
+        self.assertIsNotNone(
+            row.get("minted_at"),
+            "row must keep its write-once minted_at anchor")
+        ok, unmatched = _audit_field.asserts_congruent(
+            row["expected"]["asserts"], self.REAL_PASS_ASSERTS)
+        self.assertTrue(
+            ok,
+            "live code/shell-coverage expected.asserts contain an entry not "
+            "coverable by the verifier's PASS-path asserts_passed -- F-K4b will "
+            "demote the row to FAIL (see the row comment / quality/CLAUDE.md "
+            f"F-K4b note). Uncovered: {unmatched}")
+        # And the load-bearing aggregate-floor claim must NOT have been dropped.
+        self.assertTrue(
+            any("aggregate shell line-coverage >= floor" in a
+                for a in row["expected"]["asserts"]),
+            "the aggregate-floor PASS-path assert must remain -- dropping it "
+            "would weaken the real regression signal")
+
+
 class TestTranscriptEvidenceOk(unittest.TestCase):
     """RBF-FW-08 runtime half."""
 
