@@ -12,6 +12,30 @@ existed BEFORE the implementation landed.
 2026-07-05 but no `minted_at` is rejected at catalog load by
 `quality/runners/_audit_field.py::validate_row` (invoked from `run.py:121`) — add it
 up front rather than discovering the rejection on your first pre-push run.
+This bites LEGACY rows too, not just new mints: a pre-P90 row with **no `minted_at`**
+whose verifier re-grades for real (e.g. an env/git-version precondition that was
+short-circuiting now passes) stamps a fresh `last_verified` >= the cutoff, and the reject
+is an **uncaught `SystemExit` in `load_catalog`** — it crashes ALL of `run.py` before
+grading, for every cadence touching that catalog (incl. the milestone-close 9th
+`pre-release-real-backend` probe), not just that one row. So proactively add `minted_at`
+to any legacy row whose verifier can start executing (P126 W1 defused
+`agent-ux/real-git-push-e2e` this way; root cause: `surprises-intake/part-08.md` #2). The
+whole-corpus invariant is CI-guarded by `test_run.py::TestNoArmedMintedAtLandmine` — it
+FAILs if any row carries `last_verified` >= the P90 cutoff without `minted_at`.
+
+**Validate/read cadences are byte-for-byte read-only — STRUCTURALLY, not by convention.**
+Only an explicit `--persist` MINT run may write `quality/catalogs/`; a bare cadence GATE
+run (pre-commit/pre-push/pre-pr) grades in memory and writes per-row artifacts but never
+the catalog (`structure/catalog-immutable-on-read`). As of P126 W1 the contract lives at
+the WRITE BOUNDARY: `run.py::save_catalog` takes a **required `persist=` keyword** and
+raises `RuntimeError` on a `persist=False` write, so a future refactor that reaches the
+write in a non-persist path fails loud instead of silently round-tripping a catalog (the
+class that staled + un-waived `subjective-rubrics.json`'s `headline-numbers-sanity` row
+during a validate-only commit-hook run). Never write a catalog with raw
+`json.dumps(indent=2)` (no `ensure_ascii=False`) — it `\u`-escapes em-dashes and reformats
+the bytes; go through `save_catalog(..., persist=True)`. Regression:
+`test_run.py::TestSaveCatalogPersistGuard` + `TestValidateOnlyMultiCatalogByteIdentical`
+(dimension: catalog-integrity / structure).
 
 **`doc-alignment.json` (and every catalog under `quality/catalogs/`) rows are mint-only —
 never hand-edit.** Rows are minted via `reposix-quality doc-alignment <verb>` (`bind` /
