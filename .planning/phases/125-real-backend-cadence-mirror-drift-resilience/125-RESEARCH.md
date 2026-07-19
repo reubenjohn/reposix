@@ -522,10 +522,15 @@ done
 | A3 | The corrected teaching string can safely thread the local bus-remote name into the hint at the `write_loop.rs:210-219` call site. This was NOT verified against the actual call signature of `apply_writes` (which is shared between single-backend and bus paths and, per its own doc header, does not currently receive a remote-name parameter). | Common Pitfalls → Pitfall 4, Code Examples | If `apply_writes` genuinely has no access to the local remote name at that call site, the fix may need to either (a) thread a new `Option<&str>` parameter through from both callers, or (b) use generic phrasing ("the SoT-backed remote you configured via `reposix attach`, not `origin`") instead of naming it explicitly. This is a real implementation-design decision for the planner, not fully resolved by this research. |
 | A4 | This phase's scope excludes touching `.github/workflows/` in the SEPARATE `reposix-tokenworld-mirror` mirror repository (i.e., does not attempt to fix the webhook+cron workflow itself). | Pitfall 5, Standard Stack | If the phase's actual intent includes repairing the mirror-sync workflow, that is a distinct, out-of-this-repo change requiring `gh` access to `reubenjohn/reposix-tokenworld-mirror` and is not scoped by DRAIN-02/DRAIN-12's text (which is about the LITMUS and the HELPER, not the external Action). Recommend confirming scope explicitly with the user/owner if the planner is tempted to touch it. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `apply_writes` have (or need) access to the local bus-remote name for the
    corrected mirror-lag hint?**
+   - **RESOLVED (Plan 125-01 Task 2):** confirmed no remote name is threaded into
+     `apply_writes` at that call site; Plan 01 chose the safe default — a generic
+     `<reposix-remote-name>` placeholder in the corrected hint rather than a dynamic
+     interpolation, sidestepping both the plumbing question and the credential-leak
+     redaction requirement that a dynamic remote/URL string would otherwise trigger.
    - What we know: `bus_handler.rs` resolves `mirror_remote_name` at STEP 0 (the
      MIRROR's local name, e.g. `origin`), but the BUS remote's own local name (the name
      the user gave the `reposix::...` URL, e.g. `reposix`) is not obviously threaded
@@ -540,6 +545,10 @@ done
 2. **Should the pre-step be wired into `docs/reference/testing-targets.md`
    independently of the self-heal (belt-and-suspenders), or does a fully
    self-reconciling litmus make the doc pre-step redundant?**
+   - **RESOLVED (Plan 125-03):** documented regardless, per this section's own
+     recommendation below — Plan 03 wires `refresh-tokenworld-mirror.sh` into
+     `testing-targets.md` as the documented pre-step (SC1) AND cross-references the
+     Plan 02 self-heal as the "you shouldn't usually need this" escape-hatch caveat.
    - What we know: SC1 explicitly offers an either/or ("a documented mandatory
      mirror-refresh pre-step ... OR a self-reconciling litmus"); SC2 mandates the
      self-heal unconditionally. The 2026-07-16 manager ruling ALSO already blesses
