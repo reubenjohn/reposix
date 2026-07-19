@@ -73,7 +73,7 @@
 - [x] **Phase 120: CLI + helper error hardening to Rust-compiler-grade** - Every user-facing error teaches the fix, suggests the alternative, gives copy-paste recovery. (completed 2026-07-17)
 - [x] **Phase 121: RPX error-code namespace + `reposix explain`** - Every error carries a stable code; `reposix explain <code>` looks it up. (completed 2026-07-17)
 - [x] **Phase 122: `reposix-remote` + `init` hardening** - Two HIGH-severity carry-forward robustness gaps close (modern-git rebase-recovery verification; binary-side self-safety refusal). (completed 2026-07-18)
-- [x] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors.
+- [x] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors. (completed 2026-07-18)
 - [x] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence. (completed 2026-07-18)
 - [ ] **Phase 125: Real-backend cadence & mirror-drift resilience** - The `pre-release-real-backend` cadence and milestone-close litmus survive GitHub-mirror drift.
 - [ ] **Phase 126: Docs-alignment tooling polish** - The doc-alignment skill/tooling surface is more reliable and less confusing.
@@ -310,7 +310,7 @@
 | 121. RPX error-code namespace + explain | 1/1 | Complete | 2026-07-17 |
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
 | 123. Quality-runner & catalog integrity | 7/7 | Complete | 2026-07-18 |
-| 124. Container-rehearse harness hardening | 0/TBD | Not started | - |
+| 124. Container-rehearse harness hardening | 1/1 | Complete | 2026-07-18 |
 | 125. Real-backend cadence & mirror-drift resilience | 0/TBD | Not started | - |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
 | 127. Surprises absorption (OP-8 Slot 1) | 0/TBD | Not started | - |
