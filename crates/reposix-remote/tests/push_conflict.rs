@@ -231,7 +231,7 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
 /// Setup drives the branch honestly: an in-process `Cache` warms the same
 /// `REPOSIX_CACHE_DIR` the subprocess consumes, then `write_mirror_synced_at`
 /// populates the ref so `read_mirror_synced_at` returns `Some` inside `write_loop.rs`
-/// (the branch under test fires ONLY on that condition — see write_loop.rs:208).
+/// (the branch under test fires ONLY on that condition — see `write_loop.rs:208`).
 #[tokio::test]
 // test-name-honesty: ok — drives helper export via stdin against wiremock; genuine mirror-lag-hint coverage
 async fn mirror_lag_reject_hint_recommends_reconcile_and_remote_explicit_rebase() {

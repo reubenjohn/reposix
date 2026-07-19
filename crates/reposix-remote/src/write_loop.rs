@@ -213,9 +213,27 @@ where
                     sot = backend_name,
                     ts = synced_at.to_rfc3339(),
                 ));
-                crate::diag(&format!(
-                    "hint: run `reposix sync` to update local cache from {backend_name} directly, then `git rebase`",
-                ));
+                // Pitfall 2 fix (SC3/DRAIN-12): the cache-refresh hint carries the
+                // `--reconcile` flag — the form that actually rebuilds the LOCAL cache
+                // from the SoT — instead of the no-op bare form (which per sync.rs's own
+                // doc comment just points at the reconcile flag and exits 0). Aligned
+                // verbatim to the already-correct doc example at
+                // docs/concepts/dvcs-topology.md line 90 (fix-twice).
+                crate::diag(
+                    "hint: run `reposix sync --reconcile` to refresh your cache against the SoT, then `git pull --rebase`",
+                );
+                // Pitfall 4 fix (SC3/DRAIN-12): on a `reposix attach` (Pattern-C)
+                // tree, git's fetch reads the ORIGIN MIRROR by default, which can
+                // itself lag the SoT — so a bare `git pull`/`git rebase` reconciles
+                // against the stale mirror, not the backend. Point at the remote-
+                // explicit rebase against the SoT-backed bus remote. Static `&str`,
+                // no dynamic interpolation → no credential can reach stderr (T-125-01);
+                // the `<reposix-remote-name>` placeholder is the mandated default.
+                crate::diag(
+                    "hint: if this tree was created via `reposix attach`, a bare `git pull`/`git rebase` \
+                     reads the ORIGIN MIRROR by default (which may itself be stale) — rebase against the \
+                     SoT-backed remote explicitly, e.g. `git pull --rebase <reposix-remote-name> main`",
+                );
             }
         }
         proto.send_line("error refs/heads/main fetch first")?;
