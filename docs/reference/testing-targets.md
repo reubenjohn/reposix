@@ -283,3 +283,35 @@ Phase 36 wires three CI integration jobs
 (`integration-contract-confluence-v09`, `-github-v09`, `-jira-v09`) that
 decrypt the relevant secret pack and run these test commands on every
 push to `main`.
+
+---
+
+## Mirror-refresh pre-step (GitHub-mirror drift)
+
+The milestone-close vision litmus and the `pre-release-real-backend` cadence
+(`python3 quality/runners/run.py --cadence pre-release-real-backend`) clone a
+plain-git GitHub mirror of the `TokenWorld` pages, edit one page, and round-trip
+the edit back to the Confluence backend. The litmus's own prior push can leave
+that mirror clone trailing the backend, so a second same-day run can hit a
+stale-base rebase conflict on its own earlier edit. This pre-step refreshes the
+mirror clone to backend-current first:
+
+```bash
+bash scripts/refresh-tokenworld-mirror.sh
+```
+
+It fetches the backend-materialized `pages/` tree and overlays it wholesale onto
+the GitHub mirror so the mirror matches the Confluence backend (the source of
+truth), then fast-forwards the mirror head — no backend write, no force-push. It
+converges the **external** GitHub mirror, which `reposix sync --reconcile` does
+**not** do (that command rebuilds only the local cache and leaves the external
+mirror byte-identical). The two are not interchangeable — do not substitute
+`reposix sync --reconcile` here.
+
+> **You usually do NOT need to run this manually.** As of P125 (P125/DRAIN-02)
+> the vision litmus **self-reconciles** the mirror clone against the backend
+> before its marker edit (`quality/gates/agent-ux/lib/litmus-flow.sh`), so a
+> routine litmus / `pre-release-real-backend` run heals mirror drift on its own.
+> Keep this script as a faster escape hatch to pre-warm or verify mirror state
+> without a full litmus run — the same way `reposix sync --reconcile` is safe to
+> run any time even though most flows never need it.
