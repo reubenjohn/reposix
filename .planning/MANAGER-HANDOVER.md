@@ -99,92 +99,56 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed at rotation #13→#14, 2026-07-19 ~03:15 UTC)
+## Live state (refreshed at rotation #14→#15, 2026-07-19 ~14:45 UTC)
 
-- **SUCCESSOR #14 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
+- **SUCCESSOR #15 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
   `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 1800 ""
-  /home/reuben/workspace/reposix`. (2) Re-create the L2 in-session deadman tick
-  (died with #13): cron `11,53 * * * *`, recurring, prompt = "WATCHDOG TICK: if
-  your last turn did not end with a freshly armed unfired manager-poll, triage
+  /home/reuben/workspace/reposix`. NOTE: `ignore_ids` (3rd arg) is
+  **SPACE-separated** — comma-separated silently fails and the poll re-fires on
+  handled red runs (#14 hit this twice). (2) Re-create the L2 in-session deadman
+  tick (died with #14): cron `11,53 * * * *`, recurring, prompt = "WATCHDOG TICK:
+  if your last turn did not end with a freshly armed unfired manager-poll, triage
   w1:p5 + origin/CI and re-arm; else one-line ack, stop." (3) Verify L3 alive:
-  `pgrep -f liveness-watchdog.sh`. (4) **OWNER'S TOP OPEN ASK — roadmap
-  transparency (3 escalating raises 2026-07-19):** owner reads docs/roadmap.md
-  LOCALLY and wants an ordered three-block sequence — "Landed recently" (dated,
-  one-line outcomes) / "In flight now" / "Up next, in order" (phase numbers OK
-  as sequence markers; dates only on the DONE side) — refreshed at EVERY phase
-  close. Thin-strip v1 landed (`60c39a57` + doctrine `78bb9e43`); the three-block
-  reshape + do-it-NOW addendum are QUEUED with seat #64 — VERIFY it lands in your
-  first cycle, nudge if not. Also queued there: docs.yml deploy-gap fix
-  (CI-cancelled docs push strands deploys until the next docs-touching push;
-  manual `gh workflow run docs.yml` = recovery, run 29670460876 success) + the
-  LYING stale docs/development/roadmap.md (claims v0.11.0 active; delete+redirect
-  recommended). (5) **Seat #64 mid-leg**: P125 executing (waves 1–2 landed
-  ~02:56 UTC, gauge 16% at last check; relief 18% soft / 22% hard gauge).
-  Rotation flow proven 3x this shift: TRUE-IDLE → verify wrap+handover commit →
-  pane-clear.sh --yes → gauge-reset check → 3-line charter → verify CONSUMED →
-  re-arm. (6) **Owner gates OPEN (non-blocking):** E1 animation publish (owner
-  PENDING, never self-authorize); PR #74 v0.14.1 cut (recommended CUT, awaiting
-  word); 91-file size-waiver umbrella (exp 2026-08-08); gsd-sdk
-  state.advance-plan upstream bug (escalated, held); L1198 .env sign-off.
+  `pgrep -f liveness-watchdog.sh`. (4) **Seat #69 mid-leg**: P126 CLOSED GREEN at
+  handoff (verdict `7c9cc153` = 126-01-VERIFICATION.md `verdict: GREEN`;
+  close-bookkeeping `13dd4ffc`; roadmap three-block moved P126→Landed correctly);
+  **CI in flight on 13dd4ffc at rotation time — verify it concluded green in your
+  first cycle** (workhorse holds the watch; known flakes below). Next work = P127
+  planning. Relief 18% soft / 22% hard gauge; rotation flow proven 5x this shift:
+  TRUE-IDLE → verify wrap+handover PUSHED (not just committed — see #68 miss) →
+  pane-clear.sh --yes → gauge-reset check → charter → verify CONSUMED → re-arm.
+  (5) **Owner gates OPEN (non-blocking):** E1 animation publish (owner PENDING,
+  never self-authorize); PR #74 v0.14.1 cut (recommended CUT, awaiting word);
+  91-file size-waiver umbrella (exp 2026-08-08); gsd-sdk state.advance-plan
+  upstream bug (held); L1198 .env sign-off. **SendMessage C2-tier ruling
+  (MANAGER decide-and-disclose 2026-07-19, owner veto OPEN):** C2 tool-grant
+  lacks SendMessage = standing limitation; fresh-leaves mitigation ratified
+  (ledger `.planning/CONSULT-DECISIONS.md:198`, doctrine `495b8357`, attribution
+  honesty-corrected `592ae4c0`); owner may instead grant the tool in the registry.
 
-- **SHIFT #13 SUMMARY (2026-07-18 01:0x → 07-19 03:1x UTC):** Seats #61→#64,
-  3 clean rotations (charter-consumption verified each time).
-  **P121+P122+P123+P124 CLOSED GREEN** (milestone 47%→73%, STATE 11/15); P125
-  executing at handoff. **P124 OP-7 gate catch (manager spot-verify):** phase
-  closed WITHOUT the independent gsd-verifier VERDICT.md and with a RED runner
-  verdict sitting in its dir; intervention → remediation verdict GREEN
-  `c267f0e8` (4/4 SCs; 8/8 FAILs dispositioned pre-existing-baseline). Spot-
-  verify-the-verdict-artifact each close — this is the second ritual miss the
-  spot-check caught. **Owner thread — roadmap transparency**: calibration is
-  "clear sequence, something changes every day"; local file is enough for now
-  (see first actions). **Suspend-gap incident:** machine suspended ~20:35→00:05
-  UTC — polls overran wall caps, L2 ticks queued+delivered late/bundled,
-  workhorse froze mid-close and resumed cleanly on its own; on any post-resume
-  wake run FULL triage (pane + origin + CI) and pgrep the poll before re-arming
-  on a bare tick — an overrun poll is evidence of suspend, not failure.
-  Docs-CI 15m-cap timeout flake (quality-gates job) hit 2x; workhorse cleared
-  both by log-reading + re-push — never code-fix an env flake.
+- **SHIFT #14 SUMMARY (2026-07-19 03:1x → ~14:45 UTC):** Seats #64→#69, 5 clean
+  rotations. **P125 + P126 CLOSED GREEN, both verdict-artifact-spot-verified**
+  (milestone 73%→87%, STATE 13/15). **Owner's roadmap top ask DELIVERED**:
+  three-block reshape landed `cb4c2b3d` + doctrine supersede in
+  `.planning/CLAUDE.md`; both closes since kept phases honestly in "In flight"
+  until verifier-GREEN. **Pre-pr CI saga (the shift's spine):** "flake" →
+  "contention" (timeout 15→28min + 3-job cap `c09f1d72`) → real root cause =
+  **fd-inheritance deadlock**, fixed + permanent observability net `cef3a2ea`
+  (pre-pr back to ~4-6min since). Then P126's own diff regressed
+  real-git-push-e2e P0 (save_catalog persist-guard) → fixed `ba13553f`; badges
+  P2 pair = external shields/codecov outage, cleared on rerun; hermetic
+  freshness-synth fixed `f1959373` (residual: hermetic P2 CI-portability bug
+  noticed in the P126 verdict — filed, non-gating). **Manager interventions that
+  mattered:** nudged the stalled roadmap quick past a passed boundary; caught
+  seat #66 tagging the SendMessage ruling [OWNER] (honesty rule) → corrected;
+  caught seat #68 ending its turn with 2 UNPUSHED relief commits (Stop advisory
+  ignored) → manager pushed them (pre-push hook ran 264s, WARN over budget —
+  possible intake; `code/shell-coverage` P2 FAIL inside it delegated to #69 for
+  pre-existing-vs-new check). Charter-queue pattern (send to a working seat,
+  consumed at next boundary) worked 6/6 times. Weekly limit read 83% at ~04:15Z
+  (resets Jul 23 2am PT) — noted only, never gated on.
 
-## Prior live state (rotation #12→#13, 2026-07-18 ~01:05 UTC — historical)
-
-- **SUCCESSOR #13 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
-  `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 1200 ""
-  /home/reuben/workspace/reposix`. (2) Re-create the L2 in-session deadman tick
-  (CronCreate died with #12's session): cron `11,53 * * * *`, recurring, prompt =
-  "WATCHDOG TICK: if your last turn did not end with a freshly armed unfired
-  manager-poll, triage w1:p5 + origin/CI and re-arm; else one-line ack, stop."
-  (3) Verify L3 watchdog alive: `pgrep -f liveness-watchdog.sh` (crontab respawns
-  it ≤17min; SIGTERM it only if retiring the mechanism). (4) **Seat #61 mid-leg**:
-  P120 CLOSED GREEN (`f6de50d3`, milestone 7/15 ≈47%); #61 continues the roadmap
-  (P121 next) under the recalibrated relief line (18%/22% gauge). Rotate it per
-  the skill (pane-clear, never bare /clear; verify charter CONSUMED, not just
-  box-empty — see send-race craft below). (5) **Owner gates OPEN:** E1 animation
-  publish — manager-deferred, owner PENDING (`gh release create docs-assets
-  --latest=false` + 6.9MB mp4 + animation-renders verify; NEVER self-authorize,
-  NEVER tag [OWNER] without genuine owner input — 2026-07-17 honesty incident);
-  PR #74 v0.14.1 cut (recommended CUT, awaiting owner word).
-
-- **SHIFT #12 SUMMARY (2026-07-17 02:4x → 07-18 01:0x UTC):** Seats #54→#61;
-  **P117+P118+P119+P120 all CLOSED GREEN** (milestone 14%→47%). P117 highlights:
-  19-commit push-blocker chain cleared honestly across three seats (#56
-  root-caused a hand-written `"BIND"` enum corrupting doc-alignment.json, #57
-  decided the 17-row refresh, #58 applied+pushed with GTH-V15-49 Option B);
-  E1 animation upload escalated → manager-deferred under outward-publishing
-  doctrine; close commit mis-tagged the deferral [OWNER] → honesty fix `97a4008`.
-  #60 single-leg closed P118+P119 after the relief-line recalibration. **PR #77**:
-  explored via subagent (verdict: flake — live crates.io probes inside the
-  "hermetic" runner unit test), rerun green, un-drafted + squash-merged by
-  manager under explicit owner direction; hermetic-test debt row filed.
-  **INCIDENT (2026-07-18): all-day relay gap** — #12 ended a turn without
-  re-arming the consumed one-shot poll; worker #60 finished a 5h leg and sat
-  unrotated ~4.5h. Root fix = the 3-layer liveness stack (see standing rules).
-  **Send-race craft:** a long `agent send` lands as a `[Pasted text]` block that
-  may survive MULTIPLE Enters while subagents hold input — verify the message
-  was CONSUMED (visible in transcript / turn started), never trust box-looks-
-  empty; L3 watchdog now flags stuck blocks. Owner interactions: merge-PR#77
-  directive (executed), watchdog design question (answered + built).
-
-(Older prior-live-state sections — rotations #11→#12 and earlier — dropped per
+(Older prior-live-state sections — rotations #13→#14 and earlier — dropped per
 the keep-lean rule; git history is the archive.)
 - **MANAGER FINDING (verified, then fixed by #48): retiring hero rows had NO
   successors on 3 surfaces.** Subagent-mapped + grep-verified: docs/index.md:17
