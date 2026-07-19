@@ -274,9 +274,12 @@ it is no longer a prerequisite for recovery.
 > For a Pattern-C **attach** (round-tripper) tree the same recovery applies because
 > `reposix attach` seeds `refs/reposix/origin/main` at the mirror merge-base at attach
 > time, so your commit-before-attach edits share an ancestor with the fetched SoT
-> snapshot and `git pull --rebase && git push` reconciles without a cross-root wall; an
-> attach tree created *before* that seed landed heals by re-running `reposix attach`
-> (runtime auto-heal of a pre-seed tree is deferred to v0.15.0).
+> snapshot and the rebase-and-retry reconciles without a cross-root wall — but name the
+> bus remote explicitly (`git pull --rebase <reposix-remote-name> main && git push
+> <reposix-remote-name> main`; see the next note), because a bare `git pull --rebase` on
+> an attach tree reads the stale `origin` mirror, not the backend. An attach tree created
+> *before* that seed landed heals by re-running `reposix attach` (runtime auto-heal of a
+> pre-seed tree is deferred to v0.15.0).
 
 > **Pattern-C (`reposix attach`) trees — name the bus remote explicitly.** On an attach
 > tree, git's fetch still reads `origin` (the plain-git mirror), which can lag the SoT;

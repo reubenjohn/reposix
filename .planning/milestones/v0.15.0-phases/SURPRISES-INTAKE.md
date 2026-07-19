@@ -95,4 +95,4 @@ This ledger exceeded the *.md 20k budget and was split into 7 per-part child fil
   - 2026-07-18 | discovered-by: P124 W1a + W2 (source=P124, migrated at phase close from phase-local `deferred-items.md`) | severity: LOW-MEDIUM
   - 2026-07-18 | discovered-by: P124 close-bookkeeping lane (shell-coverage FAIL forces `--persist` downgrade-REFUSAL — augments `L1166` / the two drift entries) | severity: MEDIUM
   - 2026-07-18 | discovered-by: P124 close-bookkeeping lane (verdict.py `--phase` bare-session collation reads a misleading RED) | severity: MEDIUM
-  - 2026-07-18 | discovered-by: gsd-executor 125-01 (SC3/DRAIN-12 — troubleshooting.md v0.14.0 blockquote shows bare attach-tree recovery that reads the stale mirror) | severity: LOW-MEDIUM
+  - 2026-07-18 | discovered-by: gsd-executor 125-01 (SC3/DRAIN-12 — troubleshooting.md v0.14.0 blockquote shows bare attach-tree recovery that reads the stale mirror) | severity: LOW-MEDIUM | **RESOLVED** by 125-03 PART 2

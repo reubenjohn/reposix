@@ -284,4 +284,12 @@ so a cold attach-tree reader is not shown the stale-mirror-reading bare form fir
 `bash quality/gates/docs-alignment/walk.sh` after and rebind any troubleshooting.md-bound row
 via the mint tool in the same commit. Effort: small (~20min).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (2026-07-18, plan 125-03 PART 2, coordinator-absorbed SC3/DRAIN-12
+completion). The v0.14.0 blockquote's Pattern-C attach paragraph now names the bus remote
+explicitly (`git pull --rebase <reposix-remote-name> main && git push <reposix-remote-name>
+main`) and states that a bare `git pull --rebase` on an attach tree reads the stale `origin`
+mirror — consistent with the `write_loop.rs` teaching string 125-01 shipped and the
+remote-explicit note directly below. Walk-gate rebind check: ZERO drift — all six
+troubleshooting.md doc-alignment bindings sit at line ≤ 227, above the edited blockquote
+(lines 274-282), so no `source_hash` range shifted; `bash quality/gates/docs-alignment/walk.sh`
+exits 0 with no STALE_DOCS_DRIFT. No rebind needed.
