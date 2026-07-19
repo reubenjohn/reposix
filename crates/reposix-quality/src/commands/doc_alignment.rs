@@ -1501,12 +1501,12 @@ pub(crate) mod verbs {
     }
 
     /// DRAIN-20: count rows currently SUPPRESSED by a live waiver -- a row in a
-    /// blocking state (MISSING_TEST / STALE_DOCS_DRIFT / ...) whose waiver is
-    /// [`WaiverStatus::Active`] relative to `now`.
+    /// blocking state (`MISSING_TEST` / `STALE_DOCS_DRIFT` / ...) whose waiver
+    /// is [`WaiverStatus::Active`] relative to `now`.
     ///
     /// Recomputed against `now` from the live rows rather than read from the
     /// persisted `summary.claims_waived` (which ONLY the walker refreshes -- see
-    /// `walk`), so a fresh `status` no longer hides that MISSING_TEST rows are
+    /// `walk`), so a fresh `status` no longer hides that `MISSING_TEST` rows are
     /// actively WAIVED (deferred) rather than silently ignored. Pairs
     /// `blocks_pre_push()` with the waiver check because a waiver on a
     /// now-non-blocking row is moot: the `waive` verb only mints waivers on
@@ -1754,7 +1754,7 @@ pub(crate) mod verbs {
             serde_json::from_value(json).expect("valid test row")
         }
 
-        /// DRAIN-20: `waived_active` counts a blocking row (MISSING_TEST) whose
+        /// DRAIN-20: `waived_active` counts a blocking row (`MISSING_TEST`) whose
         /// waiver is ACTIVE vs `now` -- recomputed from the live rows, so it
         /// surfaces the suppression even when the persisted
         /// `summary.claims_waived` is stale/0 (only the walker refreshes that).
