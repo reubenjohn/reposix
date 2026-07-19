@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 401,
-    "claims_bound": 262,
+    "claims_bound": 263,
     "claims_missing_test": 1,
     "claims_retire_proposed": 1,
     "claims_retired": 68,
-    "alignment_ratio": 0.7867867867867868,
+    "alignment_ratio": 0.7897897897897898,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-18T04:53:05Z",
+    "last_walked": "2026-07-19T12:18:07Z",
     "coverage_ratio": 0.1734128674904133,
     "lines_covered": 1221,
     "total_eligible_lines": 7041,
@@ -9143,12 +9143,12 @@
       "claim": "v0.1.0 shipped: initial release with sim+confluence+jira+github connectors",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 24,
-        "line_end": 24
+        "line_start": 9,
+        "line_end": 9
       },
-      "source_hash": "6033301200637abb9b4476a85138a297eeba4d404cb55bf173a4b38e4ce22bbb",
+      "source_hash": "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496",
       "source_hashes": [
-        "6033301200637abb9b4476a85138a297eeba4d404cb55bf173a4b38e4ce22bbb"
+        "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496"
       ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
@@ -9159,8 +9159,8 @@
       "rationale": "Verifier asserts git tag v0.1.0 exists in history; the tag IS the historical record",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T03:18:11Z",
-      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_run": "2026-07-19T12:17:58Z",
+      "last_extracted": "2026-07-19T12:17:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -9168,12 +9168,12 @@
       "claim": "v0.10.0 shipped: docs restructure (Diataxis nav, three-page how-it-works, etc.)",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 13,
-        "line_end": 13
+        "line_start": 18,
+        "line_end": 18
       },
-      "source_hash": "8478bf5d33c9c4b069be4a530ebf6e1cc4074e7d9025f8e6d8698df1e6a9587d",
+      "source_hash": "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa",
       "source_hashes": [
-        "8478bf5d33c9c4b069be4a530ebf6e1cc4074e7d9025f8e6d8698df1e6a9587d"
+        "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa"
       ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
@@ -9184,8 +9184,8 @@
       "rationale": "Verifier asserts git tag v0.10.0 exists; CURRENTLY FAILS at runtime (real drift -- CHANGELOG says shipped, no tag exists). The script is still the contract; runtime failure surfaces the missing-tag gap as a real release-tooling issue to close in v0.13.0",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T03:18:11Z",
-      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_run": "2026-07-19T12:18:07Z",
+      "last_extracted": "2026-07-19T12:18:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -9193,24 +9193,24 @@
       "claim": "Roadmap active-milestone version matches workspace Cargo.toml version (modulo patch)",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 22,
-        "line_end": 22
+        "line_start": 26,
+        "line_end": 26
       },
-      "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
+      "source_hash": "db6bf0ec8dd11f34d3b5d2b35f653713850915cd6ca829f52c932a61c2734364",
       "source_hashes": [
-        "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c"
+        "db6bf0ec8dd11f34d3b5d2b35f653713850915cd6ca829f52c932a61c2734364"
       ],
       "tests": [
         "quality/gates/structure/active-milestone-matches-workspace-version.sh"
       ],
       "test_body_hashes": [
-        "df6cdeb41ad74b4f19e1b0007611212631a235c72356f50cc15e296c92cb7631"
+        "4207eed4f6df2cbc9be1d5b899ca433b73c02ef38ca15248d655c33aa9560789"
       ],
-      "rationale": "Verifier extracts CHANGELOG most-recent shipped version + Cargo.toml workspace version; asserts major.minor match. Surfaces every release-cycle drift; currently flags the v0.12.0/0.11.3 G1 mismatch (intentional -- v0.13.0 owner closes by bumping Cargo).",
+      "rationale": "Verifier extracts CHANGELOG most-recent shipped version (v0.14.0) + Cargo.toml workspace version (0.14.0); asserts major.minor match -- currently GREEN. Source anchors the roadmap's active-milestone declaration (now v0.15.0 Floor); the gate surfaces every release-cycle major.minor drift between CHANGELOG and Cargo.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:57:20Z",
-      "last_extracted": "2026-04-29T02:57:20Z",
+      "last_run": "2026-07-19T12:18:07Z",
+      "last_extracted": "2026-07-19T12:18:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -9218,12 +9218,12 @@
       "claim": "v0.2.0-alpha shipped: alpha release with frontmatter validation + audit log",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 23,
-        "line_end": 23
+        "line_start": 10,
+        "line_end": 10
       },
-      "source_hash": "62b67e1f685b7fef51102005dddd27774be3fee38c42965c53aab035d0b6b221",
+      "source_hash": "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830",
       "source_hashes": [
-        "62b67e1f685b7fef51102005dddd27774be3fee38c42965c53aab035d0b6b221"
+        "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830"
       ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
@@ -9234,8 +9234,8 @@
       "rationale": "Verifier asserts git tag v0.2.0-alpha exists; the tag IS the historical record",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T03:18:11Z",
-      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_run": "2026-07-19T12:17:58Z",
+      "last_extracted": "2026-07-19T12:17:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -9279,13 +9279,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
       "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
       "rationale": "test verifies the pivot's load-bearing claims: .git/ real, extensions.partialClone=origin, promisor=true, blob:none filter, URL prefix reposix::http:// after init -- the partial-clone shape and helper integration the roadmap entry claims shipped",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:29:03Z",
-      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_run": "2026-07-19T12:17:58Z",
+      "last_extracted": "2026-07-19T12:17:58Z",
       "last_extracted_by": "bind-call"
     },
     {

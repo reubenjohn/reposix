@@ -12,8 +12,9 @@
 #   -> mismatch; v0.12.0 shipped per CHANGELOG but Cargo is still 0.11.3.
 #
 # Bound by docs-development-roadmap-md/v0-11-0-active-milestone in
-# quality/catalogs/doc-alignment.json (the prose names "v0.11.0 active
-# milestone" while v0.12.0 has shipped).
+# quality/catalogs/doc-alignment.json (the roadmap prose names v0.15.0
+# "Floor" as the active milestone while v0.14.0 is the most-recent shipped
+# CHANGELOG entry -- this gate asserts that most-recent entry matches Cargo).
 #
 # Exit codes:
 #   0 -- versions match (modulo patch -- major.minor)

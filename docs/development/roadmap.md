@@ -16,12 +16,14 @@
 | **v0.8.0** | 2026-04-16 | JIRA Cloud integration; `IssueBackend` → `BackendConnector` rename; `Issue.extensions` field for backend-specific metadata. |
 | **v0.9.0** | 2026-04-24 | Architecture pivot — git-native partial clone. FUSE mount retired; `git-remote-reposix` now advertises `stateless-connect` + `export` against an on-disk bare-repo cache. Agent UX is upstream git from `init` onward. |
 | **v0.10.0** | 2026-04-25 | Docs and narrative shine — landing page, tutorial set, mermaid diagrams, value-prop framing. |
+| **v0.11.0** | 2026-04-26 | Vision-innovations surface — `reposix doctor` (18-check catalog), `log --time-travel`, `init --since`, `cost`, `gc --orphans`; real-backend latency cells populated. |
+| **v0.12.0** | 2026-04-28 | Dimension-tagged Quality Gates framework (`quality/{gates,catalogs,reports,runners}/`, nine dimensions) plus the autonomous-mode runtime contract at `quality/PROTOCOL.md`. |
+| **v0.13.0** | 2026-05-01 | DVCS over REST — a bus remote fans a `git push` out SoT-first (Confluence) then to a plain-git GitHub mirror; `reposix attach` reconciles an existing checkout; webhook-driven mirror sync. |
+| **v0.14.0** | 2026-07-12 | Wave-2 hardening — mechanical leaf-isolation enforcement for the autonomous fleet plus a dedicated pass over five carried HIGH-severity intake items. |
 
 ## Active milestone
 
-> **v0.11.0 Polish & Reproducibility** — PLANNING (Phases 50–55 scaffolded). Closes the v0.10.0 long tail: jargon glosses + glossary, mermaid render hygiene, fresh-clone tutorial runner, dist release pipeline, real-backend latency table, vision-innovations surface (`reposix doctor`, `reposix log --time-travel`, `reposix gc --orphans`, `reposix cost`, `reposix init --since`).
->
-> **v0.11.1 Polish & Reproducibility (second pass)** — PLANNING (POLISH2-01..22). Carry-forward: crates.io publish, arm64-musl, JIRA cells, code-quality P1, machine-readability gaps, upstream mkdocs-material issue.
+> **v0.15.0 "Floor" — ACTIVE.** Phases 114–128 (roadmap scoped 2026-07-15 as the first planned milestone of the ratified "Arc D"): the doc-truth + UX-floor pass — Rust-compiler-grade error messages, real-backend cadence + mirror-drift resilience, doc-alignment tooling polish, and the debt-drain that keeps the autonomous fleet honest. As a public snapshot this page lags the planning ledger by design.
 
 See [`.planning/ROADMAP.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/ROADMAP.md) for current phase status and the per-milestone archives under [`.planning/milestones/`](https://github.com/reubenjohn/reposix/tree/main/.planning/milestones).
 
