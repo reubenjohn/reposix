@@ -216,3 +216,51 @@ confirmed green IN CI (not just locally), re-mint to PASS via
 
 **STATUS:** PARTIAL — honesty half CLOSED (WAIVED re-mint, P127 T2); CI-portability CODE
 fix OPEN (>1h, kept-filed). Tag structure / honesty (catalog-mint-vs-CI-reality).
+
+## 2026-07-19 | discovered-by: P127 T4 (traceability reconcile, gsd-executor) | severity: MEDIUM
+
+**What:** `.planning/REQUIREMENTS.md`'s traceability table marked
+DRAIN-11/13/14/22/23/24/25 "Pending" although their assigned Phases 119 & 124 both
+closed GREEN — a stale-traceability gap. A naive "phase closed GREEN → mark all its
+DRAIN rows Complete" pass would have LAUNDERED OPEN BUGS into false Completes. P127 T4
+reconciled ONLY the unentangled structural rows against reality, and HELD the rest:
+
+- **FLIPPED → Complete (verified against reality):** DRAIN-14 (`.sim-*.log` gitignored —
+  `.gitignore:95` present; Phase 124 SC4 `d83bbe32`) and DRAIN-25 (six P79-P84 `**Plan:**`
+  links repointed to the `NN-PLAN-OVERVIEW/index.md` directory form — all six resolve on
+  disk; Phase 119 SC-4, close 2026-07-17).
+- **HELD Pending (reconcile in P128 after the entangled item drains):**
+  - **DRAIN-11** — Phase 119 SC-3 split ORCHESTRATION.md under ceiling AT CLOSE (was
+    20480B), but it has since **RE-GROWN to 24119B > the 20000B ceiling** (P123–126
+    doctrine additions); the under-ceiling steady-state is NOT met now, so the flip
+    condition "verify under ceiling now" FAILS. Re-split before the file-size waiver
+    lapses 2026-08-08. (This is the false-Complete the drain exists to catch.)
+  - **DRAIN-13** — exit-from-artifact half verified (Phase 124 SC4 `d83bbe32`), but the
+    "pre-`docker run` port-7878-free + sim-reachability readiness gate" half shares the
+    port-7878-orphan surface with the OPEN SIGKILL blast-radius (intake #1 above / T1) —
+    reasonable doubt → HOLD.
+  - **DRAIN-22** — F-K4b container-class congruence tautology; entangled with the OPEN
+    F-K4b-container-tautology item (same class as P127 T3). Phase 124 SC1 claims it EARNED
+    via ASSERT-PASS harvesting, but the class stays open per the coordinator's guard.
+  - **DRAIN-23** — SIGKILL sim-leak / EXIT-trap orphan; entangled with intake #1 (SIGKILL
+    process-group blast-radius, OPEN, under DP-2 / T1). Phase 124 SC2 claims SIGKILL-proof
+    teardown, but P126 re-discovered the blast radius kills the whole `run.py` — NOT closed.
+  - **DRAIN-24** — `target/debug/reposix` provenance; entangled with the OPEN binary-
+    provenance-unconfirmed item (part-01). Phase 124 claims a guaranteed build step; the
+    provenance question stays filed.
+
+**Why out-of-scope for the discovering session:** The traceability staleness itself is
+reconciled here (T4). The three HELD code-fix families (SIGKILL kill-scoping, F-K4b
+container tautology, binary provenance) are the OPEN intake items themselves (>1h each,
+code changes) — not a metadata reconcile. DRAIN-11's re-split is a docs task under the
+active file-size waiver umbrella (warn-only until 2026-08-08), deferred not silently
+skipped.
+
+**Sketched resolution:** P128 re-checks each HELD row after its entangled intake item
+drains: DRAIN-22/23/24 flip when the SIGKILL/F-K4b/provenance code fixes land and grade
+green; DRAIN-13 flips when the 7878-orphan surface is decoupled from the open SIGKILL
+item; DRAIN-11 flips when ORCHESTRATION.md is re-split under 20000B (before 2026-08-08).
+
+**STATUS:** PARTIAL — traceability reconcile DONE (DRAIN-14/25 flipped, DRAIN-11/13/22/23/24
+held with entanglement annotations in REQUIREMENTS.md); the five HELD rows tracked for
+P128. Tag structure / traceability-hygiene.

@@ -221,3 +221,38 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Status:** RATIFIED — standing doctrine. **Reversibility:** doc/ledger-only, reversible
   via `git revert`. **Commit:** this quick's ratification commit.
 
+---
+
+## 2026-07-19 [SELF gsd-executor P127 Slot-1 drain] DP-3 cleared T3+T2; T4 DRAIN conflict resolved conservatively
+
+- **DP-3 (intake-design inversion) cleared two catalog defusals:**
+  - **T3 — `code/shell-coverage` F-K4b defusal (`974c41c0`).** The row carries `minted_at`,
+    which arms the grade-time F-K4b congruence gate; its 2nd `expected.asserts` entry
+    ("coverable-line counter validated within 15%…") is a **WARN-only** anti-gaming
+    diagnostic that lands in `asserts_failed` on a >15% drift while the gate still exits 0
+    — so it was never in `asserts_passed`, and F-K4b silently demoted the real PASS to FAIL.
+    Proved against reality (`apply_pass_gates` on the real row+artifact: FAIL before / PASS
+    after), dropped the WARN-only assert only (aggregate-floor claim retained — gate NOT
+    weakened), locked with `test_audit_field.py::TestShellCoverageWarnOnlyAssertDefused`.
+    Mirrors `ba13553f`. Deeper counter-vs-kcov reconcile stays filed (GTH-V15-99 → P128).
+  - **T2 — `structure/hermetic-test-network-isolation` re-mint WAIVED (`f8b8d9ed`).** The
+    row was minted PASS locally but fast-fails in the CI sandbox (poisoned-proxy isolation
+    unavailable) — a lying catalog. Metadata-WAIVED is VALID (proved: `run_row`'s
+    `waiver_active` short-circuits to WAIVED in 0.0006s without running the verifier;
+    file-size row precedent) — no verifier-only mint required, so no STOP-and-report. The
+    deeper CI-portability CODE fix (>1h) stays filed (part-08).
+- **T4 — RD-2 ("phase closed GREEN → mark DRAIN rows Complete") vs the EX-plan
+  anti-tautology guard — resolved CONSERVATIVELY.** The plan's guard wins over a naive
+  bulk-flip: flip ONLY verdict+reality-supported unentangled rows, HOLD the rest.
+  - **Flipped (verified against reality):** DRAIN-14 (`.gitignore:95` present; SC4
+    `d83bbe32`), DRAIN-25 (six P79-P84 links resolve to dir/index.md; SC-4).
+  - **Held (would launder open bugs):** DRAIN-22 (F-K4b container tautology / T3 class),
+    DRAIN-23 (SIGKILL blast-radius / T1, intake #1), DRAIN-24 (binary provenance, part-01),
+    DRAIN-13 (readiness-gate half shares the 7878-orphan surface with the OPEN SIGKILL item).
+  - **Genuine catch:** DRAIN-11 (a coordinator flip-candidate) was HELD — its flip condition
+    "verify ORCHESTRATION.md under 20000B now" FAILED: SC-3 split it under ceiling at Phase
+    119 close (20480B) but it has **re-grown to 24119B** (P123–126 doctrine additions). A
+    bulk "Phase 119 closed → DRAIN-11 Complete" would have been a false-Complete.
+- **Status:** COMPLETE — T5/T3/T2 committed; T4 reconcile in this commit. **Reversibility:**
+  fully reversible (local commits, `git revert`); coordinator controls the push.
+

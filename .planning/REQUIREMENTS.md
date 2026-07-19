@@ -188,6 +188,9 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   Also give example-05 a real runtime blob-limit-exceeded exercise (drive the actual
   `BLOB_LIMIT_EXCEEDED_FMT` error + `git sparse-checkout` recovery cycle) rather than only the
   pre-emptive sparse-checkout + source-constant stand-in it exercises today.
+  *(HELD Pending — P127 T4: Phase 124 SC1 claims the tautology EARNED via ASSERT-PASS
+  harvesting, but this is the SAME F-K4b-container-tautology class as still-OPEN intake
+  (part-01) / P127 T3; held to avoid laundering an open bug. Reconcile in P128.)*
 - [ ] **DRAIN-23** *(MED)*: SIGKILL sim-leak / EXIT-trap orphan in
   `quality/gates/docs-repro/container-rehearse.sh` — the harness backgrounds the ephemeral sim
   and tears it down via a bash `EXIT` trap, which never fires when the runner's
@@ -198,6 +201,10 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   group (`setsid`/`set -m`) and kill the group on teardown; add a pre-`docker run`
   port-7878-free readiness check so a stale orphaned sim is detected fail-loud instead of
   silently reused.
+  *(HELD Pending — P127 T4: Phase 124 SC2 claims SIGKILL-proof teardown, but P126
+  re-discovered the SIGKILL blast-radius takes down the WHOLE `run.py` process group +
+  leaks an orphan `reposix sim` (surprises-intake/part-08.md intake #1, OPEN, under DP-2 /
+  P127 T1) — the class is NOT closed; held. Reconcile in P128 once T1 drains.)*
 - [ ] **DRAIN-24** *(MED, verify)*: Confirm `target/debug/reposix`'s provenance on the
   `quality-post-release.yml` runner that `container-rehearse.sh` needs host-mounted — trace
   whether it reaches the runner via an explicit `cargo build -p reposix-cli` step, an
@@ -206,11 +213,17 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   container` docs-repro rows are provenance-guaranteed on a cold runner rather than silently
   degrading to NOT-VERIFIED; if an explicit step already exists, document it inline so the
   question isn't re-opened.
-- [ ] **DRAIN-25** *(LOW)*: Fix six broken `**Plan:**` markdown links in
+  *(HELD Pending — P127 T4: Phase 124 claims a guaranteed `target/debug/reposix` build step,
+  but the binary-provenance-unconfirmed question stays OPEN in intake (part-01); held.
+  Reconcile in P128 once the provenance item drains.)*
+- [x] **DRAIN-25** *(LOW)*: Fix six broken `**Plan:**` markdown links in
   `.planning/milestones/v0.13.0-phases/ROADMAP.md` — P79 (L28), P80 (L39), P81 (L45), P82
   (L51), P83 (L57), P84 (L63) each point at a nonexistent `NN-PLAN-OVERVIEW.md` FILE; repoint
   to the real `NN-PLAN-OVERVIEW/` DIRECTORY form (`index.md` entry point), e.g.
   `[80-PLAN-OVERVIEW](80-mirror-lag-refs/80-PLAN-OVERVIEW/index.md)`.
+  *(Complete — verified P127 T4: all six P79-P84 links in v0.13.0-phases/ROADMAP.md now use
+  the `NN-PLAN-OVERVIEW/index.md` directory form and all six targets resolve on disk;
+  Phase 119 SC-4, 119-PLAN.md:21, close 2026-07-17.)*
 
 **GOOD-TO-HAVES (17 of 18 rows; GTH-V15-19 is FIX-02 above):**
 
@@ -239,6 +252,10 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 - [ ] **DRAIN-11** *(MED/hygiene, GTH-V15-08)*: `.planning/ORCHESTRATION.md` is 26968B vs
   its 20000B `structure/file-size-limits` ceiling (waived until 2026-08-08) — split
   reference detail to a sibling doc before the waiver lapses.
+  *(HELD Pending — P127 T4: Phase 119 SC-3 split it under ceiling at close (was 20480B),
+  but it has **re-grown to 24119B > 20000B** (P123–126 doctrine additions), so the
+  under-ceiling steady-state is NOT met now — the flip condition FAILS. Re-split before the
+  waiver lapses 2026-08-08; reconcile in P128. Filed: surprises-intake/part-08.md.)*
 - [x] **DRAIN-12** *(MED→HIGH, GTH-V15-09)*: Make the milestone-close vision-litmus
   fixture self-healing for BOTH backend drift (trashed protected pages) and GitHub mirror
   drift (`reposix sync --reconcile` does NOT push to the mirror) — reconcile the mirror to
@@ -249,8 +266,14 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   sim-readiness race between rapid sequential runs produces transient "sim not reachable"
   flakes — derive the harness exit strictly from the persisted `exit_code`; add a
   pre-`docker run` port-7878-free + sim-reachability readiness gate.
-- [ ] **DRAIN-14** *(LOW, GTH-V15-11)*: Add a `.sim-*.log` pattern to `.gitignore` scoped
+  *(HELD Pending — P127 T4: exit-from-artifact half verified (Phase 124 SC4 `d83bbe32`),
+  but the port-7878-free + sim-reachability readiness-gate half shares the 7878-orphan
+  surface with the OPEN SIGKILL blast-radius (surprises-intake/part-08.md intake #1 / P127
+  T1) — reasonable doubt → held. Reconcile in P128 once the SIGKILL item drains.)*
+- [x] **DRAIN-14** *(LOW, GTH-V15-11)*: Add a `.sim-*.log` pattern to `.gitignore` scoped
   to `quality/reports/verifications/docs-repro/`.
+  *(Complete — verified P127 T4: `.gitignore:95` `quality/reports/verifications/docs-repro/.sim-*.log`
+  present; Phase 124 SC4, commit `d83bbe32`, 124-SUMMARY.md:88.)*
 - [x] **DRAIN-15** *(LOW-MED, GTH-V15-12)*: The user-global `doc-clarity-review` skill's
   nested `claude -p` returns a confusing non-error (not a hard fail) when it can't see file
   content — add a canary-probe hard-fail or the subscription-caveat note the doc-alignment
@@ -329,10 +352,10 @@ goals, and success criteria).
 | DRAIN-08 | Phase 122 | Complete |
 | DRAIN-09 | Phase 122 | Complete |
 | DRAIN-10 | Phase 123 | Complete |
-| DRAIN-11 | Phase 119 | Pending |
+| DRAIN-11 | Phase 119 | Pending (P127 T4 HOLD — SC-3 split landed but re-grew to 24119B > 20000B ceiling; re-split before 2026-08-08; P128) |
 | DRAIN-12 | Phase 125 | Complete |
-| DRAIN-13 | Phase 124 | Pending |
-| DRAIN-14 | Phase 124 | Pending |
+| DRAIN-13 | Phase 124 | Pending (P127 T4 HOLD — readiness-gate half entangled w/ OPEN SIGKILL #1; P128) |
+| DRAIN-14 | Phase 124 | Complete (P127 T4 — .gitignore:95 verified; SC4 d83bbe32) |
 | DRAIN-15 | Phase 126 | Complete |
 | DRAIN-16 | Phase 126 | Complete |
 | DRAIN-17 | Phase 126 | Complete |
@@ -340,10 +363,10 @@ goals, and success criteria).
 | DRAIN-19 | Phase 126 | Complete |
 | DRAIN-20 | Phase 126 | Complete |
 | DRAIN-21 | Phase 126 | Complete |
-| DRAIN-22 | Phase 124 | Pending |
-| DRAIN-23 | Phase 124 | Pending |
-| DRAIN-24 | Phase 124 | Pending |
-| DRAIN-25 | Phase 119 | Pending |
+| DRAIN-22 | Phase 124 | Pending (P127 T4 HOLD — F-K4b container-tautology class, OPEN intake part-01 / T3; P128) |
+| DRAIN-23 | Phase 124 | Pending (P127 T4 HOLD — SIGKILL blast-radius OPEN, intake #1 / T1; P128) |
+| DRAIN-24 | Phase 124 | Pending (P127 T4 HOLD — binary provenance unconfirmed, OPEN intake part-01; P128) |
+| DRAIN-25 | Phase 119 | Complete (P127 T4 — six P79-P84 links resolve to dir/index.md; SC-4) |
 
 **Reserved OP-8 absorption slots (no REQ-ID; drain NEW intake surfaced during P114–P126's
 own execution, not the DRAIN-01..25 rows above which are already routed):** Phase 127

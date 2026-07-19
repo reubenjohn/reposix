@@ -100,9 +100,10 @@ This ledger exceeded the *.md 20k budget and was split into 7 per-part child fil
   - 2026-07-19 | discovered-by: P125 planning + C1 ground-truth (tokenworld-mirror doc-truth, verified against reality) | severity: MEDIUM
   - 2026-07-19 | discovered-by: P125 verifier NOTICED (VERDICT #4 — weak OR-assert push_conflict.rs:352-354) | severity: LOW-MEDIUM
   - 2026-07-19 | discovered-by: P125 verifier NOTICED (VERDICT #5 — refresh/litmus env-var divergence) | severity: LOW-MEDIUM
-- [`surprises-intake/part-08.md`](surprises-intake/part-08.md) — 5 entries:
+- [`surprises-intake/part-08.md`](surprises-intake/part-08.md) — 6 entries:
   - 2026-07-19 | discovered-by: Cycle-2 bundled `/gsd-quick` task (d) executor | severity: MEDIUM | RESOLVED same commit
   - 2026-07-19 | discovered-by: Cycle-2 task (d) executor (own `--persist` verification pass) | severity: HIGH | CLOSED (P126 W1) — agent-ux/real-git-push-e2e minted_at load-crash landmine defused
   - 2026-07-19 | discovered-by: P126 close-bookkeeping lane | severity: LOW | RESOLVED (confirmed flake) — container-rehearse-sigkill-safe SIGKILL was a flake; clean rerun GREEN
   - 2026-07-19 | discovered-by: P126 close-bookkeeping lane | severity: HIGH | OPEN — container-rehearse-sigkill-safe leaked-process-group-kill took down all ~83 gates + leaked orphan `reposix sim` PID 11014 (same class as cef3a2ea); P127 Slot 1
-  - 2026-07-19 | discovered-by: P126 gsd-verifier (WARN-1) | severity: MEDIUM | OPEN — structure/hermetic-test-network-isolation stale local PASS mint vs deterministic ~0.02s CI-sandbox fast-fail (lying catalog row); P127 Slot 1
+  - 2026-07-19 | discovered-by: P126 gsd-verifier (WARN-1) | severity: MEDIUM | PARTIAL — structure/hermetic-test-network-isolation lying local PASS mint vs ~0.02s CI-sandbox fast-fail: honesty half CLOSED (P127 T2 re-mint WAIVED `f8b8d9ed`), CI-portability CODE fix kept-filed for P128
+  - 2026-07-19 | discovered-by: P127 T4 (traceability reconcile, gsd-executor) | severity: MEDIUM | PARTIAL — REQUIREMENTS DRAIN rows stale vs closed Phases 119/124; T4 flipped unentangled DRAIN-14/25, HELD 11/13/22/23/24 pending open intake items (SIGKILL #1 / F-K4b-container / provenance / ORCHESTRATION.md re-grown >ceiling)
