@@ -278,6 +278,14 @@ it is no longer a prerequisite for recovery.
 > attach tree created *before* that seed landed heals by re-running `reposix attach`
 > (runtime auto-heal of a pre-seed tree is deferred to v0.15.0).
 
+> **Pattern-C (`reposix attach`) trees — name the bus remote explicitly.** On an attach
+> tree, git's fetch still reads `origin` (the plain-git mirror), which can lag the SoT;
+> a bare `git pull --rebase` there reconciles against the *stale mirror*, not the
+> backend. Rebase against your SoT-backed bus remote by name, e.g.
+> `git pull --rebase <reposix-remote-name> main && git push <reposix-remote-name> main`
+> — the same remote-explicit recovery the milestone-close litmus uses on purpose
+> (`quality/gates/agent-ux/lib/litmus-flow.sh:94-99`).
+
 On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
 Mechanism: the bus-remote `CHEAP PRECHECK B` runs `backend.list_changed_since(last_fetched_at)` on the SoT before reading stdin; the rejection comes from that step. See [DVCS topology — Two refs, and where they actually live](../concepts/dvcs-topology.md#two-refs-and-where-they-actually-live) for the staleness model.
