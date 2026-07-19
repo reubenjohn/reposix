@@ -91,7 +91,11 @@ export PATH="${BIN_DIR}:${PATH}"
 
 echo "latency-bench: spawning reposix-sim on $SIM_BIND" >&2
 SEED="${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json"
-"${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral --seed-file "$SEED" &
+# fd hardening: redirect stdout+stderr so the backgrounded sim never inherits a
+# parent capture pipe (run.py runs gates under subprocess.run(capture_output=
+# True); an inherited pipe held open by this child deadlocks communicate() until
+# the gate timeout). See quality/CLAUDE.md "Backgrounded-process fd convention".
+"${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral --seed-file "$SEED" >"${RUN_DIR}/sim.log" 2>&1 &
 SIM_PID=$!
 for _ in $(seq 1 50); do
     if curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1; then

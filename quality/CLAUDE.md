@@ -261,6 +261,22 @@ namespace (some CI sandboxes restrict those); both mechanisms were manually veri
 deny the network and both pass the test deterministically — see the gate's header
 comment for the manual `unshare -rn` cross-check.
 
+### Backgrounded-process fd convention (structure / gate-authoring)
+
+A gate that backgrounds a process (`… &` — a sim, a helper) MUST redirect its
+stdout AND stderr on the SAME line as the `&` (`… >"${RUN_DIR}/sim.log" 2>&1 &`),
+never a bare `… &`. `run.py` runs every gate under
+`subprocess.run(capture_output=True)`; a backgrounded child that inherits that
+capture pipe holds the write end open, so the runner's cleanup `communicate()`
+blocks until the per-row timeout — and if a surviving grandchild keeps the pipe
+open, run.py wedges INDEFINITELY (no timeout on the cleanup drain). That was the
+2026-07-19 pre-pr CI hang: the job ran to its 28-min cap and was CANCELLED, and
+cancelled-job logs are purged, so it was undiagnosable. Redirect to a per-run
+log and `cat` that log on any startup-failure path so bind/seed errors stay
+visible (they are no longer inherited to the gate's own stderr). Enforced by
+convention + code review, not a gate; the reference fixes are the redirects
+across `quality/gates/agent-ux/*` + `quality/gates/perf/latency-bench.sh`.
+
 ### Verifier-script existence
 
 `structure/verifier-script-exists.sh` (row `structure/verifier-script-exists` in

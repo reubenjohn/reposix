@@ -307,6 +307,18 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     else:
         cmd = [str(script_abs), *args]
 
+    # OBSERVABILITY NET (PERMANENT — keep AFTER the pre-pr-hang diagnosis).
+    # Emit a per-gate START marker on run.py's OWN stdout (the stream CI
+    # captures), FLUSHED, BEFORE the subprocess.run that could wedge. A hung
+    # verifier otherwise prints NOTHING until it COMPLETES — only the DONE/
+    # PASS/FAIL summary is emitted (by the caller, via print_row_summary) — so
+    # a gate that never returns is INVISIBLE in the preserved CI log and its
+    # name cannot be recovered. With this line the LAST START before a
+    # timeout/SIGKILL names the wedged gate. Distinct `-> START` prefix (NOT a
+    # `[STATUS]` summary line) so stdout-scraping tests (test_freshness_synth.py)
+    # are unaffected; the caller's DONE/PASS/FAIL summary line is UNCHANGED.
+    print(f"    -> START  {row['id']}  ({row.get('blast_radius', 'P2')})", flush=True)
+
     timed_out = False
     stdout = ""
     stderr = ""

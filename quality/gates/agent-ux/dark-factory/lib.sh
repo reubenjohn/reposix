@@ -104,13 +104,22 @@ spawn_sim() {
     if [[ "${SIM_PERSIST:-}" == "1" ]]; then
         db_flag=""
     fi
+    # fd hardening: redirect stdout+stderr to a log so the backgrounded sim
+    # never inherits run.py's subprocess.run(capture_output=True) pipe — an
+    # inherited pipe held open by this child (or a surviving grandchild)
+    # deadlocks the runner's cleanup communicate() until the gate timeout (the
+    # 2026-07-19 pre-pr hang mechanism). The startup-failure paths below `cat`
+    # this log so the bind/seed errors stay visible. See quality/CLAUDE.md
+    # "Backgrounded-process fd convention".
     if [[ "$mode" == "seeded" ]]; then
         # shellcheck disable=SC2086
         "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" $db_flag \
-            --seed-file "${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json" &
+            --seed-file "${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json" \
+            >"${RUN_DIR}/sim.log" 2>&1 &
     else
         # shellcheck disable=SC2086
-        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" $db_flag &
+        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" $db_flag \
+            >"${RUN_DIR}/sim.log" 2>&1 &
     fi
     SIM_PID=$!
     export SIM_PID
@@ -120,7 +129,8 @@ spawn_sim() {
     # than blocking the full 5s and reporting a generic timeout.
     for _ in $(seq 1 50); do
         if ! kill -0 "$SIM_PID" 2>/dev/null; then
-            echo "FAIL: reposix-sim (pid ${SIM_PID}) exited during startup on ${SIM_BIND} -- inspect its bind/seed errors above (mode='${mode:-unseeded}', seed=${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json)" >&2
+            echo "FAIL: reposix-sim (pid ${SIM_PID}) exited during startup on ${SIM_BIND} -- bind/seed errors below (mode='${mode:-unseeded}', seed=${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json)" >&2
+            cat "${RUN_DIR}/sim.log" >&2 2>/dev/null || true
             return 1
         fi
         if curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1; then
@@ -129,6 +139,7 @@ spawn_sim() {
         sleep 0.1
     done
     echo "FAIL: sim did not come up at ${SIM_URL} within 5s (pid ${SIM_PID} still alive but not answering)" >&2
+    cat "${RUN_DIR}/sim.log" >&2 2>/dev/null || true
     return 1
 }
 

@@ -130,7 +130,31 @@ jobs:
         # (quality/PROTOCOL.md "Latency budgets").
         run: cargo build --workspace --bins --quiet
       - name: Run quality gates (pre-pr cadence)
-        run: python3 quality/runners/run.py --cadence pre-pr
+        # `timeout -k 30 1200`: HARD 20-min cap (< the 28-min job budget) so a
+        # WEDGED gate FAILS (exit 124, logs KEPT) instead of the job being
+        # CANCELLED at its `timeout-minutes` cap — cancelled-job logs are
+        # PURGED, which is exactly why the 2026-07-18/19 pre-pr hang was
+        # undiagnosable. `-k 30` sends SIGKILL 30s after the initial SIGTERM to
+        # reap orphaned grandchildren (a backgrounded sim surviving SIGTERM
+        # caused the 33-vs-28-min overshoot). Pairs with the fd-redirect
+        # hardening in quality/gates/agent-ux/* (a backgrounded process that
+        # inherits run.py's capture_output pipe deadlocks communicate() until
+        # the gate timeout). The per-gate START line run.py now flushes names
+        # whichever gate the timeout kills.
+        run: timeout -k 30 1200 python3 quality/runners/run.py --cadence pre-pr
+      - name: Dump survivor process tree on failure (hang forensics)
+        # Pairs with the `timeout` wrapper above: when a pre-pr gate wedges and
+        # the timeout FAILS this step, dump the surviving process state so the
+        # next hang is fully forensic — a backgrounded sim / orphaned grandchild
+        # still holding run.py's pipe shows up here BY NAME. `pstree` may be
+        # absent on the runner image, so fall back to `ps -ef --forest`.
+        # Non-fatal (`|| true`) so diagnostics never mask the real failure exit.
+        if: failure()
+        run: |
+          echo "=== ps auxf (survivor processes) ==="
+          ps auxf || true
+          echo "=== process tree ==="
+          pstree -p 2>/dev/null || ps -ef --forest || true
       - name: Dump verification artifacts on failure
         # run.py captures each verifier's stdout/stderr into the per-row JSON
         # artifact, NOT the job log -- so a FAIL row (e.g. agent-ux/*) leaves

@@ -31,7 +31,13 @@ trap cleanup EXIT
 cargo build -p reposix-sim -p reposix-cli --quiet
 SIM_BIN="${REPO_ROOT}/target/debug/reposix-sim"
 CLI_BIN="${REPO_ROOT}/target/debug/reposix"
-"${SIM_BIN}" --bind "127.0.0.1:${PORT}" --ephemeral --no-seed &
+# fd hardening: redirect the backgrounded sim's stdout+stderr to a log so it
+# never inherits a parent capture pipe. run.py runs gates under
+# subprocess.run(capture_output=True); a backgrounded child holding that pipe
+# open deadlocks the runner's cleanup communicate() until the gate timeout —
+# and a surviving grandchild wedges it indefinitely (the 2026-07-19 pre-pr
+# hang mechanism). See quality/CLAUDE.md "Backgrounded-process fd convention".
+"${SIM_BIN}" --bind "127.0.0.1:${PORT}" --ephemeral --no-seed >"${WORK}/sim.log" 2>&1 &
 SIM_PID=$!
 sleep 1
 

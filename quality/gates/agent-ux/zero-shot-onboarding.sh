@@ -132,10 +132,17 @@ SEED_SOURCE="builtin"
 echo "zero-shot-onboarding: reposix sim --bind ${SIM_BIND} & (builtin seed, offline)" >&2
 curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1 \
     && fail_with "${SIM_URL} already serving before spawn -- port ${SIM_BIND} occupied"
-"${BIN_DIR}/reposix" sim --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral &
+# fd hardening: redirect stdout+stderr so the backgrounded sim never inherits
+# run.py's subprocess.run(capture_output=True) pipe (an inherited pipe held
+# open by this child deadlocks the runner's cleanup communicate() until the
+# gate timeout). See quality/CLAUDE.md "Backgrounded-process fd convention".
+"${BIN_DIR}/reposix" sim --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral >"${RUN_DIR}/sim.log" 2>&1 &
 SIM_PID=$!
 for _ in $(seq 1 50); do
-    kill -0 "$SIM_PID" 2>/dev/null || fail_with "reposix sim (pid ${SIM_PID}) exited during startup (builtin seed)"
+    if ! kill -0 "$SIM_PID" 2>/dev/null; then
+        cat "${RUN_DIR}/sim.log" >&2 2>/dev/null || true  # surface bind/seed errors (no longer inherited)
+        fail_with "reposix sim (pid ${SIM_PID}) exited during startup (builtin seed)"
+    fi
     curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1 && break
     sleep 0.1
 done
