@@ -4,9 +4,17 @@ A bird's-eye view of where reposix is heading — grouped by **capability, not b
 number or date**, so the map stays true without weekly edits.
 
 > **Source of truth.** This page mirrors the private planning ledger at
-> [`.planning/PROJECT.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/PROJECT.md)<!-- SYNC: paired with .planning/PROJECT.md § Current Milestone. Edit either side → update the other; re-color the arcs (shipped / active / future) at milestone close. -->,
-> driven by the GSD planning workflow. It is a public snapshot — it lags the ledger by
-> design and is refreshed at milestone close, so it never promises a date it has to chase.
+> [`.planning/PROJECT.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/PROJECT.md)<!-- SYNC: paired with .planning/PROJECT.md § Current Milestone. Edit either side → update the other. TWO distinct cadences: the "Progress right now" strip below (fraction / percent / capability-line / date) refreshes at EVERY phase close; the mermaid arcs (shipped / active / future) re-color only at milestone close. -->,
+> driven by the GSD planning workflow. It is a public snapshot — the capability map and
+> its arcs lag the ledger by design and re-color at milestone close, so the map never
+> promises a date it has to chase. Only the "Progress right now" strip below moves faster,
+> ticking forward at each phase close.
+
+> **Progress right now** · _updated 2026-07-18_
+> **Milestone: Floor** — **11 / 15** phases closed (**73%**).
+> We are hardening the launch-readiness floor: closing known correctness gaps, making every
+> error message teach its own fix, and re-grounding the docs and benchmark numbers in
+> freshly measured reality — so a first-time user meets fewer sharp edges before launch.
 
 ```mermaid
 graph TB
@@ -55,3 +63,9 @@ arcs; the arrows flow from what is done, through what we are doing now, into the
 
 Because the map is drawn by capability, it names no phase numbers and no dates. For live
 phase status and the current milestone in detail, follow the source-of-truth link above.
+
+**Two refresh cadences.** The **"Progress right now" strip** near the top ticks forward at
+**every phase close** — its milestone name, phases-closed fraction and percent, capability
+line, and date are the only lines that move that often. The **mermaid arcs** (green shipped,
+blue active, grey ahead, gold launch) re-color only at **milestone close**, which is why the
+diagram stays stable while the strip keeps pace with day-to-day progress.
