@@ -1098,9 +1098,14 @@ pub(crate) mod verbs {
                     .as_slice()
                     .first()
                     .map_or_else(String::new, |c| c.file.clone());
+                // W2-NOTICED UX fix: name the row id like every other blocking
+                // state's detail line (the main branch below already prints
+                // `row={}`). Without it, a RETIRE_PROPOSED block left the
+                // operator blind on WHICH row on that state's detail line.
                 let base = format!(
-                    "docs-alignment: {} on {} -- run /reposix-quality-refresh {}",
+                    "docs-alignment: {} row={} on {} -- run /reposix-quality-refresh {}",
                     row.last_verdict.as_str(),
+                    row.id,
                     cite_str,
                     cite_str,
                 );
@@ -1480,6 +1485,29 @@ pub(crate) mod verbs {
         }
     }
 
+    /// DRAIN-20: count rows currently SUPPRESSED by a live waiver -- a row in a
+    /// blocking state (MISSING_TEST / STALE_DOCS_DRIFT / ...) whose waiver is
+    /// [`WaiverStatus::Active`] relative to `now`.
+    ///
+    /// Recomputed against `now` from the live rows rather than read from the
+    /// persisted `summary.claims_waived` (which ONLY the walker refreshes -- see
+    /// `walk`), so a fresh `status` no longer hides that MISSING_TEST rows are
+    /// actively WAIVED (deferred) rather than silently ignored. Pairs
+    /// `blocks_pre_push()` with the waiver check because a waiver on a
+    /// now-non-blocking row is moot: the `waive` verb only mints waivers on
+    /// blocking rows, so in a well-formed catalog the two are equivalent, but
+    /// the pairing stays honest if a waiver outlives its row's blocking state.
+    fn count_waived_active(rows: &[Row], now: chrono::DateTime<chrono::Utc>) -> u64 {
+        u64::try_from(
+            rows.iter()
+                .filter(|r| {
+                    r.last_verdict.blocks_pre_push() && r.waiver_status(now) == WaiverStatus::Active
+                })
+                .count(),
+        )
+        .unwrap_or(u64::MAX)
+    }
+
     #[allow(
         clippy::too_many_lines,
         reason = "Single coherent procedure: load + compute counters + per-file table + json/text emit. Splitting hurts readability of a deterministic pipeline."
@@ -1491,6 +1519,12 @@ pub(crate) mod verbs {
         // We do this in BOTH modes (json + table) so subagents can read the
         // gap-target view machine-readable.
         let per_file = coverage::compute_per_file(&cat.rows);
+
+        // DRAIN-20: recompute the live waiver-suppression count against `now`.
+        // The persisted `summary.claims_waived` is refreshed ONLY by the walker,
+        // so a fresh `status` can read a stale 0 while MISSING_TEST rows are
+        // actively waived -- this surfaces them in BOTH text + json below.
+        let waived_active = count_waived_active(&cat.rows, Utc::now());
 
         // Multi-test row count (W7 / v0.12.1): how many rows bind to >=2
         // tests. Surfaces the new schema's reach without changing the
@@ -1521,6 +1555,7 @@ pub(crate) mod verbs {
             // sorted ascending by ratio (worst-first) by compute_per_file.
             let payload = serde_json::json!({
                 "global": &cat.summary,
+                "waived_active": waived_active,
                 "multi_test_rows": multi_test_rows,
                 "next_action_breakdown": {
                     "WRITE_TEST": na_write_test,
@@ -1549,6 +1584,9 @@ pub(crate) mod verbs {
         println!("  claims_retire_proposed {}", s.claims_retire_proposed);
         println!("  claims_retired         {}", s.claims_retired);
         println!("  claims_waived          {}", s.claims_waived);
+        println!(
+            "  waived_active          {waived_active}   (blocking rows suppressed by a live waiver, recomputed vs now)"
+        );
         println!(
             "  alignment_ratio        {:.4}   ({} bound / {} non-retired)",
             s.alignment_ratio,
@@ -1689,6 +1727,67 @@ pub(crate) mod verbs {
         #[test]
         fn empty_when_no_row_states_block() {
             assert!(block_state_summary(&[]).is_empty());
+        }
+    }
+
+    #[cfg(test)]
+    mod waived_active_tests {
+        use super::count_waived_active;
+        use crate::catalog::Row;
+
+        fn row_from(json: serde_json::Value) -> Row {
+            serde_json::from_value(json).expect("valid test row")
+        }
+
+        /// DRAIN-20: `waived_active` counts a blocking row (MISSING_TEST) whose
+        /// waiver is ACTIVE vs `now` -- recomputed from the live rows, so it
+        /// surfaces the suppression even when the persisted
+        /// `summary.claims_waived` is stale/0 (only the walker refreshes that).
+        /// The three negative rows prove the pairing: a blocking row with NO
+        /// waiver is not *waived*, a non-blocking (BOUND) row with an active
+        /// waiver has nothing to suppress, and an EXPIRED waiver blocks again.
+        #[test]
+        fn counts_only_waiver_active_blocking_rows() {
+            let now = chrono::Utc::now();
+            let rows = vec![
+                // blocking + ACTIVE waiver -> COUNTED (the exact case DRAIN-20
+                // exists to un-hide).
+                row_from(serde_json::json!({
+                    "id": "a/missing-waived",
+                    "claim": "x",
+                    "source": {"file": "docs/x.md", "line_start": 1, "line_end": 2},
+                    "last_verdict": "MISSING_TEST",
+                    "waiver": {"until": "2099-01-01T00:00:00Z", "reason": "deferred", "tracked_in": "INTAKE"}
+                })),
+                // blocking, NO waiver -> not counted (blocks, but not waived).
+                row_from(serde_json::json!({
+                    "id": "b/missing-nowaiver",
+                    "claim": "x",
+                    "source": {"file": "docs/y.md", "line_start": 1, "line_end": 2},
+                    "last_verdict": "MISSING_TEST"
+                })),
+                // non-blocking (BOUND) + active waiver -> nothing to suppress.
+                row_from(serde_json::json!({
+                    "id": "c/bound-waived",
+                    "claim": "x",
+                    "source": {"file": "docs/z.md", "line_start": 1, "line_end": 2},
+                    "last_verdict": "BOUND",
+                    "waiver": {"until": "2099-01-01T00:00:00Z", "reason": "r", "tracked_in": "I"}
+                })),
+                // blocking + EXPIRED waiver -> blocks again, not waiver-active.
+                row_from(serde_json::json!({
+                    "id": "d/missing-expired",
+                    "claim": "x",
+                    "source": {"file": "docs/w.md", "line_start": 1, "line_end": 2},
+                    "last_verdict": "MISSING_TEST",
+                    "waiver": {"until": "2000-01-01T00:00:00Z", "reason": "r", "tracked_in": "I"}
+                })),
+            ];
+            assert_eq!(
+                count_waived_active(&rows, now),
+                1,
+                "only the blocking MISSING_TEST row with an ACTIVE waiver is waived_active"
+            );
         }
     }
 }
