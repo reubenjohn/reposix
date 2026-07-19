@@ -700,5 +700,111 @@ class TestPersistCatalogLock(unittest.TestCase):
                 "row-b's flip was lost to a concurrent --persist writer (lost update)")
 
 
+class TestMintedAtLandmineLoadCrash(unittest.TestCase):
+    """P126 W1 (DP-2): drive the REAL run.load_catalog() path -- the exact entry
+    run.py uses at run.py:513/124 -- to prove the agent-ux/real-git-push-e2e
+    load-crash landmine and its minted_at fix END TO END (not just at the
+    validate_row unit level in test_audit_field.py).
+
+    Isolation (charter): reads the committed agent-ux.json but writes ONLY a
+    /tmp copy. NEVER --persist-mutates the real catalog -- persisting the aged
+    last_verified would ARM the live crash for the next real run."""
+
+    ROW_ID = "agent-ux/real-git-push-e2e"
+    CATALOG_DIR = Path(__file__).resolve().parents[2] / "quality" / "catalogs"
+    AGENT_UX = CATALOG_DIR / "agent-ux.json"
+
+    _AUDIT = (
+        "The verifier drives a real reposix push round-trip and asserts the "
+        "backend audit counts; if the claim were false the count assertions "
+        "would fail and the verifier would exit nonzero naming the mismatch."
+    )
+
+    def _find_row(self, data, row_id):
+        for r in data["rows"]:
+            if r.get("id") == row_id:
+                return r
+        raise AssertionError(f"row {row_id} not found in {self.AGENT_UX.name}")
+
+    def test_class_mechanism_aged_row_without_minted_at_crashes_load(self):
+        # Characterization (GREEN before AND after the fix): a synthetic
+        # agent-ux-shaped row with NO minted_at and an aged last_verified crashes
+        # run.load_catalog(). Documents WHY the anchor is mandatory, independent
+        # of the real row's current state.
+        with tempfile.TemporaryDirectory() as td:
+            cat = {"dimension": "agent-ux", "rows": [{
+                "id": "agent-ux/synthetic-landmine",
+                "last_verified": "2026-07-06T00:00:00Z",  # >= P90_MINT_CUTOFF
+                "transport_claim": False,
+                "claim_vs_assertion_audit": self._AUDIT,
+            }]}
+            p = Path(td) / "agent-ux.json"
+            p.write_text(json.dumps(cat, indent=2, ensure_ascii=False) + "\n",
+                         encoding="utf-8")
+            with self.assertRaises(SystemExit) as ctx:
+                run.load_catalog(p)
+            self.assertIn("lacks a write-once minted_at anchor", str(ctx.exception))
+
+    def test_real_row_survives_lastverified_aging(self):
+        # THE FLIPPING REPRO (RED before the fix, GREEN after): take the REAL
+        # committed real-git-push-e2e row, age its last_verified to the fresh
+        # post-P90 timestamp a git>=2.34 verifier stamps, and drive the real
+        # run.load_catalog() over a /tmp copy. Without minted_at this raises
+        # SystemExit (crash); with the fix's minted_at it loads clean.
+        data = json.loads(self.AGENT_UX.read_text(encoding="utf-8"))
+        self._find_row(data, self.ROW_ID)["last_verified"] = "2026-07-19T12:00:00Z"
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "agent-ux.json"
+            p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+                         encoding="utf-8")
+            try:
+                run.load_catalog(p)
+            except SystemExit as e:
+                self.fail(
+                    f"{self.ROW_ID} still lacks a write-once minted_at anchor: "
+                    f"aging its last_verified past the P90 cutoff crashes "
+                    f"run.load_catalog() -> the whole runner. Add minted_at to "
+                    f"the row in quality/catalogs/agent-ux.json. Underlying: {e}")
+
+
+class TestNoArmedMintedAtLandmine(unittest.TestCase):
+    """P126 W1 deliverable 3: a whole-corpus invariant guard. No committed
+    catalog row may carry last_verified >= P90_MINT_CUTOFF without a write-once
+    minted_at anchor -- the exact crash condition in _audit_field.validate_row
+    (:305). A future stripped/re-added row that re-arms this landmine is caught
+    HERE (in CI), not by a mid-cadence load crash before grading begins."""
+
+    CATALOG_DIR = Path(__file__).resolve().parents[2] / "quality" / "catalogs"
+
+    def test_no_catalog_row_arms_the_load_crash(self):
+        cutoff = run.parse_rfc3339(_audit_field_cutoff())
+        offenders = []
+        for p in sorted(self.CATALOG_DIR.glob("*.json")):
+            if p.stem.endswith("-allowlist"):
+                continue
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if data.get("dimension") == "docs-alignment":
+                continue  # distinct schema; validate_row is skipped for it
+            for r in data.get("rows", []):
+                lv = r.get("last_verified")
+                if lv is None or r.get("minted_at") is not None:
+                    continue
+                if run.parse_rfc3339(lv) >= cutoff:
+                    offenders.append(f"{p.name}::{r.get('id')}")
+        self.assertEqual(
+            offenders, [],
+            "these rows carry last_verified >= the P90 mint cutoff but no "
+            "minted_at anchor -- the next load_catalog will crash the runner "
+            "before grading. Add minted_at (RFC3339) to each: " +
+            ", ".join(offenders))
+
+
+def _audit_field_cutoff() -> str:
+    """The P90 mint cutoff, read from _audit_field so the invariant tracks the
+    single source of truth rather than a hardcoded copy."""
+    import _audit_field
+    return _audit_field.P90_MINT_CUTOFF
+
+
 if __name__ == "__main__":
     unittest.main()

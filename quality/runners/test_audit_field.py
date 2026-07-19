@@ -468,6 +468,63 @@ class TestShellSubprocessFK4bExemption(unittest.TestCase):
                                 for f in artifact["asserts_failed"]))
 
 
+class TestMintedAtAgentUxLandmine(unittest.TestCase):
+    """P126 W1 (DP-2): the agent-ux/real-git-push-e2e load-crash landmine CLASS.
+
+    A legacy agent-ux-shaped row (no minted_at) whose last_verified is stamped
+    fresh by its verifier on a git>=2.34 box ages PAST P90_MINT_CUTOFF. On the
+    NEXT catalog load `validate_row` raises SystemExit ("lacks a write-once
+    minted_at anchor") -- and because load_catalog does not catch it, the WHOLE
+    runner crashes before grading for every cadence that touches agent-ux.json
+    (incl. the P128 milestone-close 9th pre-release-real-backend probe). Root
+    cause: .planning/milestones/v0.15.0-phases/surprises-intake/part-08.md #2.
+
+    The fix vector is a write-once minted_at: validate_row then takes the
+    `minted is not None` branch (_audit_field.py:288) so the lv-based crash raise
+    at :305-311 is unreachable forever."""
+
+    def _agentux_row(self, **overrides):
+        # Shaped like the real row: agent-ux dim, mechanical, transport_claim
+        # False (so adding minted_at does NOT trip the coverage_kind check), a
+        # present claim_vs_assertion_audit (>=50 chars), and a last_verified
+        # aged past the P90 cutoff -- the exact state the git>=2.34 verifier
+        # write leaves the row in.
+        row = {
+            "id": "agent-ux/real-git-push-e2e",
+            "dimension": "agent-ux",
+            "kind": "mechanical",
+            "last_verified": "2026-07-06T00:00:00Z",  # >= P90_MINT_CUTOFF
+            "transport_claim": False,
+            "claim_vs_assertion_audit": VALID_AUDIT,
+        }
+        row.update(overrides)
+        return row
+
+    def test_aged_row_without_minted_at_crashes_load(self):
+        # The mechanism: no minted_at + aged last_verified -> SystemExit crash.
+        with self.assertRaises(SystemExit) as ctx:
+            _audit_field.validate_row(
+                self._agentux_row(), "quality/catalogs/agent-ux.json",
+                parse_rfc3339, "agent-ux")
+        self.assertIn("lacks a write-once minted_at anchor", str(ctx.exception))
+
+    def test_aged_row_with_minted_at_loads_clean(self):
+        # The fix vector: a write-once minted_at makes the lv-based raise
+        # unreachable, so the same aged row loads without a crash.
+        _audit_field.validate_row(
+            self._agentux_row(minted_at="2026-07-19T00:00:00Z"),
+            "quality/catalogs/agent-ux.json", parse_rfc3339, "agent-ux")  # no raise
+
+    def test_minted_at_does_not_trip_coverage_kind_on_transport_false(self):
+        # Belt-and-suspenders: because transport_claim is False, adding
+        # minted_at must NOT newly demand coverage_kind: real-backend (the row
+        # is sim-only). A regression here would swap one load crash for another.
+        _audit_field.validate_row(
+            self._agentux_row(minted_at="2026-07-19T00:00:00Z",
+                              comment="a real git push round-trip against the sim"),
+            "quality/catalogs/agent-ux.json", parse_rfc3339, "agent-ux")  # no raise
+
+
 class TestTranscriptEvidenceOk(unittest.TestCase):
     """RBF-FW-08 runtime half."""
 
