@@ -79,3 +79,18 @@ loose at `.planning/` top level — such files go under `.planning/milestones/au
   (P0) probe asserts main's newest `ci.yml` run concluded success and rolls the phase
   verdict RED otherwise. Push-landed is the floor; CI-green-on-main-after is the bar.
   Never open the next phase over a red main.
+- **Phase-close refreshes the public roadmap strip (dimension: structure).** Every phase
+  close MUST refresh the `docs/roadmap.md` "Progress right now" strip — bump the
+  phases-closed **fraction + percent**, the milestone **name** if it rolled, the one
+  plain-language **capability line**, and the **last-updated date** — in the SAME
+  close-bookkeeping commit that advances `STATE.md`/`ROADMAP.md`, so the OWNER sees
+  mid-milestone progress instead of a page frozen since the last milestone close. This is
+  the *fast* cadence; the mermaid **arcs** still re-color only at *milestone* close — two
+  documented cadences (see the SYNC comment atop `docs/roadmap.md`). HARD CONSTRAINTS: the
+  strip carries **no phase numbers** (user-facing progressive disclosure — capability
+  language only), and its moving lines stay **binding-free** — never let a
+  `quality/catalogs/doc-alignment.json` row cite the fraction/percent/capability-line/date,
+  or every close re-drifts the binding (P117 W3 `STALE_DOCS_DRIFT` cascade). Tag: this is a
+  **structure**-dimension freshness invariant (`quality/gates/structure/`); a machine gate
+  that cross-checks the strip against `STATE.md`'s phase count is filed as **GTH-V15-89**
+  (prose doctrine here is the enforcement floor until that gate lands).
