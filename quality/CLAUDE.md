@@ -193,6 +193,36 @@ from `quality/dispatch/`: `absorption-honesty-spot-check.md` (author ≠ orchest
 `milestone-adversarial.md` (fresh subagent grades whether each row's assertion falsifies
 its own description).
 
+**`minted_at` also arms the GRADE-TIME F-K4b congruence gate — not only the load-time
+crash (P126 dc60cc21 CI regression).** Adding a write-once `minted_at` to a legacy
+`kind: mechanical` row that emits `asserts_passed` (via a shell verifier) does two things
+at once: it defuses the `validate_row` load crash (W1) AND it activates
+`apply_pass_gates`'s F-K4b `asserts_congruent` check (`_audit_field.py`, gated on
+`if row.get("minted_at")`). F-K4b runs ONLY on the PASS path (verifier exit 0 → PASS) and
+requires **every** `expected.asserts` entry to map to an `asserts_passed` entry. So an
+`expected.asserts` entry describing a **mutually-exclusive / environment branch the PASS
+run never executes** — e.g. a `git < 2.34 → NOT-VERIFIED (exit 75)` skip — is structurally
+UNCOVERABLE on the git≥2.34 PASS path and **silently demotes the real PASS to FAIL** the
+instant `minted_at` lands (agent-ux/real-git-push-e2e FAILed CI run 29687639465 at 0.68s
+this way). **Rule:** on a `minted_at` + `asserts_passed`-emitting mechanical row,
+`expected.asserts` must be the **PASS-path claim set ONLY**; a skip/NOT-VERIFIED alternate
+outcome belongs in the row's `comment`/`owner_hint`/`claim_vs_assertion_audit` (and is
+enforced live by the verifier's own exit-75 branch), never in `expected.asserts`.
+Regression-locked at **pre-push** by `test_audit_field.py::TestFK4bMutuallyExclusiveBranch`
+(RED demote + GREEN row-shape + a live-catalog guard, run via
+`structure/asserts-congruence-grade-time`). `kind: shell-subprocess` rows are exempt
+(graded on the regenerated transcript, `apply_pass_gates` returns early).
+
+**Coverage gap (why W6's local pre-push passed while CI caught it):**
+`agent-ux/real-git-push-e2e` (P0) is cadence **`pre-pr`/`pre-release`/`on-demand` — NOT
+`pre-push`** (it is cargo/sim-dependent, deliberately excluded from the local battery).
+Before any phase-close push, run it locally with the SAME condition CI uses:
+`python3 quality/runners/run.py --cadence pre-pr` (validate-only, no `--persist`; needs
+git ≥ 2.34 + prebuilt bins) — or the single row directly via
+`bash quality/gates/agent-ux/real-git-push-e2e.sh`. The pre-push battery alone will NOT
+re-grade this P0. The structural F-K4b half of the hazard is now caught locally at
+pre-push by the regression above, but the full round-trip stays pre-pr/CI-only.
+
 **Marker placement window (test-name-honesty).** The `// test-name-honesty: ok — <reason>`
 marker (and the `#[test]`/`#[ignore = "real-backend..."]` gate) MUST sit within a **6-line
 lookback window ending at the fn signature** — i.e. the 6 lines immediately ABOVE the

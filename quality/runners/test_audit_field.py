@@ -525,6 +525,100 @@ class TestMintedAtAgentUxLandmine(unittest.TestCase):
             "quality/catalogs/agent-ux.json", parse_rfc3339, "agent-ux")  # no raise
 
 
+class TestFK4bMutuallyExclusiveBranch(unittest.TestCase):
+    """P126 EARLY-LANE (dc60cc21 CI regression fix): the GRADE-TIME sibling of
+    the W1 load-crash landmine. Adding a write-once minted_at to a legacy
+    kind:mechanical row does not ONLY defuse the load crash -- it also ACTIVATES
+    the grade-time F-K4b congruence gate (apply_pass_gates, gated on `minted_at`),
+    which was dormant while the row carried no minted_at.
+
+    F-K4b runs ONLY on the PASS path (status == PASS after a 0-exit verifier) and
+    requires every expected.asserts entry to map to an asserts_passed entry. An
+    expected.asserts entry describing a MUTUALLY-EXCLUSIVE branch the PASS run
+    never executes -- here the git<2.34 -> NOT-VERIFIED (exit 75) skip -- is
+    structurally UNCOVERABLE by a git>=2.34 PASS run's asserts_passed, so F-K4b
+    demoted the real PASS to FAIL. That is exactly why agent-ux/real-git-push-e2e
+    FAILed CI run 29687639465 at 0.68s the instant W1's minted_at landed
+    (surprises-intake/part-08.md #2, grade-time half).
+
+    Fix: expected.asserts stays a PASS-path claim set ONLY; the alternate
+    NOT-VERIFIED outcome lives in the row's prose (comment/owner_hint) + is
+    enforced live by the verifier's exit-75 branch, never in expected.asserts.
+    These tests lock BOTH the mechanism (RED) and the fixed live-row shape
+    (GREEN) at the pre-push cadence (structure/asserts-congruence-grade-time)."""
+
+    # The two PASS-path asserts_passed strings the real verifier
+    # (quality/gates/agent-ux/real-git-push-e2e.sh) emits on a git>=2.34 PASS run.
+    REAL_PASS_ASSERTS = [
+        "real push round-tripped as exactly 1 PATCH (misclassification count == 0: 0 Create, 0 Delete)",
+        "no-op push (pull, no edits, push) wrote zero additional backend mutations",
+    ]
+    # The former mutually-exclusive branch assert (git<2.34 -> NOT-VERIFIED) that
+    # a PASS run can never cover -- removed from the live row by this fix.
+    SKIP_BRANCH_ASSERT = (
+        "on git < 2.34, the verifier detects the precondition gap and reports "
+        "NOT-VERIFIED (exit 75) rather than FAIL -- an environment gap is not a "
+        "code regression"
+    )
+
+    def _grade(self, expected_asserts):
+        row = {
+            "id": "agent-ux/real-git-push-e2e",
+            "dimension": "agent-ux",
+            "kind": "mechanical",
+            "minted_at": "2026-07-19T11:05:43Z",
+            "status": "PASS",  # verifier exited 0 -> map_exit_code_to_status
+            "expected": {"asserts": expected_asserts},
+        }
+        artifact = {"asserts_passed": list(self.REAL_PASS_ASSERTS),
+                    "asserts_failed": []}
+        _audit_field.apply_pass_gates(row, artifact, ".")
+        return row["status"], artifact["asserts_failed"]
+
+    def test_mutually_exclusive_branch_assert_demotes(self):
+        # RED repro: the exact shape that FAILed CI at dc60cc21. Proves the
+        # mechanism -- a skip/env branch in expected.asserts is uncoverable.
+        status, failed = self._grade(
+            self.REAL_PASS_ASSERTS + [self.SKIP_BRANCH_ASSERT])
+        self.assertEqual(
+            status, "FAIL",
+            "F-K4b must demote a PASS whose expected.asserts lists an uncoverable "
+            "mutually-exclusive branch (the dc60cc21 regression shape)")
+        self.assertTrue(any("F-K4b" in f for f in failed))
+        self.assertTrue(any("NOT-VERIFIED" in f for f in failed),
+                        "the demote message must name the uncovered branch assert")
+
+    def test_pass_path_only_asserts_stay_pass(self):
+        # GREEN lock: the fixed row shape (PASS-path claims only) stays PASS.
+        status, failed = self._grade(self.REAL_PASS_ASSERTS)
+        self.assertEqual(status, "PASS",
+                         "the fixed expected.asserts (PASS-path only) must stay PASS")
+        self.assertEqual(failed, [])
+
+    def test_live_row_expected_asserts_are_pass_path_coverable(self):
+        # The fix-twice guard that catches this class at LOCAL pre-push (this
+        # suite backs structure/asserts-congruence-grade-time, cadence pre-push):
+        # the REAL committed agent-ux/real-git-push-e2e row's expected.asserts
+        # must ALL be coverable by the verifier's real PASS-path asserts_passed,
+        # or F-K4b demotes the row to FAIL on CI. A future re-add of a skip/env
+        # branch assert to the live row RED-flags HERE, locally, not only on CI.
+        import json as _json
+        cat = Path(__file__).resolve().parents[1] / "catalogs" / "agent-ux.json"
+        rows = _json.loads(cat.read_text())["rows"]
+        row = next(r for r in rows if r["id"] == "agent-ux/real-git-push-e2e")
+        self.assertIsNotNone(
+            row.get("minted_at"),
+            "row must keep its write-once minted_at (W1 load-crash defuse)")
+        ok, unmatched = _audit_field.asserts_congruent(
+            row["expected"]["asserts"], self.REAL_PASS_ASSERTS)
+        self.assertTrue(
+            ok,
+            "live agent-ux/real-git-push-e2e expected.asserts contain an entry "
+            "not coverable by the verifier's PASS-path asserts_passed -- F-K4b "
+            "will demote the row to FAIL on CI (see the row comment / "
+            f"quality/CLAUDE.md F-K4b note). Uncovered: {unmatched}")
+
+
 class TestTranscriptEvidenceOk(unittest.TestCase):
     """RBF-FW-08 runtime half."""
 
