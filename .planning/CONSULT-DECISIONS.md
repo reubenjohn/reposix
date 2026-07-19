@@ -172,3 +172,24 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   release with `--latest=false` so it can't steal `releases/latest` from v0.14.0 and
   404 installer URLs).
 
+---
+
+## 2026-07-18 [SELF] roadmap three-block reshape interleaved at the P125 wave boundary
+
+- **Decision:** reshaped `docs/roadmap.md`'s "Progress right now" strip into a sequenced
+  three-block view (`Landed recently` / `In flight now` / `Up next, in order`), reversing
+  the prior "no phase numbers" hard constraint (phase numbers now allowed as sequence
+  markers; dates ONLY on the `Landed recently` side; binding-free constraint unchanged).
+- **Timing:** interleaved at the P125 wave boundary — NOT "before P125" (P125 was already
+  in flight when this landed) and NOT "P125's close lane" (the owner explicitly excluded
+  P125's own close bookkeeping from this quick). P125 itself stays `In flight now` on the
+  new strip because it is not yet verifier-graded GREEN, even though `STATE.md` already
+  optimistically shows 12/15.
+- **Scope:** nothing deleted, nothing deferred — pure reshape of already-true content plus
+  the fix-twice supersede of `.planning/CLAUDE.md`'s phase-close doctrine.
+- **Reversibility:** fully reversible — local-only commit, held until CI-safe push by the
+  parent coordinator.
+- **Note:** P125's own close will later move P125 from `In flight now` to `Landed
+  recently` via the normal per-phase-close strip refresh — that is expected, not a
+  conflict with this entry.
+

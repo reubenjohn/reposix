@@ -80,17 +80,31 @@ loose at `.planning/` top level — such files go under `.planning/milestones/au
   verdict RED otherwise. Push-landed is the floor; CI-green-on-main-after is the bar.
   Never open the next phase over a red main.
 - **Phase-close refreshes the public roadmap strip (dimension: structure).** Every phase
-  close MUST refresh the `docs/roadmap.md` "Progress right now" strip — bump the
-  phases-closed **fraction + percent**, the milestone **name** if it rolled, the one
-  plain-language **capability line**, and the **last-updated date** — in the SAME
+  close MUST refresh the `docs/roadmap.md` "Progress right now" section — in the SAME
   close-bookkeeping commit that advances `STATE.md`/`ROADMAP.md`, so the OWNER sees
   mid-milestone progress instead of a page frozen since the last milestone close. This is
   the *fast* cadence; the mermaid **arcs** still re-color only at *milestone* close — two
-  documented cadences (see the SYNC comment atop `docs/roadmap.md`). HARD CONSTRAINTS: the
-  strip carries **no phase numbers** (user-facing progressive disclosure — capability
-  language only), and its moving lines stay **binding-free** — never let a
-  `quality/catalogs/doc-alignment.json` row cite the fraction/percent/capability-line/date,
-  or every close re-drifts the binding (P117 W3 `STALE_DOCS_DRIFT` cascade). Tag: this is a
-  **structure**-dimension freshness invariant (`quality/gates/structure/`); a machine gate
-  that cross-checks the strip against `STATE.md`'s phase count is filed as **GTH-V15-89**
-  (prose doctrine here is the enforcement floor until that gate lands).
+  documented cadences (see the SYNC comment atop `docs/roadmap.md`).
+  **SUPERSEDED 2026-07-18 (owner quick, P125/P126 wave boundary):** the section is now a
+  **sequenced three-block view** (`Landed recently` / `In flight now` / `Up next, in
+  order`), not a single fraction/percent/capability-line strip. The former HARD CONSTRAINT
+  "no phase numbers" is **REVERSED** — phase numbers ARE now allowed as sequence markers
+  in all three blocks. What replaces it:
+  - **Dates appear ONLY on the `Landed recently` side** (each landed phase carries its
+    close date + a one-line plain-language outcome). `In flight now` and `Up next, in
+    order` carry NO dates — order is the promise, not a projected date.
+  - A phase moves from `In flight now` to `Landed recently` only once it is
+    verifier-graded GREEN (not merely pushed) — a phase mid-close with its verifier not
+    yet dispatched stays `In flight now` even if `STATE.md`'s phase counter already
+    optimistically advanced.
+  - `Up next, in order` continues past the current milestone's remaining phases into the
+    follow-on milestone arc(s), sourced from `.planning/PROJECT.md` / `.planning/STATE.md`
+    — order there is exactly as important a promise as the phase-level ordering.
+  - The **binding-free constraint is unchanged and still HARD**: never let a
+    `quality/catalogs/doc-alignment.json` row cite any of the three blocks' moving lines,
+    or every close re-drifts the binding (P117 W3 `STALE_DOCS_DRIFT` cascade).
+  Tag: this is a **structure**-dimension freshness invariant (`quality/gates/structure/`);
+  a machine gate that cross-checks `Up next, in order`'s block-3 sequencing against
+  `STATE.md`'s phase count is filed as **GTH-V15-89** — carried forward under the
+  three-block design (P128 scope; prose doctrine here is the enforcement floor until that
+  gate lands).
