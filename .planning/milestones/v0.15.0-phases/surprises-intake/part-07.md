@@ -253,3 +253,35 @@ verdict is the per-phase SC gates run for real + CI-green-on-main. This trap has
 observably (P124); document it so the next verifier does not re-trip it.
 
 **STATUS:** OPEN
+
+## 2026-07-18 | discovered-by: gsd-executor 125-01 (SC3/DRAIN-12, mirror-lag hint fix — OD-3 noticing adjacent to the edit) | severity: LOW-MEDIUM
+
+**What:** In `docs/guides/troubleshooting.md` § "Bus-remote `fetch first` rejection", the
+v0.14.0 "Resolved" blockquote's Pattern-C paragraph (the "For a Pattern-C **attach**
+(round-tripper) tree the same recovery applies …" lines) shows a **bare** `git pull --rebase
+&& git push` as the attach-tree recovery. That is imprecise for the mirror-drift case the whole
+section addresses: on a `reposix attach` tree, `branch.<b>.remote` stays `origin` (the plain-git
+mirror) for fetch — confirmed by `quality/gates/agent-ux/lib/litmus-flow.sh:95-96` ("after
+attach `branch.<b>.remote` still points at origin … the recovery is remote-explicit on
+purpose") — so a **bare** `git pull` there reconciles against the *stale mirror*, not the
+SoT-backed bus remote. The paragraph's point is really the cross-root ANCESTOR mechanics
+(attach seeds the merge-base), but its bare-command shorthand under-teaches the attach reader.
+125-01 ADDED a correct Pattern-C remote-explicit note immediately after that blockquote (the
+fix-twice pair for the `write_loop.rs` hint), but the PLAN explicitly forbade rewording the
+existing blockquote lines, so the imprecise bare-form example still stands one paragraph above
+the correction.
+
+**Why out-of-scope for the discovering session:** 125-01's charter was the additive hint
+correction + additive doc note (plan: "do NOT reword the existing … recovery lines"). Rewording
+the v0.14.0 blockquote is a separate, pre-existing doc-precision edit touching a
+doc-alignment-bound file (needs a walk-gate rebind check), out of the plan's file-scope.
+
+**Sketched resolution (docs/tooling-polish phase or OP-8 slot):** reword the v0.14.0
+blockquote's Pattern-C paragraph so its recovery example is remote-explicit
+(`git pull --rebase <reposix-remote-name> main && git push <reposix-remote-name> main`) for the
+attach case, or add an inline "(name the bus remote — see below)" pointer to the 125-01 note,
+so a cold attach-tree reader is not shown the stale-mirror-reading bare form first. Run
+`bash quality/gates/docs-alignment/walk.sh` after and rebind any troubleshooting.md-bound row
+via the mint tool in the same commit. Effort: small (~20min).
+
+**STATUS:** OPEN
