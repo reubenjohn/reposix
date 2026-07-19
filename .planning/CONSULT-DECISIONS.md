@@ -195,7 +195,7 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
-## 2026-07-18 [OWNER] SendMessage C2-tier tool-grant limitation ratified as STANDING doctrine
+## 2026-07-18 [MANAGER decide-and-disclose, owner veto open] SendMessage C2-tier tool-grant limitation ratified as STANDING doctrine
 
 - **Finding:** `SendMessage` is unavailable at the phase-coordinator (C2) tier and below
   — a C2 cannot SendMessage / halt / resume its own background children, and a child
@@ -206,9 +206,11 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Re-discovery count:** independently re-discovered across the #63→#64→#65 handover
   chain (the 2nd/3rd re-discovery this milestone) before this ratification — that
   recurrence is WHY it is now formalized rather than re-diagnosed each rotation.
-- **Ruling (owner/manager, 2026-07-18):** ratified as a **STANDING tool-grant limitation
-  of the `phase-coordinator` registry grant** — NOT a session/config fluke to chase or
-  "fix." It is a property of the registry entry, permanent until the grant itself changes.
+- **Ruling (MANAGER decide-and-disclose, owner veto open, 2026-07-18):** ratified as a
+  **STANDING tool-grant limitation of the `phase-coordinator` registry grant** — NOT a
+  session/config fluke to chase or "fix." It is a property of the registry entry, permanent
+  until the grant itself changes. Ratified under the manager's delegated decide-and-disclose
+  authority; the owner's veto window on this ruling is still open.
 - **Standing mitigation:** coordinators at C2 and below **serialize strictly** and drive
   every phase close via **FRESH verifier→executor LEAVES** only; **never `fork`-to-resume**
   a coordinator, **never background-and-resume a child at C2**; **embed this caveat
