@@ -26,10 +26,14 @@ use std::sync::Arc;
 
 use assert_cmd::Command;
 use chrono::TimeZone;
-use reposix_core::{Record, RecordId, RecordStatus};
+use reposix_cache::Cache;
+use reposix_core::{BackendConnector, Record, RecordId, RecordStatus};
 use serde_json::Value;
 use wiremock::matchers::{any, method, path_regex};
 use wiremock::{Mock, MockServer, Request, ResponseTemplate};
+
+mod common;
+use common::{sim_backend, CacheDirGuard};
 
 fn sample_issue(id: u64, version: u64) -> Value {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
@@ -213,6 +217,147 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
         !stdout.contains("RPX-0505"),
         "the git-parsed `fetch first` protocol line on STDOUT must NOT carry an \
          RPX code (it would corrupt the push status git parses): {stdout}"
+    );
+}
+
+/// SC3 / DRAIN-12 regression: when the mirror-lag ref (`refs/mirrors/<sot>-synced-at`)
+/// is populated, a stale-base push must reject with a mirror-lag hint that (a)
+/// recommends `reposix sync --reconcile` — the real cache-refresh command, NOT the
+/// no-op bare `reposix sync` — and (b) warns that on a `reposix attach` (Pattern-C)
+/// tree a bare `git pull`/`git rebase` reads the ORIGIN MIRROR by default, pointing
+/// at a remote-explicit rebase against the SoT-backed bus remote. The load-bearing
+/// pinned `git pull --rebase` substring must survive both before and after the fix.
+///
+/// Setup drives the branch honestly: an in-process `Cache` warms the same
+/// `REPOSIX_CACHE_DIR` the subprocess consumes, then `write_mirror_synced_at`
+/// populates the ref so `read_mirror_synced_at` returns `Some` inside `write_loop.rs`
+/// (the branch under test fires ONLY on that condition — see write_loop.rs:208).
+#[tokio::test]
+// test-name-honesty: ok — drives helper export via stdin against wiremock; genuine mirror-lag-hint coverage
+async fn mirror_lag_reject_hint_recommends_reconcile_and_remote_explicit_rebase() {
+    let server = MockServer::start().await;
+    // Backend has issue 2 at version=2 — local push will claim version=1.
+    let issues: Vec<Value> = vec![sample_issue(1, 1), sample_issue(2, 2)];
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/1$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(1, 1)))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/2$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(2, 2)))
+        .mount(&server)
+        .await;
+    // Strict expectation: the reject must fire BEFORE any write reaches the backend.
+    Mock::given(method("PATCH"))
+        .and(any())
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(any())
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+    Mock::given(method("DELETE"))
+        .and(any())
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Per-test cache dir — the SAME path the subprocess will consume below.
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
+
+    // Load-bearing new step vs the sibling test: pre-populate the mirror-lag ref so
+    // the `if let Ok(Some(synced_at)) = c.read_mirror_synced_at(backend_name)` arm in
+    // write_loop.rs actually fires. Open an in-process Cache on the same dir, warm it
+    // (sync() commits refs/heads/main + sets HEAD — the tag-object target
+    // write_mirror_synced_at needs), then stamp the synced-at ref 5 minutes in the
+    // past. Backend host is `"sim"` (loopback origin classifies as BackendKind::Sim,
+    // so the subprocess helper reads refs/mirrors/sim-synced-at). Mirrors
+    // bus_precheck_b.rs:110-115.
+    {
+        let _env = CacheDirGuard::new(&cache_path);
+        let backend: Arc<dyn BackendConnector> = sim_backend(&server);
+        let cache = Cache::open(backend, "sim", "demo").expect("Cache::open");
+        cache
+            .sync()
+            .await
+            .expect("seed sync (warm cache cursor + HEAD for synced-at target)");
+        cache
+            .write_mirror_synced_at("sim", chrono::Utc::now() - chrono::Duration::minutes(5))
+            .expect("populate refs/mirrors/sim-synced-at");
+        drop(cache); // release the cache lock + (on _env drop) restore the env var
+    }
+
+    // Drive the stale-base push exactly as the sibling test does.
+    let blob = render_with_overrides(2, "issue 2", "edited body\n", 1, 2);
+    let stream = one_file_export("issues/2.md", &blob, "edit issue 2\n");
+    let url = format!("reposix::{}/projects/demo", server.uri());
+    let stdin_data = {
+        let mut buf = Vec::new();
+        writeln!(&mut buf, "export").unwrap();
+        buf.extend_from_slice(&stream);
+        buf
+    };
+    let cache_path_sub = cache_path.clone();
+    let assert = tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("git-remote-reposix")
+            .expect("binary built")
+            .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path_sub)
+            .write_stdin(stdin_data)
+            .timeout(std::time::Duration::from_secs(15))
+            .assert()
+    })
+    .await
+    .unwrap();
+    drop(cache_dir);
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+
+    assert!(
+        !out.status.success(),
+        "stale-base push must fail; stderr: {stderr}"
+    );
+    assert!(
+        stdout.contains("error refs/heads/main fetch first"),
+        "stdout missing canned conflict status: {stdout}"
+    );
+    // Prove the mirror-lag branch actually fired (guards against a mis-setup
+    // false-negative that would otherwise look like a missing-impl failure):
+    assert!(
+        stderr.contains("last synced from"),
+        "mirror-lag branch did not fire — refs/mirrors/<sot>-synced-at was not populated: {stderr}"
+    );
+    // SC3 bug (a): the corrected `--reconcile` flag on the cache-refresh hint. The
+    // bare `reposix sync` is a no-op (per sync.rs's own doc comment) — the recovery
+    // must name the flag that actually rebuilds the LOCAL cache.
+    assert!(
+        stderr.contains("reposix sync --reconcile"),
+        "stderr still recommends the no-op bare `reposix sync` (missing --reconcile): {stderr}"
+    );
+    // SC3 bug (b): the Pattern-C remote-explicit augmentation — a bare pull on an
+    // attach tree reads the stale origin mirror, so the recovery names the bus remote.
+    assert!(
+        stderr.contains("git pull --rebase <reposix-remote-name> main")
+            || stderr.contains("reposix attach"),
+        "stderr missing the Pattern-C bare-pull-reads-stale-mirror augmentation hint: {stderr}"
+    );
+    // Pin survives (TRUE both before and after the fix — never removed):
+    assert!(
+        stderr.contains("git pull --rebase"),
+        "pinned `git pull --rebase` substring vanished: {stderr}"
     );
 }
 
