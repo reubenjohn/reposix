@@ -55,7 +55,7 @@ For each rubric in scope:
 
 3. **Path B (fallback)** -- if Task is not available (the runner subprocess invocation typically lacks Task): emit a stub artifact (`score=0, verdict=NOT-IMPLEMENTED, dispatched_via=Path-B-runner-subprocess`). The runner re-grade will mark the row FAIL; Wave G's full-skill dispatch (with Task tool) re-runs and produces the real artifact.
 
-4. **Special case (cold-reader rubric)** -- the cold-reader rubric's implementation is the existing `doc-clarity-review` global skill. Instead of constructing a custom subagent prompt, invoke `/doc-clarity-review --prompt <cold-reader-prompt> README.md docs/index.md`. Parse the `_feedback.md` output for the verdict + score (CLEAR=10, NEEDS-WORK=5, CONFUSING=2).
+4. **Special case (cold-reader rubric)** -- the cold-reader rubric's implementation is the existing `doc-clarity-review` global skill. Instead of constructing a custom subagent prompt, invoke `/doc-clarity-review --prompt <cold-reader-prompt> README.md docs/index.md`. Parse the `_feedback.md` output for the verdict + score (CLEAR=10, NEEDS-WORK=5, CONFUSING=2). **Subscription caveat:** a *suspiciously clean* CLEAR may mean the nested `claude -p` could not SEE the file content (a subscription/context limitation that returns a confusing non-error, not a hard fail) — verify the feedback quotes real doc content before trusting a clean pass.
 
 Capture each subagent's JSON output for the persist step.
 </step>

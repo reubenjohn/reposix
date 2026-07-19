@@ -5,7 +5,7 @@
 reposix exposes REST-based issue trackers (and similar SaaS systems) as a
 git-native partial clone, served by `git-remote-reposix` from a local
 bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`,
-and `git` on real workflows — no MCP tool schemas, no custom CLI.
+and `git` on real workflows — no Model Context Protocol (MCP) tool schemas, no custom CLI.
 
 [![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
 [![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg?branch=main)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml)

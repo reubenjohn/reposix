@@ -16,6 +16,8 @@ The user types `/reposix-quality-refresh <doc-file>` from a fresh top-level Clau
 
 ```
 1. Run: reposix-quality doc-alignment plan-refresh <doc-file>
+   ⚠️ Cold caveat: `plan-refresh <doc>` invoked cold (no prior `walk` this session) UNDER-reports drift —
+      run `reposix-quality doc-alignment walk` first, then re-run plan-refresh, for an accurate stale-row set.
    → produces stale-row manifest as JSON on stdout: list of row IDs whose source_hash drifted
      OR whose test_body_hash drifted OR whose state is STALE_TEST_GONE / TEST_MISALIGNED
    → if zero rows: exit 0 silently — pre-push misfire, nothing to do.

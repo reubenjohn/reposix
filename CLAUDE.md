@@ -248,6 +248,12 @@ headline numbers, README, docs landing), dispatch `/doc-clarity-review` on the a
 pages. Automated rubric grading: `/reposix-quality-review` (`--rubric <id>` /
 `--all-stale`); catalog `quality/catalogs/subjective-rubrics.json` enforces a 30-day TTL.
 
+**Subscription caveat.** A `/doc-clarity-review` result that comes back *suspiciously clean*
+may mean the nested `claude -p` invocation could not SEE the file content (a subscription/
+context limitation that returns a confusing NON-error, not a hard fail) — confirm it actually
+rendered the content before trusting a clean pass. The `reposix-quality-doc-alignment` skill
+carries the same subscription caveat as the pattern to mirror.
+
 ## Docs-site + freshness gates (pre-push enforced)
 
 - Any change to `mkdocs.yml` or `docs/**` MUST pass
