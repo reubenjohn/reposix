@@ -200,4 +200,19 @@ not that the test itself is wrong). Slot into P127 alongside the `code/shell-cov
 stale-mint work if the two share the `minted_at`→F-K4b activation family (they may not —
 verify: this one is a mint-vs-CI-reality gap, not an F-K4b congruence demote).
 
-**STATUS:** OPEN — tag structure / honesty (catalog-mint-vs-CI-reality); P127 Slot 1 candidate.
+**P127 T2 DISPOSITION (2026-07-19):** Took option (a) — re-minted the row honestly to
+`WAIVED` (metadata write: `status: WAIVED` + a `waiver` block, `until: 2026-09-15`,
+`dimension_owner: P127 / intake part-08`) in `quality/catalogs/freshness-invariants.json`.
+The catalog now stops asserting an unreproducible green: `run_row`'s `waiver_active`
+short-circuit grades the row `WAIVED` (proven: graded WAIVED in 0.0006s at pre-push
+without running the verifier) instead of the lying local `PASS`. Verified the gate still
+passes LOCALLY (exit 0) so the WARN-only disposition is honest, not masking a real
+regression. Option (b) — the deeper CI-sandbox-portability CODE fix to
+`hermetic-test-network-isolation.sh` (>1h, requires reproducing the CI-sandbox
+restriction and choosing a denial mechanism the sandbox permits) — **STAYS FILED** here;
+it is out of scope for this Slot-1 metadata drain. When (b) lands and the gate is
+confirmed green IN CI (not just locally), re-mint to PASS via
+`run.py --cadence pre-push --persist` and drop the waiver.
+
+**STATUS:** PARTIAL — honesty half CLOSED (WAIVED re-mint, P127 T2); CI-portability CODE
+fix OPEN (>1h, kept-filed). Tag structure / honesty (catalog-mint-vs-CI-reality).

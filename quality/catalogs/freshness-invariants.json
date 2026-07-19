@@ -1438,13 +1438,18 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/hermetic-test-network-isolation.json",
-      "status": "PASS",
+      "status": "WAIVED",
       "last_verified": "2026-07-19T08:12:32Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: either test_freshness_synth.py started depending on a live network call again (regression of the Cycle-2 task (d) fix), or a NEW weekly-cadence catalog row was added without _neutralize_other_weekly_rows's blanket per-catalog waiver sweep picking it up (it iterates every quality/catalogs/*.json row with 'weekly' in cadences, so a genuinely new file/row is auto-covered -- more likely cause is a live network call added OUTSIDE the weekly-cadence rows this sweep targets, e.g. inside run.py itself). See quality/CLAUDE.md Hermetic test convention. Mint to PASS via `python3 quality/runners/run.py --cadence pre-push --persist` once graded.",
-      "claim_vs_assertion_audit": "If test_freshness_synth.py actually reached crates.io, the GitHub API, or any other live network endpoint (unmocked, un-neutralized), the poisoned HTTP(S) proxy would force that socket to fail fast with ECONNREFUSED (verified manually: a bare urllib.request.urlopen call under the same proxy env raises URLError), which would propagate into a non-zero pytest exit code and falsify both asserts above -- assert 1 fails directly on the non-zero exit, assert 2's claim of zero live-network dependence is falsified by the very fact that denying the network broke the run.",
-      "waiver": null,
+      "owner_hint": "if RED (after the waiver lapses and the gate re-runs): either test_freshness_synth.py started depending on a live network call again (regression of the Cycle-2 task (d) fix), or a NEW weekly-cadence catalog row was added without _neutralize_other_weekly_rows's blanket per-catalog waiver sweep picking it up (it iterates every quality/catalogs/*.json row with 'weekly' in cadences, so a genuinely new file/row is auto-covered -- more likely cause is a live network call added OUTSIDE the weekly-cadence rows this sweep targets, e.g. inside run.py itself). See quality/CLAUDE.md Hermetic test convention. NOTE (P127 T2): the gate passes LOCALLY but fast-fails (~0.02s) in the CI sandbox, where the poisoned-proxy network-denial mechanism is unavailable -- so this row is WAIVED (not PASS) until the CI-portability fix lands (intake part-08). Mint to PASS via `python3 quality/runners/run.py --cadence pre-push --persist` only once the CI-portability gap is closed AND the gate is confirmed green in CI, not just locally.",
+      "claim_vs_assertion_audit": "If test_freshness_synth.py actually reached crates.io, the GitHub API, or any other live network endpoint (unmocked, un-neutralized), the poisoned HTTP(S) proxy would force that socket to fail fast with ECONNREFUSED (verified manually: a bare urllib.request.urlopen call under the same proxy env raises URLError), which would propagate into a non-zero pytest exit code and falsify both asserts above -- assert 1 fails directly on the non-zero exit, assert 2's claim of zero live-network dependence is falsified by the very fact that denying the network broke the run. P127 T2: this holds LOCALLY (verified exit 0); the row is WAIVED because the CI sandbox cannot establish the poisoned-proxy denial, so the local PASS is not CI-reproducible -- an honest WAIVED beats a committed PASS that CI fast-fails (honesty rule).",
+      "waiver": {
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "CI-sandbox incompatible: poisoned-proxy network isolation unavailable in CI sandbox; gate passes locally. Deeper CI-portability fix stays filed (intake part-08).",
+        "dimension_owner": "P127 / intake part-08",
+        "tracked_in": ".planning/milestones/v0.15.0-phases/surprises-intake/part-08.md (hermetic-test-network-isolation CI-portability; P127 T2 re-minted the lying local-PASS to WAIVED, the deeper CI-portability CODE fix stays filed as >1h)."
+      },
       "transport_claim": false,
       "cadences": [
         "pre-push",
