@@ -75,7 +75,7 @@
 - [x] **Phase 122: `reposix-remote` + `init` hardening** - Two HIGH-severity carry-forward robustness gaps close (modern-git rebase-recovery verification; binary-side self-safety refusal). (completed 2026-07-18)
 - [x] **Phase 123: Quality-runner & catalog integrity hardening** - `run.py` and the catalog it persists resist false-greens, silent corruption, and misleading errors. (completed 2026-07-18)
 - [x] **Phase 124: Container-rehearse harness hardening** - Docs-repro container rows are provenance-guaranteed and immune to SIGKILL orphaning + tautological congruence. (completed 2026-07-18)
-- [ ] **Phase 125: Real-backend cadence & mirror-drift resilience** - The `pre-release-real-backend` cadence and milestone-close litmus survive GitHub-mirror drift.
+- [x] **Phase 125: Real-backend cadence & mirror-drift resilience** - The `pre-release-real-backend` cadence and milestone-close litmus survive GitHub-mirror drift. (completed 2026-07-19)
 - [ ] **Phase 126: Docs-alignment tooling polish** - The doc-alignment skill/tooling surface is more reliable and less confusing.
 - [ ] **Phase 127: Surprises absorption (OP-8 Slot 1)** - Every surprise surfaced during P114–P126's own execution has a terminal STATUS.
 - [ ] **Phase 128: Good-to-haves polish + milestone close (OP-9 Slot 2)** - GOOD-TO-HAVES drained, RETROSPECTIVE.md distilled, milestone-close ritual complete, tag script authored.
@@ -311,7 +311,7 @@
 | 122. reposix-remote + init hardening | 4/4 | Complete   | 2026-07-18 |
 | 123. Quality-runner & catalog integrity | 7/7 | Complete | 2026-07-18 |
 | 124. Container-rehearse harness hardening | 1/1 | Complete | 2026-07-18 |
-| 125. Real-backend cadence & mirror-drift resilience | 0/3 | Planned (plan-checker VERIFICATION PASSED) | - |
+| 125. Real-backend cadence & mirror-drift resilience | 3/3 | Complete | 2026-07-19 |
 | 126. Docs-alignment tooling polish | 0/TBD | Not started | - |
 | 127. Surprises absorption (OP-8 Slot 1) | 0/TBD | Not started | - |
 | 128. Good-to-haves polish + milestone close (OP-9 Slot 2) | 0/TBD | Not started | - |

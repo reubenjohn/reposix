@@ -10,8 +10,8 @@ number or date**, so the map stays true without weekly edits.
 > promises a date it has to chase. Only the "Progress right now" strip below moves faster,
 > ticking forward at each phase close.
 
-> **Progress right now** · _updated 2026-07-18_
-> **Milestone: Floor** — **11 / 15** phases closed (**73%**).
+> **Progress right now** · _updated 2026-07-19_
+> **Milestone: Floor** — **12 / 15** phases closed (**80%**).
 > We are hardening the launch-readiness floor: closing known correctness gaps, making every
 > error message teach its own fix, and re-grounding the docs and benchmark numbers in
 > freshly measured reality — so a first-time user meets fewer sharp edges before launch.

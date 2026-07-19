@@ -87,7 +87,7 @@ This ledger exceeded the *.md 20k budget and was split into 7 per-part child fil
   - 2026-07-18 11:09 | discovered-by: gsd-executor 123-01 (catalog-first Wave 1) | severity: MEDIUM
   - 2026-07-18 06:00 | discovered-by: 123-06 (SC4/DRAIN-06, structure/verifier-script-exists gate) | severity: MEDIUM
   - 2026-07-18 | discovered-by: 123-07 close-wave Lane 2 (PLANNING-CLOSE + AUDIT, security audit tasked by the coordinator) | severity: MEDIUM
-- [`surprises-intake/part-07.md`](surprises-intake/part-07.md) — 8 entries:
+- [`surprises-intake/part-07.md`](surprises-intake/part-07.md) — 10 entries:
   - 2026-07-18 | discovered-by: P123 close wave (push cadence measurement, coordinator-filed) | severity: MEDIUM
   - 2026-07-18 | discovered-by: gsd-verifier P123 phase-close verdict (`quality/reports/verdicts/p123/VERDICT.md`) | severity: LOW-MEDIUM
   - 2026-07-18 | discovered-by: gsd-verifier P123 phase-close verdict, NOTICED #1 (`quality/reports/verdicts/p123/VERDICT.md`) | severity: LOW / INFO
@@ -96,3 +96,5 @@ This ledger exceeded the *.md 20k budget and was split into 7 per-part child fil
   - 2026-07-18 | discovered-by: P124 close-bookkeeping lane (shell-coverage FAIL forces `--persist` downgrade-REFUSAL — augments `L1166` / the two drift entries) | severity: MEDIUM
   - 2026-07-18 | discovered-by: P124 close-bookkeeping lane (verdict.py `--phase` bare-session collation reads a misleading RED) | severity: MEDIUM
   - 2026-07-18 | discovered-by: gsd-executor 125-01 (SC3/DRAIN-12 — troubleshooting.md v0.14.0 blockquote shows bare attach-tree recovery that reads the stale mirror) | severity: LOW-MEDIUM | **RESOLVED** by 125-03 PART 2
+  - 2026-07-19 | discovered-by: P125 planning + C1 close-bookkeeping lane (gsd-sdk STATE.md corruption, EXECUTED evidence) | severity: MEDIUM
+  - 2026-07-19 | discovered-by: P125 planning + C1 ground-truth (tokenworld-mirror doc-truth, verified against reality) | severity: MEDIUM

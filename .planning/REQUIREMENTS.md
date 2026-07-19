@@ -163,7 +163,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
   oid-drift aborts to a git-version problem. `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`
   should surface the real stderr (`oid drift … for issue 7766017`) instead of the
   git-version fallback whenever the actual failure is an oid-drift abort.
-- [ ] **DRAIN-02** *(MED)*: Document a mandatory mirror-refresh pre-step for the
+- [x] **DRAIN-02** *(MED)*: Document a mandatory mirror-refresh pre-step for the
   `pre-release-real-backend` cadence — run `scripts/refresh-tokenworld-mirror.sh` first (or
   make the litmus self-reconcile, see DRAIN-12/GTH-V15-09), so a second-run vision-litmus
   doesn't false-negative on its own prior push re-staling the GitHub mirror.
@@ -239,7 +239,7 @@ mandate). Phase detail: `.planning/ROADMAP.md` § "v0.15.0 Floor (PLANNING)".
 - [ ] **DRAIN-11** *(MED/hygiene, GTH-V15-08)*: `.planning/ORCHESTRATION.md` is 26968B vs
   its 20000B `structure/file-size-limits` ceiling (waived until 2026-08-08) — split
   reference detail to a sibling doc before the waiver lapses.
-- [ ] **DRAIN-12** *(MED→HIGH, GTH-V15-09)*: Make the milestone-close vision-litmus
+- [x] **DRAIN-12** *(MED→HIGH, GTH-V15-09)*: Make the milestone-close vision-litmus
   fixture self-healing for BOTH backend drift (trashed protected pages) and GitHub mirror
   drift (`reposix sync --reconcile` does NOT push to the mirror) — reconcile the mirror to
   backend-current through the reposix bus remote before the marker push; fix the helper's
@@ -319,7 +319,7 @@ goals, and success criteria).
 | BENCH-01 | Phase 115 | Pending |
 | ADR-01 | Phase 116 | Pending |
 | DRAIN-01 | Phase 123 | Complete |
-| DRAIN-02 | Phase 125 | Pending |
+| DRAIN-02 | Phase 125 | Complete |
 | DRAIN-03 | Phase 123 | Complete |
 | DRAIN-04 | Phase 123 | Complete |
 | DRAIN-05 | Phase 123 | Complete |
@@ -329,7 +329,7 @@ goals, and success criteria).
 | DRAIN-09 | Phase 122 | Complete |
 | DRAIN-10 | Phase 123 | Complete |
 | DRAIN-11 | Phase 119 | Pending |
-| DRAIN-12 | Phase 125 | Pending |
+| DRAIN-12 | Phase 125 | Complete |
 | DRAIN-13 | Phase 124 | Pending |
 | DRAIN-14 | Phase 124 | Pending |
 | DRAIN-15 | Phase 126 | Pending |

@@ -293,3 +293,67 @@ remote-explicit note directly below. Walk-gate rebind check: ZERO drift — all 
 troubleshooting.md doc-alignment bindings sit at line ≤ 227, above the edited blockquote
 (lines 274-282), so no `source_hash` range shifted; `bash quality/gates/docs-alignment/walk.sh`
 exits 0 with no STALE_DOCS_DRIFT. No rebind needed.
+
+## 2026-07-19 | discovered-by: P125 planning + C1 close-bookkeeping lane (gsd-sdk STATE.md corruption, EXECUTED evidence) | severity: MEDIUM
+
+**What:** During P125 planning, `gsd-sdk query state.planned-phase` (and the sibling
+progress-recompute state verbs) **corrupted `.planning/STATE.md`**: it recomputed milestone
+progress as **21 phases / 4 complete / 19%** by scanning ALL-TIME phase directories under
+`.planning/phases/` (every milestone's phases ever executed) instead of THIS milestone's scoped
+15-phase count (v0.15.0 = P114–P128), and in the same pass **dropped `last_activity`** and
+fragmented the hand-authored Current-Position prose. The change was reverted and STATE.md was
+hand-rewritten. The generic gsd-sdk progress model (all-time phase-dir scan) is mismatched to
+this project's per-milestone-scoped STATE schema (`progress.total_phases` is milestone-local,
+not repo-lifetime). This is why every P114+ phase-close in this milestone has hand-edited
+STATE.md rather than calling `gsd-sdk query state.update-progress` / `state.advance-plan`.
+
+**Why out-of-scope for the discovering session:** P125's charter was the real-backend-cadence /
+mirror-drift SCs, not GSD-tooling repair; the close-bookkeeping lane is explicitly directed to
+hand-edit STATE.md and NOT invoke the corrupting verb. Fixing the gsd-sdk progress-scoping (or
+formally retiring it for STATE.md progress) is a cross-cutting tooling change with its own
+verification surface, out of a docs-only phase's file-scope.
+
+**Sketched resolution (docs/tooling-polish phase or OP-8 slot):** either (a) scope the gsd-sdk
+progress query to the active milestone's phase set — read `progress.total_phases` /
+the milestone's `*-phases/ROADMAP.md` phase range rather than globbing all of
+`.planning/phases/*` — so `state.update-progress` / `state.advance-plan` become safe to call at
+phase close; OR (b) formally retire `gsd-sdk` for STATE.md progress in this repo and document
+the hand-maintained convention as canonical in `.planning/CLAUDE.md` (§ "Do not hand-edit"
+currently forbids hand-edits generally; it should carve out STATE.md progress as an intentional
+hand-maintained exception with the corruption rationale). Cross-ref: this mismatch is the
+standing reason the P114–P125 close lanes hand-edit STATE.md.
+
+**STATUS:** OPEN
+
+## 2026-07-19 | discovered-by: P125 planning + C1 ground-truth (tokenworld-mirror doc-truth, verified against reality) | severity: MEDIUM
+
+**What:** P125 planning artifacts claimed the `reposix-tokenworld-mirror` GitHub Action "has
+been failing since 2026-05-01." C1 ground-truth against reality contradicts the premise: **no
+such workflow exists** in `.github/workflows/`, none is registered (`gh workflow list` shows no
+mirror/tokenworld workflow), and there are **no mirror/tokenworld runs in the last 30**. The
+"authoritative 30-minute cron converger" that load-bearing docs reference — root `CLAUDE.md`
+§ "Mirror-head refresh promise" ("The webhook + 30-minute cron GH Action is the **authoritative**
+mechanism that converges the external mirror repo itself") and `docs/concepts/dvcs-topology.md`
+— is presumably an OWNER-configured Action living in the EXTERNAL mirror repo (per
+`docs/guides/dvcs-mirror-setup.md`), whose liveness is **unverifiable from this repo**; OR the
+docs describe a converger that no longer runs. This is a doc-truth risk on an explicitly
+"authoritative" claim: if the external cron is absent/dead, then P125's litmus self-heal
+(SC2/DRAIN-12) + the documented manual `scripts/refresh-tokenworld-mirror.sh` pre-step
+(SC1/DRAIN-02) are the actual live compensating controls converging the mirror today — not the
+"authoritative" cron the docs lean on.
+
+**Why out-of-scope for the discovering session:** verifying/relocating an owner-configured
+Action in an external repo (or downgrading an "authoritative" doc claim) needs owner input on
+where the cron actually lives and whether it runs — an owner-gated ground-truth confirmation,
+not a change a docs-only phase-close lane can make unilaterally without risking a false
+downgrade of a claim that may be true-but-external.
+
+**Sketched resolution (owner-gated; docs/tooling-polish phase or OP-8 slot):** owner confirms
+(1) where the 30-minute cron converger lives (external mirror repo? which repo/workflow?) and
+(2) that it actually runs on schedule. If confirmed-live-external, add a one-line pointer in
+root `CLAUDE.md` § "Mirror-head refresh promise" + `docs/concepts/dvcs-topology.md` naming the
+external location so the "authoritative" claim is traceable. If absent/dead, **downgrade the
+"authoritative" framing** to name the litmus self-heal + manual pre-step as the live converging
+mechanism, and file a follow-up to re-establish (or intentionally retire) the external cron.
+
+**STATUS:** OPEN
