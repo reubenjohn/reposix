@@ -14,9 +14,15 @@ You have ZERO session context beyond this prompt and the row context that follow
 
 2. **Read the cited test fn body.** Open the test file. Read the entire fn body and any setup/teardown that affects what's asserted. If the fn calls helpers, read the helpers.
 
-3. **Decide one of:**
+3. **Prove the test has teeth — drift-sensitivity is the anti-false-BIND gate.** A binding is only real if the cited test **fails when the number drifts**: ask *"if the doc's asserted number/claim were silently changed to a WRONG value, would this test go red?"*
+   - **YES** → the test pins the value; a `bind` is defensible.
+   - **NO** (the test runs the code path but asserts nothing about the cited number — e.g. it only asserts `Ok(...)`, a collection length, or an unrelated field) → it is **not** a binding test. A test that passes regardless of the number is a **false BIND** — the worst failure mode. Do NOT `bind`; route to `mark-missing-test`.
 
-   - **Still BOUND** — the test asserts the claim. Call:
+4. **Grep `src/` broadly before concluding no test exists.** Do not trust only the currently-cited test. Before deciding `TEST_MISALIGNED` / `STALE_TEST_GONE`, grep the crate unit tests for one that DOES assert the cited value — e.g. `rg -n "<the-number>|<const-or-fn-name>" crates/*/src crates/*/tests`. If a DIFFERENT test genuinely pins the claim (it fails when the number drifts), `bind` the row to THAT test — a row binds to whatever test verifies the claim, not just the one already named.
+
+5. **Decide one of:**
+
+   - **Still BOUND** — a drift-sensitive test (step 3) asserts the claim; it fails when the number drifts. Call:
      ```
      reposix-quality doc-alignment bind \
        --row-id <id> \
@@ -51,7 +57,7 @@ You have ZERO session context beyond this prompt and the row context that follow
 
    - **Claim is genuinely superseded** — call `propose-retire` with the supersession source. RETIREMENT IS HUMAN-CONFIRMED ONLY. Do not call `confirm-retire`. **Before proposing retirement, apply the transport-vs-feature heuristic:** retirement requires the FEATURE to be intentionally dropped with a documented decision (ADR, CHANGELOG, research note). Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those stay `mark-missing-test` with rationale prefix `IMPL_GAP:` (feature alive, impl strategy pivoted) or `DOC_DRIFT:` (prose names a stale shape; current shape exists). See `prompts/extractor.md` § "Retirement vs implementation-gap" for canonical examples.
 
-4. **Output** is the cumulative effect of your `reposix-quality` calls. No prose summary, no JSON. Print one stdout line on completion:
+6. **Output** is the cumulative effect of your `reposix-quality` calls. No prose summary, no JSON. Print one stdout line on completion:
    ```
    row <id>: <verdict> — <one-line rationale>
    ```
@@ -60,6 +66,7 @@ You have ZERO session context beyond this prompt and the row context that follow
 
 - Read the test body. Do not infer alignment from the test fn name.
 - When uncertain (e.g., the test asserts a related but slightly different thing) — choose `mark-missing-test`, not `bind`. False BOUND is the worst failure mode for a refresh; the user can re-bind explicitly if they disagree.
+- **Bind only on teeth.** Never `bind` a test that would still pass if the cited number/claim drifted — that is a false BIND. Confirm drift-sensitivity (step 3), and grep `src/` broadly (step 4) so the row binds to whatever test actually verifies the claim, not merely the one already named. A test that pins the value but was never the cited one is a BIND target; a cited test with no assertion on the value is not.
 - Do not modify implementation code. Even if you think the right fix is to write a missing test, you stop at the catalog state. The user does the test work.
 - Never call `confirm-retire`. That's `$CLAUDE_AGENT_CONTEXT`-guarded and human-only.
 
