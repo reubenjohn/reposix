@@ -145,6 +145,33 @@ An in-progress run grades NOT-VERIFIED (also RED for a P0 at phase-close): wait
 for CI to conclude, then re-run the two post-push lines above. This is the
 mechanism the "8 GREEN phases over a RED main" incident was missing.
 
+> **A bare-session `verdict.py --phase N` roll-up is NOT the phase verdict
+> (dimension: framework/verdict-read; cadence: phase-close verifier read).** The
+> verifier subagent runs only the handful of targeted gates it was dispatched to
+> grade — NOT a full pre-push/post-push `--persist` sweep of every catalog. But
+> `verdict.py --phase N` **collates rows across every cadence** and auto-writes a
+> gitignored roll-up (`quality/reports/verdicts/p<N>/<RFC3339>.md`). In a bare
+> session the ~400+ rows the sweep never ran this session persist as
+> **NOT-VERIFIED**, and `compute_exit_code` treats P0/P1 NOT-VERIFIED as RED — so
+> the roll-up reads **RED off un-run rows alone**, plus a stable tail of
+> pre-existing STANDING reds from older milestones (`agent-ux/real-git-push-e2e`,
+> `t4-conflict-rebase-ancestry` ×2, the lost-update/p92-mid-stream cursor row,
+> `dvcs-cold-reader` STALE, and the v0.13.0/v0.14.0 drain/tag/changelog/hygiene P2
+> rows). NONE of that is a regression in the phase under grade. This trap has
+> **bitten once observably (P124):** the auto-written roll-up read RED while the
+> independent verifier correctly graded P124 GREEN — a naive verifier trusting the
+> file alone would have WRONGLY failed the phase. **How a verifier MUST read it:**
+> the phase-close verdict is (a) the phase's OWN success-criteria gates **run for
+> real this session** + (b) the P0 `code/ci-green-on-main` probe against main's
+> newest `ci.yml` run — NOT the full-catalog collation. Before trusting a
+> `--phase` RED, confirm the RED rows are IN-SCOPE for this phase and were RUN this
+> session; a NOT-VERIFIED-dominated roll-up (NOT-VERIFIED count ≫ this phase's row
+> count) is a bare-session artifact, not a phase failure. (Filed:
+> `.planning/milestones/v0.15.0-phases/surprises-intake/part-07.md`, 2026-07-18;
+> the machine remedy — `verdict.py` WARN-header on missing full-sweep provenance,
+> or `--phase N` scoping the collation to the phase's own rows + the P0 probe — is
+> a filed follow-up, not yet implemented.)
+
 Rows carry `cadences: list[str]`; a single gate may fire at multiple
 cadences (a fast mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]`
 will be picked up by all three runner invocations).
