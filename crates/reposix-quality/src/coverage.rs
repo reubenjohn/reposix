@@ -34,14 +34,32 @@ pub struct PerFileCoverage {
     pub row_count: u64,
 }
 
-/// Eligible file set (mirrors `collect_backfill_inputs` in
-/// `commands/doc_alignment.rs`). Both should evolve together; if one drifts,
-/// both are wrong together (single point of update).
+/// Eligible file set = the coverage DENOMINATOR (which files' lines count and
+/// which citations are "in bounds"). A row whose `source.file` is NOT in this
+/// set emits a `cites out-of-eligible file` warning at attribution time
+/// ([`compute_per_file`]).
 ///
-/// Walks `docs/**/*.md`, `README.md`, and archived REQUIREMENTS files for
-/// v0.6.0 -- v0.11.0. Files that don't exist on disk are skipped silently
-/// here (warnings happen at row-attribution time when a citation references
-/// a file outside this set).
+/// SHARED BASE with `collect_backfill_inputs` in `commands/doc_alignment.rs`
+/// (the backfill miner's input universe): `docs/**/*.md`, `README.md`, and
+/// archived milestone `REQUIREMENTS.md` (v0.6.0 -- v0.15.0, extended from
+/// v0.11.0 in DRAIN-21). Keep that base in LOCKSTEP in both functions.
+///
+/// SUPERSET (coverage-only, DRAIN-21): this set ADDITIONALLY includes specific
+/// doc-of-record surfaces that individual BOUND rows cite -- a handful of prose
+/// files (`benchmarks/README.md` + three archived `.planning/` docs) plus the
+/// two SOURCE files the connector-protocol / CLI-surface rows verify against
+/// (`crates/reposix-core/src/backend.rs`, `crates/reposix-cli/src/main.rs`).
+/// These are NARROW, explicit paths -- NEVER a glob. A blanket `crates/**/*.rs`
+/// would pull hundreds of un-rowed source lines into the denominator, tank the
+/// coverage ratio below its floor (docs-alignment gate RED), and flip this
+/// metric from doc-coverage into code-coverage. The two source files stay OUT
+/// of `collect_backfill_inputs` because the backfill miner extracts PROSE
+/// claims, never Rust source -- the one intentional divergence between the two
+/// lists (they are hand-maintained parallel copies; a DRY refactor is a tracked
+/// GOOD-TO-HAVE, deliberately not done here).
+///
+/// Files absent on disk are skipped silently (warnings fire only for a row
+/// whose citation names a file outside this set).
 #[must_use]
 pub fn eligible_files() -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = Vec::new();
@@ -57,10 +75,47 @@ pub fn eligible_files() -> Vec<PathBuf> {
         }
     }
 
-    for v in &["v0.6.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"] {
+    // Archived milestone REQUIREMENTS. Cutoff extended v0.11.0 -> v0.15.0
+    // (DRAIN-21): closed milestones accrued since the original range; keeping
+    // it current keeps their archived requirement docs in the denominator.
+    // v0.15.0 is the active milestone whose file lands here only at close
+    // (no-op until then). Kept in LOCKSTEP with `collect_backfill_inputs`.
+    for v in &[
+        "v0.6.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0", "v0.12.0", "v0.13.0",
+        "v0.14.0", "v0.15.0",
+    ] {
         let p = format!(".planning/milestones/{v}-phases/REQUIREMENTS.md");
         if Path::new(&p).exists() {
             out.push(PathBuf::from(p));
+        }
+    }
+
+    // DRAIN-21 SUPERSET (coverage-only): specific PROSE doc-of-record surfaces
+    // that BOUND rows cite but the base globs above miss. NARROW explicit paths
+    // (see the fn doc comment). These are legitimate prose and could also be
+    // mined, but are kept coverage-only here to avoid widening the backfill
+    // universe as a side effect of a coverage-warning fix.
+    for p in &[
+        "benchmarks/README.md",
+        ".planning/milestones/v0.13.0-phases/CARRY-FORWARD.md",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch/innovations.md",
+        ".planning/milestones/v0.8.0-phases/ARCHIVE.md",
+    ] {
+        if Path::new(p).exists() {
+            out.push(PathBuf::from(*p));
+        }
+    }
+
+    // DRAIN-21 SUPERSET (coverage-only, DELIBERATELY absent from the backfill
+    // miner): the two SOURCE files that 11 already-BOUND rows verify doc claims
+    // against -- the BackendConnector protocol and the CLI subcommand surface.
+    // NEVER broaden to a `crates/**/*.rs` glob (see the fn doc comment).
+    for p in &[
+        "crates/reposix-core/src/backend.rs",
+        "crates/reposix-cli/src/main.rs",
+    ] {
+        if Path::new(p).exists() {
+            out.push(PathBuf::from(*p));
         }
     }
 

@@ -775,9 +775,9 @@ pub(crate) mod verbs {
 
     /// Deterministic backfill chunker.
     ///
-    /// Walks `docs/**/*.md`, `README.md`, and v0.6.0 -- v0.11.0 archived
-    /// REQUIREMENTS.md files. Groups by directory affinity, ≤3 files per
-    /// shard. Output: MANIFEST.json under
+    /// Walks `docs/**/*.md`, `README.md`, and v0.6.0 -- v0.15.0 archived
+    /// REQUIREMENTS.md files (the PROSE the miner extracts claims from). Groups
+    /// by directory affinity, ≤3 files per shard. Output: MANIFEST.json under
     /// `quality/reports/doc-alignment/backfill-<UTC-iso>/`.
     pub fn plan_backfill(_catalog: &Path) -> Result<i32> {
         let ts = Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
@@ -827,6 +827,16 @@ pub(crate) mod verbs {
     }
 
     /// Collect backfill input files (deterministic order).
+    ///
+    /// The backfill miner's input universe = PROSE only. This is the SHARED
+    /// BASE with `coverage::eligible_files` (README + `docs/**/*.md` + archived
+    /// milestone REQUIREMENTS) and must stay in LOCKSTEP with it -- e.g. the
+    /// DRAIN-21 REQUIREMENTS cutoff bump (v0.11.0 -> v0.15.0) lands in both.
+    /// It intentionally does NOT carry the coverage-only SUPERSET
+    /// `eligible_files` adds (the two doc-of-record SOURCE files backend.rs /
+    /// main.rs): the miner extracts natural-language claims, never Rust source.
+    /// See the `eligible_files` doc comment for the full relationship (the two
+    /// are hand-maintained parallel copies; DRY is a tracked GOOD-TO-HAVE).
     fn collect_backfill_inputs() -> Result<Vec<String>> {
         let mut out = Vec::new();
 
@@ -840,8 +850,13 @@ pub(crate) mod verbs {
             walk_md(Path::new("docs"), &mut out)?;
         }
 
-        // .planning/milestones/v0.6.0..v0.11.0-phases/REQUIREMENTS.md
-        for v in &["v0.6.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"] {
+        // .planning/milestones/v0.6.0..v0.15.0-phases/REQUIREMENTS.md
+        // (DRAIN-21: cutoff extended v0.11.0 -> v0.15.0, lockstep with
+        // coverage::eligible_files).
+        for v in &[
+            "v0.6.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0", "v0.12.0", "v0.13.0",
+            "v0.14.0", "v0.15.0",
+        ] {
             let p = format!(".planning/milestones/{v}-phases/REQUIREMENTS.md");
             if Path::new(&p).exists() {
                 out.push(p);
