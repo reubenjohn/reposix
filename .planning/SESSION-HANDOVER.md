@@ -1,23 +1,24 @@
-# SESSION-HANDOVER.md — v0.15.0 Floor: P125 CLOSING (verdict pending), 12/15
-(80% — STATE counter optimistic, NOT verifier-confirmed), next close-out = P125 verdict
-then P126 — 2026-07-19
+# SESSION-HANDOVER.md — v0.15.0 Floor: P125 CLOSED GREEN, 12/15
+(80% — verifier-confirmed), next = P126 — 2026-07-19
 
 **VERIFY LIVE BEFORE ACTING — every number below was LIVE-VERIFIED by workhorse seat
-#64 (this writer) immediately before this write, but concurrent pushes drift state.
+#65 (this writer) immediately before this write, but concurrent pushes drift state.
 Re-run the ground-truth block in §1 yourself before doing anything else.**
 
-Written by **workhorse seat #64** (L0 ROUTER), relieving to successor **seat #65**
+Written by **workhorse seat #65** (L0 ROUTER), relieving to successor **seat #66**
 (fresh L0 ROUTER — `.planning/ORCHESTRATION.md` § "L0 is a ROUTER"). This file
-**REPLACES** the prior `#63→#64` handover in place (last reachable at commit
-`3bb3d39a`) — that handover's runbook (dispatch C2 for P124 close, watch P124, hold the
-E1 owner-gate) is fully executed and DONE; do not re-run it. Milestone **v0.15.0
-"Floor"**. Router ROUTES ONLY — delegate reads through a reader-digester, own the
-CI-watch loop yourself (§1 liveness doctrine below), cap subagent reports at ≤400 words.
+**REPLACES** the prior `#64→#65` handover in place (last reachable at commit
+`043447c3`) — that handover's runbook (watch P125-close CI, rotate a fresh C2 off
+`RELIEF-HANDOVER-C2-wave-1.md`, drive verdict→close→P126) is fully executed and DONE;
+do not re-run it. Milestone **v0.15.0 "Floor"**. Router ROUTES ONLY — delegate reads
+through a reader-digester, own the CI-watch loop yourself (§1 liveness doctrine below),
+cap subagent reports at ≤400 words.
 
 **Read order:** this file → §1 ground truth (verify live) → §2 milestone/phase state →
-§3 owner directive status (this rotation's headline) → §4 critical infra finding (file
-for owner ruling) → §5 mid-execution decisions + noticed-not-filed → §6 RAISE-LIST +
-HOLDS → Runbook (start at step 1).
+§3 owner/manager status (this rotation's headline — the recurring CI flake + the manager
+directive) → §4 infra findings (file for owner ruling, do NOT self-resolve) → §5
+mid-execution decisions + noticed-not-filed → §6 RAISE-LIST + HOLDS → Runbook (start at
+step 1).
 
 ## 1. Ground truth (git/CI) — verified live, re-verify before acting
 
@@ -25,258 +26,219 @@ HOLDS → Runbook (start at step 1).
 ```
 git fetch origin main
 git rev-parse HEAD origin/main && git status --porcelain
-gh run list --branch main --workflow ci.yml --limit 3 --json databaseId,status,conclusion,headSha
+gh run list --branch main --workflow ci.yml --limit 4 --json databaseId,status,conclusion,headSha
 ```
 
-**Live-verified by #64 at 2026-07-19T04:02Z:**
+**Live-verified by #65 at 2026-07-19T05:21Z:**
 
-- `origin/main` = `HEAD` = `6472f020` (`6472f0204da6fb3c8a30a099cd2213984bfeb8ad`), tree
-  clean (`git status --porcelain` empty), 0 unpushed. Pushed this rotation: `cb4c2b3d`
-  (roadmap three-block view + fix-twice doctrine supersede, owner quick) then `6472f020`
-  (prior-C2 relief handover, `RELIEF-HANDOVER-C2-wave-1.md`).
-- `git log --oneline -10` (newest first): `6472f020` docs(v0.15.0): C2 relief handover @
-  P125 close-drive boundary / `cb4c2b3d` docs(roadmap): sequenced three-block view
-  (Landed/In-flight/Up-next) + fix-twice no-phase-numbers supersede [owner quick] /
-  `1b660472` docs(125): close-bookkeeping — STATE/ROADMAP 12/15 (80%), DRAIN-02+DRAIN-12
-  complete, roadmap-strip refresh + 2 SURPRISES-INTAKE rows / `8604f087` docs(125-03):
-  complete mirror-refresh pre-step plan (SC1/DRAIN-02 + PART 2 SC3/DRAIN-12) /
-  `0808d48f` docs(125): make attach-tree recovery remote-explicit in v0.14.0 blockquote
-  (SC3/DRAIN-12) / `cdaee30a` docs(125-03): document refresh-tokenworld-mirror pre-step
-  / `28a8646b` docs(planning): refresh manager handover — rotation #13→#14 / `d219ef51`
-  docs(125-02): SUMMARY for litmus self-heal / `35c41ac1` docs(125-02): document
-  DRAIN-02 run-twice + backend-drift manual verification / `3864e1a6` feat(125-02):
-  litmus self-heals backend drift + mirror drift before marker edit.
-- **CI (`gh run list --branch main --workflow ci.yml --limit 5`, re-checked at
-  04:02Z):**
+- `origin/main` = `HEAD` = `d2d1786b` (`d2d1786b9c92c3ff510e7340d4049dc7a61625d4`), tree
+  clean (`git status --porcelain` empty), 0 unpushed.
+- `git log --oneline -8` (newest first): `d2d1786b` docs(planning): #65 C2 relief —
+  wave-1→wave-2 @ P125 closed GREEN / P126-not-started boundary / `4cc9836a`
+  docs(roadmap): scope capability-map "no phase numbers/dates" line to the mermaid map
+  (P125 raise #1 eager-fix) / `21b89fe3` docs(125): close GREEN — verifier VERDICT
+  confirmed (12/15, 80%), roadmap strip P125→Landed, +3 verifier-NOTICED intake rows /
+  `55d66378` docs(125): verifier VERDICT — P125 GREEN (SC1/SC2/SC3 verified against
+  committed artifacts) / `043447c3` docs(planning): #64→#65 relief — P125 CLOSING
+  (verdict pending) / `6472f020` docs(v0.15.0): C2 relief handover @ P125 close-drive
+  boundary / `cb4c2b3d` docs(roadmap): sequenced three-block view + fix-twice
+  no-phase-numbers supersede / `1b660472` docs(125): close-bookkeeping — STATE/ROADMAP
+  12/15 (80%), DRAIN-02+DRAIN-12 complete.
+- **CI (`gh run list --branch main --workflow ci.yml --limit 4`, re-checked at
+  05:21Z) — ALL FOUR most-recent pushes GREEN:**
 
   | run id | headSha | status | conclusion |
   |---|---|---|---|
-  | `29672608656` | `6472f020` (current HEAD) | **`in_progress`** (NOT queued anymore — advanced since handoff instructions were drafted) | — |
-  | `29671820890` | `1b66047` | completed | **success** (after ONE re-run of the pre-pr timeout flake) |
-  | `29671165231` | `28a8646b` | completed | cancelled (superseded by the next push, expected/benign) |
-  | `29667972559` | `c267f0e8` | completed | success |
-  | `29667079687` | `d3d8052f` | completed | success (this is the run that flaked once and was rerun) |
+  | `29674505740` | `d2d1786b` (current HEAD) | completed | **success** |
+  | `29674209349` | `4cc9836a` | completed | **success** (after ONE `--failed` re-run of the known `test_freshness_synth.py` flake — see §3) |
+  | `29673847760` | `21b89fe3` | completed | success |
+  | `29672909419` | `043447c3` | completed | success |
 
-  **IN-FLIGHT CI #65 MUST WATCH FIRST: run `29672608656` on `6472f020` (CI / ci.yml) —
-  was `in_progress` as of 04:02Z, not yet concluded.** Do not assume green; watch it to
-  a definitive conclusion.
-- **Pre-pr timeout flake — TWICE today already** (`d3d8052f`, `1b66047`): the `quality
-  gates (pre-pr)` job hits its 15-min timeout while EVERY other job is green. Recovery =
-  `gh run rerun <id> --failed` then re-watch (both prior instances cleared on one
-  re-run). If `29672608656` flakes the same way, re-run it. **If it times out a THIRD
-  time today, it graduates from flake to confirmed CI-budget blocker → escalate to
-  owner/fable** (the pre-pr wrapper likely needs its timeout raised or its runtime cut;
-  ties to the RAISE-LIST runtime-creep item in §6).
+  **No in-flight CI. No active children. Main is GREEN at HEAD.**
 - **L0-owns-watch, and watch for the true conclusion, not just exit code:** background
   `gh run watch <id> --exit-status` AND separately verify via `gh run view <id> --json
-  conclusion` — exit 0 from `gh run watch` can mask a `cancelled` run; the pre-pr wrapper
-  masked exactly this pattern once already this milestone. Never relay "green" upward
-  without reading the actual `conclusion` field.
+  conclusion` — exit 0 from `gh run watch` can mask a `cancelled` run. Seat #65 held this
+  watch across all four push→CI boundaries this rotation (`043447c3`, `21b89fe3`,
+  `4cc9836a`, `d2d1786b`) — all four resolved GREEN, one (`4cc9836a`) via the manager's
+  documented flake-rerun call (§3). The liveness loop (C2 stops at push→CI boundary, L0
+  holds watch, L0→C2 SendMessage on green) worked end-to-end this rotation.
 
 ## 2. Milestone/phase state
 
-- `STATE.md` frontmatter reads `completed_phases: 12` / `percent: 80`, but **P125 is
-  CLOSING, NOT CLOSED** — `last_activity` says so honestly: "P125 CLOSING (Real-backend
-  cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) — phase-close
-  bookkeeping + push lane... Verifier NOT yet dispatched (runs after this phase-close
-  push per cadence — CLOSING, not verdict-GREEN)."
-- **P125 code: executed + pushed (3 plans across 2 waves, TDD RED→GREEN), all 3 SCs
-  delivered, CI green on `1b66047` (after the pre-pr re-run).** `OPEN OP-7 GAP:` no
-  independent gsd-verifier VERDICT exists yet — confirmed live, `quality/reports/
-  verdicts/p125/` **does not exist** (`ls quality/reports/verdicts/` shows dirs through
-  `p124` only, plus milestone/session-end/pre-push/post-push/weekly/post-release/`all`
-  dirs — no `p125`). This is the exact P124 gap recurring one phase later.
-- **P125 is NOT truly closed until:**
-  (a) a fresh independent gsd-verifier grades the 3 SCs GREEN against reality →
-      `VERDICT.md` at `quality/reports/verdicts/p125/`;
-  (b) main's newest `ci.yml` run is green (see §1 — currently in-flight, unresolved);
-  (c) post-push cadence `python3 quality/runners/run.py --cadence post-push --persist`
-      (the `code/ci-green-on-main` P0 probe) passes.
-  Verdict RED → revert `STATE.md` from 12 back to 11, reopen P125.
-- **P125's 3 SCs, for the verifier to grade against reality:**
-  - **SC1 (DRAIN-02):** a mandatory mirror-refresh pre-step
-    (`scripts/refresh-tokenworld-mirror.sh`) is documented for the
-    `pre-release-real-backend` cadence, so a second-run vision-litmus does not
-    false-negative on its own prior push re-staling the GitHub mirror.
-  - **SC2 (DRAIN-12):** the milestone-close vision-litmus fixture self-heals for BOTH
-    backend drift (trashed protected pages) AND GitHub mirror drift, reconciling the
-    mirror to backend-current through the reposix bus remote before the marker push.
-  - **SC3 (DRAIN-12):** the helper's `git pull --rebase` teaching string is corrected
-    for the mirror-drift case, and the v0.14.0 attach-tree recovery blockquote in
-    `docs/guides/troubleshooting.md` is made remote-explicit.
+- `STATE.md` frontmatter reads `completed_phases: 12` / `percent: 80` — **this is now
+  verifier-confirmed, not optimistic.** `last_activity`: "P125 CLOSED GREEN ...
+  gsd-verifier verdict GREEN on all 3 SCs (`quality/reports/verdicts/p125/VERDICT.md`,
+  verdict commit `55d66378`) — the 12/15 count is now verifier-confirmed, not
+  optimistic. 12/15 v0.15.0 'Floor' phases complete (P114–P125); next = P126."
+- **P125 (Real-backend cadence & mirror-drift resilience, v0.15.0 DRAIN-02/DRAIN-12) is
+  FULLY CLOSED.** Confirmed live: `quality/reports/verdicts/p125/VERDICT.md` exists
+  (12551 bytes, committed `55d66378`), independent gsd-verifier graded GREEN on all 3
+  SCs against committed artifacts (SC1 mirror-refresh pre-step doc/DRAIN-02, SC2 litmus
+  self-heal for backend+mirror drift/DRAIN-12, SC3 helper teaching-string + v0.14.0
+  blockquote remote-explicit reword/DRAIN-12). Close bookkeeping landed `21b89fe3`
+  (STATE/ROADMAP advance to 12/15, roadmap-strip refresh, +3 verifier-NOTICED intake
+  rows filed). **RAISE #1** from the verifier (a cold-reader tension in the roadmap's
+  "no phase numbers/dates" capability-map line) was eager-fixed same-rotation at
+  `4cc9836a` (`/gsd-quick`, <1h, no new dependency — correct per OP-8).
+- **The follow-on-milestone roadmap arc is CONFIRMED COMPLETE** (was an open item in the
+  #64→#65 handover; landed as part of `cb4c2b3d`, live-verified this rotation): `docs/
+  roadmap.md`'s "Up next, in order" block now lists P126→P127→P128 followed by the full
+  Arc D follow-on arc (v0.17 meta-milestone → v0.19 truth-purge/IA rebuild → v0.21
+  benchmark-honesty → v0.23 journey slices → v0.25 launch kit), sourced correctly against
+  `.planning/PROJECT.md` § Arc D. No further action needed here.
+- **Next = P126** (Docs-alignment tooling polish, DRAIN-15..21). Remaining v0.15.0 arc:
+  **P126 → P127 → P128 → milestone-close** (OP-8 +2-phase absorption: P127 drains
+  `SURPRISES-INTAKE.md`, P128 drains `GOOD-TO-HAVES.md` + does OP-9 retrospective
+  distillation + the 9th `pre-release-real-backend` probe before archive).
 
-## 3. Owner directive status (this rotation's headline — 3 owner messages, all addressed)
+## 3. Owner/manager status (this rotation's headline)
 
-- **Sequenced three-block roadmap.md — LANDED + PUSHED (`cb4c2b3d`).** Owner reshaped
-  the thin "Progress right now" strip into three blocks: `Landed recently` (last ~5
-  closed = P120–P124, each with close date + one-line plain-language outcome) /
-  `In flight now` (P125) / `Up next, in order` (P126–P128). Phase numbers are now
-  ALLOWED as sequence markers (this REVERSES the old "no phase numbers" hard
-  constraint); dates appear ONLY on the `Landed recently` side; the binding-free HARD
-  constraint (no `doc-alignment.json` row may cite any of the three blocks' moving
-  lines) is unchanged. The fix-twice doctrine supersede is committed in
-  `.planning/CLAUDE.md` § "Phase-close refreshes the public roadmap strip" (verified
-  live — the section now documents the three-block shape, the phase numbers reversal,
-  the dates-only-on-Landed rule, and files `GTH-V15-89` as the deferred machine gate).
-  **The content is CORRECT — do NOT "correct" `Landed recently` to P114–P124; that was
-  seat #64's own error in a mid-incident message this rotation. P120–P124 (last ~5)
-  matches the owner's actual spec.**
-  - **MINOR OPEN GAP:** `Up next, in order` currently lists only P126–P128; the owner
-    also asked for "the follow-on MILESTONE arc(s)" beyond milestone close. `.planning/
-    CLAUDE.md` already documents this requirement ("`Up next, in order` continues past
-    the current milestone's remaining phases into the follow-on milestone arc(s),
-    sourced from `.planning/PROJECT.md` / `.planning/STATE.md`") but the actual
-    roadmap.md content has not yet been extended with that arc — add it, sourced from
-    `.planning/PROJECT.md`/`STATE.md`, folding into P125-close bookkeeping or P126.
-    Non-blocking, but open.
-  - Owner reads roadmap.md locally; it is now also on `origin/main`, and the push
-    touched `docs/**` so the Docs deploy workflow will pick up the three-block view (see
-    §3's docs.yml note below for a KNOWN deploy-gap risk on that path).
-- **Two filed follow-ons (owner de-urgentized both — route, don't drop):**
-  - **(A) `docs.yml` deploy-gap BUG:** make the deploy decision diff the candidate sha
-    against the LAST SUCCESSFULLY DEPLOYED sha (not just the triggering push range), or
-    an equivalent fallback. Evidence: the strip push `d3d8052f`'s Docs run `29667633692`
-    concluded `skipped` (stranded — the intended content never deployed off that push);
-    the owner's manual dispatch `29670460876` = success and recovered it. Fix-twice into
-    doctrine when this lands.
-  - **(B) `docs/development/roadmap.md` is a LYING stale duplicate** — claims v0.11.0
-    active, is nav-excluded but still deployed and reachable. Delete it and redirect to
-    `roadmap.md`.
-  - Route (A)+(B) into P126 or a `/gsd-quick`; docs-build + banned-words gates apply to
-    whichever lands them (see root CLAUDE.md "Fix-twice (P117 W3)" — both catalogs, not
-    just one).
+- **The MANAGER is actively co-watching CI this rotation** — not a passive audience.
+  When `4cc9836a`'s CI run (`29674209349`) went RED, the manager judged it against the
+  known-flake pattern (identical CI GREEN on `21b89fe3` only ~15 minutes earlier with the
+  only diff being roadmap wording — not a plausible real regression), issued `gh run
+  rerun 29674209349 --failed`, and the rerun resolved GREEN. **Do NOT double-rerun
+  `29674209349` — it is already resolved GREEN, this is historical record only.**
+- **Recurring flake, now on its 3rd recurrence this milestone:**
+  `test_freshness_synth.py`'s stale-P2 HERMETIC flake (PR#77 family — the test makes live
+  `crates.io` network probes and leaks a "verifier not found at None" state on network
+  variance). Manager DIRECTIVE (authoritative, verbatim intent, recurrence #3):
+  **promote the hermetic-test debt into a near-term ACTIVE fix lane** — this has now
+  cost three separate CI reruns across the milestone and is a debt item, not
+  noise-to-tolerate-forever.
+  - **Standing rule for #66 (until the fix lands):** on a fresh main push, if CI goes RED
+    specifically matching this known flake signature (freshness-synth-only failure,
+    everything else green, no code diff that plausibly explains it) → `gh run rerun
+    <id> --failed` ONCE and re-watch. If the RERUN is ALSO red → treat as a REAL
+    regression, stop, investigate — do not keep re-running past one retry.
+  - Seat #65 could NOT find a canonical filed tracking row for this specific hermeticity
+    debt during this rotation's search (checked `GOOD-TO-HAVES.md` +
+    `good-to-haves/part-*.md` + `SURPRISES-INTAKE.md`); the closest adjacent rows are
+    `GTH-V15-55` (a different cdn-smell item) and `good-to-haves/part-06.md` (an adjacent
+    None-leakage symptom, not this exact test). **#66's C2 charter (Runbook step 2) MUST
+    locate-or-file this as a first-class near-term lane** per the manager's directive —
+    do not let it recur a 4th time unaddressed.
 
-## 4. CRITICAL INFRA FINDING — file for owner ruling
+## 4. Infra findings (two, file for owner ruling — do NOT self-resolve)
 
-**SendMessage is DISABLED at the C2 (phase-coordinator) tier** — observed directly this
-rotation as "not enabled in this context": a C2 CANNOT SendMessage/halt/resume its own
-background children. Consequence: `ORCHESTRATION.md` §3's "background the CI watch, L0
-relays the run id up and SendMessages the coordinator to resume" pattern (line ~150,
-"...the parent relays the run id up to L0 (which holds the durable CI watch) and
-SendMessages the coordinator to resume the phase close on green") **does NOT work when
-the coordinator being resumed is itself a C2** — a C2 cannot be the target of a resume
-by SendMessage from within its own backgrounded-child relationship, and it cannot issue
-SendMessage to its own children either, in this session's tooling context. This was the
-proximate cause of an earlier single-writer discipline lapse (a C2 could not halt a
-concurrently-running child it had backgrounded).
-
-**Working mitigation (confirmed):** L0→C2 SendMessage DOES work — the old C2 received
-every L0-issued directive without issue. The failure is specifically C2→child (and
-child→C2 resume-via-id), not L0→C2.
-
-**Standing-doctrine consequence for #65:** coordinators at the C2 tier and below must
-serialize strictly and drive every phase close via **FRESH verifier→executor LEAVES**
-(the P122-blessed deterministic pattern already documented at `.planning/
-ORCHESTRATION.md` §11, "to drive a phase close, dispatch the verifier→executor LEAVES
-directly... NEVER `fork` a coordinator to resume/close it") — never rely on
-backgrounding a child and resuming it later via SendMessage at the C2 tier.
-
-**Owner question to surface, do not self-resolve:** is this a *permanent* tier
-limitation on SendMessage (in which case `ORCHESTRATION.md` §3/§11 need a doctrine
-caveat added permanently), or a session/config gap specific to this rotation's tooling
-context? Any successor C2 charter dispatched by #65 MUST embed this caveat verbatim
-until the owner rules.
+1. **SendMessage is DISABLED at the C2 (phase-coordinator) tier and below** — a C2
+   cannot SendMessage/halt/resume its own background children, and a child cannot
+   resume-by-id back to its parent C2 either. **L0→C2 SendMessage DOES work** — confirmed
+   directly this rotation: seat #65 (L0) resumed the wave-1 C2 by session id twice,
+   successfully, across this rotation's push→CI boundaries. The failure is specifically
+   C2→child and child→C2, not L0→C2.
+   - **This is now the 2nd independent re-discovery** of the same finding (first surfaced
+     in the #64→#65 handover's §4, re-confirmed live by #65 this rotation). It remains
+     **UNFORMALIZED in durable doctrine** — grep-empty in `.planning/STATE.md` and
+     `.planning/CONSULT-DECISIONS.md`; `.planning/ORCHESTRATION.md` mentions
+     `SendMessage` generically (background-watch-and-resume pattern, §3/§11) but carries
+     NO tier-limitation caveat.
+   - **Open owner question, unresolved:** is this a PERMANENT tier limitation on
+     SendMessage (in which case `ORCHESTRATION.md` §3/§11 need a permanent doctrine
+     caveat) or a session/config gap specific to this rotation's tooling context? **Seat
+     #65 surfaced this question to the manager this rotation; a ruling is still
+     PENDING as of this handover.** #66 should chase the ruling at the next natural
+     check-in, and — until ruled — file a `.planning/CONSULT-DECISIONS.md` ledger entry
+     recording the finding + pending-ruling status, so a 3rd independent re-discovery
+     doesn't happen on a future rotation.
+2. **Consequence (working mitigation, apply until ruled):** coordinators at the C2 tier
+   and below MUST serialize strictly and drive every phase close via **FRESH
+   verifier→executor LEAVES** (the P122-blessed deterministic pattern at
+   `.planning/ORCHESTRATION.md` §11 — "dispatch the verifier→executor LEAVES directly...
+   NEVER `fork` a coordinator to resume/close it") — never fork-to-resume, never
+   background-and-resume a child at the C2 tier. This caveat must be embedded VERBATIM in
+   every C2/C1 charter #66 dispatches until the owner rules.
 
 ## 5. Mid-execution decisions + noticed-not-filed
 
-- The prior milestone C2 (session id starting `a75107fb4dd1bd176`) RELIEVED ITSELF at
-  152k+ tokens after self-catching a provenance hallucination (it had fabricated
-  attributing an "items A–E" correction to L0 when no such L0 message existed). Its
-  handover is at `.planning/milestones/v0.15.0-phases/RELIEF-HANDOVER-C2-wave-1.md`,
-  committed at `6472f020` (confirmed live: file exists, 25010 bytes, dated Jul 18
-  20:50). Treat this as the authoritative reading for the C2 lane before dispatching
-  the next C2 — do not re-derive P125 state from scratch.
-- **DP-4 [SELF] decision** by seat #64 (recorded in `.planning/CONSULT-DECISIONS.md`
-  under "2026-07-18 [SELF] roadmap three-block reshape interleaved at the P125 wave
-  boundary" — confirmed present, tail of file): the roadmap quick was interleaved at
-  the P125 wave boundary (NOT "before P125" — P125 was already in flight when this
-  landed; NOT "P125's close lane" — the owner explicitly excluded P125's own close
-  bookkeeping from this quick). Nothing deleted or deferred; fully reversible,
-  local-only until the parent coordinator pushed it. The decision ledger entry is
-  present and complete — no successor action needed here beyond awareness.
-- The P125 code push (`1b660472`) advanced `STATE.md`'s counter to 12/80% BEFORE any
-  verifier ran — the OP-7 anti-pattern recurring. The fix-twice doctrine now encodes
-  this explicitly in `.planning/CLAUDE.md`: "a phase mid-close with its verifier not yet
-  dispatched stays `In flight now` [on the roadmap strip] even if `STATE.md`'s phase
-  counter already optimistically advanced." Good — the doctrine catches the roadmap-strip
-  side of this; it does NOT yet stop `STATE.md`'s own counter from advancing early. That
-  residual (STATE.md counter vs. verdict-gating) is not filed as its own item; #65's
-  successor C2 should consider whether it needs a dedicated GOOD-TO-HAVES row so
-  `STATE.md`'s `completed_phases`/`percent` fields themselves gate on verdict-GREEN, not
-  just the roadmap strip.
+- The wave-1 C2 (from the #64→#65 handover) relieved itself cleanly at ~100k own-context
+  after judging the remaining 4-phase arc (P126→P127→P128→close) would breach the 150k
+  hard stop mid-arc — correct, proactive relief per doctrine, not a forced/incident
+  relief. Its handover is `.planning/milestones/v0.15.0-phases/
+  RELIEF-HANDOVER-C2-wave-2.md`, committed `d2d1786b`, live-confirmed this rotation
+  (21514 bytes, exists). **This is the authoritative C2-lane reading for the fresh C2 —
+  route it through a reader-digester, do not raw-dump into the C2's context.**
+- Seat #65 (L0) owned the durable CI watch for all four push→CI boundaries this rotation
+  (`043447c3`, `21b89fe3`, `4cc9836a`, `d2d1786b`) — all four resolved GREEN (`4cc9836a`
+  required the manager's flake-rerun call, documented in §3). The liveness doctrine
+  (C2 stops at the push→CI boundary rather than self-watching; L0 holds the watch;
+  L0→C2 SendMessage relays the green signal to resume) worked end-to-end this rotation
+  with zero L0-side misses.
+- P125's RAISE #1 (verifier-noticed cold-reader tension) was eager-fixed same-rotation
+  at `4cc9836a` — a clean example of OP-8's "<1h + no new dependency → fix in place"
+  rule being followed correctly, not deferred or silently skipped.
 
-## 6. RAISE-LIST + HOLDS + escalations (carry forward)
+## 6. RAISE-LIST + HOLDS (carry forward from the wave-2 C2 report — route, don't drop)
 
-**RAISE-LIST → routed:**
-- pre-pr CI runtime-creep (now 2 timeouts today — trending real, not noise) →
-  P126/P127 + local pre-push (`L1129`-tagged) 113s drift item.
-- 3 stale persisted-FAILs + shell-coverage P2 counter-drift (confirmed present in
-  `SURPRISES-INTAKE.md`: "shell-coverage FAIL forces `--persist` downgrade-REFUSAL"
-  entry, 2026-07-18, severity MEDIUM) → P127 Slot-1 (CLOSE-INTEGRITY).
-- `verdict.py --phase` bare-session false-RED trap (confirmed present in
-  `SURPRISES-INTAKE.md`, 2026-07-18, severity MEDIUM) → P126 fix-twice.
-- `GTH-V15-89` roadmap-strip machine gate — confirmed present in `GOOD-TO-HAVES.md`
-  ("structure-dimension machine gate that cross-checks the strip against STATE.md") —
-  now additionally cross-checks block-3 (`Up next, in order`) sequencing per the
-  three-block reshape → P128.
-- P124 `DRAIN-13/14/22/23/24` unmarked in `REQUIREMENTS.md` (bookkeeping lying) → P128.
-  Not independently re-verified this rotation; carried forward from the prior handover
-  as-is — #65 should spot-check this claim against `REQUIREMENTS.md` before treating it
-  as settled.
-- tokenworld-mirror doc-truth item — owner-gated, no further action without an owner
-  signal.
+- **P126:** `verdict.py --phase` bare-session false-RED fix-twice (confirmed present in
+  `SURPRISES-INTAKE.md` per prior rotation's live check — carry forward, not
+  re-independently-verified this rotation); `docs.yml` deploy-gap item — **UNVERIFIED
+  this rotation, no committed artifact found on a light search; #66 should verify-or-drop
+  rather than treat it as settled fact**; stale `docs/development/roadmap.md` LYING
+  duplicate — **VERIFIED historically** (5 doc-alignment bindings, stale since
+  2026-07-07, claims v0.11.0 active while nav-excluded but still deployed/reachable) —
+  delete it and redirect to `docs/roadmap.md`.
+- **P127 CLOSE-INTEGRITY (Slot 1, drains `SURPRISES-INTAKE.md`):** `code/shell-coverage`
+  34-vs-27 counter-drift (tracked at `good-to-haves/part-07.md:44` per the wave-2 C2
+  report — spot-check the exact line on pickup, content drifts as the file grows); split
+  `good-to-haves/part-07.md` (referenced as GTH-V15-90 in the incoming facts — confirm
+  the id on pickup, it was not independently re-derived this rotation) + the file-size
+  waiver clock expiring **2026-08-08**; dead `PROTECTED_IDS` cleanup.
+- **P128 (Slot 2, drains `GOOD-TO-HAVES.md` + OP-9 retrospective + milestone close):**
+  `DRAIN-13/14/22/23/24` are **CONFIRMED still unmarked** in `.planning/REQUIREMENTS.md`
+  (live-verified this rotation: lines 179/191/201/247/252 show `- [ ]` unchecked, and the
+  tracking table at lines 333/334/342/343/344 shows all five as `Pending` despite P124
+  having delivered them) — this is real bookkeeping debt, not carried-forward hearsay.
+- **HOLDS (never self-authorize, only route/surface):**
+  - **E1** launch-animation publish (`GTH-V15-37`) — owner-PENDING, do not publish.
+  - Any release action (tag `v*`, crates.io publish) — outward-facing, owner-gated,
+    never self-authorize.
+  - Milestone archive is gated on BOTH the OP-9 retrospective distillation AND the 9th
+    `pre-release-real-backend` probe passing — do not archive v0.15.0 without both.
+  - `L1198` `.env` credential sign-off → routed to P128.
+  - File-size waiver umbrella expires **2026-08-08**.
+  - Hero-number doc-alignment waivers expire **2026-08-15**.
 
-**HOLDS/escalations — NEVER self-authorize, only route/surface:**
-- **E1** launch-animation publish (`GTH-V15-37`) — owner-PENDING; do not publish.
-- Global `gsd-sdk` `state.advance-plan` corruption bug — upstream issue; hand-advance
-  `STATE.md` via `gsd-sdk query state.load` read-path only, never trust
-  `state.advance-plan` to write correctly.
-- File-size waiver umbrella expires **2026-08-08**.
-- `L1198` `.env` credential sign-off → routed to P128.
-- Hero-number doc-alignment waivers expire **2026-08-15**.
-- Any release action (tag `v*`, crates.io publish) is outward-facing → escalate to
-  owner, never self-authorize.
-- Milestone archive is gated on the OP-9 retrospective distillation AND the 9th
-  `pre-release-real-backend` probe — do not archive v0.15.0 without both.
-
-## Runbook (seat #65 — numbered, start at step 1)
+## Runbook (seat #66 — numbered, start at step 1)
 
 1. **Ground-truth re-verify** using the exact block in §1. Confirm `origin/main` =
-   `6472f020` (or a fast-forward ahead of it) and check the live status of CI run
-   `29672608656` — it was `in_progress` (not yet concluded) as of this handover's
-   write time; do not assume it finished green.
-2. **Watch `29672608656` to a definitive conclusion (L0-owns-watch, per §1's liveness
-   doctrine).** Read the true `conclusion` field, not just an exit code. If the
-   pre-pr-gates job times out (matching the pattern in §1) → `gh run rerun 29672608656
-   --failed` then re-watch. If it times out a THIRD consecutive time today → stop and
-   escalate to owner/fable per §1 — do not keep silently re-running past 3.
-3. **Rotate a FRESH `opus` milestone `phase-coordinator` C2**, pointed first at
-   `.planning/milestones/v0.15.0-phases/RELIEF-HANDOVER-C2-wave-1.md` (route the ~25KB
-   read through a reader-digester, not a raw context dump). Its charter must include,
-   verbatim:
-   - the standard ownership charter block (root `CLAUDE.md` § "Ownership charter for
-     dispatched subagents");
-   - the §4 SendMessage-disabled-at-C2-tier caveat from this handover, in full;
-   - the L0-owns-watch liveness doctrine from `.planning/ORCHESTRATION.md` §3.
-   On CI green from step 2, the C2's ordered work is:
-   (a) run the post-push cadence (`python3 quality/runners/run.py --cadence post-push
-       --persist`);
-   (b) dispatch an INDEPENDENT (fresh, not self-graded) gsd-verifier against the 3 SCs
-       in §2 → write `VERDICT.md` at `quality/reports/verdicts/p125/`;
-   (c) close P125 ONLY on verdict-green AND newest-ci-green (RED on either → revert
-       `STATE.md`'s counter from 12 back to 11 and reopen P125 — do not paper over);
-   (d) add the follow-on-milestone arc to roadmap.md's `Up next, in order` block (§3's
-       minor open gap), sourced from `.planning/PROJECT.md`/`STATE.md`;
-   (e) then proceed P126 → P127 → P128 → milestone-close, carrying forward every item in
-       §6's RAISE-LIST as it reaches the phase it was routed to.
+   `d2d1786b` (or a fast-forward ahead of it) and that main's newest `ci.yml` run is
+   GREEN (`success`, not merely `completed`). As of this write there is no in-flight CI
+   and no active children — a clean rotation boundary.
+2. **Dispatch ONE fresh `opus` milestone `phase-coordinator` C2**, pointed at
+   `.planning/milestones/v0.15.0-phases/RELIEF-HANDOVER-C2-wave-2.md` (route the ~21.5KB
+   read through a reader-digester, not a raw context dump). Charter = P126 → P127 → P128
+   → milestone-close. The charter MUST inject VERBATIM (none of these are already inside
+   the wave-2 handover — they post-date it):
+   (a) the standard ownership charter block (root `CLAUDE.md` § "Ownership charter for
+       dispatched subagents");
+   (b) §4's SendMessage-disabled-at-C2-tier caveat, IN FULL, plus §4.2's working
+       mitigation (serialize strictly; fresh verifier→executor LEAVES only; never
+       fork-to-resume);
+   (c) the L0-owns-watch liveness doctrine (`.planning/ORCHESTRATION.md` §3) — the C2
+       stops at every push→CI boundary and returns/SendMessages up rather than
+       self-watching;
+   (d) the **hermetic-fix directive** from §3: locate-or-file the
+       `test_freshness_synth.py` hermeticity debt as a first-class near-term ACTIVE lane
+       (P126 first-class scope, OR a `/gsd-quick` landed before P126 opens — coordinator's
+       call). Acceptance floor: the test passes DETERMINISTICALLY OFFLINE (mock the
+       crates.io probes, resolve the stale-P2 assertion, eliminate the None-verifier
+       leakage), verified with network denied. Fix-twice: tag the hermeticity dimension +
+       update the relevant `CLAUDE.md`;
+   (e) the **SendMessage-formalization task**: file the `.planning/CONSULT-DECISIONS.md`
+       ledger entry per §4.1 (2nd re-discovery this milestone, owner ruling still
+       pending as of this handover).
    First C1 under this C2 = open P126.
-4. **Own the CI-watch loop** for every C1/C2 push #65 routes for the remainder of this
-   rotation (background the watch, read the true `conclusion`, signal the coordinator on
-   green via SendMessage — confirmed L0→C2 direction works even though C2→child does
-   not).
-5. **Surface §4's infra finding and §6's escalations to the owner/manager** at the next
-   natural check-in; never self-resolve an E1/E2/E3/E4-class item.
-6. **REPLACE this handover file in place** (do not append) at your own relief or pause,
-   following the same `.planning/ORCHESTRATION-REFERENCE.md` § "Handover file template
-   (§3 detail)" shape; re-verify every claim live before writing it down, the same way
-   this handover's §1 was re-verified against `gh run view` moments before commit.
+3. **Own the CI-watch loop** for every push→CI boundary the C2 returns at — background
+   `gh run watch <id> --exit-status`, separately confirm via `gh run view <id> --json
+   conclusion` (never trust exit code alone — a cancelled run can exit 0), watching
+   main's NEWEST `ci.yml` run specifically. Apply §3's hermetic-flake rerun rule: ONE
+   `--failed` rerun on a matching-signature RED, escalate if the rerun is also RED.
+4. **Surface §4's infra findings and §6's HOLDS** to the owner/manager at natural
+   check-ins; never self-resolve an E-class item. §4.1's owner question is already
+   surfaced by seat #65 — chase a ruling, do not re-surface it as if new.
+5. **REPLACE this handover file in place** (do not append) at your own relief or pause,
+   following the same `.planning/ORCHESTRATION.md` §3 / `.planning/ORCHESTRATION-
+   REFERENCE.md` § "Handover file template (§3 detail)" shape; re-verify every claim
+   live before writing it down, the same way this handover's §1 was re-verified against
+   `gh run list`/`git rev-parse` moments before commit.
