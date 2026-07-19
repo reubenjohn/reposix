@@ -99,7 +99,53 @@ does reposix work itself. Keep this file lean; git history is the archive.
    gauge-reset after /clear (3 retries) and successor-turn-started after the prompt
    send (4 Enter retries, loud FAILED log line if unsubmitted).
 
-## Live state (refreshed at rotation #12→#13, 2026-07-18 ~01:05 UTC)
+## Live state (refreshed at rotation #13→#14, 2026-07-19 ~03:15 UTC)
+
+- **SUCCESSOR #14 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
+  `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 1800 ""
+  /home/reuben/workspace/reposix`. (2) Re-create the L2 in-session deadman tick
+  (died with #13): cron `11,53 * * * *`, recurring, prompt = "WATCHDOG TICK: if
+  your last turn did not end with a freshly armed unfired manager-poll, triage
+  w1:p5 + origin/CI and re-arm; else one-line ack, stop." (3) Verify L3 alive:
+  `pgrep -f liveness-watchdog.sh`. (4) **OWNER'S TOP OPEN ASK — roadmap
+  transparency (3 escalating raises 2026-07-19):** owner reads docs/roadmap.md
+  LOCALLY and wants an ordered three-block sequence — "Landed recently" (dated,
+  one-line outcomes) / "In flight now" / "Up next, in order" (phase numbers OK
+  as sequence markers; dates only on the DONE side) — refreshed at EVERY phase
+  close. Thin-strip v1 landed (`60c39a57` + doctrine `78bb9e43`); the three-block
+  reshape + do-it-NOW addendum are QUEUED with seat #64 — VERIFY it lands in your
+  first cycle, nudge if not. Also queued there: docs.yml deploy-gap fix
+  (CI-cancelled docs push strands deploys until the next docs-touching push;
+  manual `gh workflow run docs.yml` = recovery, run 29670460876 success) + the
+  LYING stale docs/development/roadmap.md (claims v0.11.0 active; delete+redirect
+  recommended). (5) **Seat #64 mid-leg**: P125 executing (waves 1–2 landed
+  ~02:56 UTC, gauge 16% at last check; relief 18% soft / 22% hard gauge).
+  Rotation flow proven 3x this shift: TRUE-IDLE → verify wrap+handover commit →
+  pane-clear.sh --yes → gauge-reset check → 3-line charter → verify CONSUMED →
+  re-arm. (6) **Owner gates OPEN (non-blocking):** E1 animation publish (owner
+  PENDING, never self-authorize); PR #74 v0.14.1 cut (recommended CUT, awaiting
+  word); 91-file size-waiver umbrella (exp 2026-08-08); gsd-sdk
+  state.advance-plan upstream bug (escalated, held); L1198 .env sign-off.
+
+- **SHIFT #13 SUMMARY (2026-07-18 01:0x → 07-19 03:1x UTC):** Seats #61→#64,
+  3 clean rotations (charter-consumption verified each time).
+  **P121+P122+P123+P124 CLOSED GREEN** (milestone 47%→73%, STATE 11/15); P125
+  executing at handoff. **P124 OP-7 gate catch (manager spot-verify):** phase
+  closed WITHOUT the independent gsd-verifier VERDICT.md and with a RED runner
+  verdict sitting in its dir; intervention → remediation verdict GREEN
+  `c267f0e8` (4/4 SCs; 8/8 FAILs dispositioned pre-existing-baseline). Spot-
+  verify-the-verdict-artifact each close — this is the second ritual miss the
+  spot-check caught. **Owner thread — roadmap transparency**: calibration is
+  "clear sequence, something changes every day"; local file is enough for now
+  (see first actions). **Suspend-gap incident:** machine suspended ~20:35→00:05
+  UTC — polls overran wall caps, L2 ticks queued+delivered late/bundled,
+  workhorse froze mid-close and resumed cleanly on its own; on any post-resume
+  wake run FULL triage (pane + origin + CI) and pgrep the poll before re-arming
+  on a bare tick — an overrun poll is evidence of suspend, not failure.
+  Docs-CI 15m-cap timeout flake (quality-gates job) hit 2x; workhorse cleared
+  both by log-reading + re-push — never code-fix an env flake.
+
+## Prior live state (rotation #12→#13, 2026-07-18 ~01:05 UTC — historical)
 
 - **SUCCESSOR #13 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY:
   `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5 1200 ""
@@ -138,45 +184,8 @@ does reposix work itself. Keep this file lean; git history is the archive.
   empty; L3 watchdog now flags stuck blocks. Owner interactions: merge-PR#77
   directive (executed), watchdog design question (answered + built).
 
-## Prior live state (rotation #11→#12, 2026-07-17 ~02:05 UTC — historical)
-
-- **SUCCESSOR #12 FIRST ACTIONS:** (1) Arm your poll IMMEDIATELY (prior one-shots
-  consumed): `bash ~/.claude/skills/herdr-manager/scripts/manager-poll.sh w1:p5
-  1200 "29542608659" /home/reuben/workspace/reposix` — 1200s cadence while a C1
-  wave is quiet-but-alive (HEARTBEAT wakes are NORMAL under router mode; inspect
-  the subagent line for token movement before suspecting a stall). (2) **#54 is
-  RUNNING under the NEW router mode** (owner directive 2026-07-17, encoded in
-  ORCHESTRATION.md at `10e2d20` + MANAGER-HANDOVER § standing instructions):
-  dormant at a wave boundary while a `phase-coordinator` C1 (+leaves) executes
-  P117 wave 1 at depth 2 (last seen: attach.rs error-UX fixes, ~155k C1 tokens,
-  progressing). (3) A manager nudge is QUEUED with #54: its own gauge hit ~200k
-  absolute (past 150k hard) — it must integrate the C1 report, push, REPLACE
-  handover, and RELIEVE at this wave's landing, no second wave. At its relief:
-  seat #55 with the TERSE router charter (3 lines: seat number + handover
-  pointer + deltas only — long charters are retired). (4) Owner threads: PR #74
-  v0.14.1 cut OWNER-GATED (recommended CUT, still awaiting word); P116 owner
-  veto window open (rulings executed; ADR-010 RBF-LR-04 CLOSED `1ea51b3`).
-  (5) Seat is **Opus 4.8 (1M ctx)** since #46 (flip surfaced to owner; Opus-as-
-  router sanctioned; Fable restore = owner's call, offered, not taken up yet).
-
-- **SHIFT #11 SUMMARY (2026-07-16 17:10 → 07-17 02:05 UTC):** **P114+P115+P116
-  all CLOSED** (milestone 14%): P115 checkpointed GREEN (`ce4d3b7`), human gate
-  closed by the OWNER's 11-command batch (landed `4bb0596`, count 0, STATE
-  advanced `d667eee`); P116 executed under my rulings and CLOSED GREEN 12/12
-  (`5dc334c`; RBF-LR-04 CLOSED). Relay legs #45–#53 all clean: token-economy
-  GENERATOR fix (`19f9ae2`, fix-it-twice on `5a5dd29`), GTH-V15-35 install-IA
-  (`97fad0d`), hero-number bindings minted on all 3 surfaces after my gap
-  finding (`c35f993`/`7553c36`/`aa75e96`; note new-vs-legacy row-id prefix
-  inconsistency → GTH-V15-39), P116 plan+checker+execution (`011096b`/
-  `9dbb860`/`7412833`../`5ee5e25`), .git/config corruption HIGH repaired+filed
-  by #53 (manager spot-verified config sane). PR #75 self-closed by dependabot;
-  **PR #76 squash-MERGED** (`8439085`, green). Survived a ~90min GitHub
-  Actions 503 outage (runs env-failed, diagnosed NOT code-red, re-certified
-  green after recovery — never code-fix an env-fail). Owner interactions:
-  answered docs-badge/roadmap/animation/relay questions with verified facts;
-  handed over the confirm-retire batch; received + encoded the
-  DELEGATION-DEPTH directive (see standing instructions) — legs #46–#52 had
-  drifted to 25–45min depth-0/1; router mode began at #54.
+(Older prior-live-state sections — rotations #11→#12 and earlier — dropped per
+the keep-lean rule; git history is the archive.)
 - **MANAGER FINDING (verified, then fixed by #48): retiring hero rows had NO
   successors on 3 surfaces.** Subagent-mapped + grep-verified: docs/index.md:17
   hero bullet, README.md:27, concepts:29-31 carried the new 94.3%/74.9% figures
