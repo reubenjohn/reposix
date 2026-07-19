@@ -92,9 +92,18 @@ jobs:
     # attach) that had never run in CI before today.
     name: quality gates (pre-pr)
     runs-on: ubuntu-latest
-    # 15 (not the 10-min PROTOCOL budget): margin for a cold rust-cache
-    # first run; warm runs finish well inside 10 (observed 290bb21+b866c90).
-    timeout-minutes: 15
+    # 28 (not the 10-min PROTOCOL budget). REAL driver, confirmed by forensic
+    # trace (2026-07-18/19, #65->#66 relief + GTH filed below): the "Warm
+    # cargo build" step's `cargo build --workspace --bins` is what hits the
+    # wall on a rust-cache MISS -- observed cold 15m51s-20m00s (job killed at
+    # the old 15-min cap, twice). WARM runs (cache hit) finish in ~3-4m
+    # (observed 3m39s on 394ebc3a's 3rd attempt, 4m06s on 592ae4c0). This was
+    # previously misdiagnosed as queue contention; it is a cold-cache timeout
+    # wall. 28 covers a cold miss with headroom -- it is a band-aid, NOT the
+    # fix. The real fix is a better rust-cache hit rate; see the GTH filed in
+    # .planning/milestones/v0.15.0-phases/good-to-haves/ ("Improve CI
+    # rust-cache hit rate...").
+    timeout-minutes: 28
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -135,6 +144,12 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-latest
+    # Explicit cap (else GitHub's 360-min default silently applies -- 2026-07-19
+    # pre-pr timeout forensic audit). Observed 2m28s-2m45s across 3 recent green
+    # runs (29677846998/29676798318/29674505740); 6 is ~2x the high end,
+    # bounded fast-fail on a genuine hang without chasing rust-cache-miss
+    # variance (that's the pre-pr job's problem, tracked via the GTH below).
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -385,6 +400,11 @@ jobs:
     # runs immediately in parallel rather than serializing behind `test`.
     name: shell-coverage
     runs-on: ubuntu-latest
+    # Explicit cap (else GitHub's 360-min default silently applies -- 2026-07-19
+    # pre-pr timeout forensic audit). Observed 1m07s-1m18s across 3 recent
+    # green runs (kcov is built from source every run, no cache -- still
+    # stable); 3 is ~2x the high end, bounded fast-fail on a genuine hang.
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -455,6 +475,12 @@ jobs:
     name: coverage
     runs-on: ubuntu-latest
     needs: [test]
+    # Explicit cap (else GitHub's 360-min default silently applies -- 2026-07-19
+    # pre-pr timeout forensic audit). Observed 2m34s-2m53s across 3 recent green
+    # runs (29677846998/29676798318/29674505740); 6 is ~2x the high end,
+    # bounded fast-fail on a genuine hang without chasing rust-cache-miss
+    # variance (that's the pre-pr job's problem, tracked via the GTH below).
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
