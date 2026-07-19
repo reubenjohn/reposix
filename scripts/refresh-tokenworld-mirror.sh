@@ -63,7 +63,6 @@ set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)"
 SPACE="${REPOSIX_CONFLUENCE_SPACE_OVERRIDE:-REPOSIX}"      # == TokenWorld == space 360450
-PROTECTED_IDS=" 7766017 7798785 "
 MIRROR_URL="${REPOSIX_LITMUS_MIRROR:-git@github.com:reubenjohn/reposix-tokenworld-mirror.git}"
 
 # --- Source .env if creds not already present (mirror preflight pattern) ------
