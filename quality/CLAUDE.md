@@ -364,3 +364,14 @@ doc). Both slash commands are top-level only (depth-2 fan-out unreachable inside
 quality/gates/docs-alignment/walk.sh` (grades against a `/tmp` copy) — never invoke the
 raw `reposix-quality doc-alignment walk` subcommand directly, which mutates the committed
 catalog's coverage/summary counters as a side effect.
+
+**Reading a walk BLOCK (DRAIN-17, P126 W2).** When a walk BLOCKs on per-row states it now
+LEADS with a summary — `docs-alignment BLOCK: N row(s) blocking across M state(s):` then a
+line per distinct blocking `RowState` naming its count + the exact row id(s)
+(`MISSING_TEST x2 -- rows: [id-a, id-b]`), followed by the three-part fix / alternative /
+copy-paste recovery teaching — so the FIRST line names WHICH row-STATE(s) to fix, not just
+an alignment/coverage ratio. The per-row detail lines and any floor-ratio lines still
+follow as context; a floor-ONLY block (no per-row state) prints just its ratio line,
+unchanged. Regression: `quality/gates/docs-alignment/walk-block-summary.selftest.sh`
+(exercises the real binary through `walk.sh`); state summary source is `walk()` /
+`block_state_summary()` in `crates/reposix-quality/src/commands/doc_alignment.rs`.

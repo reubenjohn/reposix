@@ -1073,6 +1073,12 @@ pub(crate) mod verbs {
         })?;
         let mut cat = Catalog::load(catalog)?;
         let mut blocking_lines: Vec<String> = Vec::new();
+        // DRAIN-17: the (state, row-id) pairs that actually block this walk
+        // (no active waiver). The walk leads its output with a summary naming
+        // WHICH row-STATE(s) + row id(s) block -- the first line an operator
+        // reads teaches WHAT to fix, instead of only an alignment/coverage
+        // ratio ("N below floor" said nothing about which row or how to fix).
+        let mut blocking_states: Vec<(RowState, String)> = Vec::new();
         // Waiver-suppressed blocking rows: surfaced loudly on EVERY walk
         // (even a clean exit-0 walk) so a time-boxed waiver is never silent.
         let mut waived_lines: Vec<String> = Vec::new();
@@ -1104,6 +1110,7 @@ pub(crate) mod verbs {
                     now,
                     base,
                     &mut blocking_lines,
+                    &mut blocking_states,
                     &mut waived_lines,
                     &mut waived_count,
                 );
@@ -1281,6 +1288,7 @@ pub(crate) mod verbs {
                     now,
                     base,
                     &mut blocking_lines,
+                    &mut blocking_states,
                     &mut waived_lines,
                     &mut waived_count,
                 );
@@ -1340,6 +1348,13 @@ pub(crate) mod verbs {
         if blocking_lines.is_empty() {
             Ok(0)
         } else {
+            // DRAIN-17: lead with the state summary so the FIRST line an
+            // operator reads names WHICH row-STATE(s) + row id(s) block (and
+            // how to fix each) -- not just an alignment/coverage ratio. The
+            // per-row detail lines and any floor-ratio lines follow as context.
+            for line in block_state_summary(&blocking_states) {
+                eprintln!("{line}");
+            }
             for line in &blocking_lines {
                 eprintln!("{line}");
             }
@@ -1347,11 +1362,74 @@ pub(crate) mod verbs {
         }
     }
 
+    /// Build the operator-facing BLOCK summary (DRAIN-17).
+    ///
+    /// Pre-DRAIN-17 the walk led its output with an alignment/coverage RATIO
+    /// (e.g. `alignment_ratio 0.91 below floor 0.95`) -- which tells a
+    /// developer that *something* is below floor but nothing about WHICH row
+    /// or WHAT to fix. This produces the first line(s) an operator reads: the
+    /// distinct blocking [`RowState`](crate::catalog::RowState)s, their counts,
+    /// and the specific row id(s) in each state, followed by the north-star
+    /// three-part teaching (fix / alternative / copy-paste recovery command).
+    ///
+    /// Returns an empty vec when NO per-row state blocks (a floor-only block
+    /// still prints its own ratio line downstream, unchanged). `blocking_states`
+    /// only ever contains states in [`RowState::blocks_pre_push`], and the
+    /// `BTreeMap` key ordering makes the summary deterministic across runs.
+    fn block_state_summary(blocking_states: &[(RowState, String)]) -> Vec<String> {
+        if blocking_states.is_empty() {
+            return Vec::new();
+        }
+        // Group row ids by state name. BTreeMap keys give a stable, sorted
+        // order (HashMap iteration order is not reproducible), and the per-state
+        // counts always sum to blocking_states.len() -- no state is dropped.
+        let mut by_state: BTreeMap<&'static str, Vec<&str>> = BTreeMap::new();
+        for (state, id) in blocking_states {
+            by_state
+                .entry(state.as_str())
+                .or_default()
+                .push(id.as_str());
+        }
+        let mut lines = Vec::with_capacity(by_state.len() + 4);
+        lines.push(format!(
+            "docs-alignment BLOCK: {} row(s) blocking across {} state(s):",
+            blocking_states.len(),
+            by_state.len(),
+        ));
+        for (state_name, ids) in &by_state {
+            lines.push(format!(
+                "  {} x{} -- rows: [{}]",
+                state_name,
+                ids.len(),
+                ids.join(", "),
+            ));
+        }
+        // North-star three-part teaching (root CLAUDE.md § Error-message
+        // convention): (1) teach the fix, (2) suggest the alternative,
+        // (3) give a copy-paste recovery command.
+        lines.push(
+            "Fix: rebind each row to a test that FAILS when the cited claim drifts (or add the missing test), then re-walk.".to_string(),
+        );
+        lines.push(
+            "Alternative: if a claim is genuinely superseded, propose-retire the row (retirement is human-confirmed).".to_string(),
+        );
+        lines.push(
+            "Recovery: run  /reposix-quality-refresh <doc>  to rebind a doc's rows; or per row:  reposix-quality doc-alignment mark-missing-test --row-id <id> --claim \"<claim>\" --source <file>:<l>-<l>".to_string(),
+        );
+        lines
+    }
+
     /// Route one blocking-state row to either the waived-lines bucket (active
     /// waiver -> loud `WAIVED-<STATE>`, does NOT block) or the blocking-lines
     /// bucket (no waiver -> `base`; expired waiver -> `WAIVER-EXPIRED` +
     /// `base`, blocks again). Shared by the `RETIRE_PROPOSED` early-continue
     /// branch and the main state-machine branch so both honor waivers.
+    ///
+    /// DRAIN-17: whenever the row actually BLOCKS (no active waiver -- the
+    /// `None` and `Expired` arms), its `(state, id)` pair is recorded in
+    /// `blocking_states` so the walk can lead with a summary naming the
+    /// blocking STATE(s) + row id(s). An ACTIVE waiver does NOT block, so it is
+    /// deliberately excluded from `blocking_states`.
     #[allow(clippy::too_many_arguments)]
     fn route_blocking(
         row: &Row,
@@ -1359,11 +1437,15 @@ pub(crate) mod verbs {
         now: chrono::DateTime<chrono::Utc>,
         base: String,
         blocking_lines: &mut Vec<String>,
+        blocking_states: &mut Vec<(RowState, String)>,
         waived_lines: &mut Vec<String>,
         waived_count: &mut u64,
     ) {
         match row.waiver_status(now) {
-            WaiverStatus::None => blocking_lines.push(base),
+            WaiverStatus::None => {
+                blocking_states.push((state, row.id.clone()));
+                blocking_lines.push(base);
+            }
             WaiverStatus::Active => {
                 // Active implies Some(waiver).
                 if let Some(w) = &row.waiver {
@@ -1379,6 +1461,8 @@ pub(crate) mod verbs {
                 }
             }
             WaiverStatus::Expired => {
+                // Expired waiver -> the row blocks again (DRAIN-17: record it).
+                blocking_states.push((state, row.id.clone()));
                 if let Some(w) = &row.waiver {
                     blocking_lines.push(format!(
                         "docs-alignment: WAIVER-EXPIRED row={} state={} until={} tracked_in={} -- {} ({})",
@@ -1527,6 +1611,85 @@ pub(crate) mod verbs {
             }
         }
         Ok(0)
+    }
+
+    #[cfg(test)]
+    mod block_summary_tests {
+        use super::block_state_summary;
+        use crate::catalog::RowState;
+
+        /// DRAIN-17: with a mix of blocking states the summary must name each
+        /// distinct STATE, its count, and the specific row id(s) in it -- so an
+        /// operator reads WHICH state blocks (and which rows), not just a ratio.
+        #[test]
+        fn summary_names_states_counts_and_row_ids() {
+            let blocking = vec![
+                (RowState::MissingTest, "alpha/one".to_string()),
+                (RowState::StaleDocsDrift, "beta/two".to_string()),
+                (RowState::MissingTest, "gamma/three".to_string()),
+            ];
+            let lines = block_state_summary(&blocking);
+            let joined = lines.join("\n");
+
+            // Header names the total and the number of distinct states.
+            assert!(
+                lines[0].contains("BLOCK") && lines[0].contains("3 row(s)"),
+                "header must name the block + row count, got: {}",
+                lines[0]
+            );
+            assert!(lines[0].contains("2 state(s)"), "got: {}", lines[0]);
+
+            // Each distinct blocking STATE is named with its count.
+            assert!(
+                joined.contains("MISSING_TEST x2"),
+                "summary must name MISSING_TEST x2, got:\n{joined}"
+            );
+            assert!(
+                joined.contains("STALE_DOCS_DRIFT x1"),
+                "summary must name STALE_DOCS_DRIFT x1, got:\n{joined}"
+            );
+
+            // The specific row id(s) appear, grouped under their state.
+            assert!(
+                joined.contains("alpha/one"),
+                "missing row id, got:\n{joined}"
+            );
+            assert!(
+                joined.contains("gamma/three"),
+                "missing row id, got:\n{joined}"
+            );
+            assert!(
+                joined.contains("beta/two"),
+                "missing row id, got:\n{joined}"
+            );
+
+            // The summary teaches the fix, an alternative, and a copy-paste
+            // recovery command -- the north-star three-part error-UX contract.
+            assert!(joined.contains("Fix:"), "missing Fix line, got:\n{joined}");
+            assert!(
+                joined.contains("Alternative:"),
+                "missing Alternative line, got:\n{joined}"
+            );
+            assert!(
+                joined.contains("Recovery:")
+                    && joined.contains("reposix-quality doc-alignment mark-missing-test"),
+                "recovery must give a copy-paste command, got:\n{joined}"
+            );
+
+            // It must NOT be a bare ratio -- the pre-DRAIN-17 failure mode.
+            assert!(
+                !lines[0].contains("below floor"),
+                "the summary line must name states, not a ratio, got: {}",
+                lines[0]
+            );
+        }
+
+        /// No per-row blocking states -> empty summary (a floor-only block still
+        /// prints its own ratio line downstream, unchanged).
+        #[test]
+        fn empty_when_no_row_states_block() {
+            assert!(block_state_summary(&[]).is_empty());
+        }
     }
 }
 
