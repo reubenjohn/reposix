@@ -15,9 +15,16 @@
 # caller. Runs with errexit OFF (the transcript lib toggles set +e), so
 # every step checks exit status explicitly and returns 0/1/2.
 
+# shellcheck source=quality/gates/agent-ux/lib/litmus-self-heal.sh
+source "$(dirname "${BASH_SOURCE[0]}")/litmus-self-heal.sh"
+
 _litmus_flow() {
   local run cache tree recon md id target marker cache_bare audit_db
   local pclone rurl summary matched bdel cache_rows core_rows
+
+  # Backend-drift self-heal (DRAIN-12): fixture restore/reparent pre-flight (see helper).
+  _litmus_fixture_preflight
+
   run="$(mktemp -d -t litmus-run.XXXXXX)"; cache="${run}/cache"; tree="${run}/tree"
   export REPOSIX_CACHE_DIR="$cache"
   cache_bare="${cache}/reposix/confluence-${SPACE}.git"
@@ -37,6 +44,9 @@ _litmus_flow() {
   else
     fail "attach did not set expected git config (partialClone='$pclone')"; return 1
   fi
+
+  # Mirror-drift self-heal (DRAIN-02): BUS-remote pages/ overlay before edit; local-tree only.
+  _litmus_mirror_reconcile "$tree" || return 1
 
   # GUARD A: reconciliation must show real overlap, zero backend_deleted —
   # else a push would delete records that DO exist on the backend.
@@ -73,16 +83,12 @@ _litmus_flow() {
   echo "edit target: $target (protected denylist honoured)"
 
   marker="litmus-marker-$(date -u +%s)"
-  # VISIBLE text, never an HTML comment: Confluence's storage sanitizer
-  # strips comments server-side, so a comment-only edit is a content no-op —
-  # the PUT returns 200 WITHOUT minting a new version and the REST confirm
-  # below can never see the marker (observed against real TokenWorld,
-  # transcript 2026-07-04T21-36-37Z). Drop any prior run's marker line first
-  # so the sanctioned page carries at most one marker instead of accumulating.
+  # VISIBLE text, never an HTML comment: Confluence's sanitizer strips comments server-side
+  # (comment-only edit = no-op PUT, no new version, REST confirm can't see it; transcript
+  # 2026-07-04T21-36-37Z). Drop any prior marker line first so at most one accumulates.
   sed -i '/litmus-marker-/d' "$target"
   printf '\n%s\n' "$marker" >> "$target"
-  git -C "$tree" config user.email "litmus@reposix.invalid"
-  git -C "$tree" config user.name "reposix-litmus"
+  # git identity already set on "$tree" by _litmus_mirror_reconcile above (pre-GUARD-A).
   git -C "$tree" add -A && git -C "$tree" commit --quiet -m "litmus edit ${marker}"
   pass "edit + commit succeeded"
 
