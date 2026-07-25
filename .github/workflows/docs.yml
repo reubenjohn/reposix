@@ -59,7 +59,7 @@ jobs:
             echo "No docs/** or mkdocs.yml changes in $SHA -- skipping deploy."
           fi
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: steps.filter.outputs.should_deploy == 'true'
         with:
           python-version: '3.11'
