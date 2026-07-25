@@ -1,0 +1,31 @@
+flowchart TB
+  subgraph User["User space"]
+    A["LLM agent<br/>(Claude Code / shell)"]
+    G["git<br/>(push / pull)"]
+    FC["FUSE mount<br/>/tmp/reposix-mnt/"]
+  end
+  subgraph Reposix["reposix binaries"]
+    RF["reposix-fuse<br/>FUSE daemon"]
+    RR["git-remote-reposix<br/>helper"]
+    RS["reposix-sim<br/>axum server"]
+  end
+  subgraph Kernel["Kernel"]
+    K["VFS + /dev/fuse"]
+  end
+  subgraph Sqlite["SQLite WAL"]
+    DB["issues table<br/>audit_events (append-only)"]
+  end
+  A -->|"cat / sed / grep / ls"| FC
+  A -->|"git commit / push"| G
+  FC <--> K
+  K <--> RF
+  G -->|"stdin/stdout protocol"| RR
+  RF -->|"HTTP / allowlist"| RS
+  RR -->|"HTTP / allowlist"| RS
+  RS --> DB
+  style A fill:#6a1b9a,stroke:#fff,color:#fff
+  style FC fill:#00897b,stroke:#fff,color:#fff
+  style RF fill:#00897b,stroke:#fff,color:#fff
+  style RR fill:#00897b,stroke:#fff,color:#fff
+  style RS fill:#00897b,stroke:#fff,color:#fff
+  style DB fill:#ef6c00,stroke:#fff,color:#fff

@@ -1,0 +1,3190 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Edit issues as files. git push to sync. Zero MCP schema tokens.">
+      
+      
+      
+        <link rel="canonical" href="https://reubenjohn.github.io/reposix/decisions/010-l2-l3-cache-coherence/">
+      
+      
+        <link rel="prev" href="../009-stability-commitment/">
+      
+      
+        <link rel="next" href="../../research/initial-report/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>ADR-010 L2/L3 cache coherence - reposix</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-010-l2l3-cache-coherence-and-sotpartialfail-recovery" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="reposix" class="md-header__button md-logo" aria-label="reposix" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            reposix
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR-010 L2/L3 cache coherence
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/reubenjohn/reposix" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    reubenjohn/reposix
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="reposix" class="md-nav__button md-logo" aria-label="reposix" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    reposix
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/reubenjohn/reposix" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    reubenjohn/reposix
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/mental-model-in-60-seconds/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mental model in 60 seconds
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/reposix-vs-mcp-and-sdks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reposix vs MCP and SDKs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/dvcs-topology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DVCS topology — three roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First run (5 min)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How it works
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How it works
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-it-works/filesystem-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The filesystem layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-it-works/git-layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The git layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-it-works/time-travel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time travel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-it-works/trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/write-your-own-connector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Write your own connector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/integrate-with-your-agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrate with your agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/dvcs-mirror-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DVCS mirror setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/error-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/exit-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/simulator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/testing-targets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing targets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/jira/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JIRA backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/confluence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Confluence backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Benchmarks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/latency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Latency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/token-economy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Token economy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../001-github-state-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-001 GitHub state mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../002-confluence-page-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-002 Confluence page mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../003-nested-mount-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-003 Nested mount layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../005-jira-issue-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-005 JIRA issue mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../007-time-travel-via-git-tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-007 Time-travel via git tags
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../008-helper-backend-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-008 Helper backend dispatch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../009-stability-commitment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-009 Stability commitment (v1.0)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-010 L2/L3 cache coherence
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-010 L2/L3 cache coherence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-confirmed-defect-d-p92-03-a-broken-treeoid_map-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The confirmed defect (D-P92-03) — a broken tree↔oid_map invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-second-defect-refresh_for_mirror_head-and-the-l1-no-op-rbf-lr-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The second defect — refresh_for_mirror_head and the L1 "no-op" (RBF-LR-02)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-re-fetch-on-cache-miss-the-l2-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A — re-fetch on cache miss (the "L2" strategy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-transactional-cache-writes-the-l3-strategy-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B — transactional cache writes (the "L3" strategy) — recommended
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-hybrid-b-primary-a-bounded-reconcile-escape-hatch-recommended-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C — hybrid (B primary + a bounded reconcile escape hatch) — recommended shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sub-decision-simbackend-second-resolution-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-decision — sim/backend second-resolution precision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversibility-blast-radius-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversibility / blast-radius assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-fix-wave-must-implement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the fix wave must implement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-tests-gate-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which tests gate it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neutral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neutral
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Initial report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_2" id="__nav_10_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Initial report — chapters
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Initial report — chapters
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/fuse-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FUSE architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/git-remote-helper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git remote helper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/rest-to-posix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST-to-POSIX
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/jira-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jira workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/confluence-drafts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Confluence drafts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/conflict-resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conflict resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/governance-rbac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance + RBAC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/initial-report/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/agentic-engineering-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic engineering reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-confirmed-defect-d-p92-03-a-broken-treeoid_map-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The confirmed defect (D-P92-03) — a broken tree↔oid_map invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-second-defect-refresh_for_mirror_head-and-the-l1-no-op-rbf-lr-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The second defect — refresh_for_mirror_head and the L1 "no-op" (RBF-LR-02)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-re-fetch-on-cache-miss-the-l2-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A — re-fetch on cache miss (the "L2" strategy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-transactional-cache-writes-the-l3-strategy-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B — transactional cache writes (the "L3" strategy) — recommended
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-hybrid-b-primary-a-bounded-reconcile-escape-hatch-recommended-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option C — hybrid (B primary + a bounded reconcile escape hatch) — recommended shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sub-decision-simbackend-second-resolution-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-decision — sim/backend second-resolution precision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reversibility-blast-radius-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reversibility / blast-radius assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-the-fix-wave-must-implement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the fix wave must implement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-tests-gate-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which tests gate it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neutral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neutral
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="adr-010-l2l3-cache-coherence-and-sotpartialfail-recovery">ADR-010 — L2/L3 cache coherence and <code>SotPartialFail</code> recovery<a class="headerlink" href="#adr-010-l2l3-cache-coherence-and-sotpartialfail-recovery" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Status</strong></td>
+<td><strong>ACCEPTED</strong></td>
+</tr>
+<tr>
+<td><strong>Ratified</strong></td>
+<td>2026-07-05 by the P93 coordinator — reversibility verdict is NOT an irreversible fork (reversible internal cache-strategy behind <code>Cache::sync</code>; no wire/ref/<code>Tainted</code>/audit/latency contract change), so no E2 escalation.</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>2026-07-05</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>v0.13.0 P93 (RBF-LR-01 / RBF-LR-02 / RBF-LR-03; closes D-P92-03)</td>
+</tr>
+<tr>
+<td><strong>Supersedes / amends</strong></td>
+<td>none — operates <em>within</em> the ratified partial-clone + lazy-materialization architecture (P78–P88)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<h3 id="the-confirmed-defect-d-p92-03-a-broken-treeoid_map-invariant">The confirmed defect (D-P92-03) — a broken tree↔<code>oid_map</code> invariant<a class="headerlink" href="#the-confirmed-defect-d-p92-03-a-broken-treeoid_map-invariant" title="Permanent link">&para;</a></h3>
+<p>A second writer's <code>git pull --rebase</code> after a two-writer conflict dies with
+<code>fatal: git upload-pack: not our ref &lt;oid&gt;</code> / <code>could not fetch &lt;oid&gt; from
+promisor remote</code> <strong>whenever the conflicting write lands in the same wall-clock
+second as the puller's cache cursor</strong>. This is reproduced, deterministic, and
+NOT environmental: 4/4 same-second runs fail, and the 2-second-gap negative
+control is clean (executed transcripts + root cause:
+<code>.planning/milestones/v0.13.0-phases/93-cache-coherence/93-DP2-REPRO-NOTES.md</code>;
+repro commit <code>9c46e49</code>).</p>
+<p>The failure is two coupled defects — a <em>trigger</em> and a latent <em>amplifier</em>:</p>
+<ul>
+<li>
+<p><strong>Trigger — the sim (and every real backend) drops same-second writes from
+  the delta query.</strong> <code>crates/reposix-sim/src/routes/issues.rs:138-139</code> stamps
+  <code>updated_at</code> at <strong>seconds</strong> precision (<code>SecondsFormat::Secs</code>); the <code>since</code>
+  filter (<code>issues.rs:179-184</code>) truncates the cursor to seconds too and compares
+  with a <strong>strict</strong> <code>updated_at &gt; ?2</code>. Any write whose truncated second is <code>&lt;=</code>
+  the cursor's truncated second is invisible to <code>list_changed_since</code>, even
+  though <code>list_records</code> (unfiltered) still returns its new content. <strong>This is
+  not a sim artifact</strong> — Confluence, JIRA, and GitHub <code>updated_at</code> are all
+  second-resolution too, so any real backend re-creates the trigger under clock
+  skew or a tight write/fetch race.</p>
+</li>
+<li>
+<p><strong>Amplifier — the actual defect — <code>Cache::sync</code> builds a tree entry it cannot
+  serve.</strong> <code>crates/reposix-cache/src/builder.rs::sync()</code> sources the git <strong>tree</strong>
+  from <code>list_records</code> — the FULL current backend state (Step 4,
+  <code>builder.rs:293-328</code>) — so a changed record's tree entry is <em>always</em> its
+  current-content OID, reflecting the write regardless of the delta query. But
+  blob materialization + <code>oid_map</code> population (Steps 3 &amp; 5,
+  <code>builder.rs:265-291</code>, <code>builder.rs:373-406</code>) cover only the
+  <code>list_changed_since</code> <strong>delta</strong>. When the trigger makes those two sources
+  disagree, the HEAD tree references an OID for which the object store has no
+  blob and <code>oid_map</code> has no row — a <strong>dangling tree entry</strong>.</p>
+</li>
+</ul>
+<p>On the puller's lazy fetch, that OID reaches <code>Cache::read_blob</code>
+  (<code>builder.rs:450-458</code>) → <code>oid_map</code> miss → <code>Error::UnknownOid</code>. The helper
+  (<code>crates/reposix-remote/src/stateless_connect.rs:369-385</code>) treats
+  <code>UnknownOid</code> as non-fatal and leaves the <code>want</code> for <code>git upload-pack</code>, which
+  rejects it: <code>not our ref &lt;oid&gt;</code>.</p>
+<p><strong>The violated invariant:</strong> <em>every blob OID the HEAD tree references must be
+resolvable by <code>read_blob</code>.</em> The tree is derived from a broader source
+(<code>list_records</code>, always current) than the <code>oid_map</code>/blob bookkeeping (the
+<code>list_changed_since</code> delta); any under-report of the delta relative to the tree
+produces an unservable OID. The seconds boundary is today's trigger; the
+tree↔<code>oid_map</code> divergence is the durable fragility. A fix that only tightens
+the sim's timestamp precision papers over a cache-layer invariant break that a
+real backend will re-open.</p>
+<p>Note the blast-radius boundary the repro settles: <strong>the bug is on the FETCH/sync
+path only.</strong> The PUSH precheck path (<code>precheck.rs</code>) reads the SoT directly and is
+not vulnerable. <code>build_from</code> (<code>builder.rs:56-191</code>), the full-rebuild seed path,
+is coherent by construction — it calls <code>put_oid_mapping</code> for <strong>every</strong> record it
+lists (<code>builder.rs:112-121</code>), so its tree never references an unrecorded OID.
+Only the <strong>delta</strong> path under-covers <code>oid_map</code> relative to the tree it emits.</p>
+<h3 id="the-second-defect-refresh_for_mirror_head-and-the-l1-no-op-rbf-lr-02">The second defect — <code>refresh_for_mirror_head</code> and the L1 "no-op" (RBF-LR-02)<a class="headerlink" href="#the-second-defect-refresh_for_mirror_head-and-the-l1-no-op-rbf-lr-02" title="Permanent link">&para;</a></h3>
+<p><code>crates/reposix-cache/src/mirror_refs.rs:297-299</code> — <code>refresh_for_mirror_head</code>
+forwards to <code>build_from()</code>. It is <strong>not</strong> itself a no-op: when called it does the
+full, coherent rebuild. The "no-op post-write" behavior is <strong>caller-side</strong>: the
+write loop gates the call behind <code>files_touched &gt; 0</code>
+(<code>crates/reposix-remote/src/write_loop.rs:295</code>, the "L1 no-op-push perf-skip"),
+with the comment <em>"Self-healing on next non-trivial push"</em>
+(<code>write_loop.rs:293-294</code>) admitting a transient staleness window on genuine
+no-op pushes. That skip is asserted as a <em>feature</em> in
+<code>crates/reposix-remote/tests/perf_l1.rs:386-390</code> (a no-op push must issue zero
+<code>list_records</code> calls).</p>
+<p>So the honest statement of RBF-LR-02 is narrower than "refresh no-ops post-write":
+<code>refresh_for_mirror_head → build_from</code> is coherent on the write path; the
+"no-op" is a <code>files_touched</code>-gated caller skip whose only cost is a mirror-head
+ref that lags until the next non-trivial push. The chosen model must (a) leave
+the write-path refresh coherent, and (b) make the <strong>fetch/delta</strong> path — the
+thing D-P92-03 actually breaks — coherent too, so that <em>any</em> subsequent
+<code>reposix sync</code> cannot re-introduce a dangling entry.</p>
+<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
+<h3 id="option-a-re-fetch-on-cache-miss-the-l2-strategy">Option A — re-fetch on cache miss (the "L2" strategy)<a class="headerlink" href="#option-a-re-fetch-on-cache-miss-the-l2-strategy" title="Permanent link">&para;</a></h3>
+<p><em>Canonical id: <code>re-fetch-on-cache-miss</code> (L2).</em></p>
+<p>Make <code>read_blob</code> resolve an unknown OID by re-fetching: on an <code>oid_map</code> miss,
+scan the backend (<code>list_records</code>, render each record, hash, match the requested
+OID) and materialize the winner on demand.</p>
+<ul>
+<li><strong>For:</strong> resilient to <em>any</em> future coherence gap, not just this one — a
+  belt-and-suspenders safety net at the read boundary.</li>
+<li><strong>Against — network on the read/fetch path.</strong> The miss is resolved <em>during</em>
+  <code>git upload-pack</code> want-resolution (<code>stateless_connect.rs:369-385</code>), so a read
+  now triggers an <strong>O(N) outbound scan</strong> (there is no OID→record index for an
+  <em>unknown</em> OID — that index <em>is</em> <code>oid_map</code>, which is what missed). This inflates
+  fetch latency and can breach the documented envelope
+  (<a href="../../benchmarks/latency/"><code>docs/benchmarks/latency.md</code></a>).</li>
+<li><strong>Against — expanded taint/egress surface on a hot path.</strong> A read path that
+  today never dials out would now make outbound HTTP. It stays inside the
+  <code>reposix_core::http::client()</code> allowlist (<code>read_blob</code> already calls
+  <code>backend.get_record</code> through it, and <code>classify_backend_error</code> fires
+  <code>egress_denied</code> on denial — <code>builder.rs:465-476</code>, <code>builder.rs:524-538</code>), so it
+  does not <em>widen</em> the allowlist, but it does move remote-byte ingestion onto the
+  fetch-serving path where OP-1/OP-2 review is most sensitive. Each re-fetched
+  blob is still <code>Tainted&lt;Vec&lt;u8&gt;&gt;</code> and content-verified against the requested OID
+  (<code>OidDrift</code> guard, <code>builder.rs:489-495</code>), so correctness holds — but the
+  surface grows.</li>
+<li><strong>Against — it papers over the invariant</strong> rather than restoring it: the tree
+  can still be emitted with unrecorded OIDs; A just makes that survivable at
+  read time.</li>
+</ul>
+<h3 id="option-b-transactional-cache-writes-the-l3-strategy-recommended">Option B — transactional cache writes (the "L3" strategy) — <strong>recommended</strong><a class="headerlink" href="#option-b-transactional-cache-writes-the-l3-strategy-recommended" title="Permanent link">&para;</a></h3>
+<p><em>Canonical id: <code>transactional-cache-writes</code> (L3).</em></p>
+<p>Restore the tree↔<code>oid_map</code> invariant at its source: <code>Cache::sync</code>'s delta path
+must never emit a tree entry for an OID that is not simultaneously recorded in
+<code>oid_map</code>. Concretely, in Step 4 (<code>builder.rs:293-328</code>), when the tree is built
+from <code>list_records</code>, upsert an <code>oid_map</code> row for <strong>every</strong> record's computed OID
+(not just the <code>list_changed_since</code> delta) inside the existing atomic transaction
+(<code>builder.rs:378-406</code>) — exactly the coverage <code>build_from</code> already provides
+(<code>builder.rs:112-121</code>). The materialize-difference is a <strong>metadata</strong> upsert;
+<strong>blob bytes stay lazy</strong> (materialized on <code>read_blob</code>), so the ratified
+lazy-materialization property is preserved.</p>
+<ul>
+<li><strong>For — restores the invariant by construction.</strong> After the fix, no
+  <code>Cache::sync</code> output can reference an OID <code>read_blob</code> cannot resolve; the
+  same-second trigger becomes harmless (the tree reflects the write <em>and</em> the
+  OID is resolvable → the puller lazily fetches it, no <code>not our ref</code>).</li>
+<li><strong>For — no read-path network, no new egress surface, cheap.</strong> The extra work
+  is per-sync <code>oid_map</code> upserts under a lock already held; the object store and
+  the outbound path are untouched. Latency envelope unaffected.</li>
+<li><strong>For — it is the direction the repro notes already recommend</strong> (candidate
+  fix (a)) and the RUNBOOK §C default (narrow cache-layer fix + ADR).</li>
+<li><strong>Against — eager reconciliation per sync.</strong> Every delta sync now touches
+  <code>oid_map</code> for the full record set, not just the changed IDs — O(N) SQLite
+  upserts where the changed set might be O(1). This is bounded (metadata only,
+  no network, no blob writes) and matches what <code>build_from</code> already does; the
+  cost is acceptable for the coherence guarantee.</li>
+</ul>
+<h3 id="option-c-hybrid-b-primary-a-bounded-reconcile-escape-hatch-recommended-shape">Option C — hybrid (B primary + a bounded reconcile escape hatch) — <strong>recommended shape</strong><a class="headerlink" href="#option-c-hybrid-b-primary-a-bounded-reconcile-escape-hatch-recommended-shape" title="Permanent link">&para;</a></h3>
+<p>Adopt <strong>B</strong> as the invariant fix, and rely on <code>reposix sync --reconcile</code> to
+self-heal any cache that has <em>already</em> drifted (a cache written by a pre-fix
+binary, or one that drifted for a reason we did not foresee). Keep <code>read_blob</code>'s
+<code>UnknownOid</code> <strong>fatal-to-that-want</strong> as today (the helper leaves it for
+upload-pack), and <strong>defer Option A's read-path re-fetch to v0.14.0</strong> as a
+documented, bounded exposure. This is precisely the RUNBOOK §C Decision-2
+option (b): <em>narrow fix + ADR documenting the bounded exposure + a <code>reposix sync
+--reconcile</code> teaching-string; NO re-deferral to v0.14.0 without owner sign-off.</em></p>
+<p><strong>Caveat the fix wave MUST close — the reconcile hatch is currently broken.</strong>
+<code>reposix sync --reconcile</code> already exists
+(<code>crates/reposix-cli/src/sync.rs:45-104</code>) and its doc-comment (<code>sync.rs:48-49</code>)
+promises <em>"a full list_records walk + cache rebuild (the L1 escape hatch)"</em> — but
+line 98 calls <code>cache.sync()</code>, which takes the <strong>delta</strong> path whenever
+<code>last_fetched_at</code> is present (only an <em>absent</em> cursor forwards to <code>build_from</code>).
+So today the "escape hatch" re-runs the very delta path D-P92-03 breaks and
+<strong>cannot recover a drifted cache</strong> — a lying doc <em>and</em> a broken recovery move.
+Option B's fix makes even the delta path coherent (so <code>--reconcile</code> stops
+<em>producing</em> drift), but to honour the "full rebuild" promise and heal a
+pre-fix-drifted cache, the fix wave must make <code>--reconcile</code> force a full
+<code>build_from</code> (e.g. clear <code>last_fetched_at</code> first, or call <code>build_from</code> directly).</p>
+<h3 id="sub-decision-simbackend-second-resolution-precision">Sub-decision — sim/backend second-resolution precision<a class="headerlink" href="#sub-decision-simbackend-second-resolution-precision" title="Permanent link">&para;</a></h3>
+<p>Is a precision fix (sim <code>updated_at</code> sub-second; cursor <code>&gt;=</code> with de-dup)
+defense-in-depth, or does the invariant fix make it moot?</p>
+<p><strong>Decision: the invariant fix (B) makes the precision fix moot <em>for coherence</em>;
+a precision fix alone would NOT fix the amplifier and MUST NOT ship as the sole
+remedy.</strong> With B, Step 4 still rebuilds the tree from <code>list_records</code> (so a
+same-second write's content is reflected) and now records its OID (so
+<code>read_blob</code> resolves it) — coherence holds whether or not <code>list_changed_since</code>
+under-reports. A precision-only fix (sub-second sim timestamps) would hide the
+trigger on the sim while leaving the tree↔<code>oid_map</code> amplifier live for the
+second-resolution real backends (Confluence/JIRA/GitHub), i.e. it would fake-fix
+the reproduced bug. Recommendation: ship B; treat sim sub-second precision +
+cursor <code>&gt;=</code>-with-de-dup as <strong>optional defense-in-depth</strong> (it improves
+delta <em>efficiency</em> — fewer missed changes → more eager pre-materialization — and
+de-risks other <code>list_changed_since</code> consumers such as the push precheck's
+changed-set), explicitly <strong>not</strong> load-bearing for the coherence guarantee.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p><strong>Ratified (ACCEPTED 2026-07-05 by the P93 coordinator):</strong></p>
+<ol>
+<li>
+<p><strong>Coherence model: Option C = Option B (transactional cache writes) + a
+   <code>reposix sync --reconcile</code> escape hatch.</strong> The fix wave restores the
+   tree↔<code>oid_map</code> invariant inside <code>Cache::sync</code>'s atomic transaction by
+   upserting <code>oid_map</code> for the full <code>list_records</code> set (metadata only; blobs stay
+   lazy), and flips the RED regression
+   <code>delta_sync_tree_references_only_resolvable_oids</code> GREEN by dropping its
+   <code>#[ignore]</code> in the same commit.</p>
+</li>
+<li>
+<p><strong>Refresh-path redesign (RBF-LR-02).</strong> <code>refresh_for_mirror_head</code> stays as the
+   full-rebuild <code>build_from</code> (already coherent). The <em>honest</em> reconciliation of
+   the L1 promise is the <strong>RBF-LR-04 "keep + qualify"</strong> branch: retain the
+   <code>files_touched &gt; 0</code> skip (<code>write_loop.rs:295</code>) — refreshing the mirror-head on
+   a genuine no-op push is wasted work with <strong>zero</strong> coherence benefit, since a
+   no-op push changes nothing in the SoT — but re-document it in
+   <code>docs/concepts/dvcs-topology.md</code> as a <em>semantic</em> no-op (nothing changed →
+   nothing to refresh), not a coherence shortcut, and point at <code>reposix sync
+   --reconcile</code> as the manual catch-up. The unqualified asterisk is replaced by
+   this bounded-exposure explanation rather than silently dropped. (The fix wave
+   MAY instead choose "always refresh, remove the asterisk" — an unconditional
+   refresh — if it judges the perf cost negligible; the ADR leaves that lever to
+   the fix-wave, since both are honest. Either way, no lying doc.)</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>CLOSED 2026-07-16 (P116 ADR-01 ruling) — the RBF-LR-04 lever is settled;
+<code>files_touched &gt; 0</code> STAYS unconditionally.</strong> The manager ruling
+(<code>.planning/CONSULT-DECISIONS.md</code> "P116 ADR-01 mirror fan-out", 2026-07-16, commit
+<code>8212373</code>) closes the "leaves that lever to the fix-wave" question above: <strong>keep the
+<code>files_touched &gt; 0</code> skip; Option D (unconditional refresh) is REJECTED.</strong> A push that
+changes nothing in the SoT is a <em>semantic</em> no-op — skipped because there is nothing to
+refresh, not a coherence shortcut — so the asserted no-op perf-skip
+(<code>crates/reposix-remote/tests/perf_l1.rs:386-390</code>: zero <code>list_records</code> on a no-op
+push) stands. The corrected live-doc claim is now regression-guarded by
+<code>quality/gates/docs-alignment/mirror-convergence-blessed.sh</code> (Plan 116-01).
+<strong>Authoritative external-mirror convergence</strong> (new — §2 above was scoped only to the
+cache-internal observability ref <code>refs/mirrors/&lt;sot&gt;-head</code>, not the external repo a
+fresh <code>git clone</code> reads): webhook + 30-min cron (<code>docs/guides/dvcs-mirror-setup.md</code>)
+is BLESSED as the authoritative external-mirror convergence mechanism;
+<code>scripts/refresh-tokenworld-mirror.sh</code> remains manual op-recovery only. <strong>Option C
+(post-write snapshot fan-out) is NOT sanctioned for v0.15</strong> — filed as <code>GTH-V15-38</code>
+with its pull-forward trigger recorded there (see that row; not restated here, to keep
+one source of truth for the trigger).</p>
+</blockquote>
+<ol>
+<li><strong><code>SotPartialFail</code> recovery semantics (RBF-LR-03).</strong> <code>SotPartialFail</code>
+   (<code>write_loop.rs:105</code>, emitted at <code>write_loop.rs:277</code>) means at least one
+   <code>execute_action</code> failed after others succeeded — the SoT is <strong>partially
+   written</strong>. The helper emits <code>error refs/heads/main some-actions-failed</code>; no
+   <code>oid_map</code>/mirror-head/cursor advance happens for the failed push (those writes
+   are on the <code>SotOk</code> branch, <code>write_loop.rs:282-313</code>). <strong>Convergence:</strong> the
+   partially-applied writes are now part of the SoT. On the agent's next push,
+   PRECHECK B (<code>precheck_export_against_changed_set</code>, <code>write_loop.rs:159-160</code>)
+   re-reads the current SoT, <code>diff::plan</code> (<code>write_loop.rs:210</code>) recomputes
+   against that new base, and only the still-needed actions are replanned and
+   applied — the already-landed writes are diffed away. <strong>What the agent sees:</strong>
+   the <code>some-actions-failed</code> protocol error plus per-action <code>error: &lt;e&gt;</code> stderr
+   (<code>write_loop.rs:268</code>), and a normal <code>git push</code> retry converges. The cache
+   converges via the same PRECHECK-B re-read on the next push (or a <code>reposix
+   sync</code> / <code>--reconcile</code>); there is no torn cache state because the failed push
+   never advanced the cursor or <code>oid_map</code>.</li>
+</ol>
+<blockquote>
+<p><strong>KNOWN LIMITATION — WAIVED for v0.13.0 (RBF-LR-03).</strong> The clean-convergence
+contract above holds against the simulator and against any backend that lets
+the client name its own record id. It does <strong>not</strong> fully hold against a real,
+id-reassigning backend (GitHub Issues / JIRA / Confluence) when a <em>create</em> is
+interrupted <strong>mid-batch</strong> — a network drop between the backend assigning the
+new id and the cache completing slug→id reconciliation. On retry, PRECHECK B
+re-diffs against the new SoT base but cannot yet recognise the already-landed
+record as "the same create," because the agent-picked placeholder-id → backend-id
+mapping has no durable home. Result: <strong>one duplicate record</strong> the owner
+hand-deletes on the backend. This is narrow (real backend + create + mid-batch
+network drop), recoverable (hand-delete the duplicate; no data loss, no torn
+cache), and <strong>owner-signed as WAIVED for v0.13.0</strong> (tag-timing decision T1,
+<code>.planning/CONSULT-DECISIONS.md</code>) — NOT suppressed. The real fix is a design
+pivot, not a point patch: model create (and any multi-step client↔server
+interaction) as a <strong>commit sequence with slug→id translation</strong> so the mapping
+lives in the data model and a partial fail leaves a well-defined intermediate
+state to replay. That reconciliation redesign is the <strong>v0.14.0 headline
+milestone</strong> (owner directive, <code>.planning/CONSULT-DECISIONS.md</code> "RBF-LR-03
+pivot"). ADR-010 §3's convergence contract is revised only after that
+exploration converges; until then this marker is the honest boundary.</p>
+<p><strong>RESOLVED in v0.14.0 (Phase 105) — the <em>rebase-recovery deep-reconciliation</em>
+half of RBF-LR-03 only.</strong> RBF-LR-03 carried two distinct limitations under one
+tag. The one <strong>now resolved</strong> is the <em>drift-recovery</em> limitation that the user
+docs referenced as "the RBF-LR-03 deep-reconciliation limitation": before
+v0.14.0, when the SoT moved via an <strong>external REST write</strong> (web UI / direct
+PATCH) or an <strong>SoT deletion</strong>, the documented <code>git pull --rebase &amp;&amp; git push</code>
+aborted with <code>warning: Not updating refs/reposix/origin/main (new tip … does
+not contain …)</code> + <code>fatal: error while running fast-import</code> <!-- banned-words: ok -->
+because the cache rebuilt a non-descendant "Sync from REST snapshot" commit.
+The two-layer fix (Phase 105): (1) the fetch fast-import now chains onto the
+tracking tip inside a private import ref namespace, so the new tip <em>contains</em>
+the old one and the rebase fast-forwards; (2) a full-rebuild <code>deleteall</code> in the
+import stream propagates SoT deletions instead of resurrecting dropped records.
+The single documented recovery <code>git pull --rebase &amp;&amp; git push</code> now reconciles
+for <strong>all three</strong> drift sources (peer git-push, external REST, deletion),
+regression-guarded by <code>quality/gates/agent-ux/rebase-recovery-reconciles.sh</code>
+(catalog row <code>agent-ux/rebase-recovery-reconciles</code>, graded GREEN at Phase 105
+close). <strong>STILL OPEN:</strong> the <em>duplicate-record-on-interrupted-create</em> waiver
+above (the slug→id durable-home problem) is a separate limitation that the
+rebase-recovery fix does <strong>not</strong> touch — it remains the v0.14.0
+reconciliation-redesign pivot until that exploration converges.</p>
+<p><strong>SANCTIONED TARGET DESIGN 2026-07-16 (P116 FIX-03 ruling) — Option B chosen; the
+waiver STAYS, now qualified.</strong> The manager ruling (<code>.planning/CONSULT-DECISIONS.md</code>
+"P116 FIX-03 slug→id durable-create", 2026-07-16, commit <code>8212373</code>) supersedes the
+"STILL OPEN … v0.14.0 reconciliation-redesign pivot" sentence above by naming a chosen
+direction: <strong>Option B — a durable slug→id map alongside <code>oid_map</code> — is the SANCTIONED
+TARGET DESIGN.</strong> Build-ready shape (from the decision packet): mint a stable local slug
+pre-push → model the create as "slug X → (pending) → backend id N" → persist it
+alongside <code>oid_map</code> (today's cache tables are <code>oid_map</code> + <code>meta</code>,
+<code>crates/reposix-cache/src/meta.rs</code>) → an interrupted create then leaves a
+pending-slug-no-confirmed-id state the retry reconciles against instead of re-creating.
+<strong>The known limitation above remains WAIVED for v0.15.0 — NO build lands this milestone
+(SC4 depth: design-only).</strong> The waiver is now qualified by a chosen target design rather
+than an open design question. Option D (pending-create intent-log) is the sanctioned
+REDUCED-SCOPE STOPGAP only if the duplicate hazard materializes in a real incident before
+B lands — decide then, not now. The next-milestone build proposal lives durably at
+<code>GOOD-TO-HAVES-09</code> (<code>.planning/GOOD-TO-HAVES.md</code>); a dedicated design+build phase for B
+is proposed at the next milestone boundary.</p>
+</blockquote>
+<ol>
+<li><strong>Test co-location.</strong> SC2 pins <code>cargo test -p reposix-cache --test
+   cache_coherence</code>, but <code>SotPartialFail</code> + PRECHECK B live in <strong>reposix-remote</strong>
+   (<code>write_loop.rs</code> / <code>precheck.rs</code>), not reposix-cache. <strong>Decision:</strong></li>
+<li>the tree↔<code>oid_map</code> <strong>coherence invariant</strong> test lives in
+     <code>crates/reposix-cache/tests/cache_coherence.rs</code> (satisfies SC2's exact
+     command), alongside the existing delta-sync RED regression that flips GREEN;</li>
+<li>the <strong><code>SotPartialFail</code> recovery</strong> test lives in a reposix-remote binary,
+     <code>crates/reposix-remote/tests/partial_failure_recovery.rs</code> (simulate
+     SoT-success-on-some + fail-on-one → assert the next push reads the new SoT
+     via PRECHECK B and replans only the remainder);</li>
+<li>the real-backend arm (<code>partial_failure_recovery_real_confluence</code>,
+     RBF-LR-03/<code>p93-partial-failure-recovery-real-confluence</code>) lives in
+     <code>crates/reposix-cli/tests/agent_flow_real.rs</code> as an <code>#[ignore]</code> smoke.
+   <strong>SC2's exact command needs a companion assert:</strong> the catalog row
+   <code>agent-ux/p93-cache-coherence-refresh-honest</code> should add
+   <code>cargo test -p reposix-remote --test partial_failure_recovery</code> as a companion
+   command (its asserts already say "wherever it lands"); the reposix-cache
+   <code>cache_coherence</code> command alone cannot prove the reposix-remote recovery path.</li>
+</ol>
+<h2 id="reversibility-blast-radius-assessment">Reversibility / blast-radius assessment<a class="headerlink" href="#reversibility-blast-radius-assessment" title="Permanent link">&para;</a></h2>
+<p>This section is load-bearing for the coordinator's escalation routing.</p>
+<p><strong>Does the recommended model (B/C) change any PUBLIC or irreversible contract?</strong>
+Assessed against each locked surface:</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Option B/C (recommended)</th>
+<th>Option A (rejected/deferred)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>protocol-v2 fetch <strong>wire</strong> format</td>
+<td><strong>No change</strong> — same want/have exchange; the OID simply resolves now</td>
+<td>No change</td>
+</tr>
+<tr>
+<td><code>refs/reposix/*</code> / <code>refs/mirrors/*</code> <strong>ref</strong> format</td>
+<td><strong>No change</strong></td>
+<td>No change</td>
+</tr>
+<tr>
+<td><code>Tainted&lt;T&gt;</code> sanitize boundary</td>
+<td><strong>No change</strong> — blobs stay lazy, still <code>Tainted</code> on read</td>
+<td>No change (re-fetch still <code>Tainted</code> + <code>OidDrift</code>-checked)</td>
+</tr>
+<tr>
+<td>audit-table shape (OP-3)</td>
+<td><strong>No change</strong> — reuses <code>oid_map</code> + existing <code>delta_sync</code> row; no new table/column</td>
+<td>No change (adds <code>materialize</code> rows on a new path)</td>
+</tr>
+<tr>
+<td>documented latency envelope</td>
+<td><strong>No change</strong> — extra work is per-sync metadata upserts, no network</td>
+<td><strong>Changes</strong> — adds O(N) outbound scan on the read/fetch path</td>
+</tr>
+<tr>
+<td>agent-facing behavior</td>
+<td><strong>Fixes</strong> it (<code>not our ref</code> → clean lazy fetch); no <em>new</em> behavior</td>
+<td>Also fixes, but adds read-path latency variance</td>
+</tr>
+<tr>
+<td>on-disk cache schema</td>
+<td>Internal to <code>Cache::sync</code>; cache is a <strong>rebuildable</strong> artifact, explicitly NOT a stability contract (ADR-009 §"On-disk cache schema")</td>
+<td>Same</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reversibility rating.</strong> Option <strong>B/C is fully reversible</strong>: it lives entirely
+behind <code>Cache::sync</code> (a rebuildable-cache internal), touches no wire/ref/taint/
+audit/latency contract, and could be reverted by rebuilding any cache with the
+prior binary. Option <strong>A is reversible but higher-blast-radius</strong>: it moves remote
+I/O onto the read path (a perf-envelope and OP-1/OP-2-surface change), so it is
+the more consequential lever — which is <em>why</em> the recommendation defers A.</p>
+<p><strong>Conclusion — one unambiguous sentence:</strong></p>
+<blockquote>
+<p><strong>This decision IS NOT an irreversible fork — it is a reversible internal
+cache-strategy choice within the ratified partial-clone direction.</strong></p>
+</blockquote>
+<p><em>Reasoning:</em> the recommended fix restores an invariant that <code>build_from</code> already
+upholds, using the same <code>oid_map</code> bookkeeping, entirely inside <code>Cache::sync</code>; it
+alters no public wire/ref/taint/audit/latency contract, and the cache it writes
+is a rebuildable artifact by ADR-009. Nothing here re-opens the P78–P88
+partial-clone/lazy-materialization axis; it makes the <em>existing</em> axis honest. The
+coordinator can ratify and proceed without an L1 (E2 fable-consult) escalation.
+(Had the recommendation been Option A — outbound HTTP on the read path — the
+latency-envelope + hot-path-taint change would warrant a closer look, though it
+too stays reversible.)</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<h3 id="what-the-fix-wave-must-implement">What the fix wave must implement<a class="headerlink" href="#what-the-fix-wave-must-implement" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Cache-layer coherence fix (RBF-LR-01 / D-P92-03).</strong> In
+   <code>Cache::sync</code> Step 4, upsert <code>oid_map</code> for the full <code>list_records</code> set inside
+   the atomic transaction (blobs stay lazy). Drop the <code>#[ignore]</code> from
+   <code>crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids</code>
+   in the <strong>same</strong> commit; add the coherence-invariant assertions to a new
+   <code>crates/reposix-cache/tests/cache_coherence.rs</code>.</li>
+<li><strong>Refresh-path honesty (RBF-LR-02 / RBF-LR-04).</strong> Keep-and-qualify the
+   <code>files_touched &gt; 0</code> skip in <code>docs/concepts/dvcs-topology.md</code> + root
+   <code>CLAUDE.md</code> (or remove the asterisk via unconditional refresh), in the <strong>same
+   PR</strong> as the fix (ROADMAP SC6 / QG-07). No lying doc.</li>
+<li><strong><code>SotPartialFail</code> recovery test (RBF-LR-03).</strong> Add
+   <code>crates/reposix-remote/tests/partial_failure_recovery.rs</code> (sim) + the
+   <code>partial_failure_recovery_real_confluence</code> <code>#[ignore]</code> smoke in
+   <code>crates/reposix-cli/tests/agent_flow_real.rs</code>. (The sim proves clean
+   convergence; the real-backend mid-batch-create duplicate is the WAIVED
+   known-limitation documented in §3 above, slated for the v0.14.0 pivot.)</li>
+<li><strong>Fix <code>reposix sync --reconcile</code></strong> (<code>crates/reposix-cli/src/sync.rs:98</code>) to
+   force a full <code>build_from</code> (clear <code>last_fetched_at</code> first, or call <code>build_from</code>
+   directly) so it honours its "full list_records walk + cache rebuild" promise
+   and can heal a pre-fix-drifted cache — today it calls <code>cache.sync()</code> (delta
+   path) and cannot. Also refresh the stale/dangling doc cross-reference at
+   <code>docs/guides/troubleshooting.md:352</code> (points at a dvcs-topology "Out of scope"
+   anchor that has no L1/L2/L3 content, and says L3 "defers to v0.14.0" — which
+   this ADR overrides).</li>
+<li><strong>(Optional defense-in-depth)</strong> sim sub-second <code>updated_at</code> + cursor
+   <code>&gt;=</code>-with-de-dup — improves delta efficiency; NOT load-bearing for coherence.</li>
+</ol>
+<h3 id="which-tests-gate-it">Which tests gate it<a class="headerlink" href="#which-tests-gate-it" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>agent-ux/p93-l2-l3-coherence-adr</code> — this ADR's existence + content
+  (options + chosen path + trade-off + deferral list). Satisfied by this file.</li>
+<li><code>agent-ux/p93-cache-coherence-refresh-honest</code> — <code>cargo test -p reposix-cache
+  --test cache_coherence</code> GREEN + the <code>SotPartialFail</code> recovery test exists
+  (companion: <code>cargo test -p reposix-remote --test partial_failure_recovery</code>) +
+  refresh-path honesty.</li>
+<li><code>agent-ux/p93-delta-sync-coherence-invariant</code> — the RED regression
+  <code>delta_sync_tree_references_only_resolvable_oids</code> flips RED→GREEN with its
+  <code>#[ignore]</code> removed (4 passed, 0 ignored).</li>
+<li><code>agent-ux/p93-partial-failure-recovery-real-confluence</code> (real-backend,
+  env-gated), <code>agent-ux/p93-l1-promise-reconciled</code> (doc honesty),
+  <code>agent-ux/p93-mid-stream-litmus-t1-t4</code> (phase-gate re-run of dark-factory
+  T1 + T4).</li>
+</ul>
+<h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The reproduced <code>not our ref</code> two-writer failure is closed at the invariant
+  level, robust to the second-resolution real backends — not papered over at the
+  sim timestamp.</li>
+<li>No new outbound surface, no latency-envelope change, no wire/ref/audit contract
+  change; the cache stays a rebuildable artifact.</li>
+</ul>
+<h3 id="negative">Negative<a class="headerlink" href="#negative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Delta sync now does O(N) <code>oid_map</code> upserts per sync (metadata only). Bounded and
+  already the shape <code>build_from</code> uses; acceptable for the coherence guarantee.</li>
+<li>The read-path resilience of Option A is deferred to v0.14.0 as a documented,
+  bounded exposure — a cache that drifts for an unforeseen reason still needs a
+  manual <code>reposix sync --reconcile</code> rather than self-healing on read.</li>
+</ul>
+<h3 id="neutral">Neutral<a class="headerlink" href="#neutral" title="Permanent link">&para;</a></h3>
+<ul>
+<li>SC2's <code>reposix-cache --test cache_coherence</code> command is retained but needs a
+  reposix-remote companion command for the <code>SotPartialFail</code> recovery assertion —
+  a catalog wording tightening, not a scope change.</li>
+</ul>
+<h2 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Sim-precision-only fix</strong> (sub-second <code>updated_at</code>) — <strong>rejected as sole
+  remedy</strong>: hides the trigger on the sim, leaves the tree↔<code>oid_map</code> amplifier
+  live for the second-resolution real backends. Kept only as optional
+  defense-in-depth atop B.</li>
+<li><strong>Option A (re-fetch on cache miss) as the primary fix</strong> — <strong>deferred to
+  v0.14.0</strong>: adds outbound HTTP + O(N) scan on the read/fetch path and papers over
+  the invariant instead of restoring it. Retained as a possible future
+  belt-and-suspenders layer, gated on owner sign-off per RUNBOOK §C.</li>
+<li><strong>Re-defer the whole item to v0.14.0</strong> — <strong>rejected</strong>: Decision-2 promoted
+  RBF-LR-01/02 out of the §6 deferral table precisely because v0.13.0's
+  round-trip vision depends on them; re-deferral without owner sign-off re-instates
+  the C8 anti-pattern.</li>
+</ul>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>.planning/phases/115-live-mcp-benchmark-re-measurement/P116-ADR-010-DECISION-PACKET.md</code> — the ruled options+tradeoffs packet (incl. the slug→id durable-create design) for the §2/§3 amendments above (ruling: <code>.planning/CONSULT-DECISIONS.md</code>, 2026-07-16, commit <code>8212373</code>).</li>
+<li><code>.planning/milestones/v0.13.0-phases/93-cache-coherence/93-DP2-REPRO-NOTES.md</code> — executed repro + root cause (repro commit <code>9c46e49</code>).</li>
+<li><code>crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids</code> — the RED regression this ADR's fix flips GREEN.</li>
+<li><code>crates/reposix-cache/src/builder.rs</code> — <code>sync()</code> Steps 3-5 (<code>:265-406</code>), <code>build_from</code> (<code>:56-191</code>), <code>read_blob</code> (<code>:450-511</code>).</li>
+<li><code>crates/reposix-remote/src/write_loop.rs</code> — <code>SotPartialFail</code> (<code>:105</code>, <code>:277</code>), PRECHECK B (<code>:159</code>), <code>files_touched &gt; 0</code> skip (<code>:295</code>).</li>
+<li><code>crates/reposix-remote/src/stateless_connect.rs:369-385</code> — the helper's <code>UnknownOid</code> handling.</li>
+<li><code>crates/reposix-sim/src/routes/issues.rs:138-184</code> — the seconds-resolution trigger.</li>
+<li><a href="../007-time-travel-via-git-tags/">ADR-007 — Time-travel via git tags</a>, <a href="../009-stability-commitment/">ADR-009 — Stability commitment</a> — cache-is-rebuildable + partial-clone precedent.</li>
+<li><a href="../../concepts/dvcs-topology/">DVCS topology</a>, <a href="../../guides/troubleshooting/#dvcs-pushpull-issues">Troubleshooting — DVCS push/pull</a> — the L1/L2/L3 mental model this ADR reconciles.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/reubenjohn/reposix" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-render.js"></script>
+      
+    
+  </body>
+</html>

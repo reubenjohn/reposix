@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="reposix vs MCP token economy benchmark: 89.1% fewer tokens">
+  <title>reposix vs MCP — 89.1% fewer tokens</title>
+  <desc>Horizontal bar chart comparing MCP-mediated baseline (4,068 tokens) against reposix (315 tokens) for the same task: read 3 issues, edit 1, push.</desc>
+
+  <!-- Background: GitHub dark -->
+  <rect width="1200" height="675" fill="#0d1117"/>
+
+  <!-- Headline -->
+  <text x="60" y="110"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="72" font-weight="700" fill="#ffffff"
+        letter-spacing="-1">89.1% fewer tokens</text>
+
+  <!-- Subhead -->
+  <text x="60" y="155"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="24" font-weight="400" fill="#8b949e">
+    reposix vs MCP  —  same task: read 3 issues, edit 1, push
+  </text>
+
+  <!-- Bar geometry: max bar width = 900px at value 4068. scale = 900/4068 -->
+  <!-- MCP bar: 4068 * (900/4068) = 900 -->
+  <!-- reposix bar: 315 * (900/4068) = ~69.7 -->
+
+  <!-- MCP row label -->
+  <text x="60" y="265"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="22" font-weight="600" fill="#c9d1d9">MCP-mediated</text>
+  <text x="60" y="290"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="15" font-weight="400" fill="#8b949e">tool catalog + schemas</text>
+
+  <!-- MCP bar -->
+  <rect x="60" y="305" width="900" height="70" rx="4" fill="#ef6c00"/>
+  <text x="975" y="352"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="36" font-weight="700" fill="#ffffff">4,068 tokens</text>
+
+  <!-- reposix row label -->
+  <text x="60" y="435"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="22" font-weight="600" fill="#c9d1d9">reposix</text>
+  <text x="60" y="460"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="15" font-weight="400" fill="#8b949e">shell session transcript</text>
+
+  <!-- reposix bar (315 tokens -> ~69.7px at same scale) -->
+  <rect x="60" y="475" width="70" height="70" rx="4" fill="#00897b"/>
+  <text x="145" y="522"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="36" font-weight="700" fill="#ffffff">315 tokens</text>
+
+  <!-- Branding bottom-left -->
+  <text x="60" y="635"
+        font-family="DejaVu Sans Mono, Menlo, Consolas, monospace"
+        font-size="18" font-weight="400" fill="#8b949e">github.com/reubenjohn/reposix</text>
+
+  <!-- Footnote bottom-right -->
+  <text x="1140" y="635"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="18" font-weight="400" fill="#8b949e" text-anchor="end">~12.9× more context for the agent</text>
+</svg>
