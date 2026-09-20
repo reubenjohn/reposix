@@ -1455,6 +1455,49 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/scoped-agent-instructions-symlinks",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-09-20T00:00:00Z",
+      "comment": "Keeps Claude Code and Codex on identical scoped policies: CLAUDE.md is canonical and each intentionally scoped agent-instruction directory exposes a tracked AGENTS.md symlink to its local CLAUDE.md. The explicit inventory is .planning/, crates/, quality/, and .claude/hooks/; a copied AGENTS.md can silently drift even when its initial contents match.",
+      "sources": [
+        "CLAUDE.md:agent instruction policy",
+        "quality/CLAUDE.md:Scoped agent-instruction aliases",
+        ".planning/CLAUDE.md",
+        "crates/CLAUDE.md",
+        "quality/CLAUDE.md",
+        ".claude/hooks/CLAUDE.md"
+      ],
+      "command": "bash quality/gates/structure/scoped-agent-instructions-symlinks.sh",
+      "expected": {
+        "asserts": [
+          "each intended scoped instruction directory (.planning, crates, quality, .claude/hooks) has tracked CLAUDE.md and AGENTS.md paths",
+          "each scoped AGENTS.md is a symlink whose literal target is CLAUDE.md",
+          "each symlink resolves to its sibling regular CLAUDE.md file; copied policies and broken aliases fail with a recovery command"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/scoped-agent-instructions-symlinks.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/scoped-agent-instructions-symlinks.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: replace the reported alias with ln -s CLAUDE.md <directory>/AGENTS.md, stage the symlink, and extend this gate when deliberately adding a new scoped instruction directory.",
+      "claim_vs_assertion_audit": "If any intended scoped instruction surface lacked a tracked alias, used a copied regular AGENTS.md, pointed at anything other than its sibling CLAUDE.md, or held a broken link, the verifier would respectively fail git ls-files, the shell symlink predicate, the literal readlink comparison, or the resolved-file predicate. Each failure prints the offending path and the exact ln -s recovery, so the claim that Claude Code and Codex read one canonical scoped policy cannot remain green while an alias drifts.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-commit",
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }
