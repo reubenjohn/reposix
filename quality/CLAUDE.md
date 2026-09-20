@@ -379,6 +379,16 @@ individually named; WAIVED/NOT-VERIFIED + missing → exempt; PASS + null-script
 quality/gates/structure/verifier-script-exists.selftest.sh` (throwaway `/tmp` fixture repo
 — never the shared repo, never the real catalogs).
 
+### Scoped agent-instruction aliases
+
+`CLAUDE.md` remains the single canonical policy file for every scoped agent-instruction
+surface. `structure/scoped-agent-instructions-symlinks` enforces that `.planning/`,
+`crates/`, `quality/`, and `.claude/hooks/` each expose a **tracked** `AGENTS.md` symlink
+whose literal target is the local `CLAUDE.md`. Do not copy policy text into an `AGENTS.md`:
+that makes Claude Code and Codex drift. When adding a new scoped instruction surface,
+extend the explicit list in `quality/gates/structure/scoped-agent-instructions-symlinks.sh`
+in the same change and run the gate.
+
 ## Docs-alignment dimension
 
 Binary: `reposix-quality doc-alignment {bind, propose-retire, confirm-retire,
